@@ -265,10 +265,20 @@ export const styles = stylex.create({
     stroke: "#32d89b",
     strokeWidth: 2.5,
   },
+  edgePathDraggingSubtree: {
+    opacity: 0.5,
+    stroke: "#9fabb9",
+    strokeDasharray: "4 5",
+  },
   junction: {
     fill: "#ffffff",
     stroke: "#cbd3dd",
     strokeWidth: 1.5,
+  },
+  junctionDraggingSubtree: {
+    fill: "#f8fafc",
+    opacity: 0.5,
+    strokeDasharray: "2 2",
   },
   branchLabel: {
     backgroundColor: "#ffffff",
@@ -288,6 +298,12 @@ export const styles = stylex.create({
     transform: "translate(-50%, -50%)",
     whiteSpace: "nowrap",
     zIndex: 2,
+  },
+  branchLabelDraggingSubtree: {
+    backgroundColor: "rgba(248, 250, 252, 0.84)",
+    borderStyle: "dashed",
+    boxShadow: "none",
+    opacity: 0.58,
   },
   edgeLabel: {
     backgroundColor: "#ffffff",
@@ -436,6 +452,13 @@ export const styles = stylex.create({
     boxShadow: "none",
     opacity: 1,
   },
+  nodeDraggingDescendant: {
+    backgroundColor: "rgba(248, 250, 252, 0.72)",
+    borderColor: "#aeb9c6",
+    borderStyle: "dashed",
+    boxShadow: "none",
+    opacity: 0.58,
+  },
   nodeDraggingContent: {
     opacity: 0,
   },
@@ -547,12 +570,21 @@ export const styles = stylex.create({
     boxShadow: "0 20px 45px rgba(20, 43, 35, 0.22)",
     alignItems: "center",
     display: "flex",
+    justifyContent: "space-between",
     minHeight: "44px",
     padding: "10px 12px",
     pointerEvents: "none",
     transform: "rotate(1.5deg) scale(1.02)",
     width: "252px",
     zIndex: 100,
+  },
+  ghostCount: {
+    backgroundColor: "#edf8f3",
+    borderRadius: "999px",
+    color: "#287b5d",
+    fontSize: "10px",
+    fontWeight: 750,
+    padding: "4px 7px",
   },
   ghostTitle: {
     fontSize: "13px",

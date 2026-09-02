@@ -7,6 +7,7 @@ import {
   findFlow,
   insertNewNode,
   moveNode,
+  nodeSubtree,
   previewDocumentForDrop,
 } from "./graph";
 import { layoutWorkflow } from "./layout";
@@ -25,6 +26,20 @@ describe("structured workflow example", () => {
     expect(findFlow(initialDocument, "flow:condition:then")?.label).toBe("Then");
     expect(findFlow(initialDocument, "flow:switch:default")?.elements[0]?.id)
       .toBe("node-action");
+  });
+
+  it("identifies every node and flow carried by a branch owner", () => {
+    const subtree = nodeSubtree(initialDocument, "node-condition");
+    expect([...(subtree?.nodeIds ?? [])]).toEqual([
+      "node-condition",
+      "node-switch",
+      "node-action",
+    ]);
+    expect([...(subtree?.flowIds ?? [])]).toEqual([
+      "flow:condition:then",
+      "flow:condition:else",
+      "flow:switch:default",
+    ]);
   });
 
   it("inserts a registered node at a structural flow location", () => {

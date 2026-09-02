@@ -185,4 +185,40 @@ describe.sequential("structured workflow builder", () => {
     expect(positions["node-action"]).toBeLessThan(positions["node-switch"] ?? 0);
     await screenshot("06-branch-move-committed");
   });
+
+  it("ghosts an entire registered subtree while its owner is dragged", async () => {
+    await page.goto(appUrl, { waitUntil: "networkidle" });
+    const { source, target } = await drag(
+      '[data-node-id="node-switch"]',
+      thenTargetSelector,
+    );
+
+    await expect.poll(() => target.getAttribute("data-drop-active")).toBe("true");
+    await expect.poll(() => source.getAttribute("data-drag-subtree")).toBe("true");
+    await expect
+      .poll(() => page.locator('[data-node-id="node-action"]').getAttribute("data-drag-subtree"))
+      .toBe("true");
+    await expect
+      .poll(() => page.locator('[data-node-id="node-condition"]').getAttribute("data-drag-subtree"))
+      .toBe("false");
+    await expect
+      .poll(() => page.locator('[data-drag-subtree-connector="true"]').count())
+      .toBeGreaterThanOrEqual(3);
+    await expect.poll(() => page.getByText("2 nodes", { exact: true }).isVisible()).toBe(true);
+
+    const descendantAppearance = await page
+      .locator('[data-node-id="node-action"]')
+      .evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { borderStyle: style.borderStyle, opacity: Number(style.opacity) };
+      });
+    expect(descendantAppearance.borderStyle).toBe("dashed");
+    expect(descendantAppearance.opacity).toBeLessThan(0.7);
+    await screenshot("07-subtree-ghost-hover");
+
+    await page.mouse.up();
+    await page.waitForTimeout(350);
+    await expectNoNodeOverlaps();
+    await screenshot("08-subtree-move-committed");
+  });
 });

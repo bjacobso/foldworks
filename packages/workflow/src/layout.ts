@@ -19,6 +19,8 @@ export type LayoutNode = Readonly<{
 export type LayoutConnector = Readonly<{
   id: string;
   points: ReadonlyArray<Point>;
+  flowId?: string;
+  ownerElementId?: string;
   locationId?: string;
 }>;
 
@@ -32,6 +34,15 @@ export type LayoutInsertion = Readonly<{
 export type LayoutBranchLabel = Readonly<{
   id: string;
   text: string;
+  flowId: string;
+  ownerElementId: string;
+  x: number;
+  y: number;
+}>;
+
+export type LayoutJunction = Readonly<{
+  id: string;
+  ownerElementId: string;
   x: number;
   y: number;
 }>;
@@ -43,7 +54,7 @@ export type StructuredWorkflowLayout = Readonly<{
   connectors: ReadonlyArray<LayoutConnector>;
   insertions: ReadonlyArray<LayoutInsertion>;
   branchLabels: ReadonlyArray<LayoutBranchLabel>;
-  junctions: ReadonlyArray<Point>;
+  junctions: ReadonlyArray<LayoutJunction>;
 }>;
 
 export type StructuredLayoutConfig<Node> = Readonly<{
@@ -185,7 +196,7 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
     const connectors: LayoutConnector[] = [];
     const insertions: LayoutInsertion[] = [];
     const branchLabels: LayoutBranchLabel[] = [];
-    const junctions: Point[] = [];
+    const junctions: LayoutJunction[] = [];
 
     const addConnection = (
       id: string,
@@ -196,6 +207,7 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
       connectors.push({
         id,
         points,
+        ...(location === undefined ? {} : { flowId: location.flowId }),
         ...(locationId === undefined ? {} : { locationId }),
       });
       if (location !== undefined) {
@@ -246,11 +258,14 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
         branchLabels.push({
           id: `branch-label:${branch.flow.id}`,
           text: branch.flow.label,
+          flowId: branch.flow.id,
+          ownerElementId: node.id,
           x: branchCenter,
           y: nodeBottom + branchPadding * 0.56,
         });
         connectors.push({
           id: `fork:${node.id}:${branch.flow.id}`,
+          ownerElementId: node.id,
           points: [
             { x: centerX, y: nodeBottom },
             { x: centerX, y: forkY },
@@ -261,6 +276,7 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
         layoutFlow(branch, branchCenter, branchEntryY, element.branchHeight, true);
         connectors.push({
           id: `merge:${node.id}:${branch.flow.id}`,
+          ownerElementId: node.id,
           points: [
             { x: branchCenter, y: branchEntryY + element.branchHeight },
             { x: branchCenter, y: mergeBusY },
@@ -271,7 +287,20 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
         branchLeft += branch.width + branchGap;
       }
       if (branchCenters.length > 1) {
-        junctions.push({ x: centerX, y: forkY }, { x: centerX, y: mergeBusY });
+        junctions.push(
+          {
+            id: `junction:${node.id}:fork`,
+            ownerElementId: node.id,
+            x: centerX,
+            y: forkY,
+          },
+          {
+            id: `junction:${node.id}:merge`,
+            ownerElementId: node.id,
+            x: centerX,
+            y: mergeBusY,
+          },
+        );
       }
       return { exit: { x: centerX, y: mergeY } };
     };

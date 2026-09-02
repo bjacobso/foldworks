@@ -42,6 +42,31 @@ export const canMoveNode = (document: WorkflowDocument, nodeId: string) => {
   return node !== undefined && nodeTypes[node.type].movable;
 };
 
+export type NodeSubtree = Readonly<{
+  rootId: string;
+  nodeIds: ReadonlySet<string>;
+  flowIds: ReadonlySet<string>;
+}>;
+
+export const nodeSubtree = (
+  document: WorkflowDocument,
+  nodeId: string,
+): NodeSubtree | undefined => {
+  const root = findNode(document, nodeId);
+  if (root === undefined) return undefined;
+  const nodeIds = new Set<string>();
+  const flowIds = new Set<string>();
+  const visitNode = (node: WorkflowNode) => {
+    nodeIds.add(node.id);
+    for (const flow of node.branches) {
+      flowIds.add(flow.id);
+      for (const child of flow.elements) visitNode(child);
+    }
+  };
+  visitNode(root);
+  return { rootId: root.id, nodeIds, flowIds };
+};
+
 export const insertNewNode = (
   document: WorkflowDocument,
   location: FlowLocation,

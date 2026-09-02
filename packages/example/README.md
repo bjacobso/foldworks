@@ -14,7 +14,8 @@ Features include:
 - nested Then, Else, and dynamic Switch flows;
 - dragging registered types into any valid nested flow location;
 - moving complete branch subtrees while rejecting recursive self-drops;
-- an outline placeholder at the source and highlighted destination control;
+- a dotted placeholder for the complete source subtree and highlighted
+  destination control;
 - animated rebalancing after insertions, moves, resizing, and deletion;
 - a Foldkit dialog sheet for node settings;
 - keyboard drag and drop with accessible announcements.

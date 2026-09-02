@@ -12,8 +12,10 @@ import {
   dropTargetId,
   findNode,
   kindFromPaletteItem,
+  nodeSubtree,
   paletteItemId,
   previewDocumentForDrop,
+  type NodeSubtree,
 } from "./graph";
 import {
   pathForPoints,
@@ -148,16 +150,28 @@ const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 const selectedNodeId = (model: Model) => Option.getOrUndefined(model.selectedNodeId);
 
+const draggedSubtree = (model: Model): NodeSubtree | undefined => {
+  const draggedId = Option.getOrUndefined(
+    Workflow.maybeDraggedItemId(model.workflow),
+  );
+  return draggedId === undefined
+    ? undefined
+    : nodeSubtree(model.document, draggedId);
+};
+
 const nodeView = (
   model: Model,
   node: WorkflowNode,
   layout: StructuredWorkflowLayout,
+  subtree: NodeSubtree | undefined,
   h: HtmlBuilder<Message>,
 ): Html => {
   const position = layout.nodes.get(node.id);
   if (position === undefined) return h.empty;
   const definition = nodeTypes[node.type];
-  const isDragging = isDraggedItem(model, node.id);
+  const isDragging = subtree?.rootId === node.id;
+  const isDraggingSubtree = subtree?.nodeIds.has(node.id) === true;
+  const isDraggingDescendant = isDraggingSubtree && !isDragging;
   const isSelected = selectedNodeId(model) === node.id;
   const draggable = canMoveNode(model.document, node.id)
     ? Workflow.draggable(
@@ -182,6 +196,7 @@ const nodeView = (
           node.data.size === "compact" && styles.nodeCompact,
           styles.nodeHoverable,
           isDragging && styles.nodeDragging,
+          isDraggingDescendant && styles.nodeDraggingDescendant,
           isSelected && styles.nodeSelected,
         ),
       ),
@@ -199,12 +214,13 @@ const nodeView = (
       h.OnClick(Message.ClickedNode({ nodeId: node.id })),
       h.AriaLabel(`${definition.label}: ${node.data.title}. Open settings.`),
       h.DataAttribute("drag-source", isDragging ? "true" : "false"),
+      h.DataAttribute("drag-subtree", isDraggingSubtree ? "true" : "false"),
       h.DataAttribute("node-id", node.id),
       h.DataAttribute("node-type", node.type),
     ],
     [
       h.div(
-        [h.Class(className(isDragging && styles.nodeDraggingContent))],
+        [h.Class(className(isDraggingSubtree && styles.nodeDraggingContent))],
         definition.render(node, h),
       ),
     ],
@@ -214,6 +230,7 @@ const nodeView = (
 const connectorLayerView = (
   model: Model,
   layout: StructuredWorkflowLayout,
+  subtree: NodeSubtree | undefined,
   h: HtmlBuilder<Message>,
 ): Html => {
   const activeLocation = Option.getOrUndefined(Workflow.maybeDropLocation(model.workflow));
@@ -238,22 +255,44 @@ const connectorLayerView = (
             h.Class(
               className(
                 styles.edgePath,
+                subtree !== undefined &&
+                  ((connector.ownerElementId !== undefined &&
+                    subtree.nodeIds.has(connector.ownerElementId)) ||
+                    (connector.flowId !== undefined &&
+                      subtree.flowIds.has(connector.flowId))) &&
+                  styles.edgePathDraggingSubtree,
                 activeId !== undefined &&
                   connector.locationId === activeId &&
                   styles.edgePathActive,
               ),
             ),
+            h.DataAttribute(
+              "drag-subtree-connector",
+              subtree !== undefined &&
+                ((connector.ownerElementId !== undefined &&
+                  subtree.nodeIds.has(connector.ownerElementId)) ||
+                  (connector.flowId !== undefined &&
+                    subtree.flowIds.has(connector.flowId)))
+                ? "true"
+                : "false",
+            ),
           ],
         ),
       ),
-      ...layout.junctions.map((junction, index) =>
+      ...layout.junctions.map((junction) =>
         h.keyed("circle")(
-          `junction:${index}`,
+          junction.id,
           [
             h.Attribute("cx", `${junction.x}`),
             h.Attribute("cy", `${junction.y}`),
             h.Attribute("r", "3"),
-            h.Class(className(styles.junction)),
+            h.Class(
+              className(
+                styles.junction,
+                subtree?.nodeIds.has(junction.ownerElementId) === true &&
+                  styles.junctionDraggingSubtree,
+              ),
+            ),
           ],
         ),
       ),
@@ -263,13 +302,20 @@ const connectorLayerView = (
 
 const branchLabelViews = (
   layout: StructuredWorkflowLayout,
+  subtree: NodeSubtree | undefined,
   h: HtmlBuilder<Message>,
 ): ReadonlyArray<Html> =>
   layout.branchLabels.map((label) =>
     h.keyed("span")(
       label.id,
       [
-        h.Class(className(styles.branchLabel)),
+        h.Class(
+          className(
+            styles.branchLabel,
+            subtree?.nodeIds.has(label.ownerElementId) === true &&
+              styles.branchLabelDraggingSubtree,
+          ),
+        ),
         h.Style({ left: `${label.x}px`, top: `${label.y}px` }),
       ],
       [label.text],
@@ -338,10 +384,21 @@ const draggedNode = (model: Model) =>
   Option.flatMap(Workflow.maybeDraggedItemId(model.workflow), (itemId) => {
     const kind = kindFromPaletteItem(itemId);
     if (kind !== undefined) {
-      return Option.some({ node: nodeTypes[kind].create("drag-preview"), kind });
+      return Option.some({
+        node: nodeTypes[kind].create("drag-preview"),
+        kind,
+        nodeCount: 1,
+      });
     }
     const node = findNode(model.document, itemId);
-    return node === undefined ? Option.none() : Option.some({ node, kind: node.type });
+    const subtree = nodeSubtree(model.document, itemId);
+    return node === undefined
+      ? Option.none()
+      : Option.some({
+          node,
+          kind: node.type,
+          nodeCount: subtree?.nodeIds.size ?? 1,
+        });
   });
 
 const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
@@ -350,7 +407,7 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
     onSome: (ghostStyle) =>
       Option.match(draggedNode(model), {
         onNone: () => h.empty,
-        onSome: ({ node, kind }) => {
+        onSome: ({ node, kind, nodeCount }) => {
           const definition = nodeTypes[kind];
           return h.div(
             [
@@ -369,6 +426,11 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
                   h.span([h.Class(className(styles.nodeTitle))], [node.data.title]),
                 ],
               ),
+              nodeCount > 1
+                ? h.span([h.Class(className(styles.ghostCount))], [
+                    `${nodeCount} nodes`,
+                  ])
+                : h.empty,
             ],
           );
         },
@@ -378,6 +440,7 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
 const canvasView = (model: Model, h: HtmlBuilder<Message>): Html => {
   const layout = layoutWorkflow(model.document);
   const nodes = allNodes(model.document);
+  const subtree = draggedSubtree(model);
   return h.div(
     [h.Class(className(styles.canvasViewport))],
     [
@@ -388,10 +451,10 @@ const canvasView = (model: Model, h: HtmlBuilder<Message>): Html => {
           h.Style({ height: `${layout.height}px`, width: `${layout.width}px` }),
         ],
         [
-          connectorLayerView(model, layout, h),
-          ...branchLabelViews(layout, h),
+          connectorLayerView(model, layout, subtree, h),
+          ...branchLabelViews(layout, subtree, h),
           ...insertionViews(model, layout, h),
-          ...nodes.map((node) => nodeView(model, node, layout, h)),
+          ...nodes.map((node) => nodeView(model, node, layout, subtree, h)),
         ],
       ),
       ghostView(model, h),
