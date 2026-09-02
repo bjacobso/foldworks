@@ -7,10 +7,10 @@
     "pnpm": ">=10.20"
   },
   "scripts": {
-    "dev": "pnpm --filter @foldworks/example dev",
-    "build": "pnpm --filter @foldworks/example build",
+    "dev": "pnpm --filter @foldworks/demo dev",
+    "build": "pnpm --filter @foldworks/demo build",
     "typecheck": "pnpm --recursive --if-present typecheck",
     "test": "pnpm --recursive --if-present test",
-    "test:e2e": "pnpm --filter @foldworks/example test:e2e"
+    "test:e2e": "pnpm --filter @foldworks/demo test:e2e"
   }
 }

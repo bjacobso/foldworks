@@ -1,0 +1,22 @@
+@import "@foldworks/ui/theme.css";
+@import "@foldworks/data-grid/styles.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

@@ -1,0 +1,59 @@
+# Demo
+
+A browser-only demo app built with Foldkit, StyleX, and Vite. Use the sidebar
+to switch between the workflow builder, Excel-like data grid, and form builder.
+
+Foldkit's bidirectional router owns navigational state. The demos live at
+`/workflow`, `/data-grid`, and `/form-builder`; the form route stores its example
+and Editor/Preview mode in query parameters so those states can be linked,
+reloaded, and traversed with browser history. Transient selections, drag state,
+column widths, and in-progress document edits remain in the application model.
+
+Reusable flow operations, layout, and drag interaction live in the private
+`@foldworks/workflow` workspace package. This application registers the
+available node types, their factories, dimensions, palette metadata, and views.
+
+The private `@foldworks/data-grid` workspace package provides a typed,
+headless table model and a Foldkit DOM view. The demo supplies 120 rows, column
+configuration, and custom employee and status cell renderers.
+
+Features include:
+
+- nested Then, Else, and dynamic Switch flows;
+- dragging registered types into any valid nested flow location;
+- moving complete branch subtrees while rejecting recursive self-drops;
+- a dotted placeholder for the complete source subtree and highlighted
+  destination control;
+- animated rebalancing after insertions, moves, resizing, and deletion;
+- a Foldkit dialog sheet for node settings;
+- keyboard drag and drop with accessible announcements.
+
+The data grid currently demonstrates:
+
+- typed application-owned rows and column definitions;
+- custom cell rendering and numeric/text sorting;
+- sticky headers and horizontal/vertical scrolling;
+- single-cell selection with arrow-key navigation;
+- resizable columns with a double-click reset.
+
+The form builder demonstrates a section-first, multi-actor document model:
+
+- simple, actor-handoff, and complex example forms;
+- Employee → Employer → Employee and Employee → Authorized representative →
+  Employer → Employee journeys;
+- adding and configuring registered field types;
+- moving sections, pages, and fields, including fields between pages;
+- an inline editor canvas backed by the same field renderers as preview;
+- actor-specific and full-journey preview modes with answers and tracked
+  Markdown content views.
+
+From the repository root:
+
+```sh
+pnpm install
+pnpm dev
+```
+
+Use `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify the example. Run
+`pnpm test:e2e` for the Vitest + Playwright interaction suite and screenshots in
+`apps/demo/test-results/demo`.

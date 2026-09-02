@@ -1,0 +1,46 @@
+:root {
+  color-scheme: light;
+  --foldworks-ui-background: #ffffff;
+  --foldworks-ui-canvas: #f7f7f8;
+  --foldworks-ui-surface: #ffffff;
+  --foldworks-ui-surface-subtle: #f3f3f4;
+  --foldworks-ui-surface-hover: #ededee;
+  --foldworks-ui-foreground: #202124;
+  --foldworks-ui-foreground-muted: #707176;
+  --foldworks-ui-foreground-subtle: #96979c;
+  --foldworks-ui-border: #e2e2e4;
+  --foldworks-ui-border-strong: #d3d3d6;
+  --foldworks-ui-primary: #18191b;
+  --foldworks-ui-primary-foreground: #ffffff;
+  --foldworks-ui-focus: #65666b;
+  --foldworks-ui-success: #079455;
+  --foldworks-ui-success-surface: #dcf8e9;
+  --foldworks-ui-warning: #9a6700;
+  --foldworks-ui-warning-surface: #fff2cc;
+  --foldworks-ui-danger: #d92d20;
+  --foldworks-ui-danger-surface: #fee4e2;
+  --foldworks-ui-info: #6941c6;
+  --foldworks-ui-info-surface: #eee8ff;
+  --foldworks-ui-radius-sm: 6px;
+  --foldworks-ui-radius-md: 9px;
+  --foldworks-ui-radius-lg: 12px;
+  --foldworks-ui-shadow-sm: 0 1px 2px rgb(16 24 40 / 0.05);
+  --foldworks-ui-shadow-panel: 0 8px 24px rgb(16 24 40 / 0.06);
+  --foldworks-ui-duration-fast: 120ms;
+  --foldworks-ui-duration-normal: 180ms;
+  --foldworks-ui-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --foldworks-ui-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--foldworks-ui-background);
+  color: var(--foldworks-ui-foreground);
+  font-family: var(--foldworks-ui-font);
+}

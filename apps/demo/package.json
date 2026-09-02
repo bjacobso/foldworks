@@ -1,0 +1,35 @@
+{
+  "name": "@foldworks/demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+  },
+  "dependencies": {
+    "@foldkit/markdown": "catalog:",
+    "@foldkit/ui": "catalog:",
+    "@foldworks/data-grid": "workspace:*",
+    "@foldworks/form-builder": "workspace:*",
+    "@foldworks/ui": "workspace:*",
+    "@foldworks/workflow": "workspace:*",
+    "@stylexjs/stylex": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:"
+  },
+  "devDependencies": {
+    "@foldkit/devtools": "catalog:",
+    "@foldkit/vite-plugin": "catalog:",
+    "@stylexjs/unplugin": "catalog:",
+    "@types/node": "catalog:",
+    "playwright": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
