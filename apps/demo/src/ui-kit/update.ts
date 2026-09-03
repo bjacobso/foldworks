@@ -14,6 +14,15 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     SelectedView: ({ value }) => ({
       model: evo(model, { selectedView: () => value }),
     }),
+    ToggledUpdates: ({ isChecked }) => ({
+      model: evo(model, { receivesUpdates: () => isChecked }),
+    }),
+    ToggledTerms: ({ isChecked }) => ({
+      model: evo(model, { termsAccepted: () => isChecked }),
+    }),
+    ToggledDetails: ({ isOpen }) => ({
+      model: evo(model, { isDetailsOpen: () => isOpen }),
+    }),
     ClickedAction: ({ action }) => ({
       model: evo(model, { announcement: () => `${action} button selected.` }),
     }),

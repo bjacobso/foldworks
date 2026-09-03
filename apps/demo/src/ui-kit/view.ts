@@ -5,12 +5,16 @@ import { CalendarDays, Check, Eye, Plus, Send, Settings, User } from "@lucide/ic
 import {
   Badge,
   Button,
+  Checkbox,
+  Disclosure,
   Field,
+  Fieldset,
   Icon,
   Layout,
   Panel,
   SegmentedControl,
   Select,
+  Switch,
   Toolbar,
 } from "@foldworks/ui";
 
@@ -232,6 +236,47 @@ const controlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
     h,
   );
 
+const choiceControlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
+  Panel.view(
+    {
+      title: "Choice and disclosure",
+      description: "Accessible Foldkit behavior with consistent labels, supporting copy, and state styling.",
+      children: [
+        Fieldset.view({
+          id: "ui-kit-preferences",
+          legend: "Preferences",
+          description: "Controlled values live in the UI kit submodel.",
+          children: [
+            Checkbox.view({
+              id: "ui-kit-terms",
+              label: "Accept the workspace terms",
+              description: "Required before publishing a workspace.",
+              isChecked: model.termsAccepted,
+              onToggle: (isChecked) => Message.ToggledTerms({ isChecked }),
+            }, h),
+            Switch.view({
+              id: "ui-kit-updates",
+              label: "Product updates",
+              description: "Receive a concise monthly summary.",
+              isChecked: model.receivesUpdates,
+              onToggle: (isChecked) => Message.ToggledUpdates({ isChecked }),
+            }, h),
+          ],
+        }, h),
+        Disclosure.view({
+          id: "ui-kit-disclosure",
+          label: "Why these controls are wrappers",
+          isOpen: model.isDetailsOpen,
+          onToggle: (isOpen) => Message.ToggledDetails({ isOpen }),
+          children: [
+            "Foldkit owns keyboard behavior and ARIA. The wrapper contributes tokens, layout, and visual states.",
+          ],
+        }, h),
+      ],
+    },
+    h,
+  );
+
 const compositionPanel = (h: HtmlBuilder<Message>): Html =>
   Panel.view(
     {
@@ -328,6 +373,7 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
         iconsPanel(h),
         fieldsPanel(model, h),
         controlsPanel(model, h),
+        choiceControlsPanel(model, h),
         compositionPanel(h),
         toolbarPanel(h),
         tokensPanel(h),

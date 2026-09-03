@@ -11,6 +11,9 @@ export const Model = S.Struct({
   notes: S.String,
   department: Department,
   selectedView: View,
+  receivesUpdates: S.Boolean,
+  termsAccepted: S.Boolean,
+  isDetailsOpen: S.Boolean,
   announcement: S.String,
 });
 export type Model = typeof Model.Type;
@@ -20,5 +23,8 @@ export const initialModel: Model = {
   notes: "Keep the experience concise and welcoming.",
   department: "People",
   selectedView: "Overview",
+  receivesUpdates: true,
+  termsAccepted: false,
+  isDetailsOpen: true,
   announcement: "UI component demo ready.",
 };

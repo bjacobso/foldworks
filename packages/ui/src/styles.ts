@@ -1,6 +1,15 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, metrics } from "./tokens.stylex";
+import {
+  colors,
+  metrics,
+  motion,
+  radii,
+  shadows,
+  sizes,
+  space,
+  typography,
+} from "./tokens.stylex";
 
 export const buttonStyles = stylex.create({
   base: {
@@ -155,6 +164,187 @@ export const fieldStyles = stylex.create({
   compact: { minHeight: "32px" },
   selectControl: { minHeight: "32px", paddingRight: "28px", width: "auto" },
   textarea: { lineHeight: 1.5, minHeight: "84px", paddingBottom: "9px", paddingTop: "9px", resize: "vertical" },
+  invalid: {
+    borderColor: colors.danger,
+    outlineColor: colors.danger,
+  },
+  required: { color: colors.danger, marginLeft: space.xs },
+  error: { color: colors.danger },
+});
+
+export const choiceStyles = stylex.create({
+  root: {
+    alignItems: "flex-start",
+    color: colors.foreground,
+    display: "flex",
+    fontFamily: typography.fontFamily,
+    gap: space.sm,
+  },
+  disabled: { cursor: "not-allowed", opacity: 0.5 },
+  control: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.borderStrong,
+    borderRadius: radii.sm,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    color: colors.primaryForeground,
+    cursor: "pointer",
+    display: "inline-flex",
+    flexShrink: 0,
+    height: "18px",
+    justifyContent: "center",
+    marginTop: "1px",
+    outline: { default: "none", ":focus-visible": `2px solid ${colors.focus}` },
+    outlineOffset: "2px",
+    padding: 0,
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, border-color, box-shadow",
+    transitionTimingFunction: motion.easeOut,
+    width: "18px",
+  },
+  checked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  indeterminate: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  content: { display: "flex", flexDirection: "column", gap: space.xs, minWidth: 0 },
+  label: { cursor: "pointer", fontSize: typography.sizeSm, fontWeight: typography.weightMedium, lineHeight: 1.35 },
+  description: { color: colors.foregroundMuted, fontSize: typography.sizeXs, lineHeight: typography.lineHeightNormal, margin: 0 },
+  hiddenInput: {
+    clip: "rect(0 0 0 0)",
+    clipPath: "inset(50%)",
+    height: "1px",
+    overflow: "hidden",
+    position: "absolute",
+    whiteSpace: "nowrap",
+    width: "1px",
+  },
+});
+
+export const switchStyles = stylex.create({
+  root: {
+    alignItems: "flex-start",
+    color: colors.foreground,
+    display: "flex",
+    fontFamily: typography.fontFamily,
+    gap: space.sm,
+    justifyContent: "space-between",
+  },
+  disabled: { cursor: "not-allowed", opacity: 0.5 },
+  copy: { display: "flex", flexDirection: "column", gap: space.xs, minWidth: 0 },
+  label: { cursor: "pointer", fontSize: typography.sizeSm, fontWeight: typography.weightMedium, lineHeight: 1.35 },
+  description: { color: colors.foregroundMuted, fontSize: typography.sizeXs, lineHeight: typography.lineHeightNormal, margin: 0 },
+  control: {
+    alignItems: "center",
+    backgroundColor: colors.input,
+    borderColor: "transparent",
+    borderRadius: radii.full,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    cursor: "pointer",
+    display: "inline-flex",
+    flexShrink: 0,
+    height: "20px",
+    outline: { default: "none", ":focus-visible": `2px solid ${colors.focus}` },
+    outlineOffset: "2px",
+    padding: "2px",
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color",
+    transitionTimingFunction: motion.easeOut,
+    width: "36px",
+  },
+  checked: { backgroundColor: colors.primary },
+  thumb: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.full,
+    boxShadow: shadows.sm,
+    height: "14px",
+    transform: "translateX(0)",
+    transitionDuration: motion.fast,
+    transitionProperty: "transform",
+    transitionTimingFunction: motion.easeOut,
+    width: "14px",
+  },
+  thumbChecked: { transform: "translateX(16px)" },
+  hiddenInput: {
+    clip: "rect(0 0 0 0)",
+    clipPath: "inset(50%)",
+    height: "1px",
+    overflow: "hidden",
+    position: "absolute",
+    whiteSpace: "nowrap",
+    width: "1px",
+  },
+});
+
+export const fieldsetStyles = stylex.create({
+  root: {
+    border: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: space.md,
+    margin: 0,
+    minWidth: 0,
+    padding: 0,
+  },
+  disabled: { opacity: 0.55 },
+  legend: {
+    color: colors.foreground,
+    fontFamily: typography.fontFamily,
+    fontSize: typography.sizeSm,
+    fontWeight: typography.weightSemibold,
+    marginBottom: space.xs,
+    padding: 0,
+  },
+  description: {
+    color: colors.foregroundMuted,
+    fontFamily: typography.fontFamily,
+    fontSize: typography.sizeXs,
+    lineHeight: typography.lineHeightNormal,
+    margin: 0,
+  },
+  content: { display: "flex", flexDirection: "column", gap: space.sm },
+});
+
+export const disclosureStyles = stylex.create({
+  root: {
+    borderBottomColor: colors.border,
+    borderBottomStyle: "solid",
+    borderBottomWidth: "1px",
+  },
+  trigger: {
+    alignItems: "center",
+    backgroundColor: { default: "transparent", ":hover": colors.surfaceSubtle },
+    border: 0,
+    color: colors.foreground,
+    cursor: "pointer",
+    display: "flex",
+    fontFamily: typography.fontFamily,
+    fontSize: typography.sizeSm,
+    fontWeight: typography.weightSemibold,
+    gap: space.sm,
+    justifyContent: "space-between",
+    minHeight: sizes.controlLg,
+    outline: { default: "none", ":focus-visible": `2px solid ${colors.focus}` },
+    outlineOffset: "-2px",
+    paddingLeft: space.sm,
+    paddingRight: space.sm,
+    width: "100%",
+  },
+  icon: {
+    color: colors.foregroundMuted,
+    transform: "rotate(0deg)",
+    transitionDuration: motion.normal,
+    transitionProperty: "transform",
+    transitionTimingFunction: motion.easeOut,
+  },
+  iconOpen: { transform: "rotate(180deg)" },
+  panel: { color: colors.foregroundMuted, fontSize: typography.sizeSm, lineHeight: typography.lineHeightNormal },
+  panelInner: { padding: `${space.sm} ${space.sm} ${space.lg}` },
 });
 
 export const panelStyles = stylex.create({

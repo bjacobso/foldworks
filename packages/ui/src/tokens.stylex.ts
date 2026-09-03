@@ -48,3 +48,56 @@ export const metrics = stylex.defineConsts({
   easeOut: "var(--foldworks-ui-ease-out)",
   font: "var(--foldworks-ui-font)",
 });
+
+export const space = stylex.defineConsts({
+  xxs: "2px",
+  xs: "4px",
+  sm: "8px",
+  md: "12px",
+  lg: "16px",
+  xl: "24px",
+  xxl: "32px",
+});
+
+export const typography = stylex.defineConsts({
+  fontFamily: "var(--foldworks-ui-font)",
+  sizeXs: "11px",
+  sizeSm: "12px",
+  sizeMd: "13px",
+  sizeLg: "14px",
+  sizeXl: "16px",
+  weightMedium: 550,
+  weightSemibold: 650,
+  weightBold: 700,
+  lineHeightTight: 1.25,
+  lineHeightNormal: 1.5,
+});
+
+export const radii = stylex.defineConsts({
+  sm: "var(--foldworks-ui-radius-sm)",
+  md: "var(--foldworks-ui-radius-md)",
+  lg: "var(--foldworks-ui-radius-lg)",
+  full: "999px",
+});
+
+export const sizes = stylex.defineConsts({
+  controlSm: "32px",
+  controlMd: "36px",
+  controlLg: "40px",
+  iconSm: "14px",
+  iconMd: "16px",
+  iconLg: "20px",
+});
+
+export const shadows = stylex.defineConsts({
+  sm: "var(--foldworks-ui-shadow-sm)",
+  panel: "var(--foldworks-ui-shadow-panel)",
+  float: "var(--foldworks-ui-shadow-float)",
+  sheet: "var(--foldworks-ui-shadow-sheet)",
+});
+
+export const motion = stylex.defineConsts({
+  fast: "var(--foldworks-ui-duration-fast)",
+  normal: "var(--foldworks-ui-duration-normal)",
+  easeOut: "var(--foldworks-ui-ease-out)",
+});

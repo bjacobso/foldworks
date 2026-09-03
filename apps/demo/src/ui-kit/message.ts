@@ -8,6 +8,9 @@ export const Message = defineMessageUnion({
   ChangedNotes: { value: S.String },
   SelectedDepartment: { value: Department },
   SelectedView: { value: View },
+  ToggledUpdates: { isChecked: S.Boolean },
+  ToggledTerms: { isChecked: S.Boolean },
+  ToggledDetails: { isOpen: S.Boolean },
   ClickedAction: { action: S.String },
 });
 export type Message = typeof Message.Type;

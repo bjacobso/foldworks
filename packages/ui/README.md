@@ -4,6 +4,11 @@ Opinionated application chrome for Foldkit, built with StyleX and the accessible
 
 The package owns semantic tokens, focus treatment, control density, and reusable visual primitives. Product concepts and feature behavior stay in their application or feature package.
 
+It currently wraps Foldkit's button, input, textarea, select, checkbox,
+switch, fieldset, and disclosure behavior. Layout, panel, badge, segmented
+control, toolbar, and Lucide icon helpers cover the shared visual composition
+used by the demo packages.
+
 ## Setup
 
 Import the theme once from the application stylesheet:
@@ -62,6 +67,24 @@ nodes. Static icon imports remain tree-shakeable, decorative icons are hidden
 from assistive technology by default, and a `label` makes a standalone icon an
 accessible image. Buttons render their icons decoratively and keep their
 accessible name on the button label or `ariaLabel`.
+
+StyleX consumers can import semantic token groups directly:
+
+```ts
+import * as stylex from "@stylexjs/stylex";
+import { colors, radii, space, typography } from "@foldworks/ui";
+
+const styles = stylex.create({
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    color: colors.foreground,
+    gap: space.md,
+    fontFamily: typography.fontFamily,
+  },
+});
+```
 
 ## Boundaries
 
