@@ -1,8 +1,8 @@
 import {
-  Workflow,
   createStructuredWorkflowOperations,
   flowLocationFromId,
   flowLocationId,
+  paletteTypeFromId,
   type FlowLocation,
 } from "@foldworks/workflow";
 
@@ -13,22 +13,9 @@ import type {
 } from "./model";
 import { nodeTypes } from "./node-types";
 
-export const PALETTE_PREFIX = "palette:";
-export const GRAPH_CONTAINER_ID = "workflow-graph";
 export const PALETTE_CONTAINER_ID = "node-palette";
 
-export const paletteItemId = (kind: NodeKind) => `${PALETTE_PREFIX}${kind}`;
-
-export const kindFromPaletteItem = (itemId: string): NodeKind | undefined => {
-  if (!itemId.startsWith(PALETTE_PREFIX)) return undefined;
-  const kind = itemId.slice(PALETTE_PREFIX.length) as NodeKind;
-  return kind in nodeTypes && nodeTypes[kind].palette !== undefined ? kind : undefined;
-};
-
-const operations = createStructuredWorkflowOperations<WorkflowNode>({
-  isMovable: (node) => nodeTypes[node.type].movable,
-  isDeletable: (node) => nodeTypes[node.type].deletable,
-});
+export const operations = createStructuredWorkflowOperations<WorkflowNode>(nodeTypes);
 
 export const findNode = operations.findElement;
 export const findFlow = operations.findFlow;
@@ -90,7 +77,10 @@ export const previewDocumentForDrop = (
 ): WorkflowDocument | undefined => {
   const location = flowLocationFromId(containerId);
   if (location === undefined) return undefined;
-  const paletteKind = kindFromPaletteItem(itemId);
+  const paletteType = paletteTypeFromId(itemId);
+  const paletteKind = paletteType !== undefined && isNodeKind(paletteType)
+    ? paletteType
+    : undefined;
   if (paletteKind !== undefined) {
     return insertNewNode(document, location, paletteKind, 0)?.document;
   }
@@ -99,4 +89,3 @@ export const previewDocumentForDrop = (
 
 export const dropLocationFromTarget = flowLocationFromId;
 export const dropTargetId = flowLocationId;
-export const maybeDropLocation = Workflow.maybeDropLocation;

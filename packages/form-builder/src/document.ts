@@ -112,12 +112,6 @@ export const findField = <Field extends FormField>(
   fieldId: string,
 ) => locateField(document, fieldId)?.field;
 
-export const allPages = <Field extends FormField>(document: FormDocument<Field>) =>
-  document.sections.flatMap((section) => section.pages);
-
-export const allFields = <Field extends FormField>(document: FormDocument<Field>) =>
-  allPages(document).flatMap((page) => page.fields);
-
 export const updateSection = <Field extends FormField>(
   document: FormDocument<Field>,
   sectionId: string,
@@ -133,28 +127,35 @@ export const updatePage = <Field extends FormField>(
   document: FormDocument<Field>,
   pageId: string,
   update: (page: Page<Field>) => Page<Field>,
-): FormDocument<Field> => ({
-  ...document,
-  sections: document.sections.map((section) => ({
-    ...section,
-    pages: section.pages.map((page) => page.id === pageId ? update(page) : page),
-  })),
-});
+): FormDocument<Field> => {
+  const sectionIndex = document.sections.findIndex((section) =>
+    section.pages.some((page) => page.id === pageId)
+  );
+  const section = document.sections[sectionIndex];
+  if (section === undefined) return document;
+  return {
+    ...document,
+    sections: document.sections.map((candidate, index) => index === sectionIndex
+      ? {
+          ...candidate,
+          pages: candidate.pages.map((page) => page.id === pageId ? update(page) : page),
+        }
+      : candidate),
+  };
+};
 
 export const updateField = <Field extends FormField>(
   document: FormDocument<Field>,
   fieldId: string,
   update: (field: Field) => Field,
-): FormDocument<Field> => ({
-  ...document,
-  sections: document.sections.map((section) => ({
-    ...section,
-    pages: section.pages.map((page) => ({
-      ...page,
-      fields: page.fields.map((field) => field.id === fieldId ? update(field) : field),
-    })),
-  })),
-});
+): FormDocument<Field> => {
+  const located = locateField(document, fieldId);
+  if (located === undefined) return document;
+  return updatePage(document, located.page.id, (page) => ({
+    ...page,
+    fields: page.fields.map((field) => field.id === fieldId ? update(field) : field),
+  }));
+};
 
 export const insertSection = <Field extends FormField>(
   document: FormDocument<Field>,
@@ -341,22 +342,33 @@ export const dropLocationId = (
 
 export const dropLocationFromId = (id: string): DropLocation | undefined => {
   if (!id.startsWith(LOCATION_PREFIX)) return undefined;
-  const [kind, encodedParentId, rawIndex] = id.slice(LOCATION_PREFIX.length).split(":");
+  const [kind, encodedParentId, rawIndex, ...surface] =
+    id.slice(LOCATION_PREFIX.length).split(":");
+  if (surface.length > 1 || surface.some((segment) => segment.length === 0)) return undefined;
   const index = Number(rawIndex);
   if (encodedParentId === undefined || !Number.isInteger(index) || index < 0) return undefined;
-  const parentId = decodeURIComponent(encodedParentId);
-  if (kind === "section") return { kind: "Section", index };
-  if (kind === "page") return { kind: "Page", sectionId: parentId, index };
-  if (kind === "field") return { kind: "Field", pageId: parentId, index };
-  return undefined;
+  try {
+    const parentId = decodeURIComponent(encodedParentId);
+    if (kind === "section") return { kind: "Section", index };
+    if (kind === "page") return { kind: "Page", sectionId: parentId, index };
+    if (kind === "field") return { kind: "Field", pageId: parentId, index };
+    return undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 export const dragItemId = (kind: ItemKind, id: string) =>
   `form-item:${kind.toLowerCase()}:${encodeURIComponent(id)}`;
 
 export const dragItemFromId = (value: string): Readonly<{ kind: ItemKind; id: string }> | undefined => {
-  const [prefix, rawKind, encodedId] = value.split(":");
-  if (prefix !== "form-item" || encodedId === undefined) return undefined;
+  const [prefix, rawKind, encodedId, ...rest] = value.split(":");
+  if (prefix !== "form-item" || encodedId === undefined || rest.length > 0) return undefined;
   const kind = rawKind === "section" ? "Section" : rawKind === "page" ? "Page" : rawKind === "field" ? "Field" : undefined;
-  return kind === undefined ? undefined : { kind, id: decodeURIComponent(encodedId) };
+  if (kind === undefined) return undefined;
+  try {
+    return { kind, id: decodeURIComponent(encodedId) };
+  } catch {
+    return undefined;
+  }
 };

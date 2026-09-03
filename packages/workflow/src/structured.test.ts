@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { createStructuredLayout, flowLocationFromId, flowLocationId } from "./layout";
+import {
+  createStructuredLayout,
+  flowLocationFromId,
+  flowLocationId,
+  pathForPoints,
+} from "./layout";
+import { OutMessage } from "./interaction";
+import { defineNodeTypes, paletteItemId, paletteTypeFromId } from "./registry";
+import { applyReorder } from "./reorder";
 import {
   createStructuredWorkflowOperations,
   type Flow,
@@ -17,7 +25,7 @@ interface Node {
 
 const leaf = (id: string, anchored = false): Node => ({
   id,
-  type: "action",
+  type: anchored ? "anchored" : "action",
   title: id,
   anchored,
   branches: [],
@@ -44,7 +52,9 @@ const document: WorkflowDocument<Node> = {
 };
 
 const operations = createStructuredWorkflowOperations<Node>({
-  isMovable: (node) => node.anchored !== true,
+  action: { movable: true, deletable: true },
+  anchored: { movable: false, deletable: false },
+  condition: { movable: true, deletable: true },
 });
 
 describe("structured workflow primitives", () => {
@@ -88,6 +98,64 @@ describe("structured workflow primitives", () => {
   it("round-trips location ids", () => {
     const location = { flowId: "condition:then", index: 2 };
     expect(flowLocationFromId(flowLocationId(location))).toEqual(location);
+  });
+
+  it("rejects malformed flow location ids", () => {
+    expect(flowLocationFromId("flow-target:missing-index")).toBeUndefined();
+    expect(flowLocationFromId("flow-target:%E0%A4%A:1")).toBeUndefined();
+    expect(flowLocationFromId("flow-target:root:-1")).toBeUndefined();
+  });
+
+  it("returns undefined when updating an unknown element", () => {
+    expect(operations.updateElement(document, "missing", (node) => ({
+      ...node,
+      title: "Updated",
+    }))).toBeUndefined();
+  });
+
+  it("draws two-point paths and compacts collinear intermediate points", () => {
+    expect(pathForPoints([{ x: 0, y: 0 }, { x: 0, y: 20 }]))
+      .toBe("M 0 0 L 0 20");
+    expect(pathForPoints([
+      { x: 0, y: 0 },
+      { x: 0, y: 10 },
+      { x: 0, y: 20 },
+      { x: 20, y: 20 },
+    ], 0)).toBe("M 0 0 L 0 20 Q 0 20 0 20 L 20 20");
+  });
+
+  it("round-trips palette ids and applies a palette reorder", () => {
+    expect(paletteTypeFromId(paletteItemId("custom:type"))).toBe("custom:type");
+    const inserted = applyReorder({
+      document,
+      reordered: OutMessage.Reordered({
+        itemId: paletteItemId("action"),
+        fromContainerId: "palette",
+        fromIndex: 0,
+        toContainerId: flowLocationId({ flowId: "condition:then", index: 0 }),
+        toIndex: 0,
+      }),
+      operations,
+      createFromPalette: (type) => type === "action" ? leaf("created") : undefined,
+    });
+
+    expect(inserted?._tag).toBe("Inserted");
+    expect(inserted === undefined
+      ? undefined
+      : operations.findFlow(inserted.document, "condition:then")?.elements[0]?.id)
+      .toBe("created");
+  });
+
+  it("defaults registry movement policies to true", () => {
+    const registry = defineNodeTypes({
+      action: {
+        create: (id: string) => leaf(id),
+        size: () => ({ width: 100, height: 40 }),
+        render: undefined,
+      },
+    });
+
+    expect(registry.action).toMatchObject({ movable: true, deletable: true });
   });
 
   it("lays out branches with orthogonal connectors and insertion targets", () => {

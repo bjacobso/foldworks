@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { createTable, defineColumns } from "./core";
+import { compareValues, createTable, defineColumns } from "./core";
 import { init } from "./model";
 
 type Person = Readonly<{
@@ -49,5 +49,16 @@ describe("createTable", () => {
 
     expect(table.rows.map((row) => row.id)).toEqual(["one", "two"]);
     expect(rows.map((row) => row.id)).toEqual(["two", "one"]);
+  });
+});
+
+describe("compareValues", () => {
+  it("orders nulls, booleans, numbers, and strings deterministically", () => {
+    expect(compareValues(null, "value")).toBeLessThan(0);
+    expect(compareValues(undefined, false)).toBeLessThan(0);
+    expect(compareValues(false, true)).toBeLessThan(0);
+    expect(compareValues(2, 10)).toBeLessThan(0);
+    expect(compareValues("item 2", "item 10")).toBeLessThan(0);
+    expect(compareValues("Same", "same")).toBe(0);
   });
 });

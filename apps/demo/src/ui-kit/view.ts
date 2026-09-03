@@ -1,4 +1,5 @@
-import type { Html, HtmlBuilder } from "foldkit/html";
+import { type Html, type HtmlBuilder } from "foldkit/html";
+import { defineView } from "foldkit/submodel";
 
 import { CalendarDays, Check, Eye, Plus, Send, Settings, User } from "@lucide/icons";
 import {
@@ -13,14 +14,14 @@ import {
   Toolbar,
 } from "@foldworks/ui";
 
-import { Message } from "../workflow/message";
-import type { Model } from "../workflow/model";
+import { Message } from "./message";
+import type { Model } from "./model";
 import { className, uiKitStyles as styles } from "./styles";
 
 const uiKitDepartmentFromString = (
   value: string,
-  fallback: Model["uiKitDepartment"],
-): Model["uiKitDepartment"] =>
+  fallback: Model["department"],
+): Model["department"] =>
   value === "Engineering" || value === "Operations" || value === "People"
     ? value
     : fallback;
@@ -48,11 +49,11 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
                 gap: "sm",
                 wrap: true,
                 children: [
-                  Button.view({ label: "Primary", onClick: Message.ClickedUiKitAction({ action: "Primary" }) }, h),
-                  Button.view({ label: "Secondary", variant: "secondary", onClick: Message.ClickedUiKitAction({ action: "Secondary" }) }, h),
-                  Button.view({ label: "Outline", variant: "outline", onClick: Message.ClickedUiKitAction({ action: "Outline" }) }, h),
-                  Button.view({ label: "Ghost", variant: "ghost", onClick: Message.ClickedUiKitAction({ action: "Ghost" }) }, h),
-                  Button.view({ label: "Danger", variant: "danger", onClick: Message.ClickedUiKitAction({ action: "Danger" }) }, h),
+                  Button.view({ label: "Primary", onClick: Message.ClickedAction({ action: "Primary" }) }, h),
+                  Button.view({ label: "Secondary", variant: "secondary", onClick: Message.ClickedAction({ action: "Secondary" }) }, h),
+                  Button.view({ label: "Outline", variant: "outline", onClick: Message.ClickedAction({ action: "Outline" }) }, h),
+                  Button.view({ label: "Ghost", variant: "ghost", onClick: Message.ClickedAction({ action: "Ghost" }) }, h),
+                  Button.view({ label: "Danger", variant: "danger", onClick: Message.ClickedAction({ action: "Danger" }) }, h),
                 ],
               }, h),
             ], h),
@@ -62,14 +63,14 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
                 gap: "sm",
                 wrap: true,
                 children: [
-                  Button.view({ label: "Small", size: "sm", variant: "outline", onClick: Message.ClickedUiKitAction({ action: "Small" }) }, h),
-                  Button.view({ label: "Medium", onClick: Message.ClickedUiKitAction({ action: "Medium" }) }, h),
-                  Button.view({ icon: Plus, size: "icon", ariaLabel: "Create item", onClick: Message.ClickedUiKitAction({ action: "Create item" }) }, h),
-                  Button.view({ label: "With icon", icon: Check, variant: "secondary", onClick: Message.ClickedUiKitAction({ action: "Icon" }) }, h),
+                  Button.view({ label: "Small", size: "sm", variant: "outline", onClick: Message.ClickedAction({ action: "Small" }) }, h),
+                  Button.view({ label: "Medium", onClick: Message.ClickedAction({ action: "Medium" }) }, h),
+                  Button.view({ icon: Plus, size: "icon", ariaLabel: "Create item", onClick: Message.ClickedAction({ action: "Create item" }) }, h),
+                  Button.view({ label: "With icon", icon: Check, variant: "secondary", onClick: Message.ClickedAction({ action: "Icon" }) }, h),
                   Button.view({ label: "Disabled", isDisabled: true }, h),
                 ],
               }, h),
-              Button.view({ label: "Full-width action", isFullWidth: true, variant: "outline", onClick: Message.ClickedUiKitAction({ action: "Full-width" }) }, h),
+              Button.view({ label: "Full-width action", isFullWidth: true, variant: "outline", onClick: Message.ClickedAction({ action: "Full-width" }) }, h),
             ], h),
           ],
         }, h),
@@ -141,17 +142,17 @@ const fieldsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
               id: "ui-kit-name",
               label: "Display name",
               description: "A controlled text input.",
-              value: model.uiKitName,
+              value: model.name,
               placeholder: "Enter a name",
-              onInput: (value) => Message.ChangedUiKitName({ value }),
+              onInput: (value) => Message.ChangedName({ value }),
             }, h),
             Field.select({
               id: "ui-kit-department",
               label: "Department",
               description: "A labeled native select.",
-              value: model.uiKitDepartment,
-              onChange: (value) => Message.SelectedUiKitDepartment({
-                value: uiKitDepartmentFromString(value, model.uiKitDepartment),
+              value: model.department,
+              onChange: (value) => Message.SelectedDepartment({
+                value: uiKitDepartmentFromString(value, model.department),
               }),
               options: [
                 { value: "Engineering", label: "Engineering" },
@@ -176,8 +177,8 @@ const fieldsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
                 id: "ui-kit-notes",
                 label: "Notes",
                 description: "Textarea resizing remains available to the user.",
-                value: model.uiKitNotes,
-                onInput: (value) => Message.ChangedUiKitNotes({ value }),
+                value: model.notes,
+                onInput: (value) => Message.ChangedNotes({ value }),
               }, h),
             ]),
           ]),
@@ -198,23 +199,23 @@ const controlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
           children: [
             group("Segmented control", [
               SegmentedControl.view({
-                value: model.uiKitView,
+                value: model.selectedView,
                 ariaLabel: "UI kit view",
                 options: [
                   { value: "Overview", label: "Overview" },
                   { value: "Details", label: "Details" },
                   { value: "Activity", label: "Activity" },
                 ],
-                onChange: (value) => Message.SelectedUiKitView({ value }),
+                onChange: (value) => Message.SelectedView({ value }),
               }, h),
             ], h),
             group("Compact select", [
               h.div([h.Class(className(styles.compactControl))], [
                 Select.control({
-                  value: model.uiKitDepartment,
+                  value: model.department,
                   ariaLabel: "Compact department",
-                  onChange: (value) => Message.SelectedUiKitDepartment({
-                    value: uiKitDepartmentFromString(value, model.uiKitDepartment),
+                  onChange: (value) => Message.SelectedDepartment({
+                    value: uiKitDepartmentFromString(value, model.department),
                   }),
                   options: [
                     { value: "Engineering", label: "Engineering" },
@@ -270,8 +271,8 @@ const toolbarPanel = (h: HtmlBuilder<Message>): Html =>
               description: "Last edited a few seconds ago",
               leading: [Badge.view({ label: "Draft", tone: "warning" }, h)],
               actions: [
-                Button.view({ label: "Preview", icon: Eye, variant: "outline", size: "sm", onClick: Message.ClickedUiKitAction({ action: "Preview" }) }, h),
-                Button.view({ label: "Publish", icon: Send, size: "sm", onClick: Message.ClickedUiKitAction({ action: "Publish" }) }, h),
+                Button.view({ label: "Preview", icon: Eye, variant: "outline", size: "sm", onClick: Message.ClickedAction({ action: "Preview" }) }, h),
+                Button.view({ label: "Publish", icon: Send, size: "sm", onClick: Message.ClickedAction({ action: "Publish" }) }, h),
               ],
             }, h),
           ]),
@@ -333,3 +334,5 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
       ]),
     ]),
   ]);
+
+export const view = defineView<Model, Message>((model, h) => uiKitView(model, h));

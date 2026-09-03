@@ -1,3 +1,5 @@
+import type { NodeTypeRegistry } from "./registry";
+
 export type Flow<Node> = Readonly<{
   id: string;
   label: string;
@@ -23,11 +25,6 @@ export type LocatedElement<Node> = Readonly<{
   flow: Flow<Node>;
   index: number;
   element: Node;
-}>;
-
-export type StructuredWorkflowOperationsConfig<Node> = Readonly<{
-  isMovable?: (node: Node) => boolean;
-  isDeletable?: (node: Node) => boolean;
 }>;
 
 const mapFlow = <Node extends ElementShape<Node>>(
@@ -58,9 +55,9 @@ const descendantFlowIds = <Node extends ElementShape<Node>>(
 
 export const createStructuredWorkflowOperations = <
   Node extends ElementShape<Node>,
->(config: StructuredWorkflowOperationsConfig<Node> = {}) => {
-  const isMovable = config.isMovable ?? (() => true);
-  const isDeletable = config.isDeletable ?? isMovable;
+>(nodeTypes: NodeTypeRegistry<Node> = {}) => {
+  const isMovable = (node: Node) => nodeTypes[node.type]?.movable ?? true;
+  const isDeletable = (node: Node) => nodeTypes[node.type]?.deletable ?? true;
 
   const findFlow = (
     document: WorkflowDocument<Node>,
@@ -190,14 +187,15 @@ export const createStructuredWorkflowOperations = <
     document: WorkflowDocument<Node>,
     elementId: string,
     update: (element: Node) => Node,
-  ): WorkflowDocument<Node> => ({
-    root: mapFlow(document.root, (flow) => ({
+  ): WorkflowDocument<Node> | undefined => {
+    if (findElement(document, elementId) === undefined) return undefined;
+    return { root: mapFlow(document.root, (flow) => ({
       ...flow,
       elements: flow.elements.map((element) =>
         element.id === elementId ? update(element) : element,
       ),
-    })),
-  });
+    })) };
+  };
 
   const elements = (document: WorkflowDocument<Node>): ReadonlyArray<Node> => {
     const result: Node[] = [];

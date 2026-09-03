@@ -4,9 +4,17 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "@lucide/icons";
 import * as Icon from "@foldworks/ui/icon";
 
-import { createTable, type CellValue, type ColumnDef } from "./core";
+import {
+  createTable,
+  DEFAULT_COLUMN_WIDTH,
+  MAX_COLUMN_WIDTH,
+  MIN_COLUMN_WIDTH,
+  columnWidth,
+  type CellValue,
+  type ColumnDef,
+} from "./core";
 import { Message } from "./message";
-import { columnWidth, type Model } from "./model";
+import type { Model } from "./model";
 
 export type ViewConfig<Row, ParentMessage> = Readonly<{
   model: Model;
@@ -140,10 +148,10 @@ export const view = <Row, ParentMessage>(
                                           width: columnWidth(
                                             config.model,
                                             definition.id,
-                                            definition.width ?? 160,
+                                            definition.width ?? DEFAULT_COLUMN_WIDTH,
                                           ),
-                                          minimumWidth: definition.minimumWidth ?? 72,
-                                          maximumWidth: definition.maximumWidth ?? 640,
+                                          minimumWidth: definition.minimumWidth ?? MIN_COLUMN_WIDTH,
+                                          maximumWidth: definition.maximumWidth ?? MAX_COLUMN_WIDTH,
                                         }),
                                       ),
                                     )
@@ -153,7 +161,7 @@ export const view = <Row, ParentMessage>(
                                 config.toParentMessage(
                                   Message.ResetColumnSize({
                                     columnId: definition.id,
-                                    width: definition.width ?? 160,
+                                    width: definition.width ?? DEFAULT_COLUMN_WIDTH,
                                   }),
                                 ),
                               ),

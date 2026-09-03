@@ -436,6 +436,7 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
 };
 
 export const FLOW_TARGET_PREFIX = "flow-target:";
+export const FLOW_CONTAINER_PREFIX = "flow-container:";
 
 export const flowLocationId = (location: FlowLocation): string =>
   `${FLOW_TARGET_PREFIX}${encodeURIComponent(location.flowId)}:${location.index}`;
@@ -449,6 +450,20 @@ export const flowLocationFromId = (value: string): FlowLocation | undefined => {
   if (!Number.isInteger(index) || index < 0) return undefined;
   try {
     return { flowId: decodeURIComponent(encoded.slice(0, separator)), index };
+  } catch {
+    return undefined;
+  }
+};
+
+export const flowContainerId = (flowId: string): string =>
+  `${FLOW_CONTAINER_PREFIX}${encodeURIComponent(flowId)}`;
+
+export const flowIdFromContainerId = (value: string): string | undefined => {
+  if (!value.startsWith(FLOW_CONTAINER_PREFIX)) return undefined;
+  const encodedFlowId = value.slice(FLOW_CONTAINER_PREFIX.length);
+  if (encodedFlowId.length === 0) return undefined;
+  try {
+    return decodeURIComponent(encodedFlowId);
   } catch {
     return undefined;
   }

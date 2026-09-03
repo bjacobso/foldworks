@@ -1,6 +1,8 @@
 import { Option, Schema as S } from "effect";
 import { defineTaggedUnion } from "foldkit/schema";
 
+import { DEFAULT_COLUMN_WIDTH, type ColumnDef } from "./core";
+
 export const SortDirection = S.Literals(["Ascending", "Descending"]);
 export type SortDirection = typeof SortDirection.Type;
 
@@ -43,17 +45,10 @@ export const Model = S.Struct({
 });
 export type Model = typeof Model.Type;
 
-export type InitialColumn = Readonly<{
+export type InitConfig<Row = unknown, ParentMessage = never> = Readonly<{
   id: string;
-  width?: number;
+  columns: ReadonlyArray<Pick<ColumnDef<Row, ParentMessage>, "id" | "width">>;
 }>;
-
-export type InitConfig = Readonly<{
-  id: string;
-  columns: ReadonlyArray<InitialColumn>;
-}>;
-
-export const DEFAULT_COLUMN_WIDTH = 160;
 
 export const init = (config: InitConfig): Model => ({
   id: config.id,
@@ -65,10 +60,3 @@ export const init = (config: InitConfig): Model => ({
   })),
   resizeState: ResizeState.Idle(),
 });
-
-export const columnWidth = (
-  model: Model,
-  columnId: string,
-  fallback = DEFAULT_COLUMN_WIDTH,
-): number =>
-  model.columnSizes.find((size) => size.columnId === columnId)?.width ?? fallback;

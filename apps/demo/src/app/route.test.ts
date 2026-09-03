@@ -18,8 +18,7 @@ const parseUrl = (url: string) =>
 
 describe("demo routes", () => {
   it("builds stable paths for each demo", () => {
-    expect(workflowPath("Horizontal"))
-      .toBe("/workflow?orientation=Horizontal");
+    expect(workflowPath("Horizontal")).toBe("/workflow?orientation=Horizontal");
     expect(dataGridRouter()).toBe("/data-grid");
     expect(formBuilderPath("Complex", "Preview"))
       .toBe("/form-builder?example=Complex&mode=Preview");

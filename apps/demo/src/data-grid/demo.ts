@@ -1,9 +1,10 @@
-import type { Html, HtmlBuilder } from "foldkit/html";
+import { type Html, type HtmlBuilder } from "foldkit/html";
+import { defineView } from "foldkit/submodel";
 
 import { DataGrid } from "@foldworks/data-grid";
 
-import { Message } from "../workflow/message";
-import type { Model } from "../workflow/model";
+import { Message } from "./message";
+import type { Model } from "./model";
 import { className } from "../workflow/styles";
 import { dataGridStyles, statusStyles } from "./styles";
 
@@ -149,11 +150,11 @@ export const dataGridView = (
       ]),
       DataGrid.view(
         {
-          model: model.dataGrid,
+          model: model.grid,
           columns,
           rows: people,
           getRowId: (person) => person.id,
-          toParentMessage: (message) => Message.GotDataGridMessage({ message }),
+          toParentMessage: (message) => Message.GotGridMessage({ message }),
           label: "Team directory",
           rowHeight: 52,
           appearance: "embedded",
@@ -166,3 +167,5 @@ export const dataGridView = (
       ]),
     ]),
   ]);
+
+export const view = defineView<Model, Message>((model, h) => dataGridView(model, h));

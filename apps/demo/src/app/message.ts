@@ -1,0 +1,26 @@
+import { Schema as S } from "effect";
+import { defineMessageUnion } from "foldkit/message";
+import { UrlRequest } from "foldkit/navigation";
+import { Url } from "foldkit/url";
+
+import { Message as DataGridMessage } from "../data-grid/message";
+import { Message as FormEditorMessage } from "../form-builder/message";
+import { ThemePreference } from "../theme";
+import { Message as UiKitMessage } from "../ui-kit/message";
+import { Message as WorkflowEditorMessage } from "../workflow/message";
+
+export const Message = defineMessageUnion({
+  ClickedLink: { request: UrlRequest },
+  ChangedUrl: { url: Url },
+  CompletedNavigateInternal: {},
+  CompletedLoadExternal: {},
+  CompletedApplyThemePreference: {},
+  CompletedPersistWorkspace: { succeeded: S.Boolean },
+  ChangedSystemTheme: { isDark: S.Boolean },
+  SelectedThemePreference: { preference: ThemePreference },
+  GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
+  GotFormEditorMessage: { message: FormEditorMessage },
+  GotDataGridDemoMessage: { message: DataGridMessage },
+  GotUiKitMessage: { message: UiKitMessage },
+});
+export type Message = typeof Message.Type;

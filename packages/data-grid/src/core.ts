@@ -1,7 +1,11 @@
 import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { columnWidth, type Model, type SortDirection } from "./model";
+import type { Model, SortDirection } from "./model";
+
+export const DEFAULT_COLUMN_WIDTH = 160;
+export const MIN_COLUMN_WIDTH = 72;
+export const MAX_COLUMN_WIDTH = 640;
 
 export type CellValue = string | number | boolean | null | undefined;
 
@@ -72,7 +76,7 @@ export type CreateTableConfig<Row, ParentMessage> = Readonly<{
   getRowId: (row: Row) => string;
 }>;
 
-const compareValues = (left: CellValue, right: CellValue): number => {
+export const compareValues = (left: CellValue, right: CellValue): number => {
   if (left === right) return 0;
   if (left === null || left === undefined) return -1;
   if (right === null || right === undefined) return 1;
@@ -85,6 +89,13 @@ const compareValues = (left: CellValue, right: CellValue): number => {
     sensitivity: "base",
   });
 };
+
+export const columnWidth = (
+  model: Model,
+  columnId: string,
+  fallback = DEFAULT_COLUMN_WIDTH,
+): number =>
+  model.columnSizes.find((size) => size.columnId === columnId)?.width ?? fallback;
 
 export const createTable = <Row, ParentMessage>(
   config: CreateTableConfig<Row, ParentMessage>,
@@ -109,7 +120,7 @@ export const createTable = <Row, ParentMessage>(
     width: columnWidth(
       config.model,
       definition.id,
-      definition.width ?? 160,
+      definition.width ?? DEFAULT_COLUMN_WIDTH,
     ),
     sortDirection:
       sorting?.columnId === definition.id ? sorting.direction : undefined,

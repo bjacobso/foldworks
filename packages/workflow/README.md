@@ -24,8 +24,9 @@ const nodeTypes = defineNodeTypes({
     palette: {
       label: "Action",
       description: "Run an operation",
-      symbol: "‹›",
     },
+    movable: true,
+    deletable: true,
     render: ActionNode.view,
   },
 })
@@ -38,3 +39,11 @@ cases.
 Pass `orientation: "Horizontal"` to `createStructuredLayout` for a left-to-right
 graph. The default is `"Vertical"`. Use the same orientation when initializing
 `Workflow.init` so pointer and keyboard drag behavior follows the rendered axis.
+The interaction defaults to an 8px activation threshold.
+
+`paletteItemId` and `paletteTypeFromId` own palette identifiers. `applyReorder`
+decodes a `Workflow.OutMessage.Reordered` and applies either `insertElement` or
+`moveElement`; the application supplies `createFromPalette` and therefore keeps
+ownership of node construction. For sortable keyboard movement, render nodes
+inside the `flowContainerId(flow.id)` droppable and pass that same id to
+`Workflow.draggable`.

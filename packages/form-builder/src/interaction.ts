@@ -1,21 +1,18 @@
-import { Option } from "effect";
-
 import { DragAndDrop } from "@foldkit/ui";
 
-import { dropLocationFromId } from "./document";
-
 export const DEFAULT_ACTIVATION_THRESHOLD = 8;
+export const DEFAULT_ID = "form-builder-drag-and-drop";
 
-export const maybeDropLocation = (model: DragAndDrop.Model) =>
-  Option.flatMap(DragAndDrop.maybeDropTarget(model), ({ containerId }) =>
-    Option.fromNullishOr(dropLocationFromId(containerId)),
-  );
+export type InitConfig = Readonly<
+  Partial<Pick<DragAndDrop.InitConfig, "id" | "orientation" | "activationThreshold">>
+>;
 
-export const init = (config: Omit<DragAndDrop.InitConfig, "orientation">) =>
+export const init = (config: InitConfig = {}) =>
   DragAndDrop.init({
     ...config,
+    id: config.id ?? DEFAULT_ID,
     activationThreshold: config.activationThreshold ?? DEFAULT_ACTIVATION_THRESHOLD,
-    orientation: "Vertical",
+    orientation: config.orientation ?? "Vertical",
   });
 
 export const Model = DragAndDrop.Model;

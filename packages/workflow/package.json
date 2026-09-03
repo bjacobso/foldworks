@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@foldkit/ui": "catalog:",
-    "effect": "catalog:",
-    "foldkit": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "typescript": "catalog:",

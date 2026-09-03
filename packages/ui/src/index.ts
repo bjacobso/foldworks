@@ -8,4 +8,4 @@ export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";
 export * as Toolbar from "./toolbar";
 export { colors, metrics } from "./tokens.stylex";
-export { sxAttrs, type ElementAttribute } from "./sx";
+export { sxAttrs } from "./sx";

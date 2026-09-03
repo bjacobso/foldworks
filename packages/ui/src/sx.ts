@@ -1,7 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import type { Attribute, ChildAttribute, HtmlBuilder } from "foldkit/html";
-
-export type ElementAttribute<Message> = Attribute<Message> | ChildAttribute;
+import type { Attribute, HtmlBuilder } from "foldkit/html";
 
 export const sxAttrs = <Message>(
   h: HtmlBuilder<Message>,

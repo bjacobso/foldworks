@@ -1,15 +1,81 @@
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { Workflow, flowLocationId } from "@foldworks/workflow";
-import { findField } from "@foldworks/form-builder";
-
+import {
+  Workflow,
+  flowContainerId,
+  flowIdFromContainerId,
+  flowLocationId,
+} from "@foldworks/workflow";
 import { allNodes, findFlow, findNode } from "./graph";
 import { Message } from "./message";
-import { initialModel } from "./model";
+import { init, initialModel, type WorkflowDocument, type WorkflowNode } from "./model";
 import { update } from "./update";
 
 describe("workflow update", () => {
+  it("moves a node with keyboard pickup, ArrowDown, and drop", () => {
+    const action = (id: string): WorkflowNode => ({
+      id,
+      type: "action",
+      data: { title: id, description: "", size: "default" },
+      branches: [],
+    });
+    const document: WorkflowDocument = {
+      root: {
+        id: "flow:root",
+        label: "",
+        elements: [action("first"), action("second"), action("third")],
+      },
+    };
+    const sourceContainer = flowContainerId(document.root.id);
+    const pickedUp = update(
+      init(document),
+      Message.GotWorkflowMessage({
+        message: Workflow.Message.ActivatedKeyboardDrag({
+          itemId: "first",
+          containerId: sourceContainer,
+          index: 0,
+        }),
+      }),
+    ).model;
+    const arrowed = update(
+      pickedUp,
+      Message.GotWorkflowMessage({
+        message: Workflow.Message.PressedArrowKey({ direction: "Down" }),
+      }),
+    );
+    expect(arrowed.commands).toHaveLength(1);
+
+    const resolved = update(
+      arrowed.model,
+      Message.GotWorkflowMessage({
+        message: Workflow.Message.CompletedResolveKeyboardMove({
+          targetContainerId: sourceContainer,
+          targetIndex: 1,
+        }),
+      }),
+    ).model;
+    const childDrop = Workflow.update(
+      resolved.workflow,
+      Workflow.Message.ConfirmedKeyboardDrop(),
+    ).outMessage;
+    expect(childDrop?._tag).toBe("Reordered");
+    if (childDrop?._tag !== "Reordered") throw new Error("Expected a reorder");
+    expect(flowIdFromContainerId(childDrop.toContainerId)).toBe("flow:root");
+
+    const dropped = update(
+      resolved,
+      Message.GotWorkflowMessage({
+        message: Workflow.Message.ConfirmedKeyboardDrop(),
+      }),
+    ).model;
+    expect(dropped.document.root.elements.map((node) => node.id)).toEqual([
+      "second",
+      "first",
+      "third",
+    ]);
+  });
+
   it("folds a completed Foldkit drag into a nested flow insertion", () => {
     const itemId = "palette:approval";
     const targetId = flowLocationId({ flowId: "flow:condition:then", index: 0 });
@@ -67,11 +133,11 @@ describe("workflow update", () => {
     expect(allNodes(added.document)).toHaveLength(6);
     expect(added.workflowHistory.past).toHaveLength(1);
 
-    const undone = update(added, Message.ClickedUndo({ editor: "Workflow" })).model;
+    const undone = update(added, Message.ClickedUndo()).model;
     expect(allNodes(undone.document)).toHaveLength(5);
     expect(undone.workflowHistory.future).toHaveLength(1);
 
-    const redone = update(undone, Message.ClickedRedo({ editor: "Workflow" })).model;
+    const redone = update(undone, Message.ClickedRedo()).model;
     expect(allNodes(redone.document)).toHaveLength(6);
   });
 
@@ -81,22 +147,8 @@ describe("workflow update", () => {
     const second = update(first, Message.ChangedSelectedNodeTitle({ value: "Run checks" })).model;
     expect(second.workflowHistory.past).toHaveLength(1);
 
-    const undone = update(second, Message.ClickedUndo({ editor: "Workflow" })).model;
+    const undone = update(second, Message.ClickedUndo()).model;
     expect(findNode(undone.document, "node-action")?.data.title).toBe("Action");
   });
 
-  it("coalesces form text edits and keeps each example draft independent", () => {
-    const selected = update(
-      initialModel,
-      Message.SelectedFormItem({ kind: "Field", id: "handoff-name" }),
-    ).model;
-    const first = update(selected, Message.ChangedFormItemTitle({ value: "Legal name" })).model;
-    const second = update(first, Message.ChangedFormItemTitle({ value: "Full legal name" })).model;
-    expect(second.formHistory.past).toHaveLength(1);
-    expect(second.formDocuments.Handoff).toBe(second.formDocument);
-    expect(second.formDocuments.Simple).toBe(initialModel.formDocuments.Simple);
-
-    const undone = update(second, Message.ClickedUndo({ editor: "Form" })).model;
-    expect(findField(undone.formDocument, "handoff-name")?.label).toBe("Preferred name");
-  });
 });

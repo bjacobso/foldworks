@@ -15,7 +15,7 @@ import {
   type FieldTypeDefinition,
 } from "@foldworks/form-builder";
 
-import { Message } from "../workflow/message";
+import { Message } from "./message";
 import type { FieldKind, FormField } from "./model";
 import { className, formStyles } from "./styles";
 

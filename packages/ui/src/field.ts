@@ -1,4 +1,4 @@
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { Input, Select, Textarea } from "@foldkit/ui";
 
@@ -13,8 +13,24 @@ type CommonConfig = Readonly<{
   density?: "default" | "compact";
 }>;
 
-const descriptionView = <Message>(description: string | undefined, h: HtmlBuilder<Message>) =>
-  description === undefined ? [] : [h.p(sxAttrs(h, fieldStyles.description), [description])];
+const descriptionView = <Message>(
+  description: string | undefined,
+  attributes: ReadonlyArray<Attribute<Message>>,
+  h: HtmlBuilder<Message>,
+) => description === undefined
+  ? [h.span([
+      ...attributes,
+      h.Style({
+        clip: "rect(0 0 0 0)",
+        clipPath: "inset(50%)",
+        height: "1px",
+        overflow: "hidden",
+        position: "absolute",
+        whiteSpace: "nowrap",
+        width: "1px",
+      }),
+    ], [])]
+  : [h.p([...attributes, ...sxAttrs(h, fieldStyles.description)], [description])];
 
 export const input = <Message>(
   config: CommonConfig & Readonly<{
@@ -35,7 +51,7 @@ export const input = <Message>(
     toView: (attributes) => h.div(sxAttrs(h, fieldStyles.root), [
       h.label([...attributes.label, ...sxAttrs(h, fieldStyles.label)], [config.label]),
       h.input([...attributes.input, ...sxAttrs(h, fieldStyles.control, config.density === "compact" && fieldStyles.compact)]),
-      ...descriptionView(config.description, h),
+      ...descriptionView(config.description, attributes.description, h),
     ]),
   },
   h,
@@ -53,7 +69,7 @@ export const textarea = <Message>(
     toView: (attributes) => h.div(sxAttrs(h, fieldStyles.root), [
       h.label([...attributes.label, ...sxAttrs(h, fieldStyles.label)], [config.label]),
       h.textarea([...attributes.textarea, ...sxAttrs(h, fieldStyles.control, fieldStyles.textarea)]),
-      ...descriptionView(config.description, h),
+      ...descriptionView(config.description, attributes.description, h),
     ]),
   },
   h,
@@ -81,7 +97,7 @@ export const select = <Message>(
           [option.label],
         )),
       ),
-      ...descriptionView(config.description, h),
+      ...descriptionView(config.description, attributes.description, h),
     ]),
   },
   h,

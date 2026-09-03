@@ -7,6 +7,10 @@ export const create = <Styles extends Record<string, unknown>>(
     [Key in keyof Styles]: string;
   };
 
+export const defineConsts = <const Values extends Record<string, string>>(
+  values: Values,
+): Values => values;
+
 export const props = (...styles: ReadonlyArray<StyleXStyles>) => ({
   className: styles.filter((style): style is string => typeof style === "string").join(" "),
 });

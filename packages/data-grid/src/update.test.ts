@@ -11,6 +11,12 @@ const model = () => init({
 });
 
 describe("update", () => {
+  it("ignores resize movement while idle", () => {
+    const idle = model();
+    expect(update(idle, Message.MovedColumnResize({ screenX: 400 })).model)
+      .toBe(idle);
+  });
+
   it("cycles a column through ascending, descending, and unsorted", () => {
     const ascending = update(model(), Message.ToggledSort({ columnId: "name" })).model;
     const descending = update(
@@ -39,6 +45,22 @@ describe("update", () => {
     });
   });
 
+  it("starts a different sort column in ascending order", () => {
+    const descending = update(
+      update(model(), Message.ToggledSort({ columnId: "name" })).model,
+      Message.ToggledSort({ columnId: "name" }),
+    ).model;
+    const changed = update(
+      descending,
+      Message.ToggledSort({ columnId: "department" }),
+    ).model;
+
+    expect(Option.getOrUndefined(changed.sorting)).toEqual({
+      columnId: "department",
+      direction: "Ascending",
+    });
+  });
+
   it("clamps a resize and restores the configured width on reset", () => {
     const resizing = update(
       model(),
@@ -61,5 +83,17 @@ describe("update", () => {
 
     expect(widened.columnSizes[0]?.width).toBe(240);
     expect(reset.columnSizes[0]?.width).toBe(180);
+  });
+
+  it("appends a width for a column that was not initialized", () => {
+    const resized = update(
+      model(),
+      Message.ResetColumnSize({ columnId: "department", width: 210 }),
+    ).model;
+
+    expect(resized.columnSizes).toEqual([
+      { columnId: "name", width: 180 },
+      { columnId: "department", width: 210 },
+    ]);
   });
 });

@@ -1,51 +1,39 @@
 import { Option } from "effect";
-import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
+import { type Html, type HtmlBuilder } from "foldkit/html";
+import { defineView } from "foldkit/submodel";
 
 import { Button, Dialog } from "@foldkit/ui";
 import {
-  Blocks,
   Download,
   GripVertical,
-  ListChecks,
   Plus,
   Redo2,
   RotateCcw,
-  Table2,
   Undo2,
   Upload,
-  Workflow as WorkflowIcon,
   X,
 } from "@lucide/icons";
-import { Workflow } from "@foldworks/workflow";
-import * as History from "@foldworks/history";
 import {
-  Badge as UiBadge,
+  Workflow,
+  flowContainerId,
+  paletteItemId,
+  paletteTypeFromId,
+} from "@foldworks/workflow";
+import { History } from "@foldworks/history";
+import {
   Button as UiButton,
   Field as UiField,
   Icon as UiIcon,
   SegmentedControl as UiSegmentedControl,
-  Select as UiSelect,
-  Toolbar as UiToolbar,
 } from "@foldworks/ui";
-
-import { dataGridView, people } from "../data-grid/demo";
 import {
-  formBuilderToolbarActions,
-  formBuilderView,
-  formGhostView,
-  formPaletteView,
-} from "../form-builder/view";
-import { uiKitView } from "../ui-kit/view";
-import {
-  GRAPH_CONTAINER_ID,
   PALETTE_CONTAINER_ID,
-  allNodes,
   canMoveNode,
   dropTargetId,
   findNode,
-  kindFromPaletteItem,
+  isNodeKind,
   nodeSubtree,
-  paletteItemId,
+  operations,
   previewDocumentForDrop,
   type NodeSubtree,
 } from "./graph";
@@ -58,6 +46,7 @@ import { Message } from "./message";
 import {
   type Model,
   type NodeKind,
+  type WorkflowFlow,
   type WorkflowNode,
 } from "./model";
 import {
@@ -65,13 +54,6 @@ import {
   nodeSizes,
   nodeTypes,
 } from "./node-types";
-import {
-  dataGridRouter,
-  demoFromRoute,
-  formBuilderPath,
-  uiKitRouter,
-  workflowPath,
-} from "./route";
 import {
   className,
   kindStyles,
@@ -134,255 +116,65 @@ const paletteItemView = (
   );
 };
 
-const paletteView = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const demo = demoFromRoute(model.route);
-  return h.aside(
-    [h.Class(className(styles.palette)), h.AriaLabel("Demo navigation and tools")],
-    [
-      h.div([h.Class(className(styles.brandRow))], [
-        h.div([h.Class(className(styles.brandMark)), h.AriaHidden(true)], ["O"]),
-        h.p([h.Class(className(styles.brand))], ["Demo"]),
-      ]),
-      h.nav([h.Class(className(styles.demoNav)), h.AriaLabel("Example views")], [
-        h.a(
-          [
-            h.Href(workflowPath(model.workflow.orientation)),
-            h.Class(className(styles.demoNavItem, demo === "Workflow" && styles.demoNavItemActive)),
-            h.AriaCurrent(demo === "Workflow" ? "page" : "false"),
-          ],
-          [UiIcon.view({ icon: WorkflowIcon, size: 15 }, h), "Workflow builder"],
-        ),
-        h.a(
-          [
-            h.Href(dataGridRouter()),
-            h.Class(className(styles.demoNavItem, demo === "DataGrid" && styles.demoNavItemActive)),
-            h.AriaCurrent(demo === "DataGrid" ? "page" : "false"),
-          ],
-          [UiIcon.view({ icon: Table2, size: 15 }, h), "Data grid"],
-        ),
-        h.a(
-          [
-            h.Href(formBuilderPath(model.formExampleId, model.formMode)),
-            h.Class(className(styles.demoNavItem, demo === "FormBuilder" && styles.demoNavItemActive)),
-            h.AriaCurrent(demo === "FormBuilder" ? "page" : "false"),
-          ],
-          [UiIcon.view({ icon: ListChecks, size: 15 }, h), "Form builder"],
-        ),
-        h.a(
-          [
-            h.Href(uiKitRouter()),
-            h.Class(className(styles.demoNavItem, demo === "UiKit" && styles.demoNavItemActive)),
-            h.AriaCurrent(demo === "UiKit" ? "page" : "false"),
-          ],
-          [UiIcon.view({ icon: Blocks, size: 15 }, h), "UI components"],
-        ),
-      ]),
-      demo === "Workflow"
-        ? h.div([], [
-            h.p([h.Class(className(styles.paletteLabel))], ["Drag to an insertion point"]),
-            h.ul(
-              [h.Class(className(styles.paletteList))],
-              insertableNodeKinds.map((kind, index) =>
-                paletteItemView(model, kind, index, h),
-              ),
-            ),
-          ])
-        : demo === "DataGrid"
-          ? h.div([h.Class(className(styles.gridFeatureList))], [
-              h.p([h.Class(className(styles.paletteLabel))], ["Initial grid primitives"]),
-              h.p([], ["Typed column definitions"]),
-              h.p([], ["Headless derived row model"]),
-              h.p([], ["Sorting and custom cells"]),
-              h.p([], ["Keyboard selection"]),
-              h.p([], ["Resizable columns"]),
-            ])
-          : demo === "FormBuilder"
-            ? formPaletteView(model, h)
-            : h.div([h.Class(className(styles.gridFeatureList))], [
-                h.p([h.Class(className(styles.paletteLabel))], ["Design system"]),
-                h.p([], ["Shared semantic tokens"]),
-                h.p([], ["Foldkit-native controls"]),
-                h.p([], ["All component variants"]),
-                h.p([], ["Controlled interaction states"]),
-                h.p([], ["Reusable composition"]),
-              ]),
-      h.p(
-        [h.Class(className(styles.paletteHint))],
-        [
-          demo === "Workflow"
-            ? "Node types, sizes, branches, and views are registered by this application. The workflow package owns structure and interaction."
-            : demo === "DataGrid"
-              ? "The application owns row data and cell rendering. The package owns table derivation and interaction state."
-              : demo === "FormBuilder"
-                ? "Sections define journey order and reference actors. Drag fields between pages, pages between sections, and sections across the document."
-                : "The UI package owns visual primitives and accessible Foldkit composition. Applications keep control of their data and messages.",
-        ],
-      ),
-    ],
-  );
-};
+const paletteView = (model: Model, h: HtmlBuilder<Message>): Html => h.div([], [
+  h.p([h.Class(className(styles.paletteLabel))], ["Drag to an insertion point"]),
+  h.ul(
+    [h.Class(className(styles.paletteList))],
+    insertableNodeKinds.map((kind, index) => paletteItemView(model, kind, index, h)),
+  ),
+]);
 
-const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const demo = demoFromRoute(model.route);
-  const editor = demo === "Workflow"
-    ? "Workflow"
-    : demo === "FormBuilder" && model.formMode === "Editor"
-      ? "Form"
-      : undefined;
-  const canUndo = editor === "Workflow"
-    ? History.canUndo(model.workflowHistory)
-    : editor === "Form" && History.canUndo(model.formHistory);
-  const canRedo = editor === "Workflow"
-    ? History.canRedo(model.workflowHistory)
-    : editor === "Form" && History.canRedo(model.formHistory);
-  const persistenceBadge = model.persistenceStatus === "Saved"
-    ? UiBadge.view({ label: "Saved locally", tone: "success", dot: true }, h)
-    : model.persistenceStatus === "Saving"
-      ? UiBadge.view({ label: "Saving", dot: true }, h)
-      : UiBadge.view({ label: "Save failed", tone: "danger", dot: true }, h);
-  return UiToolbar.view(
-    {
-      title: demo === "Workflow"
-        ? "Candidate workflow"
-        : demo === "DataGrid"
-          ? "People operations"
-          : demo === "FormBuilder"
-            ? model.formDocument.title
-            : "Foldkit UI",
-      description: demo === "Workflow"
-        ? `${allNodes(model.document).length} nodes · structured auto-layout`
-        : demo === "DataGrid"
-          ? `${people.length} people · controlled Foldkit data grid`
-          : demo === "FormBuilder"
-            ? `${model.formDocument.sections.length} sections · ${model.formDocument.actors.length} actors`
-            : "9 opinionated primitives · shared semantic tokens",
-      actions: [
-        ...(demo === "UiKit"
-          ? [
-            UiBadge.view({ label: "9 primitives", tone: "info", dot: true }, h),
-            UiBadge.view({ label: "StyleX + Foldkit" }, h),
-          ]
-          : [
-              ...(demo === "Workflow" || demo === "FormBuilder"
-                ? [persistenceBadge]
-                : []),
-              ...(editor === undefined
-                ? []
-                : [
-                    UiButton.view({
-                      icon: Undo2,
-                      ariaLabel: "Undo",
-                      variant: "ghost",
-                      size: "icon",
-                      isDisabled: !canUndo,
-                      onClick: Message.ClickedUndo({ editor }),
-                      attributes: [
-                        h.Title("Undo (⌘Z)"),
-                        h.AriaKeyshortcuts("Control+Z Meta+Z"),
-                      ],
-                    }, h),
-                    UiButton.view({
-                      icon: Redo2,
-                      ariaLabel: "Redo",
-                      variant: "ghost",
-                      size: "icon",
-                      isDisabled: !canRedo,
-                      onClick: Message.ClickedRedo({ editor }),
-                      attributes: [
-                        h.Title("Redo (⌘⇧Z)"),
-                        h.AriaKeyshortcuts("Control+Shift+Z Meta+Shift+Z"),
-                      ],
-                    }, h),
-                  ]),
-              ...(demo === "Workflow"
-                ? [
-                    UiSegmentedControl.view(
-                      {
-                        value: model.workflow.orientation,
-                        ariaLabel: "Workflow orientation",
-                        options: [
-                          { value: "Vertical", label: "Vertical" },
-                          { value: "Horizontal", label: "Horizontal" },
-                        ],
-                        onChange: (orientation) =>
-                          Message.SelectedWorkflowOrientation({ orientation }),
-                      },
-                      h,
-                    ),
-                    UiButton.view(
-                      {
-                        label: "Reset",
-                        icon: RotateCcw,
-                        ariaLabel: "Reset example",
-                        onClick: Message.ClickedResetWorkflow(),
-                        variant: "outline",
-                        size: "sm",
-                      },
-                      h,
-                    ),
-                    UiButton.view({
-                      label: "Import",
-                      icon: Upload,
-                      onClick: Message.ClickedImportDocument({ editor: "Workflow" }),
-                      variant: "outline",
-                      size: "sm",
-                    }, h),
-                    UiButton.view({
-                      label: "Export",
-                      icon: Download,
-                      onClick: Message.ClickedExportDocument({ editor: "Workflow" }),
-                      variant: "outline",
-                      size: "sm",
-                    }, h),
-                  ]
-                : demo === "DataGrid"
-                  ? [UiBadge.view({ label: "Headless core + DOM view" }, h)]
-                  : [
-                      formBuilderToolbarActions(model, h),
-                      UiButton.view({
-                        label: "Reset",
-                        icon: RotateCcw,
-                        ariaLabel: "Reset example",
-                        onClick: Message.ClickedResetForm(),
-                        variant: "outline",
-                        size: "sm",
-                      }, h),
-                      UiButton.view({
-                        label: "Import",
-                        icon: Upload,
-                        onClick: Message.ClickedImportDocument({ editor: "Form" }),
-                        variant: "outline",
-                        size: "sm",
-                      }, h),
-                      UiButton.view({
-                        label: "Export",
-                        icon: Download,
-                        onClick: Message.ClickedExportDocument({ editor: "Form" }),
-                        variant: "outline",
-                        size: "sm",
-                      }, h),
-                    ]),
-            ]),
-        UiSelect.control(
-          {
-            value: model.themePreference,
-            ariaLabel: "Color theme",
-            onChange: (preference) => Message.SelectedThemePreference({
-              preference: preference as Model["themePreference"],
-            }),
-            options: [
-              { value: "System", label: "System theme" },
-              { value: "Light", label: "Light theme" },
-              { value: "Dark", label: "Dark theme" },
-            ]
-          },
-          h,
-        ),
-      ],
-    },
-    h,
-  );
-};
+const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html => h.div([], [
+  UiButton.view({
+    icon: Undo2,
+    ariaLabel: "Undo",
+    variant: "ghost",
+    size: "icon",
+    isDisabled: !History.canUndo(model.workflowHistory),
+    onClick: Message.ClickedUndo(),
+    attributes: [h.Title("Undo (⌘Z)"), h.AriaKeyshortcuts("Control+Z Meta+Z")],
+  }, h),
+  UiButton.view({
+    icon: Redo2,
+    ariaLabel: "Redo",
+    variant: "ghost",
+    size: "icon",
+    isDisabled: !History.canRedo(model.workflowHistory),
+    onClick: Message.ClickedRedo(),
+    attributes: [h.Title("Redo (⌘⇧Z)"), h.AriaKeyshortcuts("Control+Shift+Z Meta+Shift+Z")],
+  }, h),
+  UiSegmentedControl.view({
+    value: model.workflow.orientation,
+    ariaLabel: "Workflow orientation",
+    options: [
+      { value: "Vertical", label: "Vertical" },
+      { value: "Horizontal", label: "Horizontal" },
+    ],
+    onChange: (orientation) => Message.SelectedOrientation({ orientation }),
+  }, h),
+  UiButton.view({
+    label: "Reset",
+    icon: RotateCcw,
+    ariaLabel: "Reset example",
+    onClick: Message.ClickedReset(),
+    variant: "outline",
+    size: "sm",
+  }, h),
+  UiButton.view({
+    label: "Import",
+    icon: Upload,
+    onClick: Message.ClickedImportDocument(),
+    variant: "outline",
+    size: "sm",
+  }, h),
+  UiButton.view({
+    label: "Export",
+    icon: Download,
+    onClick: Message.ClickedExportDocument(),
+    variant: "outline",
+    size: "sm",
+  }, h),
+]);
 
 const selectedNodeId = (model: Model) => Option.getOrUndefined(model.selectedNodeId);
 
@@ -409,14 +201,15 @@ const nodeView = (
   const isDraggingSubtree = subtree?.nodeIds.has(node.id) === true;
   const isDraggingDescendant = isDraggingSubtree && !isDragging;
   const isSelected = selectedNodeId(model) === node.id;
-  const draggable = canMoveNode(model.document, node.id)
+  const located = operations.locateElement(model.document, node.id);
+  const draggable = canMoveNode(model.document, node.id) && located !== undefined
     ? Workflow.draggable(
         {
           model: model.workflow,
           toParentMessage: toWorkflowMessage,
           itemId: node.id,
-          containerId: GRAPH_CONTAINER_ID,
-          index: allNodes(model.document).findIndex((candidate) => candidate.id === node.id),
+          containerId: flowContainerId(located.flow.id),
+          index: located.index,
         },
         h,
       )
@@ -618,7 +411,10 @@ const insertionViews = (
 
 const draggedNode = (model: Model) =>
   Option.flatMap(Workflow.maybeDraggedItemId(model.workflow), (itemId) => {
-    const kind = kindFromPaletteItem(itemId);
+    const paletteType = paletteTypeFromId(itemId);
+    const kind = paletteType !== undefined && isNodeKind(paletteType)
+      ? paletteType
+      : undefined;
     if (kind !== undefined) {
       return Option.some({
         node: nodeTypes[kind].create("drag-preview"),
@@ -673,9 +469,13 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
       }),
   });
 
+const flowGroups = (root: WorkflowFlow): ReadonlyArray<WorkflowFlow> => [
+  root,
+  ...root.elements.flatMap((node) => node.branches.flatMap(flowGroups)),
+];
+
 const canvasView = (model: Model, h: HtmlBuilder<Message>): Html => {
   const layout = layoutWorkflow(model.document, model.workflow.orientation);
-  const nodes = allNodes(model.document);
   const subtree = draggedSubtree(model);
   return h.div(
     [h.Class(className(styles.canvasViewport))],
@@ -691,7 +491,16 @@ const canvasView = (model: Model, h: HtmlBuilder<Message>): Html => {
           connectorLayerView(model, layout, subtree, h),
           ...branchLabelViews(layout, subtree, h),
           ...insertionViews(model, layout, h),
-          ...nodes.map((node) => nodeView(model, node, layout, subtree, h)),
+          ...flowGroups(model.document.root).map((flow) =>
+            h.keyed("div")(
+              `flow-container:${flow.id}`,
+              [
+                h.Style({ display: "contents" }),
+                ...Workflow.droppable(flowContainerId(flow.id), `Reorder ${flow.label || "workflow"}`),
+              ],
+              flow.elements.map((node) => nodeView(model, node, layout, subtree, h)),
+            )
+          ),
         ],
       ),
       ghostView(model, h),
@@ -854,44 +663,15 @@ const inspectorView = (model: Model, h: HtmlBuilder<Message>): Html => {
   });
 };
 
-export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
-  const demo = demoFromRoute(model.route);
-  return {
-    title: demo === "Workflow"
-      ? "Workflow · Demo"
-      : demo === "DataGrid"
-        ? "Data grid · Demo"
-        : demo === "FormBuilder"
-          ? "Form builder · Demo"
-          : "UI components · Demo",
-    body: h.main(
-      [
-        h.Class(className(
-          styles.app,
-          demo === "FormBuilder" && model.formMode === "Preview" && styles.appFormPreview,
-        )),
-      ],
-      [
-        demo === "FormBuilder" && model.formMode === "Preview"
-          ? h.empty
-          : paletteView(model, h),
-        h.section([h.Class(className(styles.workspace))], [
-          toolbarView(model, h),
-          demo === "Workflow"
-            ? canvasView(model, h)
-            : demo === "DataGrid"
-              ? dataGridView(model, h)
-              : demo === "FormBuilder"
-                ? formBuilderView(model, h)
-                : uiKitView(model, h),
-        ]),
-        demo === "Workflow" ? inspectorView(model, h) : h.empty,
-        demo === "FormBuilder" ? formGhostView(model, h) : h.empty,
-        h.div(
-          [h.Class(className(styles.srOnly)), h.AriaLive("assertive")],
-          [model.announcement],
-        ),
-      ],
-    ),
-  };
-};
+export type ViewInputs = Readonly<{
+  region: "Palette" | "Toolbar" | "Content" | "Overlay";
+}>;
+
+export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) => {
+  switch (inputs.region) {
+    case "Palette": return paletteView(model, h);
+    case "Toolbar": return toolbarView(model, h);
+    case "Content": return canvasView(model, h);
+    case "Overlay": return inspectorView(model, h);
+  }
+});

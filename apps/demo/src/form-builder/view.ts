@@ -1,7 +1,17 @@
 import { Option } from "effect";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import { type Html, type HtmlBuilder } from "foldkit/html";
+import { defineView } from "foldkit/submodel";
 
-import { CheckCircle2, GripVertical, Plus } from "@lucide/icons";
+import {
+  CheckCircle2,
+  Download,
+  GripVertical,
+  Plus,
+  Redo2,
+  RotateCcw,
+  Undo2,
+  Upload,
+} from "@lucide/icons";
 import {
   FormBuilder,
   dragItemFromId,
@@ -11,9 +21,12 @@ import {
   findField,
   findPage,
   findSection,
+  paletteItemId,
+  paletteTypeFromId,
   type DropLocation,
   type ItemKind,
 } from "@foldworks/form-builder";
+import { History } from "@foldworks/history";
 import {
   Button as UiButton,
   Field as UiField,
@@ -22,35 +35,38 @@ import {
   Select as UiSelect,
 } from "@foldworks/ui";
 
-import { Message } from "../workflow/message";
-import type { Model } from "../workflow/model";
-import { fieldKinds, fieldTypes } from "./field-types";
-import { paletteFieldId, paletteKindFromId, selectedFormItem } from "./operations";
+import { Message } from "./message";
+import type { Model } from "./editor-model";
+import { fieldKinds, fieldTypes, isFieldKind } from "./field-types";
+import { selectedFormItem } from "./operations";
 import type { FormField, FormPage, FormSelection } from "./model";
 import { className, formStyles } from "./styles";
 
 const toFormMessage = (message: FormBuilder.Message): Message =>
-  Message.GotFormBuilderMessage({ message });
+  Message.GotInteractionMessage({ message });
 
 const draggedItem = (model: Model): Readonly<{
   kind: ItemKind;
   id: string;
   label: string;
 }> | undefined => {
-  if (!FormBuilder.isDragging(model.formBuilder)) return undefined;
-  const rawId = Option.getOrUndefined(FormBuilder.maybeDraggedItemId(model.formBuilder));
+  if (!FormBuilder.isDragging(model.interaction)) return undefined;
+  const rawId = Option.getOrUndefined(FormBuilder.maybeDraggedItemId(model.interaction));
   if (rawId === undefined) return undefined;
-  const paletteKind = paletteKindFromId(rawId);
+  const paletteType = paletteTypeFromId(rawId);
+  const paletteKind = paletteType !== undefined && isFieldKind(paletteType)
+    ? paletteType
+    : undefined;
   if (paletteKind !== undefined) {
     return { kind: "Field", id: rawId, label: fieldTypes[paletteKind].palette.label };
   }
   const item = dragItemFromId(rawId);
   if (item === undefined) return undefined;
   const label = item.kind === "Section"
-    ? findSection(model.formDocument, item.id)?.title
+    ? findSection(model.document, item.id)?.title
     : item.kind === "Page"
-      ? findPage(model.formDocument, item.id)?.title
-      : findField(model.formDocument, item.id)?.label;
+      ? findPage(model.document, item.id)?.title
+      : findField(model.document, item.id)?.label;
   return { ...item, label: label ?? item.kind };
 };
 
@@ -58,7 +74,7 @@ const isDragged = (model: Model, kind: ItemKind, id: string) =>
   draggedItem(model)?.kind === kind && draggedItem(model)?.id === id;
 
 const isSelected = (model: Model, kind: ItemKind, id: string) =>
-  Option.exists(model.selectedFormItem, (selection) =>
+  Option.exists(model.selectedItem, (selection) =>
     selection.kind === kind && selection.id === id,
   );
 
@@ -72,12 +88,12 @@ const dropTarget = (
   const dragged = draggedItem(model);
   const acceptsDraggedItem = dragged === undefined || dragged.kind === location.kind;
   const id = dropLocationId(
-    model.formDocument.id,
+    model.document.id,
     location,
     receiver ? "outline" : undefined,
   );
   const active = acceptsDraggedItem && Option.exists(
-    FormBuilder.maybeDropTarget(model.formBuilder),
+    FormBuilder.maybeDropTarget(model.interaction),
     (target) => target.containerId === id,
   );
   return h.div(
@@ -115,8 +131,8 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
         [UiIcon.view({ icon: Plus, size: 14, strokeWidth: 2.25 }, h)],
       ),
     ]),
-    ...model.formDocument.sections.flatMap((section, sectionIndex) => {
-      const actor = findActor(model.formDocument, section.actorId);
+    ...model.document.sections.flatMap((section, sectionIndex) => {
+      const actor = findActor(model.document, section.actorId);
       return [
         dropTarget(
           model,
@@ -141,7 +157,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                   h.Class(className(formStyles.dragHandle)),
                   h.Tabindex(0),
                   ...FormBuilder.draggable({
-                    model: model.formBuilder,
+                    model: model.interaction,
                     toParentMessage: toFormMessage,
                     itemId: dragItemId("Section", section.id),
                     containerId: "form-sections",
@@ -154,7 +170,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                 [
                   h.Type("button"),
                   h.Class(className(formStyles.outlineButton)),
-                  h.OnClick(Message.SelectedFormItem({ kind: "Section", id: section.id })),
+                  h.OnClick(Message.SelectedItem({ kind: "Section", id: section.id })),
                 ],
                 [
                   h.span([h.Class(className(formStyles.outlineTitle))], [section.title]),
@@ -175,7 +191,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                   [
                     h.Class(className(
                       formStyles.pageRow,
-                      model.activeFormPageId === page.id && formStyles.pageRowActive,
+                      model.activePageId === page.id && formStyles.pageRowActive,
                       isDragged(model, "Page", page.id) && formStyles.draggingSource,
                     )),
                     h.DataAttribute("form-page-id", page.id),
@@ -187,7 +203,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                         h.Class(className(formStyles.dragHandle)),
                         h.Tabindex(0),
                         ...FormBuilder.draggable({
-                          model: model.formBuilder,
+                          model: model.interaction,
                           toParentMessage: toFormMessage,
                           itemId: dragItemId("Page", page.id),
                           containerId: `form-pages:${section.id}`,
@@ -200,7 +216,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                       [
                         h.Type("button"),
                         h.Class(className(formStyles.outlineButton)),
-                        h.OnClick(Message.SelectedFormItem({ kind: "Page", id: page.id })),
+                        h.OnClick(Message.SelectedItem({ kind: "Page", id: page.id })),
                       ],
                       [h.span([h.Class(className(formStyles.outlineTitle))], [
                         `${page.title} · ${page.fields.length}`,
@@ -242,7 +258,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
     }),
     dropTarget(
       model,
-      { kind: "Section", index: model.formDocument.sections.length },
+      { kind: "Section", index: model.document.sections.length },
       "Move section to the end",
       h,
     ),
@@ -270,9 +286,9 @@ const fieldEditorView = (
       h.Tabindex(0),
       h.DataAttribute("form-field-id", field.id),
       h.Style({ viewTransitionName: `form-field-${field.id}` }),
-      h.OnClick(Message.SelectedFormItem({ kind: "Field", id: field.id })),
+      h.OnClick(Message.SelectedItem({ kind: "Field", id: field.id })),
       ...FormBuilder.draggable({
-        model: model.formBuilder,
+        model: model.interaction,
         toParentMessage: toFormMessage,
         itemId: dragItemId("Field", field.id),
         containerId: `form-fields:${page.id}`,
@@ -302,7 +318,7 @@ const fieldEditorView = (
           field,
           mode: "Editor",
           value: "",
-          onInput: () => Message.SelectedFormItem({ kind: "Field", id: field.id }),
+          onInput: () => Message.SelectedItem({ kind: "Field", id: field.id }),
         }, h),
       ]),
     ],
@@ -310,11 +326,11 @@ const fieldEditorView = (
 };
 
 const canvasView = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const page = findPage(model.formDocument, model.activeFormPageId);
-  const located = page === undefined ? undefined : model.formDocument.sections.find((section) =>
+  const page = findPage(model.document, model.activePageId);
+  const located = page === undefined ? undefined : model.document.sections.find((section) =>
     section.pages.some((candidate) => candidate.id === page.id),
   );
-  const actor = located === undefined ? undefined : findActor(model.formDocument, located.actorId);
+  const actor = located === undefined ? undefined : findActor(model.document, located.actorId);
   return h.div([h.Class(className(formStyles.canvasViewport))], [
     page === undefined
       ? h.div([h.Class(className(formStyles.emptyPage))], ["Add or select a page to begin building."])
@@ -362,7 +378,7 @@ const commonSettings = (
         id: "form-settings-title",
         label: selection.kind === "Field" ? "Label" : "Title",
         value: title,
-        onInput: (value) => Message.ChangedFormItemTitle({ value }),
+        onInput: (value) => Message.ChangedItemTitle({ value }),
       },
       h,
     ),
@@ -373,7 +389,7 @@ const commonSettings = (
         id: "form-settings-description",
         label: "Description",
         value: description,
-        onInput: (value) => Message.ChangedFormItemDescription({ value }),
+        onInput: (value) => Message.ChangedItemDescription({ value }),
       },
       h,
     ),
@@ -385,12 +401,12 @@ const settingsView = (model: Model, h: HtmlBuilder<Message>): Html =>
     h.div([h.Class(className(formStyles.panelHeader))], [
       h.p([h.Class(className(formStyles.panelTitle))], ["Settings"]),
     ]),
-    Option.match(model.selectedFormItem, {
+    Option.match(model.selectedItem, {
       onNone: () => h.p([h.Class(className(formStyles.settingsEmpty))], [
         "Select a section, page, or field to edit its settings.",
       ]),
       onSome: (selection) => {
-        const item = selectedFormItem(model.formDocument, selection);
+        const item = selectedFormItem(model.document, selection);
         if (item === undefined) return h.empty;
         const title = "label" in item ? item.label : item.title;
         return h.div([], [
@@ -403,7 +419,7 @@ const settingsView = (model: Model, h: HtmlBuilder<Message>): Html =>
                     label: "Assigned actor",
                     ...("actorId" in item ? { value: item.actorId } : {}),
                     onChange: (actorId) => Message.ChangedSectionActor({ actorId }),
-                    options: model.formDocument.actors.map((actor) => ({
+                    options: model.document.actors.map((actor) => ({
                       value: actor.id,
                       label: actor.title,
                     })),
@@ -451,7 +467,7 @@ const settingsView = (model: Model, h: HtmlBuilder<Message>): Html =>
           UiButton.view(
             {
               label: `Delete ${selection.kind.toLowerCase()}`,
-              onClick: Message.ClickedDeleteFormItem(),
+              onClick: Message.ClickedDeleteItem(),
               variant: "danger",
               isFullWidth: true,
             },
@@ -470,7 +486,7 @@ const editorView = (model: Model, h: HtmlBuilder<Message>): Html =>
   ]);
 
 const answerValue = (model: Model, fieldId: string) =>
-  model.formAnswers.find((answer) => answer.fieldId === fieldId)?.value ?? "";
+  model.answers.find((answer) => answer.fieldId === fieldId)?.value ?? "";
 
 const runnerFieldView = (
   model: Model,
@@ -497,7 +513,7 @@ const runnerFieldView = (
         field,
         mode: "Runner",
         value: answerValue(model, field.id),
-        onInput: (value) => Message.ChangedFormAnswer({ fieldId: field.id, value }),
+        onInput: (value) => Message.ChangedAnswer({ fieldId: field.id, value }),
       }, h),
       field.type === "content" && viewed
         ? h.p([h.Class(className(formStyles.viewedBadge))], [
@@ -510,16 +526,16 @@ const runnerFieldView = (
 };
 
 const runnerView = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const sections = model.formDocument.sections.filter((section) =>
+  const sections = model.document.sections.filter((section) =>
     model.previewActorId === "__journey__" || section.actorId === model.previewActorId,
   );
   const pages = sections.flatMap((section) => section.pages);
-  const pageIndex = Math.max(0, pages.findIndex((page) => page.id === model.activeFormPageId));
+  const pageIndex = Math.max(0, pages.findIndex((page) => page.id === model.activePageId));
   const page = pages[pageIndex];
   const section = page === undefined ? undefined : sections.find((candidate) =>
     candidate.pages.some((candidatePage) => candidatePage.id === page.id),
   );
-  const actor = section === undefined ? undefined : findActor(model.formDocument, section.actorId);
+  const actor = section === undefined ? undefined : findActor(model.document, section.actorId);
   const progress = pages.length === 0 ? 0 : ((pageIndex + 1) / pages.length) * 100;
   return h.div([h.Class(className(formStyles.runnerViewport))], [
     h.div([h.Class(className(formStyles.runner)), h.DataAttribute("form-runner", "true")], [
@@ -537,7 +553,7 @@ const runnerView = (model: Model, h: HtmlBuilder<Message>): Html => {
             onChange: (actorId) => Message.SelectedPreviewActor({ actorId }),
             options: [
               { value: "__journey__", label: "Full journey" },
-              ...model.formDocument.actors.map((candidate) => ({
+              ...model.document.actors.map((candidate) => ({
                 value: candidate.id,
                 label: candidate.title,
               })),
@@ -581,7 +597,7 @@ const runnerView = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 export const formBuilderView = (model: Model, h: HtmlBuilder<Message>): Html =>
-  model.formMode === "Editor" ? editorView(model, h) : runnerView(model, h);
+  model.mode === "Editor" ? editorView(model, h) : runnerView(model, h);
 
 export const formBuilderToolbarActions = (
   model: Model,
@@ -590,9 +606,9 @@ export const formBuilderToolbarActions = (
   h.div([h.Class(className(formStyles.modeBar))], [
     UiSelect.control(
       {
-        value: model.formExampleId,
+        value: model.exampleId,
         ariaLabel: "Example form",
-        onChange: (exampleId) => Message.SelectedFormExample({
+        onChange: (exampleId) => Message.SelectedExample({
           exampleId: exampleId as "Simple" | "Handoff" | "Complex",
         }),
         options: [
@@ -605,16 +621,60 @@ export const formBuilderToolbarActions = (
     ),
     UiSegmentedControl.view(
       {
-        value: model.formMode,
+        value: model.mode,
         ariaLabel: "Form mode",
         options: [
           { value: "Editor", label: "Editor" },
           { value: "Preview", label: "Preview" },
         ],
-        onChange: (mode) => Message.SelectedFormMode({ mode }),
+        onChange: (mode) => Message.SelectedMode({ mode }),
       },
       h,
     ),
+    ...(model.mode === "Editor"
+      ? [
+          UiButton.view({
+            icon: Undo2,
+            ariaLabel: "Undo",
+            variant: "ghost",
+            size: "icon",
+            isDisabled: !History.canUndo(model.history),
+            onClick: Message.ClickedUndo(),
+            attributes: [h.Title("Undo (⌘Z)"), h.AriaKeyshortcuts("Control+Z Meta+Z")],
+          }, h),
+          UiButton.view({
+            icon: Redo2,
+            ariaLabel: "Redo",
+            variant: "ghost",
+            size: "icon",
+            isDisabled: !History.canRedo(model.history),
+            onClick: Message.ClickedRedo(),
+            attributes: [h.Title("Redo (⌘⇧Z)"), h.AriaKeyshortcuts("Control+Shift+Z Meta+Shift+Z")],
+          }, h),
+        ]
+      : []),
+    UiButton.view({
+      label: "Reset",
+      icon: RotateCcw,
+      ariaLabel: "Reset example",
+      onClick: Message.ClickedReset(),
+      variant: "outline",
+      size: "sm",
+    }, h),
+    UiButton.view({
+      label: "Import",
+      icon: Upload,
+      onClick: Message.ClickedImportDocument(),
+      variant: "outline",
+      size: "sm",
+    }, h),
+    UiButton.view({
+      label: "Export",
+      icon: Download,
+      onClick: Message.ClickedExportDocument(),
+      variant: "outline",
+      size: "sm",
+    }, h),
   ]);
 
 export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
@@ -622,7 +682,7 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
     h.p([h.Class(className(formStyles.panelTitle))], ["Add a field"]),
     ...fieldKinds.map((kind, index) => {
       const definition = fieldTypes[kind];
-      const itemId = paletteFieldId(kind);
+      const itemId = paletteItemId(kind);
       return h.keyed("div")(
         itemId,
         [h.Class(className(formStyles.paletteRow))],
@@ -633,7 +693,7 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
               h.Tabindex(0),
               h.DataAttribute("form-palette-drag", kind),
               ...FormBuilder.draggable({
-                model: model.formBuilder,
+                model: model.interaction,
                 toParentMessage: toFormMessage,
                 itemId,
                 containerId: "form-field-palette",
@@ -651,7 +711,7 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
               h.Class(className(formStyles.paletteAdd)),
               h.DataAttribute("form-palette-field", kind),
               h.AriaLabel(`Add ${definition.palette.label}`),
-              h.OnClick(Message.ClickedAddField({ pageId: model.activeFormPageId, fieldType: kind })),
+              h.OnClick(Message.ClickedAddField({ pageId: model.activePageId, fieldType: kind })),
             ],
             [UiIcon.view({ icon: Plus, size: 14, strokeWidth: 2.25 }, h)],
           ),
@@ -661,7 +721,7 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
   ]);
 
 export const formGhostView = (model: Model, h: HtmlBuilder<Message>): Html =>
-  Option.match(FormBuilder.ghostStyle(model.formBuilder), {
+  Option.match(FormBuilder.ghostStyle(model.interaction), {
     onNone: () => h.empty,
     onSome: (style) => {
       const dragged = draggedItem(model);
@@ -676,3 +736,16 @@ export const formGhostView = (model: Model, h: HtmlBuilder<Message>): Html =>
           );
     },
   });
+
+export type ViewInputs = Readonly<{
+  region: "Palette" | "Toolbar" | "Content" | "Overlay";
+}>;
+
+export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) => {
+  switch (inputs.region) {
+    case "Palette": return formPaletteView(model, h);
+    case "Toolbar": return formBuilderToolbarActions(model, h);
+    case "Content": return formBuilderView(model, h);
+    case "Overlay": return formGhostView(model, h);
+  }
+});
