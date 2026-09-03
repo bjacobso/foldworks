@@ -1,4 +1,4 @@
-# Foldkit form builder
+# @foldworks/form-builder
 
 Section-first form document and drag-and-drop primitives for Foldkit applications.
 

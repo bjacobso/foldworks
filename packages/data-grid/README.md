@@ -1,4 +1,4 @@
-# Foldkit data grid
+# @foldworks/data-grid
 
 A typed, Foldkit-native data grid with a headless table core.
 

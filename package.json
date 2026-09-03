@@ -1,5 +1,6 @@
 {
   "name": "foldworks",
+  "description": "Polished application primitives for Foldkit and StyleX.",
   "private": true,
   "packageManager": "pnpm@10.20.0",
   "engines": {

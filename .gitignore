@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.turbo/
+.env
+.env.local
+coverage/
+test-results/
+playwright-report/
+.DS_Store

@@ -1,4 +1,4 @@
-# Foldkit workflow
+# @foldworks/workflow
 
 Internal structured-workflow primitives for Foldkit applications.
 
