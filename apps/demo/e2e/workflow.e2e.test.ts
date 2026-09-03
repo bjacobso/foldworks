@@ -781,8 +781,9 @@ describe.sequential("structured workflow builder", () => {
       "Button",
       "Badge",
       "Icon",
-      "Field and Select",
+      "Field, input, textarea, and select",
       "Selection controls",
+      "Choice and disclosure",
       "Panel and Layout",
       "Toolbar",
       "Semantic tokens",
@@ -795,6 +796,16 @@ describe.sequential("structured workflow builder", () => {
 
     await expect.poll(() => showcase.getByRole("button", { name: "Disabled" }).isDisabled())
       .toBe(true);
+    const email = showcase.getByRole("textbox", { name: "Work email" });
+    await expect.poll(() => email.getAttribute("aria-invalid")).toBe("true");
+    await email.fill("maya@example.com");
+    await expect.poll(() => email.getAttribute("aria-invalid")).toBeNull();
+    await expect.poll(() => showcase.getByRole("checkbox", { name: "Team permissions" }).getAttribute("aria-checked"))
+      .toBe("mixed");
+    await expect.poll(() => showcase.getByRole("switch", { name: "Automatic backups" }).isDisabled())
+      .toBe(true);
+    await expect.poll(() => showcase.getByRole("button", { name: "Managed account details" }).isDisabled())
+      .toBe(true);
     await showcase.getByLabel("Display name").fill("Avery Stone");
     await expect.poll(() => showcase.getByLabel("Display name").inputValue())
       .toBe("Avery Stone");
@@ -806,6 +817,8 @@ describe.sequential("structured workflow builder", () => {
     await showcase.getByRole("button", { name: "Activity" }).click();
     await expect.poll(() => showcase.getByRole("button", { name: "Activity" }).getAttribute("aria-pressed"))
       .toBe("true");
+    await expect.poll(() => showcase.getByText("Activity view selected.", { exact: true }).count())
+      .toBe(1);
 
     await screenshot("12-ui-kit");
   });
@@ -831,7 +844,7 @@ describe.sequential("structured workflow builder", () => {
       };
     });
     expect(darkTokens).toEqual({
-      background: "oklch(14.5% 0 0)",
+      background: "oklch(18.5% .04 252)",
       selection: "oklch(27% .045 156)",
       dropTarget: "oklch(29% .055 156)",
     });

@@ -8,11 +8,14 @@ export type View = typeof View.Type;
 
 export const Model = S.Struct({
   name: S.String,
+  email: S.String,
   notes: S.String,
   department: Department,
   selectedView: View,
   receivesUpdates: S.Boolean,
+  securityAlerts: S.Boolean,
   termsAccepted: S.Boolean,
+  mixedPermissions: S.Boolean,
   isDetailsOpen: S.Boolean,
   announcement: S.String,
 });
@@ -20,11 +23,14 @@ export type Model = typeof Model.Type;
 
 export const initialModel: Model = {
   name: "Maya Chen",
+  email: "maya@",
   notes: "Keep the experience concise and welcoming.",
   department: "People",
   selectedView: "Overview",
   receivesUpdates: true,
+  securityAlerts: false,
   termsAccepted: false,
+  mixedPermissions: false,
   isDetailsOpen: true,
   announcement: "UI component demo ready.",
 };

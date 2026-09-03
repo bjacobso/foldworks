@@ -1,7 +1,17 @@
 import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { CalendarDays, Check, Eye, Plus, Send, Settings, User } from "@lucide/icons";
+import {
+  ArrowRight,
+  Bell,
+  CalendarDays,
+  Check,
+  Eye,
+  Plus,
+  Send,
+  Settings,
+  User,
+} from "@lucide/icons";
 import {
   Badge,
   Button,
@@ -39,11 +49,40 @@ const group = (
   ...children,
 ]);
 
+const hero = (model: Model, h: HtmlBuilder<Message>): Html =>
+  h.section([h.Class(className(styles.hero))], [
+    h.div([h.Class(className(styles.heroCopy))], [
+      h.p([h.Class(className(styles.eyebrow))], ["Foldworks component library"]),
+      h.h2([h.Class(className(styles.heroTitle))], ["Polished primitives for serious product work."]),
+      h.p([h.Class(className(styles.heroDescription))], [
+        "A compact, expressive visual layer for Foldkit—designed for information-dense application interfaces and predictable interaction.",
+      ]),
+      Layout.row({
+        gap: "sm",
+        wrap: true,
+        children: [
+          Badge.view({ label: "13 primitives", tone: "info", dot: true }, h),
+          Badge.view({ label: "Accessible by default", tone: "success", dot: true }, h),
+          Badge.view({ label: "StyleX tokens" }, h),
+        ],
+      }, h),
+    ]),
+    h.div([h.Class(className(styles.activity)), h.AriaLive("polite")], [
+      h.span([h.Class(className(styles.activityIcon)), h.AriaHidden(true)], [
+        Icon.view({ icon: Check, size: 14, strokeWidth: 2.5 }, h),
+      ]),
+      h.div([], [
+        h.p([h.Class(className(styles.activityLabel))], ["Live interaction"]),
+        h.p([h.Class(className(styles.activityMessage))], [model.announcement]),
+      ]),
+    ]),
+  ]);
+
 const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
   Panel.view(
     {
       title: "Button",
-      description: "Five intent variants, three sizes, and controlled disabled states.",
+      description: "Five intent variants, three sizes, icons, and controlled disabled states.",
       children: [
         Layout.stack({
           gap: "lg",
@@ -71,6 +110,7 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
                   Button.view({ label: "Medium", onClick: Message.ClickedAction({ action: "Medium" }) }, h),
                   Button.view({ icon: Plus, size: "icon", ariaLabel: "Create item", onClick: Message.ClickedAction({ action: "Create item" }) }, h),
                   Button.view({ label: "With icon", icon: Check, variant: "secondary", onClick: Message.ClickedAction({ action: "Icon" }) }, h),
+                  Button.view({ label: "Continue", trailingIcon: ArrowRight, variant: "ghost", onClick: Message.ClickedAction({ action: "Continue" }) }, h),
                   Button.view({ label: "Disabled", isDisabled: true }, h),
                 ],
               }, h),
@@ -127,6 +167,10 @@ const iconsPanel = (h: HtmlBuilder<Message>): Html =>
               Icon.view({ icon: Settings, size: 24, strokeWidth: 1.5 }, h),
               "24px",
             ]),
+            h.div([h.Class(className(styles.iconSample))], [
+              Icon.view({ icon: Bell, size: 18, label: "Notifications" }, h),
+              "Labeled",
+            ]),
           ],
         }, h),
       ],
@@ -138,8 +182,8 @@ const fieldsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div([h.Class(className(styles.wide))], [
     Panel.view(
       {
-        title: "Field and Select",
-        description: "Foldkit input behavior with shared labels, descriptions, density, and focus treatment.",
+        title: "Field, input, textarea, and select",
+        description: "Default, required, invalid, read-only, disabled, and compact control states.",
         children: [
           h.div([h.Class(className(styles.fieldGrid))], [
             Field.input({
@@ -165,16 +209,37 @@ const fieldsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
               ],
             }, h),
             Field.input({
+              id: "ui-kit-email",
+              label: "Work email",
+              description: "Used for account notifications.",
+              ...(model.email.includes("@") && model.email.includes(".")
+                ? {}
+                : { error: "Enter a complete email address." }),
+              isRequired: true,
+              type: "email",
+              value: model.email,
+              placeholder: "name@company.com",
+              onInput: (value) => Message.ChangedEmail({ value }),
+            }, h),
+            Field.input({
               id: "ui-kit-compact",
               label: "Compact input",
               value: "Compact density",
               density: "compact",
             }, h),
             Field.input({
+              id: "ui-kit-readonly",
+              label: "Account ID",
+              description: "Read-only values remain selectable.",
+              value: "acct_01HRZ8M4Q2",
+              isReadOnly: true,
+            }, h),
+            Field.select({
               id: "ui-kit-disabled",
-              label: "Disabled input",
-              value: "Unavailable",
+              label: "Billing region",
+              value: "Managed automatically",
               isDisabled: true,
+              options: [{ value: "Managed automatically", label: "Managed automatically" }],
             }, h),
             h.div([h.Class(className(styles.fullWidth))], [
               Field.textarea({
@@ -229,6 +294,10 @@ const controlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
                 }, h),
               ]),
             ], h),
+            h.div([h.Class(className(styles.controlState))], [
+              h.span([], ["Current view"]),
+              h.strong([], [model.selectedView]),
+            ]),
           ],
         }, h),
       ],
@@ -254,12 +323,42 @@ const choiceControlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
               isChecked: model.termsAccepted,
               onToggle: (isChecked) => Message.ToggledTerms({ isChecked }),
             }, h),
+            Checkbox.view({
+              id: "ui-kit-permissions",
+              label: "Team permissions",
+              description: "Some workspace roles are currently selected.",
+              isChecked: model.mixedPermissions,
+              isIndeterminate: !model.mixedPermissions,
+              onToggle: (isChecked) => Message.ToggledMixedPermissions({ isChecked }),
+            }, h),
+            Checkbox.view({
+              id: "ui-kit-disabled-checkbox",
+              label: "Managed by your organization",
+              isChecked: true,
+              isDisabled: true,
+              onToggle: () => Message.ClickedAction({ action: "Disabled checkbox" }),
+            }, h),
             Switch.view({
               id: "ui-kit-updates",
               label: "Product updates",
               description: "Receive a concise monthly summary.",
               isChecked: model.receivesUpdates,
               onToggle: (isChecked) => Message.ToggledUpdates({ isChecked }),
+            }, h),
+            Switch.view({
+              id: "ui-kit-security-alerts",
+              label: "Security alerts",
+              description: "Get notified when a new device signs in.",
+              isChecked: model.securityAlerts,
+              onToggle: (isChecked) => Message.ToggledSecurityAlerts({ isChecked }),
+            }, h),
+            Switch.view({
+              id: "ui-kit-disabled-switch",
+              label: "Automatic backups",
+              description: "Required on this plan.",
+              isChecked: true,
+              isDisabled: true,
+              onToggle: () => Message.ClickedAction({ action: "Disabled switch" }),
             }, h),
           ],
         }, h),
@@ -271,6 +370,14 @@ const choiceControlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
           children: [
             "Foldkit owns keyboard behavior and ARIA. The wrapper contributes tokens, layout, and visual states.",
           ],
+        }, h),
+        Disclosure.view({
+          id: "ui-kit-disabled-disclosure",
+          label: "Managed account details",
+          isOpen: false,
+          isDisabled: true,
+          onToggle: () => Message.ClickedAction({ action: "Disabled disclosure" }),
+          children: ["This content is unavailable."],
         }, h),
       ],
     },
@@ -296,6 +403,19 @@ const compositionPanel = (h: HtmlBuilder<Message>): Html =>
               ],
             }, h),
             h.div([h.Class(className(styles.layoutTile))], ["Stack item"]),
+            Fieldset.view({
+              id: "ui-kit-disabled-fieldset",
+              legend: "Disabled fieldset",
+              description: "Fieldset state is inherited by its native controls.",
+              isDisabled: true,
+              children: [
+                Field.input({
+                  id: "ui-kit-fieldset-input",
+                  label: "Organization policy",
+                  value: "Editing disabled",
+                }, h),
+              ],
+            }, h),
           ],
         }, h),
       ],
@@ -364,9 +484,7 @@ const tokensPanel = (h: HtmlBuilder<Message>): Html => {
 export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div([h.Class(className(styles.viewport)), h.DataAttribute("ui-kit", "true")], [
     h.div([h.Class(className(styles.content))], [
-      h.p([h.Class(className(styles.intro))], [
-        "These primitives add Foldworks's visual language to Foldkit's accessible behavior. The controls below are live and controlled by the demo model.",
-      ]),
+      hero(model, h),
       h.div([h.Class(className(styles.sectionGrid))], [
         buttonsPanel(h),
         badgesPanel(h),

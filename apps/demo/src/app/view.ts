@@ -132,7 +132,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         ? model.formEditor.document.title
         : demo === "QueryBuilder"
           ? "Employee query"
-        : "Foldkit UI";
+        : "@foldworks/ui";
   const description = demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
     : demo === "DataGrid"
@@ -141,7 +141,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
         : demo === "QueryBuilder"
           ? "Configured attributes · recursive groups · live validation"
-        : "13 opinionated primitives · shared semantic tokens";
+        : "13 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view({
     title,
     description,

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import * as Checkbox from "./checkbox";
 import * as Fieldset from "./fieldset";
+import * as Select from "./select";
 import * as Switch from "./switch";
 
 const find = (html: Html, selector: string) => {
@@ -58,5 +59,18 @@ describe("styled choice controls", () => {
     expect(attr(html, "fieldset", "aria-describedby")).toBe("preferences-description");
     expect(attr(html, "legend", "id")).toBe("preferences-legend");
     expect(attr(html, "[id=\"preferences-description\"]", "id")).toBe("preferences-description");
+  });
+
+  it("supports a disabled compact select", () => {
+    const html = Select.control({
+      value: "managed",
+      options: [{ value: "managed", label: "Managed" }],
+      ariaLabel: "Billing region",
+      isDisabled: true,
+      onChange: () => undefined as never,
+    }, h);
+
+    expect(attr(html, "select", "disabled")).toBe("true");
+    expect(attr(html, "select", "aria-label")).toBe("Billing region");
   });
 });
