@@ -67,6 +67,9 @@ const drag = async (sourceSelector: string, targetSelector: string) => {
   await page.mouse.move(sourceBox.x + sourceBox.width / 2 + 12, sourceBox.y + 12, {
     steps: 3,
   });
+  // Drag activation can expand insertion targets; wait for their layout
+  // transition before resolving the final target coordinates.
+  await page.waitForTimeout(220);
   const targetBox = await target.boundingBox();
   expect(targetBox).not.toBeNull();
   if (targetBox === null) return { source, target };
@@ -173,6 +176,38 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.locator("[data-query-readonly=true]").textContent())
       .toContain("Employee nameisMaya");
     await screenshot("16-query-builder");
+  });
+
+  it("reorders query rules across groups with pointer and keyboard dragging", async () => {
+    await page.goto(`${appUrl}/query-builder`, { waitUntil: "networkidle" });
+
+    const pointerTarget = '[data-droppable-id="query-target:group-2:2"]';
+    const { target } = await drag(
+      '[data-draggable-id="query-rule:rule-1"]',
+      pointerTarget,
+    );
+    await expect.poll(() => page.locator('[data-query-drag-ghost="true"]').count()).toBe(1);
+    await expect.poll(() => target.getAttribute("data-query-drop-active")).toBe("true");
+    expect(await target.evaluate((element) => element.getBoundingClientRect().height))
+      .toBeGreaterThanOrEqual(28);
+    await screenshot("17-query-builder-dragging");
+    await page.mouse.up();
+
+    const nestedGroup = page.locator('[data-query-group="group-2"]');
+    await expect.poll(() => nestedGroup.locator("[data-query-rule]").count()).toBe(3);
+    await expect.poll(() => nestedGroup.locator("[data-query-rule]").last().getAttribute("data-query-rule"))
+      .toBe("rule-1");
+
+    const keyboardHandle = page.locator('[data-draggable-id="query-rule:rule-5"]');
+    await keyboardHandle.focus();
+    await keyboardHandle.press("Space");
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Space");
+
+    await expect.poll(() => nestedGroup.locator("[data-query-rule]").count()).toBe(4);
+    await expect.poll(() => nestedGroup.locator("[data-query-rule]").last().getAttribute("data-query-rule"))
+      .toBe("rule-5");
+    await screenshot("18-query-builder-reordered");
   });
 
   it("honors reduced motion in the query builder", async () => {

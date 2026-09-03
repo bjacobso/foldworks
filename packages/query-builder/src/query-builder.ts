@@ -8,3 +8,4 @@ export type Model = ModelValue;
 export { init, type InitConfig } from "./model";
 export { update } from "./update";
 export { readOnlyView, view, type ViewInputs } from "./view";
+export { subscriptions } from "./subscriptions";

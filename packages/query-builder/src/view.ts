@@ -1,13 +1,21 @@
-import { Brackets, ListFilter, Plus, Trash2 } from "@lucide/icons";
+import { Brackets, GripVertical, ListFilter, Plus, Trash2 } from "@lucide/icons";
+import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
+import { DragAndDrop } from "@foldkit/ui";
 
 import { Button, Icon, sxAttrs } from "@foldworks/ui";
 
 import { Message } from "./message";
 import type { Model } from "./model";
 import {
+  ruleIdFromItemId,
+  ruleItemId,
+  ruleTargetId,
+} from "./interaction";
+import {
   defaultValueForAttribute,
+  findNode,
   operatorsForAttribute,
   type AttributeDefinition,
   type Configuration,
@@ -22,6 +30,34 @@ export type ViewInputs = Configuration & Readonly<{
   label?: string;
   showValidation?: boolean;
 }>;
+
+const toInteractionMessage = (message: DragAndDrop.Message): Message =>
+  Message.GotInteractionMessage({ message });
+
+const ruleDropTarget = (
+  model: Model,
+  groupId: string,
+  index: number,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const targetId = ruleTargetId({ groupId, index });
+  const isDragging = DragAndDrop.isDragging(model.interaction);
+  const isActive = Option.exists(
+    DragAndDrop.maybeDropTarget(model.interaction),
+    (target) => target.containerId === targetId,
+  );
+  return h.div([
+    ...sxAttrs(
+      h,
+      styles.dropTarget,
+      isDragging && styles.dropTargetAvailable,
+      isActive && styles.dropTargetActive,
+    ),
+    ...DragAndDrop.droppable(targetId, `Move condition to position ${String(index + 1)}`),
+    h.DataAttribute("query-drop-target", targetId),
+    h.DataAttribute("query-drop-active", isActive ? "true" : "false"),
+  ]);
+};
 
 const select = (
   value: string,
@@ -101,7 +137,10 @@ const valueControl = (
 };
 
 const ruleView = (
+  model: Model,
   rule: QueryRule,
+  groupId: string,
+  index: number,
   configuration: Configuration,
   validation: ValidationResult,
   h: HtmlBuilder<Message>,
@@ -111,13 +150,24 @@ const ruleView = (
   const issues = issuesForNode(validation, rule.id);
   if (attribute === undefined) {
     return h.div(sxAttrs(h, styles.rule, styles.ruleInvalid), [
+      h.span([
+        ...sxAttrs(h, styles.dragHandle),
+        ...DragAndDrop.draggable({
+          model: model.interaction,
+          toParentMessage: toInteractionMessage,
+          itemId: ruleItemId(rule.id),
+          containerId: ruleTargetId({ groupId, index }),
+          index: 0,
+        }, h),
+        h.AriaLabel("Move condition"),
+      ], [Icon.view({ icon: GripVertical, size: 15 }, h)]),
       h.p(sxAttrs(h, styles.issue), [issues[0]?.message ?? "Configure an attribute to edit this rule."]),
       Button.view({
         icon: Trash2,
         ariaLabel: "Remove condition",
         variant: "ghost",
         size: "icon",
-        style: styles.removeButton,
+        style: [styles.removeButton, styles.ruleRemoveButton],
         onClick: Message.RemovedNode({ nodeId: rule.id }),
       }, h),
     ]);
@@ -127,9 +177,23 @@ const ruleView = (
     rule.id,
     [
       ...sxAttrs(h, styles.rule, styles.responsiveRule, issues.length > 0 && styles.ruleInvalid),
+      ...(ruleIdFromItemId(Option.getOrUndefined(DragAndDrop.maybeDraggedItemId(model.interaction)) ?? "") === rule.id
+        ? sxAttrs(h, styles.draggingRule)
+        : []),
       h.DataAttribute("query-rule", rule.id),
     ],
     [
+      h.span([
+        ...sxAttrs(h, styles.dragHandle),
+        ...DragAndDrop.draggable({
+          model: model.interaction,
+          toParentMessage: toInteractionMessage,
+          itemId: ruleItemId(rule.id),
+          containerId: ruleTargetId({ groupId, index }),
+          index: 0,
+        }, h),
+        h.AriaLabel(`Move ${attribute.label} condition`),
+      ], [Icon.view({ icon: GripVertical, size: 15 }, h)]),
       select(
         attribute.id,
         "Attribute",
@@ -158,7 +222,7 @@ const ruleView = (
         ariaLabel: `Remove ${attribute.label} condition`,
         variant: "ghost",
         size: "icon",
-        style: styles.removeButton,
+        style: [styles.removeButton, styles.ruleRemoveButton],
         onClick: Message.RemovedNode({ nodeId: rule.id }),
       }, h),
       ...(issues[0] === undefined
@@ -169,6 +233,7 @@ const ruleView = (
 };
 
 const groupView = (
+  model: Model,
   group: QueryGroup,
   configuration: Configuration,
   validation: ValidationResult,
@@ -232,21 +297,62 @@ const groupView = (
         ]),
       ]),
       ...(isRoot ? [] : [h.span([h.AriaHidden(true), ...sxAttrs(h, styles.nestedRail)])]),
-      h.div(sxAttrs(h, styles.children), group.children.length === 0
-        ? [h.div(sxAttrs(h, styles.empty), [
-            firstAttribute === undefined
-              ? "Configure at least one attribute."
-              : "Add a condition or nested group.",
-          ])]
-        : group.children.map((child) => child._tag === "Rule"
-          ? ruleView(child, configuration, validation, h)
-          : groupView(child, configuration, validation, depth + 1, false, h))),
+      h.div(sxAttrs(h, styles.children), [
+        ...group.children.flatMap((child, index) => [
+          ruleDropTarget(model, group.id, index, h),
+          child._tag === "Rule"
+            ? ruleView(model, child, group.id, index, configuration, validation, h)
+            : groupView(model, child, configuration, validation, depth + 1, false, h),
+        ]),
+        ruleDropTarget(model, group.id, group.children.length, h),
+        ...(group.children.length === 0
+          ? [h.div(sxAttrs(h, styles.empty), [
+              firstAttribute === undefined
+                ? "Configure at least one attribute."
+                : "Add a condition or nested group.",
+            ])]
+          : []),
+      ]),
       ...(groupIssues[0] === undefined || group.children.length === 0
         ? []
         : [h.p(sxAttrs(h, styles.issue), [groupIssues[0].message])]),
     ],
   );
 };
+
+const ghostView = (
+  model: Model,
+  configuration: Configuration,
+  h: HtmlBuilder<Message>,
+): Html => Option.match(DragAndDrop.ghostStyle(model.interaction), {
+  onNone: () => h.empty,
+  onSome: (ghostStyle) => {
+    const itemId = Option.getOrUndefined(DragAndDrop.maybeDraggedItemId(model.interaction));
+    const ruleId = itemId === undefined ? undefined : ruleIdFromItemId(itemId);
+    const rule = ruleId === undefined ? undefined : findNode(model.query, ruleId);
+    if (rule?._tag !== "Rule") return h.empty;
+    const attribute = configuration.attributes.find((candidate) => candidate.id === rule.attributeId);
+    const operator = attribute === undefined
+      ? undefined
+      : operatorsForAttribute(attribute).find((candidate) => candidate.id === rule.operatorId);
+    return h.div(
+      [
+        h.Style(ghostStyle),
+        ...sxAttrs(h, styles.ghostPosition),
+        h.AriaHidden(true),
+        h.DataAttribute("query-drag-ghost", "true"),
+      ],
+      [h.div(sxAttrs(h, styles.ghost), [
+        Icon.view({ icon: GripVertical, size: 15 }, h),
+        h.span(sxAttrs(h, styles.ghostAttribute), [attribute?.label ?? rule.attributeId]),
+        h.span(sxAttrs(h, styles.ghostOperator), [operator?.label ?? rule.operatorId]),
+        ...(operator?.requiresValue === false
+          ? []
+          : [h.span(sxAttrs(h, styles.ghostValue), [rule.value || "No value"])]),
+      ])],
+    );
+  },
+});
 
 export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) => {
   const validation = validate(model.query, inputs);
@@ -257,7 +363,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
       h.DataAttribute("query-builder", model.id),
     ],
     [
-      groupView(model.query, inputs, validation, 0, true, h),
+      groupView(model, model.query, inputs, validation, 0, true, h),
       ...(inputs.showValidation === false
         ? []
         : [h.div(sxAttrs(
@@ -270,6 +376,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
               ? "Query is valid"
               : `${validation.issues.length} ${validation.issues.length === 1 ? "issue" : "issues"} to resolve`,
           ])]),
+      ghostView(model, inputs, h),
     ],
   );
 });

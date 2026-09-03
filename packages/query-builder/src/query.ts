@@ -193,3 +193,66 @@ export const removeNode = (query: QueryGroup, nodeId: string): QueryGroup | unde
   });
   return visit(query);
 };
+
+export type RuleLocation = Readonly<{
+  groupId: string;
+  index: number;
+}>;
+
+export const findRuleLocation = (
+  group: QueryGroup,
+  ruleId: string,
+): RuleLocation | undefined => {
+  const index = group.children.findIndex((child) => child._tag === "Rule" && child.id === ruleId);
+  if (index >= 0) return { groupId: group.id, index };
+  for (const child of group.children) {
+    if (child._tag !== "Group") continue;
+    const location = findRuleLocation(child, ruleId);
+    if (location !== undefined) return location;
+  }
+  return undefined;
+};
+
+export const moveRule = (
+  query: QueryGroup,
+  ruleId: string,
+  location: RuleLocation,
+): QueryGroup | undefined => {
+  const rule = findNode(query, ruleId);
+  const origin = findRuleLocation(query, ruleId);
+  const target = findNode(query, location.groupId);
+  if (
+    rule?._tag !== "Rule" ||
+    origin === undefined ||
+    target?._tag !== "Group" ||
+    !Number.isSafeInteger(location.index) ||
+    location.index < 0 ||
+    location.index > target.children.length
+  ) return undefined;
+
+  // Drop indexes describe boundaries in the pre-removal list. Removing an
+  // earlier sibling shifts later boundaries left by one.
+  const adjustedIndex = origin.groupId === location.groupId && location.index > origin.index
+    ? location.index - 1
+    : location.index;
+  if (origin.groupId === location.groupId && adjustedIndex === origin.index) return query;
+
+  const withoutRule = removeNode(query, ruleId);
+  if (withoutRule === undefined) return undefined;
+  const adjustedTarget = findNode(withoutRule, location.groupId);
+  if (
+    adjustedTarget?._tag !== "Group" ||
+    adjustedIndex < 0 ||
+    adjustedIndex > adjustedTarget.children.length
+  ) return undefined;
+  return mapNode(withoutRule, location.groupId, (candidate) => candidate._tag === "Group"
+    ? {
+        ...candidate,
+        children: [
+          ...candidate.children.slice(0, adjustedIndex),
+          rule,
+          ...candidate.children.slice(adjustedIndex),
+        ],
+      }
+    : candidate);
+};

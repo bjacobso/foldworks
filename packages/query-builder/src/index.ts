@@ -9,7 +9,9 @@ export {
   defaultValueForAttribute,
   defineAttributes,
   findNode,
+  findRuleLocation,
   mapNode,
+  moveRule,
   operatorsForAttribute,
   operatorsForKind,
   removeNode,
@@ -17,7 +19,19 @@ export {
   type AttributeOption,
   type Configuration,
   type OperatorDefinition,
+  type RuleLocation,
 } from "./query";
+export {
+  DEFAULT_ACTIVATION_THRESHOLD,
+  RULE_ITEM_PREFIX,
+  RULE_TARGET_PREFIX,
+  applyRuleReorder,
+  ruleIdFromItemId,
+  ruleItemId,
+  ruleLocationFromTargetId,
+  ruleTargetId,
+  type ApplyRuleReorderConfig,
+} from "./interaction";
 export {
   issuesForNode,
   validate,

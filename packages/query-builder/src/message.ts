@@ -1,9 +1,11 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+import { DragAndDrop } from "@foldkit/ui";
 
 import { Combinator } from "./query";
 
 export const Message = defineMessageUnion({
+  GotInteractionMessage: { message: DragAndDrop.Message },
   AddedRule: {
     groupId: S.String,
     attributeId: S.String,

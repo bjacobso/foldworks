@@ -1,5 +1,9 @@
-import type { Update } from "foldkit";
+import { Option } from "effect";
+import { Update } from "foldkit";
+import { evo } from "foldkit/struct";
+import { DragAndDrop } from "@foldkit/ui";
 
+import { applyRuleReorder } from "./interaction";
 import { Message } from "./message";
 import type { Model } from "./model";
 import { nextAvailableId } from "./model";
@@ -7,8 +11,32 @@ import { appendNode, findNode, mapNode, removeNode } from "./query";
 
 type UpdateReturn = Update.Return<Model, Message>;
 
+const commitDrop = (outMessage: DragAndDrop.OutMessage): Update.Step<Model, Message> =>
+  (model) => DragAndDrop.OutMessage.match<UpdateReturn>(outMessage, {
+    Cancelled: () => ({ model }),
+    Reordered: (reordered) => {
+      const query = applyRuleReorder({
+        query: model.query,
+        reordered: DragAndDrop.OutMessage.Reordered(reordered),
+      });
+      return query === undefined || query === model.query
+        ? { model }
+        : { model: { ...model, query } };
+    },
+  });
+
+const foldInteraction = Update.foldChild({
+  update: DragAndDrop.update,
+  read: (model: Model) => Option.some(model.interaction),
+  write: (model, interaction) => evo(model, { interaction: () => interaction }),
+  toParentMessage: (message) => Message.GotInteractionMessage({ message }),
+  foldOutMessage: commitDrop,
+});
+
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    GotInteractionMessage: ({ message: interactionMessage }) =>
+      foldInteraction(model, interactionMessage),
     AddedRule: ({ groupId, attributeId, operatorId, value }) => {
       const id = `rule-${model.nextId}`;
       const query = appendNode(model.query, groupId, {

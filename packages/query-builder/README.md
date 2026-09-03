@@ -43,6 +43,11 @@ focus-within feedback; validation changes animate without moving surrounding
 content. All non-essential animation is disabled when the user prefers reduced
 motion.
 
+Rules can be reordered within or between groups using the drag handle. Pointer
+dragging uses an 8px activation threshold, and keyboard users can pick up a rule
+with Space or Enter, move between the visible insertion targets with Tab or
+Shift+Tab, and drop with Space or Enter.
+
 Custom operator labels can be supplied per attribute. An operator with
 `requiresValue: false` skips value validation and omits the value editor.
 A top-level `validateValue(attribute, value)` callback adds domain validation

@@ -173,6 +173,9 @@ importers:
 
   packages/query-builder:
     dependencies:
+      '@foldkit/ui':
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0

@@ -1,13 +1,23 @@
+import { Option } from "effect";
 import { inertHtml as h } from "foldkit/html";
 import { Scene } from "foldkit/test";
+import { DragAndDrop } from "@foldkit/ui";
 import { describe, expect, it } from "vitest";
 
 import { Message } from "./message";
 import { init } from "./model";
 import {
+  applyRuleReorder,
+  ruleIdFromItemId,
+  ruleItemId,
+  ruleLocationFromTargetId,
+  ruleTargetId,
+} from "./interaction";
+import {
   appendNode,
   defineAttributes,
   findNode,
+  moveRule,
   removeNode,
   type QueryGroup,
 } from "./query";
@@ -76,6 +86,52 @@ describe("query operations", () => {
       attributeId: "name",
       operatorId: "equals",
       value: "x",
+    })).toBeUndefined();
+  });
+
+  it("moves rules within a group using pre-removal boundary indexes", () => {
+    const nested = validQuery.children[1];
+    if (nested?._tag !== "Group") throw new Error("Expected nested group");
+    const moved = moveRule(validQuery, "rule-b", { groupId: nested.id, index: 2 });
+
+    // Boundary 2 is after rule-c before removal, then shifts to index 1.
+    expect(moved === undefined ? [] : (findNode(moved, nested.id) as QueryGroup).children.map(({ id }) => id))
+      .toEqual(["rule-c", "rule-b"]);
+  });
+
+  it("moves rules between groups without moving their old siblings", () => {
+    const nested = validQuery.children[1];
+    if (nested?._tag !== "Group") throw new Error("Expected nested group");
+    const moved = moveRule(validQuery, "rule-a", { groupId: nested.id, index: 1 });
+    const movedNested = moved === undefined ? undefined : findNode(moved, nested.id);
+
+    expect(moved?.children.map(({ id }) => id)).toEqual(["group-a"]);
+    expect(movedNested?._tag === "Group" ? movedNested.children.map(({ id }) => id) : [])
+      .toEqual(["rule-b", "rule-a", "rule-c"]);
+    expect(findNode(moved!, "rule-a")).toBe(validQuery.children[0]);
+  });
+
+  it("round-trips drag ids containing colons and rejects malformed targets", () => {
+    const itemId = ruleItemId("employee:name");
+    const targetId = ruleTargetId({ groupId: "actor:employee", index: 12 });
+
+    expect(ruleIdFromItemId(itemId)).toBe("employee:name");
+    expect(ruleLocationFromTargetId(targetId)).toEqual({ groupId: "actor:employee", index: 12 });
+    expect(ruleIdFromItemId("query-rule:%E0%A4%A")).toBeUndefined();
+    expect(ruleLocationFromTargetId("query-target:root:nope")).toBeUndefined();
+    expect(ruleLocationFromTargetId("query-target:root:-1")).toBeUndefined();
+  });
+
+  it("rejects reorders with unknown rules or out-of-range destinations", () => {
+    expect(applyRuleReorder({
+      query: validQuery,
+      reordered: DragAndDrop.OutMessage.Reordered({
+        itemId: ruleItemId("missing"),
+        fromContainerId: ruleTargetId({ groupId: "root", index: 0 }),
+        fromIndex: 0,
+        toContainerId: ruleTargetId({ groupId: "root", index: 99 }),
+        toIndex: 0,
+      }),
     })).toBeUndefined();
   });
 });
@@ -168,6 +224,39 @@ describe("QueryBuilder submodel", () => {
     const model = init({ id: "builder", query: validQuery });
     expect(update(model, Message.ChangedValue({ ruleId: "missing", value: "x" })).model).toBe(model);
     expect(update(model, Message.AddedGroup({ groupId: "missing" })).model).toBe(model);
+  });
+
+  it("commits a pointer drag between nested groups", () => {
+    const initial = init({ id: "builder", query: validQuery });
+    const source = ruleTargetId({ groupId: "root", index: 0 });
+    const destination = ruleTargetId({ groupId: "group-a", index: 2 });
+    const pressed = update(initial, Message.GotInteractionMessage({
+      message: DragAndDrop.Message.PressedDraggable({
+        itemId: ruleItemId("rule-a"),
+        containerId: source,
+        index: 0,
+        screenX: 10,
+        screenY: 10,
+      }),
+    })).model;
+    const dragging = update(pressed, Message.GotInteractionMessage({
+      message: DragAndDrop.Message.MovedPointer({
+        screenX: 10,
+        screenY: 30,
+        clientX: 10,
+        clientY: 30,
+        maybeDropTarget: Option.some({ containerId: destination, index: 0 }),
+      }),
+    })).model;
+    const dropped = update(dragging, Message.GotInteractionMessage({
+      message: DragAndDrop.Message.ReleasedPointer(),
+    })).model;
+    const nested = findNode(dropped.query, "group-a");
+
+    expect(dropped.interaction.dragState._tag).toBe("Idle");
+    expect(dropped.query.children.map(({ id }) => id)).toEqual(["group-a"]);
+    expect(nested?._tag === "Group" ? nested.children.map(({ id }) => id) : [])
+      .toEqual(["rule-b", "rule-c", "rule-a"]);
   });
 
   it("renders a dense readable summary without editor controls", () => {

@@ -5,6 +5,7 @@ import { subscriptions as dataGridSubscriptions } from "../data-grid/subscriptio
 import { Message as DataGridMessage } from "../data-grid/message";
 import { subscriptions as formSubscriptions } from "../form-builder/subscriptions";
 import { Message as FormMessage } from "../form-builder/message";
+import { subscriptions as queryBuilderSubscriptions } from "../query-builder/subscriptions";
 import { SYSTEM_DARK_QUERY } from "../theme";
 import { subscriptions as workflowSubscriptions } from "../workflow/subscriptions";
 import { Message as WorkflowMessage } from "../workflow/message";
@@ -76,10 +77,16 @@ const dataGrid = Subscription.lift(dataGridSubscriptions)<Model, Message>({
   toParentMessage: (message) => Message.GotDataGridDemoMessage({ message }),
 });
 
+const queryBuilder = Subscription.lift(queryBuilderSubscriptions)<Model, Message>({
+  toChildModel: (model) => model.queryBuilderDemo,
+  toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
+});
+
 export const subscriptions = Subscription.aggregate<Model, Message>()(
   workflow,
   form,
   dataGrid,
+  queryBuilder,
   themeSubscriptions,
   historySubscriptions,
 );
