@@ -1,4 +1,5 @@
 import type { LucideIconData } from "@lucide/icons";
+import type * as stylex from "@stylexjs/stylex";
 import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { Button } from "@foldkit/ui";
@@ -21,6 +22,7 @@ export type ViewConfig<Message> = Readonly<{
   isFullWidth?: boolean;
   ariaLabel?: string;
   attributes?: ReadonlyArray<Attribute<Message>>;
+  style?: stylex.StyleXStyles;
 }>;
 
 const variantStyle = (variant: Variant) => {
@@ -60,6 +62,7 @@ export const view = <Message>(
             buttonStyles.base,
             variantStyle(variant),
             sizeStyle(size),
+            config.style,
             config.isFullWidth === true && buttonStyles.fullWidth,
             config.isDisabled === true && buttonStyles.disabled,
           ),

@@ -15,7 +15,13 @@ export const colors = stylex.defineConsts({
   primary: "var(--foldworks-ui-primary)",
   primaryHover: "var(--foldworks-ui-primary-hover)",
   primaryForeground: "var(--foldworks-ui-primary-foreground)",
+  brand: "var(--foldworks-ui-brand)",
+  brandHover: "var(--foldworks-ui-brand-hover)",
+  brandSurface: "var(--foldworks-ui-brand-surface)",
+  brandBorder: "var(--foldworks-ui-brand-border)",
+  brandForeground: "var(--foldworks-ui-brand-foreground)",
   focus: "var(--foldworks-ui-focus)",
+  focusGlow: "var(--foldworks-ui-focus-glow)",
   success: "var(--foldworks-ui-success)",
   successSurface: "var(--foldworks-ui-success-surface)",
   warning: "var(--foldworks-ui-warning)",
@@ -40,12 +46,16 @@ export const metrics = stylex.defineConsts({
   radiusMd: "var(--foldworks-ui-radius-md)",
   radiusLg: "var(--foldworks-ui-radius-lg)",
   shadowSm: "var(--foldworks-ui-shadow-sm)",
+  shadowControl: "var(--foldworks-ui-shadow-control)",
+  shadowInteractive: "var(--foldworks-ui-shadow-interactive)",
   shadowPanel: "var(--foldworks-ui-shadow-panel)",
   shadowFloat: "var(--foldworks-ui-shadow-float)",
   shadowSheet: "var(--foldworks-ui-shadow-sheet)",
   durationFast: "var(--foldworks-ui-duration-fast)",
   durationNormal: "var(--foldworks-ui-duration-normal)",
+  durationSlow: "var(--foldworks-ui-duration-slow)",
   easeOut: "var(--foldworks-ui-ease-out)",
+  spring: "var(--foldworks-ui-spring)",
   font: "var(--foldworks-ui-font)",
 });
 
@@ -91,6 +101,8 @@ export const sizes = stylex.defineConsts({
 
 export const shadows = stylex.defineConsts({
   sm: "var(--foldworks-ui-shadow-sm)",
+  control: "var(--foldworks-ui-shadow-control)",
+  interactive: "var(--foldworks-ui-shadow-interactive)",
   panel: "var(--foldworks-ui-shadow-panel)",
   float: "var(--foldworks-ui-shadow-float)",
   sheet: "var(--foldworks-ui-shadow-sheet)",
@@ -99,5 +111,7 @@ export const shadows = stylex.defineConsts({
 export const motion = stylex.defineConsts({
   fast: "var(--foldworks-ui-duration-fast)",
   normal: "var(--foldworks-ui-duration-normal)",
+  slow: "var(--foldworks-ui-duration-slow)",
   easeOut: "var(--foldworks-ui-ease-out)",
+  spring: "var(--foldworks-ui-spring)",
 });

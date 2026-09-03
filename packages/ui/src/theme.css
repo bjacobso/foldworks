@@ -49,7 +49,13 @@
   --foldworks-ui-primary: var(--primary);
   --foldworks-ui-primary-hover: oklch(0.269 0 0);
   --foldworks-ui-primary-foreground: var(--primary-foreground);
-  --foldworks-ui-focus: var(--ring);
+  --foldworks-ui-brand: oklch(0.585 0.233 275.17);
+  --foldworks-ui-brand-hover: oklch(0.525 0.252 274.713);
+  --foldworks-ui-brand-surface: oklch(0.97 0.022 278.97);
+  --foldworks-ui-brand-border: oklch(0.86 0.075 278.16);
+  --foldworks-ui-brand-foreground: oklch(0.35 0.18 276.8);
+  --foldworks-ui-focus: var(--foldworks-ui-brand);
+  --foldworks-ui-focus-glow: oklch(0.585 0.233 275.17 / 18%);
   --foldworks-ui-sidebar: var(--sidebar);
   --foldworks-ui-sidebar-foreground: var(--sidebar-foreground);
   --foldworks-ui-sidebar-accent: var(--sidebar-accent);
@@ -78,12 +84,16 @@
   --foldworks-ui-radius-md: calc(var(--radius) - 2px);
   --foldworks-ui-radius-lg: var(--radius);
   --foldworks-ui-shadow-sm: 0 1px 2px oklch(0.145 0 0 / 5%);
-  --foldworks-ui-shadow-panel: 0 8px 24px oklch(0.145 0 0 / 6%);
+  --foldworks-ui-shadow-control: 0 1px 2px oklch(0.145 0 0 / 7%), 0 0 0 1px oklch(0.145 0 0 / 2%);
+  --foldworks-ui-shadow-interactive: 0 4px 10px oklch(0.35 0.12 275 / 10%), 0 1px 3px oklch(0.145 0 0 / 8%);
+  --foldworks-ui-shadow-panel: 0 1px 2px oklch(0.145 0 0 / 4%), 0 6px 20px oklch(0.145 0 0 / 6%);
   --foldworks-ui-shadow-float: 0 20px 45px oklch(0.145 0 0 / 22%);
   --foldworks-ui-shadow-sheet: -24px 0 60px oklch(0.145 0 0 / 16%);
   --foldworks-ui-duration-fast: 120ms;
   --foldworks-ui-duration-normal: 180ms;
+  --foldworks-ui-duration-slow: 320ms;
   --foldworks-ui-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --foldworks-ui-spring: cubic-bezier(0.2, 0.8, 0.2, 1.08);
   --foldworks-ui-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -124,6 +134,13 @@
   --sidebar-ring: oklch(0.556 0 0);
 
   --foldworks-ui-primary-hover: oklch(0.87 0 0);
+  --foldworks-ui-brand: oklch(0.704 0.18 275.28);
+  --foldworks-ui-brand-hover: oklch(0.765 0.145 276.14);
+  --foldworks-ui-brand-surface: oklch(0.235 0.06 277.2);
+  --foldworks-ui-brand-border: oklch(0.39 0.12 276.2);
+  --foldworks-ui-brand-foreground: oklch(0.89 0.065 278.1);
+  --foldworks-ui-focus: var(--foldworks-ui-brand);
+  --foldworks-ui-focus-glow: oklch(0.704 0.18 275.28 / 22%);
   --foldworks-ui-success: oklch(0.792 0.209 151.711);
   --foldworks-ui-success-surface: oklch(0.266 0.065 152.934);
   --foldworks-ui-warning: oklch(0.852 0.199 91.936);
@@ -141,6 +158,8 @@
   --foldworks-ui-drop-target-active-border: oklch(0.66 0.15 156);
   --foldworks-ui-overlay: oklch(0 0 0 / 58%);
   --foldworks-ui-shadow-sm: 0 1px 2px oklch(0 0 0 / 22%);
+  --foldworks-ui-shadow-control: 0 1px 2px oklch(0 0 0 / 26%), 0 0 0 1px oklch(1 0 0 / 2%);
+  --foldworks-ui-shadow-interactive: 0 5px 16px oklch(0 0 0 / 32%), 0 0 0 1px oklch(0.704 0.18 275.28 / 8%);
   --foldworks-ui-shadow-panel: 0 8px 24px oklch(0 0 0 / 28%);
   --foldworks-ui-shadow-float: 0 20px 45px oklch(0 0 0 / 42%);
   --foldworks-ui-shadow-sheet: -24px 0 60px oklch(0 0 0 / 38%);

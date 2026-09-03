@@ -11,6 +11,8 @@ export const defineConsts = <const Values extends Record<string, string>>(
   values: Values,
 ): Values => values;
 
+export const keyframes = () => "stylex-test-keyframes";
+
 export const props = (...styles: ReadonlyArray<StyleXStyles>) => ({
   className: styles.filter((style): style is string => typeof style === "string").join(" "),
 });

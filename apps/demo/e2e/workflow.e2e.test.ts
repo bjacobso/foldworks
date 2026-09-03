@@ -142,10 +142,28 @@ describe.sequential("structured workflow builder", () => {
       .toContain("DepartmentisEngineering");
     await expect.poll(() => page.getByText("Query is valid", { exact: true }).count()).toBe(1);
 
-    await page.locator('[data-query-group="employee-filter-root"]')
+    const firstRule = page.locator("[data-query-rule]").first();
+    const restingShadow = await firstRule.evaluate((element) => getComputedStyle(element).boxShadow);
+    const animationName = await firstRule.evaluate((element) => getComputedStyle(element).animationName);
+    expect(animationName).not.toBe("none");
+    await firstRule.hover();
+    await page.waitForTimeout(220);
+    const hoverShadow = await firstRule.evaluate((element) => getComputedStyle(element).boxShadow);
+    expect(hoverShadow).not.toBe(restingShadow);
+
+    const conditionButton = page.locator('[data-query-group="employee-filter-root"]')
       .getByRole("button", { name: "Condition" })
-      .first()
-      .click();
+      .first();
+    const restingTransform = await conditionButton.evaluate((element) => getComputedStyle(element).transform);
+    const conditionBox = await conditionButton.boundingBox();
+    expect(conditionBox).not.toBeNull();
+    if (conditionBox === null) return;
+    await page.mouse.move(conditionBox.x + conditionBox.width / 2, conditionBox.y + conditionBox.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(140);
+    const activeTransform = await conditionButton.evaluate((element) => getComputedStyle(element).transform);
+    expect(activeTransform).not.toBe(restingTransform);
+    await page.mouse.up();
     await expect.poll(() => page.locator("[data-query-rule]").count()).toBe(5);
     await expect.poll(() => page.getByText("1 issue to resolve", { exact: true }).count()).toBe(1);
 
@@ -155,6 +173,17 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.locator("[data-query-readonly=true]").textContent())
       .toContain("Employee nameisMaya");
     await screenshot("16-query-builder");
+  });
+
+  it("honors reduced motion in the query builder", async () => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`${appUrl}/query-builder`, { waitUntil: "networkidle" });
+    const motion = await page.locator("[data-query-rule]").first().evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { duration: style.animationDuration, name: style.animationName };
+    });
+
+    expect(motion).toEqual({ duration: "0s", name: "none" });
   });
 
   it("switches to a horizontal, shareable workflow layout", async () => {

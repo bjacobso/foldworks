@@ -1,8 +1,8 @@
-import { Plus, Trash2 } from "@lucide/icons";
+import { Brackets, ListFilter, Plus, Trash2 } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { Button, sxAttrs } from "@foldworks/ui";
+import { Button, Icon, sxAttrs } from "@foldworks/ui";
 
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -42,6 +42,24 @@ const select = (
     [option.label],
   )),
 );
+
+const combinatorControl = (
+  group: QueryGroup,
+  h: HtmlBuilder<Message>,
+): Html => h.div([
+  ...sxAttrs(h, styles.combinatorControl),
+  h.Role("group"),
+  h.AriaLabel("Condition matching"),
+], (["All", "Any"] as const).map((combinator) => h.button([
+  ...sxAttrs(
+    h,
+    styles.combinatorButton,
+    group.combinator === combinator && styles.combinatorActive,
+  ),
+  h.Type("button"),
+  h.AriaPressed(group.combinator === combinator ? "true" : "false"),
+  h.OnClick(Message.ChangedCombinator({ groupId: group.id, combinator })),
+], [combinator])));
 
 const valueControl = (
   rule: QueryRule,
@@ -99,6 +117,7 @@ const ruleView = (
         ariaLabel: "Remove condition",
         variant: "ghost",
         size: "icon",
+        style: styles.removeButton,
         onClick: Message.RemovedNode({ nodeId: rule.id }),
       }, h),
     ]);
@@ -139,6 +158,7 @@ const ruleView = (
         ariaLabel: `Remove ${attribute.label} condition`,
         variant: "ghost",
         size: "icon",
+        style: styles.removeButton,
         onClick: Message.RemovedNode({ nodeId: rule.id }),
       }, h),
       ...(issues[0] === undefined
@@ -168,18 +188,11 @@ const groupView = (
     [
       h.div(sxAttrs(h, styles.groupHeader), [
         h.div(sxAttrs(h, styles.groupLead), [
+          h.span(sxAttrs(h, styles.groupIcon), [
+            Icon.view({ icon: isRoot ? ListFilter : Brackets, size: 15, strokeWidth: 2.1 }, h),
+          ]),
           h.span(sxAttrs(h, styles.groupLabel), [isRoot ? "Match" : "Nested group"]),
-          select(
-            group.combinator,
-            "Condition matching",
-            [{ value: "All", label: "All" }, { value: "Any", label: "Any" }],
-            (value) => Message.ChangedCombinator({
-              groupId: group.id,
-              combinator: value === "Any" ? "Any" : "All",
-            }),
-            h,
-            styles.combinator,
-          ),
+          combinatorControl(group, h),
           h.span(sxAttrs(h, styles.groupLabel), ["of the following"]),
         ]),
         h.div(sxAttrs(h, styles.groupActions), [
@@ -213,10 +226,12 @@ const groupView = (
                 ariaLabel: "Remove group",
                 variant: "ghost",
                 size: "icon",
+                style: styles.removeButton,
                 onClick: Message.RemovedNode({ nodeId: group.id }),
               }, h)]),
         ]),
       ]),
+      ...(isRoot ? [] : [h.span([h.AriaHidden(true), ...sxAttrs(h, styles.nestedRail)])]),
       h.div(sxAttrs(h, styles.children), group.children.length === 0
         ? [h.div(sxAttrs(h, styles.empty), [
             firstAttribute === undefined
@@ -245,7 +260,11 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
       groupView(model.query, inputs, validation, 0, true, h),
       ...(inputs.showValidation === false
         ? []
-        : [h.div(sxAttrs(h, styles.summary), [
+        : [h.div(sxAttrs(
+            h,
+            styles.summary,
+            validation.isValid ? styles.summaryValid : styles.summaryInvalid,
+          ), [
             h.span(sxAttrs(h, validation.isValid ? styles.validDot : styles.invalidDot)),
             validation.isValid
               ? "Query is valid"
@@ -301,7 +320,8 @@ export const readOnlyView = <Message>(
     label?: string;
   }>,
   h: HtmlBuilder<Message>,
-): Html => h.div(
+): Html => h.keyed("div")(
+  JSON.stringify(config.query),
   [
     ...sxAttrs(h, styles.readonly),
     h.AriaLabel(config.label ?? "Query summary"),

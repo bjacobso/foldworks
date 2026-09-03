@@ -36,6 +36,13 @@ Render `QueryBuilder.view` through a Foldkit submodel boundary and fold its
 messages with `QueryBuilder.update`. Use `QueryBuilder.readOnlyView` when the
 same query needs a compact, non-interactive summary.
 
+The default StyleX presentation uses the shared `@foldworks/ui`
+semantic tokens for every color, shadow, radius, and motion value. New groups
+and rules enter with keyed spring transitions; rows expose hover, pressed, and
+focus-within feedback; validation changes animate without moving surrounding
+content. All non-essential animation is disabled when the user prefers reduced
+motion.
+
 Custom operator labels can be supplied per attribute. An operator with
 `requiresValue: false` skips value validation and omits the value editor.
 A top-level `validateValue(attribute, value)` callback adds domain validation

@@ -30,11 +30,18 @@ export const buttonStyles = stylex.create({
     transitionDuration: metrics.durationFast,
     transitionProperty: "background-color, border-color, color, opacity, transform",
     transitionTimingFunction: "ease-out",
+    transform: {
+      default: "translateY(0) scale(1)",
+      ":hover": "translateY(-1px) scale(1)",
+      ":active": "translateY(0) scale(0.975)",
+    },
+    willChange: "transform",
     whiteSpace: "nowrap",
   },
   primary: {
     backgroundColor: { default: colors.primary, ":hover": colors.primaryHover },
     borderColor: colors.primary,
+    boxShadow: { default: metrics.shadowControl, ":hover": metrics.shadowInteractive },
     color: colors.primaryForeground,
   },
   secondary: {
@@ -45,7 +52,7 @@ export const buttonStyles = stylex.create({
   outline: {
     backgroundColor: { default: colors.surface, ":hover": colors.surfaceSubtle },
     borderColor: colors.borderStrong,
-    boxShadow: metrics.shadowSm,
+    boxShadow: { default: metrics.shadowControl, ":hover": metrics.shadowInteractive },
     color: colors.foreground,
   },
   ghost: {
@@ -62,7 +69,7 @@ export const buttonStyles = stylex.create({
   md: { height: "36px", paddingLeft: "14px", paddingRight: "14px" },
   icon: { height: "32px", padding: 0, width: "32px" },
   fullWidth: { width: "100%" },
-  disabled: { cursor: "not-allowed", opacity: 0.45 },
+  disabled: { cursor: "not-allowed", opacity: 0.45, transform: "none" },
 });
 
 export const badgeStyles = stylex.create({
@@ -137,6 +144,10 @@ export const segmentedStyles = stylex.create({
     outline: { default: "none", ":focus-visible": `2px solid ${colors.focus}` },
     paddingLeft: "10px",
     paddingRight: "10px",
+    transform: { default: "scale(1)", ":active": "scale(0.96)" },
+    transitionDuration: motion.fast,
+    transitionProperty: "background-color, box-shadow, color, transform",
+    transitionTimingFunction: motion.easeOut,
   },
   active: { backgroundColor: colors.surface, boxShadow: metrics.shadowSm, color: colors.foreground },
 });
@@ -147,7 +158,11 @@ export const fieldStyles = stylex.create({
   description: { color: colors.foregroundMuted, fontSize: "10px", lineHeight: 1.45, margin: 0 },
   control: {
     backgroundColor: colors.surface,
-    borderColor: { default: colors.input, ":focus": colors.foregroundMuted },
+    borderColor: {
+      default: colors.input,
+      ":hover": colors.borderStrong,
+      ":focus": colors.brand,
+    },
     borderRadius: metrics.radiusMd,
     borderStyle: "solid",
     borderWidth: "1px",
@@ -160,6 +175,10 @@ export const fieldStyles = stylex.create({
     paddingLeft: "10px",
     paddingRight: "10px",
     width: "100%",
+    boxShadow: { default: "none", ":hover": shadows.control },
+    transitionDuration: motion.fast,
+    transitionProperty: "border-color, box-shadow",
+    transitionTimingFunction: motion.easeOut,
   },
   compact: { minHeight: "32px" },
   selectControl: { minHeight: "32px", paddingRight: "28px", width: "auto" },
@@ -354,10 +373,11 @@ export const panelStyles = stylex.create({
     borderRadius: metrics.radiusLg,
     borderStyle: "solid",
     borderWidth: "1px",
-    boxShadow: metrics.shadowSm,
+    boxShadow: metrics.shadowPanel,
+    overflow: "hidden",
   },
-  header: { borderBottomColor: colors.border, borderBottomStyle: "solid", borderBottomWidth: "1px", padding: "14px 16px" },
+  header: { borderBottomColor: colors.border, borderBottomStyle: "solid", borderBottomWidth: "1px", padding: "16px 18px" },
   title: { color: colors.foreground, fontSize: "14px", fontWeight: 700, margin: 0 },
   description: { color: colors.foregroundMuted, fontSize: "11px", marginBottom: 0, marginTop: "4px" },
-  body: { padding: "16px" },
+  body: { padding: "18px" },
 });
