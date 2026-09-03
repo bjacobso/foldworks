@@ -27,7 +27,7 @@ export const styles = stylex.create({
   appFormPreview: {
     gridTemplateColumns: "1fr",
   },
-  palette: {
+  sidebar: {
     backgroundColor: "var(--foldworks-ui-sidebar)",
     borderRightColor: "var(--foldworks-ui-sidebar-border)",
     borderRightStyle: "solid",
@@ -46,9 +46,8 @@ export const styles = stylex.create({
   brandRow: {
     alignItems: "center",
     display: "flex",
-    gap: "10px",
     marginBottom: "20px",
-    paddingLeft: "4px",
+    paddingLeft: "10px",
   },
   demoNav: {
     display: "flex",
@@ -97,20 +96,6 @@ export const styles = stylex.create({
     backgroundColor: "var(--foldworks-ui-brand-surface)",
     color: "var(--foldworks-ui-brand-foreground)",
   },
-  brandMark: {
-    alignItems: "center",
-    backgroundColor: "var(--foldworks-ui-brand)",
-    backgroundImage: "linear-gradient(145deg, var(--foldworks-ui-brand), color-mix(in oklch, var(--foldworks-ui-brand) 68%, var(--foldworks-ui-info)))",
-    borderRadius: "9px",
-    color: "var(--foldworks-ui-primary-foreground)",
-    display: "flex",
-    fontSize: "18px",
-    fontWeight: 800,
-    height: "32px",
-    justifyContent: "center",
-    boxShadow: "var(--foldworks-ui-shadow-interactive)",
-    width: "32px",
-  },
   brand: {
     fontSize: "15px",
     fontWeight: 750,
@@ -133,11 +118,6 @@ export const styles = stylex.create({
     gap: "8px",
     margin: 0,
     padding: 0,
-  },
-  gridFeatureList: {
-    color: "var(--foldworks-ui-foreground-muted)",
-    fontSize: "12px",
-    lineHeight: 1.45,
   },
   paletteItem: {
     alignItems: "center",
@@ -204,22 +184,35 @@ export const styles = stylex.create({
     fontSize: "15px",
     letterSpacing: "-2px",
   },
-  paletteHint: {
-    borderColor: "var(--foldworks-ui-border)",
-    borderStyle: "solid",
-    borderWidth: "1px 0 0",
-    color: "var(--foldworks-ui-foreground-muted)",
-    fontSize: "11px",
-    lineHeight: 1.5,
-    marginBottom: 0,
-    marginTop: "auto",
-    padding: "20px 6px 0",
-  },
   workspace: {
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
     minHeight: 0,
     minWidth: 0,
+  },
+  editorWorkspace: {
+    display: "grid",
+    gridTemplateColumns: {
+      default: "252px minmax(0, 1fr)",
+      "@media (max-width: 1100px)": "220px minmax(0, 1fr)",
+      "@media (max-width: 820px)": "1fr",
+    },
+    minHeight: 0,
+    minWidth: 0,
+    overflow: "hidden",
+  },
+  editorPalette: {
+    backgroundColor: "var(--foldworks-ui-sidebar)",
+    borderRightColor: "var(--foldworks-ui-sidebar-border)",
+    borderRightStyle: "solid",
+    borderRightWidth: "1px",
+    display: {
+      default: "block",
+      "@media (max-width: 820px)": "none",
+    },
+    minHeight: 0,
+    overflowY: "auto",
+    padding: "18px 14px 24px",
   },
   toolbar: {
     alignItems: "center",

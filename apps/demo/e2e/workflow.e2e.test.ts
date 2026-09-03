@@ -111,6 +111,32 @@ describe.sequential("structured workflow builder", () => {
     await server?.close();
   });
 
+  it("keeps navigation isolated from each demo's tools", async () => {
+    await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
+
+    const sidebar = page.getByRole("complementary", { name: "Foldworks navigation" });
+    await expect.poll(() => sidebar.getByRole("link").allTextContents()).toEqual([
+      "@foldworks/ui",
+      "Data grid",
+      "Query builder",
+      "Form builder",
+      "Workflow builder",
+    ]);
+    await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
+    await expect.poll(() => sidebar.getByText("Design system", { exact: true }).count()).toBe(0);
+
+    await page.getByRole("link", { name: "Workflow builder" }).click();
+    await expect.poll(() => page.getByRole("complementary", { name: "Workflow nodes" }).count())
+      .toBe(1);
+    await expect.poll(() => sidebar.getByText("Drag to an insertion point", { exact: true }).count())
+      .toBe(0);
+
+    await page.getByRole("link", { name: "Form builder" }).click();
+    await expect.poll(() => page.getByRole("complementary", { name: "Form fields" }).count())
+      .toBe(1);
+    await expect.poll(() => sidebar.getByText("Add a field", { exact: true }).count()).toBe(0);
+  });
+
   it("renders nested condition and switch branches without collisions", async () => {
     await page.goto(appUrl, { waitUntil: "networkidle" });
     await expect.poll(() => page.locator("[data-node-id]").count()).toBe(5);

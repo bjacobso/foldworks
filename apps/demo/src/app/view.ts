@@ -49,30 +49,30 @@ const navigation = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   return h.nav([h.Class(className(styles.demoNav)), h.AriaLabel("Example views")], [
     h.a([
-      h.Href(workflowPath(model.workflowEditor.workflow.orientation)),
-      h.Class(className(styles.demoNavItem, demo === "Workflow" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "Workflow" ? "page" : "false"),
-    ], [Icon.view({ icon: WorkflowIcon, size: 15 }, h), "Workflow builder"]),
+      h.Href(uiKitRouter()),
+      h.Class(className(styles.demoNavItem, demo === "UiKit" && styles.demoNavItemActive)),
+      h.AriaCurrent(demo === "UiKit" ? "page" : "false"),
+    ], [Icon.view({ icon: Blocks, size: 15 }, h), "@foldworks/ui"]),
     h.a([
       h.Href(dataGridRouter()),
       h.Class(className(styles.demoNavItem, demo === "DataGrid" && styles.demoNavItemActive)),
       h.AriaCurrent(demo === "DataGrid" ? "page" : "false"),
     ], [Icon.view({ icon: Table2, size: 15 }, h), "Data grid"]),
     h.a([
-      h.Href(formBuilderPath(model.formEditor.exampleId, model.formEditor.mode)),
-      h.Class(className(styles.demoNavItem, demo === "FormBuilder" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "FormBuilder" ? "page" : "false"),
-    ], [Icon.view({ icon: ListChecks, size: 15 }, h), "Form builder"]),
-    h.a([
       h.Href(queryBuilderRouter()),
       h.Class(className(styles.demoNavItem, demo === "QueryBuilder" && styles.demoNavItemActive)),
       h.AriaCurrent(demo === "QueryBuilder" ? "page" : "false"),
     ], [Icon.view({ icon: ListFilter, size: 15 }, h), "Query builder"]),
     h.a([
-      h.Href(uiKitRouter()),
-      h.Class(className(styles.demoNavItem, demo === "UiKit" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "UiKit" ? "page" : "false"),
-    ], [Icon.view({ icon: Blocks, size: 15 }, h), "UI components"]),
+      h.Href(formBuilderPath(model.formEditor.exampleId, model.formEditor.mode)),
+      h.Class(className(styles.demoNavItem, demo === "FormBuilder" && styles.demoNavItemActive)),
+      h.AriaCurrent(demo === "FormBuilder" ? "page" : "false"),
+    ], [Icon.view({ icon: ListChecks, size: 15 }, h), "Form builder"]),
+    h.a([
+      h.Href(workflowPath(model.workflowEditor.workflow.orientation)),
+      h.Class(className(styles.demoNavItem, demo === "Workflow" && styles.demoNavItemActive)),
+      h.AriaCurrent(demo === "Workflow" ? "page" : "false"),
+    ], [Icon.view({ icon: WorkflowIcon, size: 15 }, h), "Workflow builder"]),
   ]);
 };
 
@@ -103,56 +103,14 @@ const childRegion = (
   return h.empty;
 };
 
-const palette = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const demo = demoFromRoute(model.route);
-  const tools = demo === "Workflow" || demo === "FormBuilder"
-    ? childRegion(model, "Palette", h)
-    : demo === "DataGrid"
-      ? h.div([h.Class(className(styles.gridFeatureList))], [
-          h.p([h.Class(className(styles.paletteLabel))], ["Initial grid primitives"]),
-          h.p([], ["Typed column definitions"]),
-          h.p([], ["Headless derived row model"]),
-          h.p([], ["Sorting and custom cells"]),
-          h.p([], ["Keyboard selection"]),
-          h.p([], ["Resizable columns"]),
-        ])
-      : demo === "QueryBuilder"
-        ? h.div([h.Class(className(styles.gridFeatureList))], [
-            h.p([h.Class(className(styles.paletteLabel))], ["Configured attributes"]),
-            h.p([], ["Text and custom operators"]),
-            h.p([], ["Number validation"]),
-            h.p([], ["Select options"]),
-            h.p([], ["Boolean values"]),
-            h.p([], ["Calendar dates"]),
-            h.p([], ["Nested all / any groups"]),
-          ])
-      : h.div([h.Class(className(styles.gridFeatureList))], [
-          h.p([h.Class(className(styles.paletteLabel))], ["Design system"]),
-          h.p([], ["Shared semantic tokens"]),
-          h.p([], ["Foldkit-native controls"]),
-          h.p([], ["All component variants"]),
-          h.p([], ["Controlled interaction states"]),
-          h.p([], ["Reusable composition"]),
-        ]);
-  const hint = demo === "Workflow"
-    ? "Node types, sizes, branches, and views are registered by this application. The workflow package owns structure and interaction."
-    : demo === "DataGrid"
-      ? "The application owns row data and cell rendering. The package owns table derivation and interaction state."
-      : demo === "FormBuilder"
-        ? "Sections define journey order and reference actors. Drag fields between pages, pages between sections, and sections across the document."
-        : demo === "QueryBuilder"
-          ? "The package owns the query document, editing state, validation, and both display densities. The application supplies its available attributes."
-        : "The UI package owns visual primitives and accessible Foldkit composition. Applications keep control of their data and messages.";
+const sidebar = (model: Model, h: HtmlBuilder<Message>): Html => {
   return h.aside(
-    [h.Class(className(styles.palette)), h.AriaLabel("Demo navigation and tools")],
+    [h.Class(className(styles.sidebar)), h.AriaLabel("Foldworks navigation")],
     [
       h.div([h.Class(className(styles.brandRow))], [
-        h.div([h.Class(className(styles.brandMark)), h.AriaHidden(true)], ["O"]),
-        h.p([h.Class(className(styles.brand))], ["Demo"]),
+        h.p([h.Class(className(styles.brand))], ["Foldworks"]),
       ]),
       navigation(model, h),
-      tools,
-      h.p([h.Class(className(styles.paletteHint))], [hint]),
     ],
   );
 };
@@ -216,7 +174,16 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
 
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
-  if (demo === "Workflow" || demo === "FormBuilder") {
+  if (demo === "Workflow" || (demo === "FormBuilder" && model.formEditor.mode === "Editor")) {
+    const paletteLabel = demo === "Workflow" ? "Workflow nodes" : "Form fields";
+    return h.div([h.Class(className(styles.editorWorkspace))], [
+      h.aside([h.Class(className(styles.editorPalette)), h.AriaLabel(paletteLabel)], [
+        childRegion(model, "Palette", h),
+      ]),
+      childRegion(model, "Content", h),
+    ]);
+  }
+  if (demo === "FormBuilder") {
     return childRegion(model, "Content", h);
   }
   if (demo === "DataGrid") {
@@ -247,11 +214,11 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
   const demo = demoFromRoute(model.route);
   const preview = demo === "FormBuilder" && model.formEditor.mode === "Preview";
   return {
-    title: `${demo === "DataGrid" ? "Data grid" : demo === "FormBuilder" ? "Form builder" : demo === "QueryBuilder" ? "Query builder" : demo === "UiKit" ? "UI components" : "Workflow"} · Demo`,
+    title: `${demo === "DataGrid" ? "Data grid" : demo === "FormBuilder" ? "Form builder" : demo === "QueryBuilder" ? "Query builder" : demo === "UiKit" ? "UI components" : "Workflow"} · Foldworks`,
     body: h.main(
       [h.Class(className(styles.app, preview && styles.appFormPreview))],
       [
-        preview ? h.empty : palette(model, h),
+        preview ? h.empty : sidebar(model, h),
         h.section([h.Class(className(styles.workspace))], [toolbar(model, h), content(model, h)]),
         demo === "Workflow" || demo === "FormBuilder"
           ? childRegion(model, "Overlay", h)

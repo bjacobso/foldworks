@@ -49,6 +49,6 @@ export const init = (
     systemIsDark: theme.systemIsDark,
     persistenceStatus: "Saved",
     revision: 0,
-    announcement: "Demo ready.",
+    announcement: "Foldworks ready.",
   };
 };

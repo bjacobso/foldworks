@@ -1,4 +1,4 @@
-# Demo
+# Foldworks demo
 
 A browser-only demo app built with Foldkit, StyleX, and Vite. Use the sidebar
 to switch between the workflow builder, Excel-like data grid, form builder, and
