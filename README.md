@@ -34,3 +34,16 @@ pnpm build
 
 Run `pnpm dev` to start the demo application. Run `pnpm test:e2e` for its
 Playwright interaction suite.
+
+## Deployment
+
+The demo is deployed to Cloudflare Workers with
+[Alchemy](https://alchemy.run):
+
+**[Open the live demo](https://foldworks-demo-prod-acvnipkoj23cgmkb.bjacobso.workers.dev)**
+
+Authenticate with Cloudflare, then deploy the production stage with:
+
+```sh
+pnpm run deploy
+```

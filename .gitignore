@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .turbo/
+.alchemy/
+.wrangler/
 .env
 .env.local
 coverage/

@@ -2,6 +2,12 @@
   "name": "foldworks",
   "description": "Polished application primitives for Foldkit and StyleX.",
   "private": true,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git"
+  },
+  "homepage": "https://foldworks-demo-prod-acvnipkoj23cgmkb.bjacobso.workers.dev",
   "packageManager": "pnpm@10.20.0",
   "engines": {
     "node": ">=24.13",
@@ -10,8 +16,20 @@
   "scripts": {
     "dev": "pnpm --filter @foldworks/demo dev",
     "build": "pnpm --filter @foldworks/demo build",
-    "typecheck": "pnpm --recursive --if-present typecheck",
+    "deploy": "alchemy deploy --stage prod",
+    "destroy": "alchemy destroy --stage prod",
+    "typecheck": "pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
+    "typecheck:infra": "tsc --noEmit",
     "test": "pnpm --recursive --if-present test",
     "test:e2e": "pnpm --filter @foldworks/demo test:e2e"
+  },
+  "devDependencies": {
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.76",
+    "@effect/platform-node": "4.0.0-rc.112",
+    "@types/node": "catalog:",
+    "alchemy": "2.0.0-beta.76",
+    "effect": "catalog:",
+    "hono": "4.12.14",
+    "typescript": "5.9.3"
   }
 }
