@@ -3,8 +3,8 @@
   --data-grid-border-strong: var(--foldworks-ui-border-strong, #d3d3d6);
   --data-grid-header: var(--foldworks-ui-surface-subtle, #f3f3f4);
   --data-grid-hover: var(--foldworks-ui-canvas, #f7f7f8);
-  --data-grid-selected: #eef8f4;
-  --data-grid-accent: #24906a;
+  --data-grid-selected: var(--foldworks-ui-selection, #eef8f4);
+  --data-grid-accent: var(--foldworks-ui-selection-foreground, #24906a);
   --data-grid-text: var(--foldworks-ui-foreground, #202124);
   --data-grid-muted: var(--foldworks-ui-foreground-muted, #707176);
   background: var(--foldworks-ui-surface, #fff);
@@ -55,7 +55,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: #536072;
+  color: var(--data-grid-muted);
   cursor: pointer;
   display: flex;
   font: inherit;
@@ -79,7 +79,9 @@
 }
 
 .fk-data-grid__sort {
-  color: #99a3b0;
+  align-items: center;
+  color: var(--data-grid-muted);
+  display: inline-flex;
   font-size: 11px;
 }
 

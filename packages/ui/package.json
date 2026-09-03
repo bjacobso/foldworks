@@ -5,17 +5,22 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./icon": "./src/icon.ts",
     "./theme.css": "./src/theme.css"
   },
   "scripts": {
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@foldkit/ui": "catalog:",
+    "@lucide/icons": "catalog:",
     "@stylexjs/stylex": "catalog:",
     "foldkit": "catalog:"
   },
   "devDependencies": {
-    "typescript": "catalog:"
+    "effect": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

@@ -24,7 +24,7 @@ export const buttonStyles = stylex.create({
     whiteSpace: "nowrap",
   },
   primary: {
-    backgroundColor: { default: colors.primary, ":hover": "#303134" },
+    backgroundColor: { default: colors.primary, ":hover": colors.primaryHover },
     borderColor: colors.primary,
     color: colors.primaryForeground,
   },
@@ -46,7 +46,7 @@ export const buttonStyles = stylex.create({
   },
   danger: {
     backgroundColor: { default: colors.surface, ":hover": colors.dangerSurface },
-    borderColor: "#f2b8b5",
+    borderColor: colors.dangerBorder,
     color: colors.danger,
   },
   sm: { height: "32px", paddingLeft: "11px", paddingRight: "11px" },
@@ -138,7 +138,7 @@ export const fieldStyles = stylex.create({
   description: { color: colors.foregroundMuted, fontSize: "10px", lineHeight: 1.45, margin: 0 },
   control: {
     backgroundColor: colors.surface,
-    borderColor: { default: colors.borderStrong, ":focus": colors.foregroundMuted },
+    borderColor: { default: colors.input, ":focus": colors.foregroundMuted },
     borderRadius: metrics.radiusMd,
     borderStyle: "solid",
     borderWidth: "1px",

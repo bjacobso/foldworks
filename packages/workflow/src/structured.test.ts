@@ -104,4 +104,30 @@ describe("structured workflow primitives", () => {
       .toContain("condition:then");
     expect(layout.connectors.some((connector) => connector.points.length > 2)).toBe(true);
   });
+
+  it("transposes the structured layout for horizontal workflows", () => {
+    const vertical = createStructuredLayout<Node>({
+      nodeSize: () => ({ width: 250, height: 64 }),
+      minimumWidth: 720,
+      minimumHeight: 620,
+    })(document);
+    const horizontal = createStructuredLayout<Node>({
+      nodeSize: () => ({ width: 250, height: 64 }),
+      orientation: "Horizontal",
+      minimumWidth: 720,
+      minimumHeight: 620,
+    })(document);
+    const verticalStart = vertical.nodes.get("start");
+    const verticalCondition = vertical.nodes.get("condition");
+    const horizontalStart = horizontal.nodes.get("start");
+    const horizontalCondition = horizontal.nodes.get("condition");
+
+    expect(verticalStart?.y).toBeLessThan(verticalCondition?.y ?? 0);
+    expect(horizontalStart?.x).toBeLessThan(horizontalCondition?.x ?? 0);
+    expect(horizontalStart).toMatchObject({ width: 250, height: 64 });
+    expect(horizontal.width).toBeGreaterThan(horizontal.height);
+    expect(horizontal.insertions).toHaveLength(vertical.insertions.length);
+    expect(horizontal.branchLabels.map((label) => label.text))
+      .toEqual(vertical.branchLabels.map((label) => label.text));
+  });
 });

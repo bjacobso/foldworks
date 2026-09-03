@@ -324,14 +324,19 @@ export const moveItem = <Field extends FormField>(
 
 const LOCATION_PREFIX = "form-target:";
 
-export const dropLocationId = (documentId: string, location: DropLocation): string => {
+export const dropLocationId = (
+  documentId: string,
+  location: DropLocation,
+  surfaceId?: string,
+): string => {
+  const suffix = surfaceId === undefined ? "" : `:${encodeURIComponent(surfaceId)}`;
   if (location.kind === "Section") {
-    return `${LOCATION_PREFIX}section:${encodeURIComponent(documentId)}:${location.index}`;
+    return `${LOCATION_PREFIX}section:${encodeURIComponent(documentId)}:${location.index}${suffix}`;
   }
   if (location.kind === "Page") {
-    return `${LOCATION_PREFIX}page:${encodeURIComponent(location.sectionId)}:${location.index}`;
+    return `${LOCATION_PREFIX}page:${encodeURIComponent(location.sectionId)}:${location.index}${suffix}`;
   }
-  return `${LOCATION_PREFIX}field:${encodeURIComponent(location.pageId)}:${location.index}`;
+  return `${LOCATION_PREFIX}field:${encodeURIComponent(location.pageId)}:${location.index}${suffix}`;
 };
 
 export const dropLocationFromId = (id: string): DropLocation | undefined => {

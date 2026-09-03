@@ -31,22 +31,22 @@ export const dataGridStyles = stylex.create({
     padding: "18px 20px 16px",
   },
   title: {
-    color: "#1e2733",
+    color: "var(--foldworks-ui-foreground)",
     fontSize: "15px",
     fontWeight: 760,
     letterSpacing: "-0.015em",
     margin: 0,
   },
   description: {
-    color: "#7a8493",
+    color: "var(--foldworks-ui-foreground-muted)",
     fontSize: "12px",
     marginBottom: 0,
     marginTop: "4px",
   },
   rowCount: {
-    backgroundColor: "#f1f5f3",
+    backgroundColor: "var(--foldworks-ui-surface-subtle)",
     borderRadius: "999px",
-    color: "#477060",
+    color: "var(--foldworks-ui-foreground-muted)",
     fontSize: "11px",
     fontWeight: 750,
     padding: "6px 10px",
@@ -54,10 +54,10 @@ export const dataGridStyles = stylex.create({
   },
   footer: {
     alignItems: "center",
-    borderTopColor: "#e4e8ed",
+    borderTopColor: "var(--foldworks-ui-border)",
     borderTopStyle: "solid",
     borderTopWidth: "1px",
-    color: "#87919f",
+    color: "var(--foldworks-ui-foreground-muted)",
     display: "flex",
     fontSize: "10px",
     justifyContent: "space-between",
@@ -71,9 +71,9 @@ export const dataGridStyles = stylex.create({
   },
   avatar: {
     alignItems: "center",
-    backgroundColor: "#e8f4ef",
+    backgroundColor: "var(--foldworks-ui-success-surface)",
     borderRadius: "9px",
-    color: "#287858",
+    color: "var(--foldworks-ui-success)",
     display: "flex",
     flexShrink: 0,
     fontSize: "10px",
@@ -88,14 +88,14 @@ export const dataGridStyles = stylex.create({
     minWidth: 0,
   },
   personName: {
-    color: "#202936",
+    color: "var(--foldworks-ui-foreground)",
     fontSize: "12px",
     fontWeight: 700,
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
   personEmail: {
-    color: "#8a94a2",
+    color: "var(--foldworks-ui-foreground-muted)",
     fontSize: "10px",
     marginTop: "2px",
     overflow: "hidden",
@@ -123,7 +123,7 @@ export const dataGridStyles = stylex.create({
 });
 
 export const statusStyles = stylex.create({
-  Active: { backgroundColor: "#eaf8f1", color: "#25815e" },
-  "On leave": { backgroundColor: "#fff5dc", color: "#9a6a13" },
-  Contractor: { backgroundColor: "#f1effb", color: "#6954a3" },
+  Active: { backgroundColor: "var(--foldworks-ui-success-surface)", color: "var(--foldworks-ui-success)" },
+  "On leave": { backgroundColor: "var(--foldworks-ui-warning-surface)", color: "var(--foldworks-ui-warning)" },
+  Contractor: { backgroundColor: "var(--foldworks-ui-info-surface)", color: "var(--foldworks-ui-info)" },
 });

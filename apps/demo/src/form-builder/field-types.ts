@@ -2,6 +2,15 @@ import * as Markdown from "@foldkit/markdown";
 import { parseMarkdown } from "@foldkit/markdown/vite";
 
 import {
+  CalendarDays,
+  CircleDot,
+  FileText,
+  SquareCheck,
+  TextAlignStart,
+  TextCursorInput,
+  type LucideIconData,
+} from "@lucide/icons";
+import {
   defineFieldTypes,
   type FieldTypeDefinition,
 } from "@foldworks/form-builder";
@@ -60,7 +69,8 @@ const inputAttributes = (mode: "Editor" | "Runner") =>
 
 const definitions = {
   shortText: {
-    palette: { label: "Short text", description: "A single-line answer", symbol: "T" },
+    icon: TextCursorInput,
+    palette: { label: "Short text", description: "A single-line answer" },
     create: (id) => makeField(id, "shortText", "Short answer"),
     render: ({ field, mode, value, onInput }, h) =>
       h.input([
@@ -73,7 +83,8 @@ const definitions = {
       ]),
   },
   longText: {
-    palette: { label: "Long text", description: "A multi-line answer", symbol: "¶" },
+    icon: TextAlignStart,
+    palette: { label: "Long text", description: "A multi-line answer" },
     create: (id) => makeField(id, "longText", "Long answer"),
     render: ({ mode, value, onInput }, h) =>
       h.textarea(
@@ -87,7 +98,8 @@ const definitions = {
       ),
   },
   singleSelect: {
-    palette: { label: "Single select", description: "Choose one option", symbol: "◉" },
+    icon: CircleDot,
+    palette: { label: "Single select", description: "Choose one option" },
     create: (id) => makeField(id, "singleSelect", "Choose an option"),
     render: ({ field, mode, value, onInput }, h) =>
       h.select(
@@ -105,7 +117,8 @@ const definitions = {
       ),
   },
   checkbox: {
-    palette: { label: "Checkbox", description: "An acknowledgment", symbol: "✓" },
+    icon: SquareCheck,
+    palette: { label: "Checkbox", description: "An acknowledgment" },
     create: (id) => makeField(id, "checkbox", "I agree"),
     render: ({ field, mode, value, onInput }, h) =>
       h.label([h.Class(className(formStyles.checkboxRow))], [
@@ -119,7 +132,8 @@ const definitions = {
       ]),
   },
   date: {
-    palette: { label: "Date", description: "A calendar date", symbol: "□" },
+    icon: CalendarDays,
+    palette: { label: "Date", description: "A calendar date" },
     create: (id) => makeField(id, "date", "Date"),
     render: ({ mode, value, onInput }, h) =>
       h.input([
@@ -131,7 +145,8 @@ const definitions = {
       ]),
   },
   content: {
-    palette: { label: "Content", description: "Tracked Markdown content", symbol: "≡" },
+    icon: FileText,
+    palette: { label: "Content", description: "Tracked Markdown content" },
     create: (id) => makeField(id, "content", "Information"),
     render: ({ field }, h) => {
       const preview = markdownPreview(field.content);
@@ -171,7 +186,10 @@ const definitions = {
       ]);
     },
   },
-} satisfies Record<FieldKind, FieldTypeDefinition<FormField, Message>>;
+} satisfies Record<
+  FieldKind,
+  FieldTypeDefinition<FormField, Message> & Readonly<{ icon: LucideIconData }>
+>;
 
 export const fieldTypes = defineFieldTypes(definitions);
 

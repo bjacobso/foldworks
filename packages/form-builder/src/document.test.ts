@@ -84,5 +84,7 @@ describe("form document operations", () => {
   it("round-trips typed drop locations", () => {
     const location = { kind: "Page", sectionId: "section:one", index: 3 } as const;
     expect(dropLocationFromId(dropLocationId("form:1", location))).toEqual(location);
+    expect(dropLocationFromId(dropLocationId("form:1", location, "outline")))
+      .toEqual(location);
   });
 });

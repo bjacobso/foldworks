@@ -7,6 +7,23 @@
       name="description"
       content="Foldkit workflow and data grid demos built with StyleX and Vite."
     />
+    <script>
+      (() => {
+        const storageKey = "foldworks-demo-theme";
+        let preference = "System";
+        try {
+          const stored = window.localStorage.getItem(storageKey);
+          if (stored === "Light" || stored === "Dark" || stored === "System") {
+            preference = stored;
+          }
+        } catch {}
+        const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const isDark = preference === "Dark" ||
+          (preference === "System" && systemIsDark);
+        document.documentElement.classList.toggle("dark", isDark);
+        document.documentElement.dataset.themePreference = preference.toLowerCase();
+      })();
+    </script>
     <link href="/src/styles.css" rel="stylesheet" />
     <title>Demo</title>
   </head>

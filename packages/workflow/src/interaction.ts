@@ -8,8 +8,7 @@ export const maybeDropLocation = (model: DragAndDrop.Model) =>
     Option.fromNullishOr(flowLocationFromId(containerId)),
   );
 
-export const init = (config: Omit<DragAndDrop.InitConfig, "orientation">) =>
-  DragAndDrop.init({ ...config, orientation: "Vertical" });
+export const init = (config: DragAndDrop.InitConfig) => DragAndDrop.init(config);
 
 export const Model = DragAndDrop.Model;
 export type Model = DragAndDrop.Model;

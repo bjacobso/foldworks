@@ -5,7 +5,7 @@ import type { FormField } from "./document";
 export type FieldPalette = Readonly<{
   label: string;
   description: string;
-  symbol: string;
+  symbol?: string;
 }>;
 
 export type FieldRenderContext<Field extends FormField, Message> = Readonly<{

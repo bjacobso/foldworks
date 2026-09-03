@@ -133,6 +133,38 @@ describe("structured workflow example", () => {
     }
   });
 
+  it("lays out the reference workflow from left to right", () => {
+    const layout = layoutWorkflow(initialDocument, "Horizontal");
+    const start = layout.nodes.get("node-start");
+    const condition = layout.nodes.get("node-condition");
+    const end = layout.nodes.get("node-end");
+
+    expect(start?.x).toBeLessThan(condition?.x ?? 0);
+    expect(condition?.x).toBeLessThan(end?.x ?? 0);
+    expect(layout.branchLabels.map((label) => label.text)).toEqual([
+      "Then",
+      "Else",
+      "Default",
+    ]);
+
+    const nodes = [...layout.nodes.values()];
+    for (const [index, first] of nodes.entries()) {
+      for (const second of nodes.slice(index + 1)) {
+        const overlapWidth = Math.max(
+          0,
+          Math.min(first.x + first.width, second.x + second.width) -
+            Math.max(first.x, second.x),
+        );
+        const overlapHeight = Math.max(
+          0,
+          Math.min(first.y + first.height, second.y + second.height) -
+            Math.max(first.y, second.y),
+        );
+        expect(overlapWidth * overlapHeight).toBe(0);
+      }
+    }
+  });
+
   it("lets the consumer registry define topology and dimensions", () => {
     const switchNode = nodeTypes.switch.create("custom-switch");
     expect(switchNode.branches.map((branch) => branch.label)).toEqual(["Default"]);

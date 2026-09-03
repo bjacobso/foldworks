@@ -1,5 +1,5 @@
 import { Effect, Match as M, Option, Schema as S } from "effect";
-import { Command, Update } from "foldkit";
+import { Command, File, Update } from "foldkit";
 import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
@@ -25,6 +25,7 @@ import {
   updatePage,
   updateSection,
 } from "@foldworks/form-builder";
+import * as History from "@foldworks/history";
 import { Workflow } from "@foldworks/workflow";
 
 import { createField, paletteKindFromId } from "../form-builder/operations";
@@ -33,6 +34,18 @@ import {
   type FormDocument,
   type FormPage,
 } from "../form-builder/model";
+import { applyThemePreference } from "../theme";
+import {
+  downloadJson,
+  nextFormId,
+  nextWorkflowId,
+  parseFormExport,
+  parseWorkflowExport,
+  serializeFormExport,
+  serializeWorkflowExport,
+  serializeWorkspace,
+  writePersistedWorkspace,
+} from "../document-storage";
 
 import {
   canMoveNode,
@@ -53,9 +66,18 @@ import {
   formBuilderPath,
   formStateFromRoute,
   urlToAppRoute,
+  workflowOrientationFromRoute,
+  workflowPath,
 } from "./route";
 
 type UpdateReturn = Update.Return<Model, Message>;
+type Editor = "Workflow" | "Form";
+type ImportResult = Extract<Message, {
+  readonly _tag:
+    | "CompletedImportDocument"
+    | "CancelledImportDocument"
+    | "FailedImportDocument";
+}>;
 
 const NavigateInternal = Command.define("NavigateInternal", {
   args: { url: S.String },
@@ -69,6 +91,62 @@ const LoadExternal = Command.define("LoadExternal", {
   messages: [Message.CompletedLoadExternal],
   execute: ({ href }) =>
     load(href).pipe(Effect.as(Message.CompletedLoadExternal())),
+});
+
+const ApplyThemePreference = Command.define("ApplyThemePreference", {
+  args: {
+    preference: S.Literals(["System", "Light", "Dark"]),
+    systemIsDark: S.Boolean,
+  },
+  messages: [Message.CompletedApplyThemePreference],
+  execute: ({ preference, systemIsDark }) => Effect.sync(() => {
+    applyThemePreference(preference, systemIsDark);
+    return Message.CompletedApplyThemePreference();
+  }),
+});
+
+const PersistWorkspace = Command.define("PersistWorkspace", {
+  args: { json: S.String },
+  messages: [Message.CompletedPersistWorkspace],
+  execute: ({ json }) => Effect.sync(() =>
+    Message.CompletedPersistWorkspace({ succeeded: writePersistedWorkspace(json) })
+  ),
+});
+
+const ExportDocument = Command.define("ExportDocument", {
+  args: {
+    editor: S.Literals(["Workflow", "Form"]),
+    filename: S.String,
+    json: S.String,
+  },
+  messages: [Message.CompletedExportDocument],
+  execute: ({ editor, filename, json }) => Effect.sync(() => {
+    downloadJson(filename, json);
+    return Message.CompletedExportDocument({ editor });
+  }),
+});
+
+const ImportDocument = Command.define("ImportDocument", {
+  args: { editor: S.Literals(["Workflow", "Form"]) },
+  messages: [
+    Message.CompletedImportDocument,
+    Message.CancelledImportDocument,
+    Message.FailedImportDocument,
+  ],
+  execute: ({ editor }) => File.select(["application/json", ".json"]).pipe(
+    Effect.flatMap((selected): Effect.Effect<ImportResult> => {
+      if (Option.isNone(selected)) {
+        return Effect.succeed(Message.CancelledImportDocument({ editor }));
+      }
+      return File.readAsText(selected.value).pipe(
+        Effect.map((json): ImportResult => Message.CompletedImportDocument({ editor, json })),
+        Effect.catch(() => Effect.succeed<ImportResult>(Message.FailedImportDocument({
+          editor,
+          reason: "The selected file could not be read.",
+        }))),
+      );
+    }),
+  ),
 });
 
 const foldInspectorOutMessage = M.type<Dialog.OutMessage>().pipe(
@@ -213,7 +291,7 @@ const markPageContentViewed = (model: Model, pageId: string): Model => {
 };
 
 const loadFormExample = (model: Model, exampleId: Model["formExampleId"]): Model => {
-  const document = exampleForms[exampleId];
+  const document = model.formDocuments[exampleId];
   const firstPage = document.sections[0]?.pages[0];
   const firstActor = document.actors[0];
   return evo(model, {
@@ -221,8 +299,8 @@ const loadFormExample = (model: Model, exampleId: Model["formExampleId"]): Model
     formDocument: () => document,
     formBuilder: () => FormBuilder.init({
       id: "form-builder-drag-and-drop",
-      activationThreshold: 5,
     }),
+    formHistory: () => History.init<FormDocument>(),
     selectedFormItem: () => Option.none(),
     activeFormPageId: () => firstPage?.id ?? "",
     previewActorId: () => firstActor?.id ?? "__journey__",
@@ -241,6 +319,7 @@ const setFormMode = (model: Model, mode: Model["formMode"]): Model => {
     : pages[0]?.id ?? "";
   const next = evo(model, {
     formMode: () => mode,
+    formHistory: (history) => History.breakCoalescing(history),
     activeFormPageId: () => activePageId,
     revision: (value) => value + 1,
   });
@@ -249,6 +328,21 @@ const setFormMode = (model: Model, mode: Model["formMode"]): Model => {
 
 const applyRoute = (model: Model, route: AppRoute): Model => {
   let next = evo(model, { route: () => route });
+  if (route._tag === "Workflow") {
+    const orientation = workflowOrientationFromRoute(route);
+    return next.workflow.orientation === orientation
+      ? next
+      : evo(next, {
+          workflow: (workflow) => Workflow.init({
+            id: workflow.id,
+            orientation,
+            activationThreshold: workflow.activationThreshold,
+          }),
+          workflowHistory: (history) => History.breakCoalescing(history),
+          revision: (value) => value + 1,
+          announcement: () => `${orientation} workflow layout selected.`,
+        });
+  }
   if (route._tag !== "FormBuilder") return next;
 
   const { exampleId, mode } = formStateFromRoute(route);
@@ -321,10 +415,258 @@ const updateSelectedNode = (
     }),
   });
 
-export const update = (model: Model, message: Message) =>
+const formCoalescingKey = (model: Model, message: Message): string | undefined => {
+  const selection = Option.getOrUndefined(model.selectedFormItem);
+  if (selection === undefined) return undefined;
+  const prefix = `form:${selection.kind}:${selection.id}`;
+  switch (message._tag) {
+    case "ChangedFormItemTitle": return `${prefix}:title`;
+    case "ChangedFormItemDescription": return `${prefix}:description`;
+    case "ChangedFieldContent": return `${prefix}:content`;
+    case "ChangedFieldOptions": return `${prefix}:options`;
+    default: return undefined;
+  }
+};
+
+const workflowCoalescingKey = (model: Model, message: Message): string | undefined => {
+  const nodeId = Option.getOrUndefined(model.selectedNodeId);
+  if (nodeId === undefined) return undefined;
+  switch (message._tag) {
+    case "ChangedSelectedNodeTitle": return `workflow:${nodeId}:title`;
+    case "ChangedSelectedNodeDescription": return `workflow:${nodeId}:description`;
+    default: return undefined;
+  }
+};
+
+const isHistoryTraversal = (message: Message): boolean =>
+  message._tag === "ClickedUndo" || message._tag === "ClickedRedo";
+
+const restoreFromHistory = (
+  model: Model,
+  editor: Editor,
+  direction: "Undo" | "Redo",
+): UpdateReturn => {
+  if (editor === "Workflow") {
+    const step = direction === "Undo"
+      ? History.undo(model.workflowHistory, model.document)
+      : History.redo(model.workflowHistory, model.document);
+    if (step === undefined) return { model };
+    const selectedNodeId = Option.getOrUndefined(model.selectedNodeId);
+    const keepsSelection = selectedNodeId !== undefined &&
+      findNode(step.value, selectedNodeId) !== undefined;
+    return {
+      model: evo(model, {
+        document: () => step.value,
+        workflowHistory: () => step.history,
+        selectedNodeId: () => keepsSelection ? model.selectedNodeId : Option.none(),
+        inspector: () => keepsSelection
+          ? model.inspector
+          : Dialog.init({ id: model.inspector.id, isAnimated: true }),
+        nextId: () => nextWorkflowId(step.value),
+        revision: (value) => value + 1,
+        announcement: () => `${direction} completed for the workflow.`,
+      }),
+    };
+  }
+
+  const step = direction === "Undo"
+    ? History.undo(model.formHistory, model.formDocument)
+    : History.redo(model.formHistory, model.formDocument);
+  if (step === undefined) return { model };
+  const selection = Option.getOrUndefined(model.selectedFormItem);
+  const keepsSelection = selection !== undefined && (
+    selection.kind === "Section"
+      ? findSection(step.value, selection.id) !== undefined
+      : selection.kind === "Page"
+        ? findPage(step.value, selection.id) !== undefined
+        : findField(step.value, selection.id) !== undefined
+  );
+  const activeFormPageId = findPage(step.value, model.activeFormPageId) === undefined
+    ? step.value.sections[0]?.pages[0]?.id ?? ""
+    : model.activeFormPageId;
+  return {
+    model: evo(model, {
+      formDocument: () => step.value,
+      formHistory: () => step.history,
+      formBuilder: () => FormBuilder.init({ id: model.formBuilder.id }),
+      selectedFormItem: () => keepsSelection ? model.selectedFormItem : Option.none(),
+      activeFormPageId: () => activeFormPageId,
+      nextFormId: () => nextFormId(step.value),
+      revision: (value) => value + 1,
+      announcement: () => `${direction} completed for the form.`,
+    }),
+  };
+};
+
+const finalizeDocumentUpdate = (
+  previous: Model,
+  message: Message,
+  result: UpdateReturn,
+): UpdateReturn => {
+  let next = result.model;
+  const workflowChanged = next.document !== previous.document;
+  const formChanged = next.formDocument !== previous.formDocument;
+  const shouldRecord = message._tag !== "ChangedUrl" && !isHistoryTraversal(message);
+
+  if (workflowChanged && shouldRecord) {
+    const coalescingKey = workflowCoalescingKey(previous, message);
+    next = evo(next, {
+      workflowHistory: () => History.record(
+        previous.workflowHistory,
+        previous.document,
+        coalescingKey === undefined ? {} : { coalescingKey },
+      ),
+    });
+  }
+
+  if (formChanged && shouldRecord) {
+    const coalescingKey = formCoalescingKey(previous, message);
+    next = evo(next, {
+      formHistory: () => History.record(
+        previous.formHistory,
+        previous.formDocument,
+        coalescingKey === undefined ? {} : { coalescingKey },
+      ),
+    });
+  }
+
+  if (formChanged && message._tag !== "ChangedUrl") {
+    next = evo(next, {
+      formDocuments: (documents) => ({
+        ...documents,
+        [next.formExampleId]: next.formDocument,
+      }),
+    });
+  }
+
+  const workspaceChanged = workflowChanged || next.formDocuments !== previous.formDocuments;
+  if (!workspaceChanged) return next === result.model ? result : { ...result, model: next };
+
+  next = evo(next, { persistenceStatus: () => "Saving" });
+  return {
+    ...result,
+    model: next,
+    commands: [
+      ...(result.commands ?? []),
+      PersistWorkspace({
+        json: serializeWorkspace({
+          version: 1,
+          workflow: next.document,
+          forms: next.formDocuments,
+        }),
+      }),
+    ],
+  };
+};
+
+const updateCore = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
     CompletedNavigateInternal: () => ({ model }),
     CompletedLoadExternal: () => ({ model }),
+    CompletedApplyThemePreference: () => ({ model }),
+    CompletedPersistWorkspace: ({ succeeded }) => ({
+      model: evo(model, {
+        persistenceStatus: () => succeeded ? "Saved" : "Error",
+        announcement: () => succeeded
+          ? "Changes saved locally."
+          : "Changes could not be saved in this browser.",
+      }),
+    }),
+    CompletedExportDocument: ({ editor }) => ({
+      model: evo(model, {
+        announcement: () => `${editor} JSON exported.`,
+      }),
+    }),
+    CancelledImportDocument: () => ({ model }),
+    FailedImportDocument: ({ reason }) => ({
+      model: evo(model, { announcement: () => reason }),
+    }),
+    ClickedUndo: ({ editor }) => restoreFromHistory(model, editor, "Undo"),
+    ClickedRedo: ({ editor }) => restoreFromHistory(model, editor, "Redo"),
+    ClickedExportDocument: ({ editor }) => ({
+      model,
+      commands: [editor === "Workflow"
+        ? ExportDocument({
+            editor,
+            filename: "candidate-workflow.workflow.json",
+            json: serializeWorkflowExport(model.document),
+          })
+        : ExportDocument({
+            editor,
+            filename: `${model.formDocument.id}.form.json`,
+            json: serializeFormExport(model.formDocument),
+          })],
+    }),
+    ClickedImportDocument: ({ editor }) => ({
+      model,
+      commands: [ImportDocument({ editor })],
+    }),
+    CompletedImportDocument: ({ editor, json }) => {
+      if (editor === "Workflow") {
+        const document = parseWorkflowExport(json);
+        return document === undefined
+          ? {
+              model: evo(model, {
+                announcement: () => "That file is not a valid workflow export.",
+              }),
+            }
+          : {
+              model: evo(model, {
+                document: () => document,
+                workflow: (workflow) => Workflow.init({
+                  id: workflow.id,
+                  orientation: workflow.orientation,
+                  activationThreshold: workflow.activationThreshold,
+                }),
+                selectedNodeId: () => Option.none(),
+                inspector: () => Dialog.init({ id: model.inspector.id, isAnimated: true }),
+                nextId: () => nextWorkflowId(document),
+                revision: (value) => value + 1,
+                announcement: () => "Workflow imported.",
+              }),
+            };
+      }
+      const document = parseFormExport(json);
+      if (document === undefined) {
+        return {
+          model: evo(model, {
+            announcement: () => "That file is not a valid form export.",
+          }),
+        };
+      }
+      return {
+        model: evo(model, {
+          formDocument: () => document,
+          formBuilder: () => FormBuilder.init({ id: model.formBuilder.id }),
+          selectedFormItem: () => Option.none(),
+          activeFormPageId: () => document.sections[0]?.pages[0]?.id ?? "",
+          nextFormId: () => nextFormId(document),
+          revision: (value) => value + 1,
+          announcement: () => "Form imported.",
+        }),
+      };
+    },
+
+    ChangedSystemTheme: ({ isDark }) => {
+      const next = evo(model, { systemIsDark: () => isDark });
+      return model.themePreference === "System"
+        ? {
+            model: next,
+            commands: [ApplyThemePreference({
+              preference: "System",
+              systemIsDark: isDark,
+            })],
+          }
+        : { model: next };
+    },
+
+    SelectedThemePreference: ({ preference }) => ({
+      model: evo(model, { themePreference: () => preference }),
+      commands: [ApplyThemePreference({
+        preference,
+        systemIsDark: model.systemIsDark,
+      })],
+    }),
 
     ClickedLink: ({ request }) =>
       UrlRequest.match<UpdateReturn>(request, {
@@ -370,9 +712,9 @@ export const update = (model: Model, message: Message) =>
       model: evo(model, {
         formBuilder: () => FormBuilder.init({
           id: "form-builder-drag-and-drop",
-          activationThreshold: 5,
         }),
         selectedFormItem: () => Option.some({ kind, id }),
+        formHistory: (history) => History.breakCoalescing(history),
         activeFormPageId: (current) =>
           kind === "Page"
             ? id
@@ -456,7 +798,6 @@ export const update = (model: Model, message: Message) =>
           formDocument: () => document,
           formBuilder: () => FormBuilder.init({
             id: "form-builder-drag-and-drop",
-            activationThreshold: 5,
           }),
           selectedFormItem: () => Option.some({ kind: "Field", id: field.id }),
           activeFormPageId: () => pageId,
@@ -565,6 +906,21 @@ export const update = (model: Model, message: Message) =>
       },
     }),
 
+    ClickedResetForm: () => {
+      const document = exampleForms[model.formExampleId];
+      return {
+        model: evo(model, {
+          formDocument: () => document,
+          formBuilder: () => FormBuilder.init({ id: model.formBuilder.id }),
+          selectedFormItem: () => Option.none(),
+          activeFormPageId: () => document.sections[0]?.pages[0]?.id ?? "",
+          nextFormId: () => nextFormId(document),
+          revision: (value) => value + 1,
+          announcement: () => "Form reset to the example.",
+        }),
+      };
+    },
+
     ChangedFormAnswer: ({ fieldId, value }) => ({
       model: evo(model, {
         formAnswers: (answers) => answers.some((answer) => answer.fieldId === fieldId)
@@ -607,12 +963,18 @@ export const update = (model: Model, message: Message) =>
     GotWorkflowMessage: ({ message: workflowMessage }) =>
       foldWorkflow(model)(model, workflowMessage),
 
+    SelectedWorkflowOrientation: ({ orientation }) => ({
+      model,
+      commands: [NavigateInternal({ url: workflowPath(orientation) })],
+    }),
+
     GotInspectorMessage: ({ message: inspectorMessage }) =>
       foldInspector(model, inspectorMessage),
 
     ClickedNode: ({ nodeId }) => {
       const selected = evo(model, {
         selectedNodeId: () => Option.some(nodeId),
+        workflowHistory: (history) => History.breakCoalescing(history),
       });
       return foldInspectorOpen(selected);
     },
@@ -701,4 +1063,29 @@ export const update = (model: Model, message: Message) =>
       });
       return model.inspector.isOpen ? foldInspectorClose(reset) : { model: reset };
     },
+
+    ChangedUiKitName: ({ value }) => ({
+      model: evo(model, { uiKitName: () => value }),
+    }),
+
+    ChangedUiKitNotes: ({ value }) => ({
+      model: evo(model, { uiKitNotes: () => value }),
+    }),
+
+    SelectedUiKitDepartment: ({ value }) => ({
+      model: evo(model, { uiKitDepartment: () => value }),
+    }),
+
+    SelectedUiKitView: ({ value }) => ({
+      model: evo(model, { uiKitView: () => value }),
+    }),
+
+    ClickedUiKitAction: ({ action }) => ({
+      model: evo(model, {
+        announcement: () => `${action} button selected.`,
+      }),
+    }),
   });
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  finalizeDocumentUpdate(model, message, updateCore(model, message));

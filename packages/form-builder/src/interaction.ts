@@ -4,13 +4,19 @@ import { DragAndDrop } from "@foldkit/ui";
 
 import { dropLocationFromId } from "./document";
 
+export const DEFAULT_ACTIVATION_THRESHOLD = 8;
+
 export const maybeDropLocation = (model: DragAndDrop.Model) =>
   Option.flatMap(DragAndDrop.maybeDropTarget(model), ({ containerId }) =>
     Option.fromNullishOr(dropLocationFromId(containerId)),
   );
 
 export const init = (config: Omit<DragAndDrop.InitConfig, "orientation">) =>
-  DragAndDrop.init({ ...config, orientation: "Vertical" });
+  DragAndDrop.init({
+    ...config,
+    activationThreshold: config.activationThreshold ?? DEFAULT_ACTIVATION_THRESHOLD,
+    orientation: "Vertical",
+  });
 
 export const Model = DragAndDrop.Model;
 export type Model = DragAndDrop.Model;

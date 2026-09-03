@@ -7,8 +7,10 @@ import {
   demoFromRoute,
   formBuilderPath,
   formStateFromRoute,
+  uiKitRouter,
   urlToAppRoute,
-  workflowRouter,
+  workflowOrientationFromRoute,
+  workflowPath,
 } from "./route";
 
 const parseUrl = (url: string) =>
@@ -16,10 +18,13 @@ const parseUrl = (url: string) =>
 
 describe("demo routes", () => {
   it("builds stable paths for each demo", () => {
-    expect(workflowRouter()).toBe("/workflow");
+    expect(workflowPath("Horizontal"))
+      .toBe("/workflow?orientation=Horizontal");
     expect(dataGridRouter()).toBe("/data-grid");
     expect(formBuilderPath("Complex", "Preview"))
       .toBe("/form-builder?example=Complex&mode=Preview");
+    expect(uiKitRouter()).toBe("/ui-kit");
+    expect(demoFromRoute(parseUrl("https://demo.test/ui-kit"))).toBe("UiKit");
   });
 
   it("parses form state and supplies defaults for a bare form route", () => {
@@ -37,6 +42,11 @@ describe("demo routes", () => {
   });
 
   it("keeps the root URL as a workflow alias", () => {
-    expect(demoFromRoute(parseUrl("https://demo.test/"))).toBe("Workflow");
+    const route = parseUrl("https://demo.test/");
+    expect(demoFromRoute(route)).toBe("Workflow");
+    expect(workflowOrientationFromRoute(route)).toBe("Vertical");
+    expect(workflowOrientationFromRoute(
+      parseUrl("https://demo.test/workflow?orientation=Horizontal"),
+    )).toBe("Horizontal");
   });
 });

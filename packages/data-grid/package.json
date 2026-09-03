@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@lucide/icons": "catalog:",
+    "@foldworks/ui": "workspace:*",
     "effect": "catalog:",
     "foldkit": "catalog:"
   },

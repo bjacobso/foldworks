@@ -54,6 +54,13 @@ export const FormDocument = S.Struct({
 });
 export type FormDocument = typeof FormDocument.Type;
 
+export const FormDocuments = S.Struct({
+  Simple: FormDocument,
+  Handoff: FormDocument,
+  Complex: FormDocument,
+});
+export type FormDocuments = typeof FormDocuments.Type;
+
 export const FormExampleId = S.Literals(["Simple", "Handoff", "Complex"]);
 export type FormExampleId = typeof FormExampleId.Type;
 
@@ -222,7 +229,7 @@ const complex: FormDocument = {
   ],
 };
 
-export const exampleForms: Readonly<Record<FormExampleId, FormDocument>> = {
+export const exampleForms: FormDocuments = {
   Simple: simple,
   Handoff: handoff,
   Complex: complex,

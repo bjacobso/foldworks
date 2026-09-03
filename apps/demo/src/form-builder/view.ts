@@ -1,6 +1,7 @@
 import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
+import { CheckCircle2, GripVertical, Plus } from "@lucide/icons";
 import {
   FormBuilder,
   dragItemFromId,
@@ -16,6 +17,7 @@ import {
 import {
   Button as UiButton,
   Field as UiField,
+  Icon as UiIcon,
   SegmentedControl as UiSegmentedControl,
   Select as UiSelect,
 } from "@foldworks/ui";
@@ -35,6 +37,7 @@ const draggedItem = (model: Model): Readonly<{
   id: string;
   label: string;
 }> | undefined => {
+  if (!FormBuilder.isDragging(model.formBuilder)) return undefined;
   const rawId = Option.getOrUndefined(FormBuilder.maybeDraggedItemId(model.formBuilder));
   if (rawId === undefined) return undefined;
   const paletteKind = paletteKindFromId(rawId);
@@ -67,9 +70,13 @@ const dropTarget = (
   receiver = false,
 ): Html => {
   const dragged = draggedItem(model);
-  if (dragged !== undefined && dragged.kind !== location.kind) return h.empty;
-  const id = dropLocationId(model.formDocument.id, location);
-  const active = Option.exists(
+  const acceptsDraggedItem = dragged === undefined || dragged.kind === location.kind;
+  const id = dropLocationId(
+    model.formDocument.id,
+    location,
+    receiver ? "outline" : undefined,
+  );
+  const active = acceptsDraggedItem && Option.exists(
     FormBuilder.maybeDropTarget(model.formBuilder),
     (target) => target.containerId === id,
   );
@@ -77,11 +84,17 @@ const dropTarget = (
     [
       h.Class(className(
         receiver ? formStyles.pageReceiver : formStyles.dropLine,
+        dragged !== undefined && acceptsDraggedItem && !active && !receiver &&
+          location.kind === "Field" && formStyles.dropLineAvailable,
+        dragged !== undefined && acceptsDraggedItem && !active && receiver &&
+          formStyles.pageReceiverAvailable,
         active && (receiver ? formStyles.pageReceiverActive : formStyles.dropLineActive),
       )),
       h.DataAttribute("form-drop-kind", location.kind.toLowerCase()),
       h.DataAttribute("form-drop-active", active ? "true" : "false"),
-      ...FormBuilder.droppable(id, label),
+      ...(acceptsDraggedItem
+        ? FormBuilder.droppable(id, label)
+        : [h.AriaHidden(true)]),
     ],
     [],
   );
@@ -99,7 +112,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
           h.AriaLabel("Add section"),
           h.OnClick(Message.ClickedAddSection()),
         ],
-        ["+"],
+        [UiIcon.view({ icon: Plus, size: 14, strokeWidth: 2.25 }, h)],
       ),
     ]),
     ...model.formDocument.sections.flatMap((section, sectionIndex) => {
@@ -135,7 +148,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                     index: sectionIndex,
                   }, h),
                 ],
-                ["⠿"],
+                [UiIcon.view({ icon: GripVertical, size: 14 }, h)],
               ),
               h.button(
                 [
@@ -181,7 +194,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                           index: pageIndex,
                         }, h),
                       ],
-                      ["⋮⋮"],
+                      [UiIcon.view({ icon: GripVertical, size: 14 }, h)],
                     ),
                     h.button(
                       [
@@ -217,7 +230,10 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
                   h.Class(className(formStyles.addPageButton)),
                   h.OnClick(Message.ClickedAddPage({ sectionId: section.id })),
                 ],
-                ["+ Add page"],
+                [
+                  UiIcon.view({ icon: Plus, size: 14, strokeWidth: 2.25 }, h),
+                  "Add page",
+                ],
               ),
             ]),
           ],
@@ -267,7 +283,9 @@ const fieldEditorView = (
       h.div([h.Class(className(dragging && formStyles.draggingContent))], [
         h.div([h.Class(className(formStyles.fieldChrome))], [
           h.span([h.Class(className(formStyles.fieldType))], [definition.palette.label]),
-          h.span([h.Class(className(formStyles.fieldHandle)), h.AriaHidden(true)], ["⠿"]),
+          h.span([h.Class(className(formStyles.fieldHandle)), h.AriaHidden(true)], [
+            UiIcon.view({ icon: GripVertical, size: 14 }, h),
+          ]),
         ]),
         field.type === "checkbox"
           ? h.empty
@@ -482,7 +500,10 @@ const runnerFieldView = (
         onInput: (value) => Message.ChangedFormAnswer({ fieldId: field.id, value }),
       }, h),
       field.type === "content" && viewed
-        ? h.p([h.Class(className(formStyles.viewedBadge))], ["✓ View recorded for this participant"])
+        ? h.p([h.Class(className(formStyles.viewedBadge))], [
+            UiIcon.view({ icon: CheckCircle2, size: 12, strokeWidth: 2.25 }, h),
+            "View recorded for this participant",
+          ])
         : h.empty,
     ],
   );
@@ -619,7 +640,10 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
                 index,
               }, h),
             ],
-            [`${definition.palette.symbol}  ${definition.palette.label}`],
+            [
+              UiIcon.view({ icon: definition.icon, size: 15, strokeWidth: 2.1 }, h),
+              definition.palette.label,
+            ],
           ),
           h.button(
             [
@@ -629,7 +653,7 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
               h.AriaLabel(`Add ${definition.palette.label}`),
               h.OnClick(Message.ClickedAddField({ pageId: model.activeFormPageId, fieldType: kind })),
             ],
-            ["+"],
+            [UiIcon.view({ icon: Plus, size: 14, strokeWidth: 2.25 }, h)],
           ),
         ],
       );
@@ -645,7 +669,10 @@ export const formGhostView = (model: Model, h: HtmlBuilder<Message>): Html =>
         ? h.empty
         : h.div(
             [h.Class(className(formStyles.ghost)), h.Style(style), h.AriaHidden(true)],
-            ["⠿", dragged.label],
+            [
+              UiIcon.view({ icon: GripVertical, size: 14 }, h),
+              dragged.label,
+            ],
           );
     },
   });

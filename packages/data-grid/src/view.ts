@@ -1,6 +1,9 @@
 import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
+import { ArrowDown, ArrowUp, ChevronsUpDown } from "@lucide/icons";
+import * as Icon from "@foldworks/ui/icon";
+
 import { createTable, type CellValue, type ColumnDef } from "./core";
 import { Message } from "./message";
 import { columnWidth, type Model } from "./model";
@@ -106,11 +109,15 @@ export const view = <Row, ParentMessage>(
                                   h.AriaHidden(true),
                                 ],
                                 [
-                                  column.sortDirection === "Ascending"
-                                    ? "↑"
-                                    : column.sortDirection === "Descending"
-                                      ? "↓"
-                                      : "↕",
+                                  Icon.view({
+                                    icon: column.sortDirection === "Ascending"
+                                      ? ArrowUp
+                                      : column.sortDirection === "Descending"
+                                        ? ArrowDown
+                                        : ChevronsUpDown,
+                                    size: 12,
+                                    strokeWidth: 2.25,
+                                  }, h),
                                 ],
                               )
                             : h.empty,

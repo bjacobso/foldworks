@@ -1,7 +1,9 @@
+import type { LucideIconData } from "@lucide/icons";
 import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { Button } from "@foldkit/ui";
 
+import * as Icon from "./icon";
 import { buttonStyles } from "./styles";
 import { sxAttrs } from "./sx";
 
@@ -10,7 +12,8 @@ export type Size = "sm" | "md" | "icon";
 
 export type ViewConfig<Message> = Readonly<{
   label?: string;
-  icon?: Html;
+  icon?: LucideIconData;
+  trailingIcon?: LucideIconData;
   onClick?: Message;
   variant?: Variant;
   size?: Size;
@@ -63,8 +66,13 @@ export const view = <Message>(
           ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)]),
         ],
         [
-          ...(config.icon === undefined ? [] : [config.icon]),
+          ...(config.icon === undefined
+            ? []
+            : [Icon.view({ icon: config.icon, size: 16 }, h)]),
           ...(config.label === undefined ? [] : [config.label]),
+          ...(config.trailingIcon === undefined
+            ? []
+            : [Icon.view({ icon: config.trailingIcon, size: 16 }, h)]),
         ],
       ),
     },

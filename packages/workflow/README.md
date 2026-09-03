@@ -7,7 +7,7 @@ The package owns:
 - recursive flows and branch-aware immutable operations;
 - stable flow locations for inserting and moving elements;
 - a deterministic orthogonal layout with derived connectors, labels, junctions,
-  and insertion targets;
+  and insertion targets in vertical or horizontal orientation;
 - a workflow-specific facade over Foldkit UI drag and drop;
 - a generic node-type registry contract.
 
@@ -34,3 +34,7 @@ const nodeTypes = defineNodeTypes({
 Branching definitions create child flows on their node instances. Layout and
 drag operations treat those child flows generically, including dynamic switch
 cases.
+
+Pass `orientation: "Horizontal"` to `createStructuredLayout` for a left-to-right
+graph. The default is `"Vertical"`. Use the same orientation when initializing
+`Workflow.init` so pointer and keyboard drag behavior follows the rendered axis.

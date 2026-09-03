@@ -1,6 +1,7 @@
 export * as Badge from "./badge";
 export * as Button from "./button";
 export * as Field from "./field";
+export * as Icon from "./icon";
 export * as Layout from "./layout";
 export * as Panel from "./panel";
 export * as SegmentedControl from "./segmented-control";

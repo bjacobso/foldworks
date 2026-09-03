@@ -14,8 +14,10 @@
   "dependencies": {
     "@foldkit/markdown": "catalog:",
     "@foldkit/ui": "catalog:",
+    "@lucide/icons": "catalog:",
     "@foldworks/data-grid": "workspace:*",
     "@foldworks/form-builder": "workspace:*",
+    "@foldworks/history": "workspace:*",
     "@foldworks/ui": "workspace:*",
     "@foldworks/workflow": "workspace:*",
     "@stylexjs/stylex": "catalog:",

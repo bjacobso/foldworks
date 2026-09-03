@@ -3,7 +3,7 @@ import type { Dimensions } from "./layout";
 export type PaletteDefinition = Readonly<{
   label: string;
   description: string;
-  symbol: string;
+  symbol?: string;
 }>;
 
 export type NodeTypeDefinition<Node, Render = unknown> = Readonly<{

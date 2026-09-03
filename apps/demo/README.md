@@ -1,13 +1,30 @@
 # Demo
 
 A browser-only demo app built with Foldkit, StyleX, and Vite. Use the sidebar
-to switch between the workflow builder, Excel-like data grid, and form builder.
+to switch between the workflow builder, Excel-like data grid, form builder, and
+UI component showcase.
 
 Foldkit's bidirectional router owns navigational state. The demos live at
-`/workflow`, `/data-grid`, and `/form-builder`; the form route stores its example
-and Editor/Preview mode in query parameters so those states can be linked,
-reloaded, and traversed with browser history. Transient selections, drag state,
-column widths, and in-progress document edits remain in the application model.
+`/workflow`, `/data-grid`, `/form-builder`, and `/ui-kit`; workflow orientation
+and the form's example and Editor/Preview mode live in query parameters so those
+states can be linked, reloaded, and traversed with browser history. Transient
+selections, drag state, column widths, and in-progress document edits remain in
+the application model.
+
+The toolbar theme control supports System, Light, and Dark preferences. The
+choice is persisted locally, applied to the document root before the stylesheet
+loads to avoid a theme flash, and responds live when the system preference
+changes. Shared surface, text, status, selection, and drop-target tokens keep
+all four demos consistent in both themes.
+
+Workflow and form documents autosave to local storage. Each form example keeps
+an independent draft, while the workflow keeps its own persisted document.
+Both editors expose validated, versioned JSON import/export and bounded
+undo/redo history with `Cmd/Ctrl+Z` and `Cmd/Ctrl+Shift+Z` shortcuts.
+Consecutive edits to the same text property coalesce into a single history
+step; structural operations such as add, delete, move, reset, and import remain
+individual steps. Transient selection, drag, dialog, route, and preview-answer
+state is intentionally excluded from history and persistence.
 
 Reusable flow operations, layout, and drag interaction live in the private
 `@foldworks/workflow` workspace package. This application registers the
@@ -27,6 +44,8 @@ Features include:
 - animated rebalancing after insertions, moves, resizing, and deletion;
 - a Foldkit dialog sheet for node settings;
 - keyboard drag and drop with accessible announcements.
+- undo/redo for node changes and structural edits;
+- autosave plus validated workflow JSON import/export.
 
 The data grid currently demonstrates:
 
@@ -46,6 +65,18 @@ The form builder demonstrates a section-first, multi-actor document model:
 - an inline editor canvas backed by the same field renderers as preview;
 - actor-specific and full-journey preview modes with answers and tracked
   Markdown content views.
+- undo/redo for field configuration and structural edits;
+- independent autosaved drafts plus validated form JSON import/export.
+
+The UI component showcase demonstrates every `@foldworks/ui` primitive:
+
+- declarative, theme-aware Lucide icons rendered through Foldkit;
+- all button intents, sizes, and disabled states;
+- badges across neutral, success, warning, danger, and information tones;
+- inputs, textareas, native selects, compact density, and disabled controls;
+- segmented controls and compact toolbar selects;
+- panel, row, stack, and toolbar composition;
+- the shared semantic color tokens used by the demos.
 
 From the repository root:
 

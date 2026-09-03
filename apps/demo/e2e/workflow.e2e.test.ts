@@ -1,8 +1,8 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { chromium, type Browser, type Page } from "playwright";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { build, preview, type PreviewServer } from "vite";
 
 const appRoot = resolve(import.meta.dirname, "..");
@@ -93,7 +93,14 @@ describe.sequential("structured workflow builder", () => {
       root: appRoot,
     });
     browser = await chromium.launch({ channel: "chrome", headless: true });
+  });
+
+  beforeEach(async () => {
     page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  });
+
+  afterEach(async () => {
+    await page?.close();
   });
 
   afterAll(async () => {
@@ -108,6 +115,9 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.getByText("Else", { exact: true }).count()).toBe(1);
     await expect.poll(() => page.getByText("Default", { exact: true }).count()).toBe(1);
     await expect.poll(() => page.locator("[data-location-id]").count()).toBe(7);
+    await expect.poll(() => page.locator('[data-lucide-icon="workflow"]').count()).toBe(1);
+    await expect.poll(() => page.locator("[data-node-id] [data-lucide-icon]").count())
+      .toBeGreaterThanOrEqual(5);
     await expectNoNodeOverlaps();
 
     const viewport = await page.locator("[data-workflow-canvas]").evaluate((canvas) => {
@@ -123,6 +133,31 @@ describe.sequential("structured workflow builder", () => {
     await screenshot("01-structured-initial");
   });
 
+  it("switches to a horizontal, shareable workflow layout", async () => {
+    await page.goto(appUrl, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Horizontal" }).click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/workflow");
+    await expect.poll(() => new URL(page.url()).searchParams.get("orientation"))
+      .toBe("Horizontal");
+
+    const canvas = page.locator("[data-workflow-canvas]");
+    await expect.poll(() => canvas.getAttribute("data-orientation")).toBe("horizontal");
+    await expect.poll(() => page.getByRole("button", { name: "Horizontal" }).getAttribute("aria-pressed"))
+      .toBe("true");
+    await page.waitForTimeout(350);
+
+    const positions = await page.locator("[data-node-id]").evaluateAll((elements) =>
+      Object.fromEntries(elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return [element.getAttribute("data-node-id") ?? "", bounds.x];
+      })),
+    );
+    expect(positions["node-start"]).toBeLessThan(positions["node-condition"] ?? 0);
+    expect(positions["node-condition"]).toBeLessThan(positions["node-end"] ?? 0);
+    await expectNoNodeOverlaps();
+    await screenshot("01-horizontal");
+  });
+
   it("highlights a nested drop target and inserts a registered type", async () => {
     await page.goto(appUrl, { waitUntil: "networkidle" });
     const { target } = await drag(
@@ -131,7 +166,8 @@ describe.sequential("structured workflow builder", () => {
     );
 
     await expect.poll(() => target.getAttribute("data-drop-active")).toBe("true");
-    await expect.poll(() => target.getByRole("button").textContent()).toBe("+");
+    await expect.poll(() => target.getByRole("button").locator('[data-lucide-icon="plus"]').count())
+      .toBe(1);
     const activeTargetBox = await target.getByRole("button").boundingBox();
     expect(activeTargetBox?.width).toBeGreaterThanOrEqual(38);
     expect(activeTargetBox?.width).toBeLessThanOrEqual(44);
@@ -267,10 +303,16 @@ describe.sequential("structured workflow builder", () => {
     })).toEqual(["0px", "0px", "0px"]);
 
     const employeeHeader = grid.locator('[data-column-id="employee"]');
+    await expect.poll(() => employeeHeader.locator('[data-lucide-icon="chevrons-up-down"]').count())
+      .toBe(1);
     await employeeHeader.getByRole("button").click();
     await expect.poll(() => employeeHeader.getAttribute("aria-sort")).toBe("ascending");
+    await expect.poll(() => employeeHeader.locator('[data-lucide-icon="arrow-up"]').count())
+      .toBe(1);
     await employeeHeader.getByRole("button").click();
     await expect.poll(() => employeeHeader.getAttribute("aria-sort")).toBe("descending");
+    await expect.poll(() => employeeHeader.locator('[data-lucide-icon="arrow-down"]').count())
+      .toBe(1);
 
     const firstCell = grid.locator('[data-grid-cell-position="0:0"]');
     await firstCell.click();
@@ -297,6 +339,225 @@ describe.sequential("structured workflow builder", () => {
     }
 
     await screenshot("09-data-grid");
+  });
+
+  it("keeps a field press selectable until deliberate movement starts a drag", async () => {
+    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
+      waitUntil: "networkidle",
+    });
+
+    const source = page.locator('[data-form-field-id="handoff-name"]');
+    const sourceBox = await source.boundingBox();
+    expect(sourceBox).not.toBeNull();
+    if (sourceBox === null) return;
+    const start = {
+      x: sourceBox.x + sourceBox.width - 20,
+      y: sourceBox.y + 20,
+    };
+
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await expect.poll(() => source.evaluate((element) => getComputedStyle(element).borderStyle))
+      .toBe("solid");
+    await page.mouse.move(start.x + 6, start.y, { steps: 3 });
+    await expect.poll(() => source.evaluate((element) => getComputedStyle(element).borderStyle))
+      .toBe("solid");
+    await expect.poll(() => page
+      .locator('[data-form-editor-canvas="true"] [data-form-drop-kind="field"]')
+      .evaluateAll((targets) => targets.every((target) =>
+        getComputedStyle(target).borderWidth === "0px"
+      )))
+      .toBe(true);
+    await page.mouse.up();
+    await expect.poll(() => page.getByLabel("Label").inputValue()).toBe("Preferred name");
+
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x + 10, start.y, { steps: 4 });
+    await expect.poll(() => source.evaluate((element) => getComputedStyle(element).borderStyle))
+      .toBe("dashed");
+    await expect.poll(() => page
+      .locator('[data-form-editor-canvas="true"] [data-form-drop-kind="field"]')
+      .evaluateAll((targets) => targets.every((target) =>
+        target.getBoundingClientRect().height >= 18
+      )))
+      .toBe(true);
+    await page.mouse.move(250, 700);
+    await page.mouse.up();
+  });
+
+  it("keeps form pages and sections fixed while dragging a field", async () => {
+    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
+      waitUntil: "networkidle",
+    });
+
+    const structureRectangles = () => page
+      .locator("[data-form-section-id], [data-form-page-id]")
+      .evaluateAll((elements) => elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          id: element.getAttribute("data-form-section-id") ??
+            element.getAttribute("data-form-page-id"),
+          height: bounds.height,
+          width: bounds.width,
+        };
+      }));
+
+    const before = await structureRectangles();
+    const source = page.locator('[data-form-palette-drag="longText"]');
+    const sourceBox = await source.boundingBox();
+    expect(sourceBox).not.toBeNull();
+    if (sourceBox === null) return;
+
+    await page.mouse.move(
+      sourceBox.x + sourceBox.width / 2,
+      sourceBox.y + sourceBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2 + 14, sourceBox.y + 14, {
+      steps: 4,
+    });
+
+    const receiver = page.locator(
+      '[data-form-page-id="handoff-about-you"] [data-form-drop-kind="field"]',
+    );
+    await expect.poll(() => receiver.count()).toBe(1);
+    const receiverBox = await receiver.boundingBox();
+    expect(receiverBox).not.toBeNull();
+    if (receiverBox !== null) {
+      await page.mouse.move(
+        receiverBox.x + receiverBox.width / 2,
+        receiverBox.y + receiverBox.height / 2,
+        { steps: 8 },
+      );
+    }
+    await expect.poll(() => receiver.getAttribute("data-form-drop-active"))
+      .toBe("true");
+
+    const canvasTargets = page.locator(
+      '[data-form-editor-canvas="true"] [data-form-drop-kind="field"]',
+    );
+    await expect.poll(() => canvasTargets.evaluateAll((targets) =>
+      targets.every((target) => {
+        const style = getComputedStyle(target);
+        return target.getBoundingClientRect().height >= 18 &&
+          style.borderStyle === "dashed";
+      })))
+      .toBe(true);
+    await expect.poll(() => receiver.evaluate((target) => getComputedStyle(target).borderStyle))
+      .toBe("solid");
+    await expect.poll(() => page
+      .locator('[data-form-page-id="handoff-emergency"] [data-form-drop-kind="field"]')
+      .evaluate((target) => getComputedStyle(target).borderStyle))
+      .toBe("dashed");
+
+    expect(await structureRectangles()).toEqual(before);
+    await screenshot("10-form-drag-stable");
+    await page.mouse.move(250, 700);
+    await page.mouse.up();
+  });
+
+  it("undoes, redoes, and restores autosaved form drafts", async () => {
+    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
+      waitUntil: "networkidle",
+    });
+    const field = page.locator('[data-form-field-id="handoff-name"]');
+    await field.click();
+    await page.getByLabel("Label").fill("Display name");
+    await expect.poll(() => field.getByText("Display name", { exact: false }).count()).toBe(1);
+    await expect.poll(() => page.getByRole("button", { name: "Undo" }).isEnabled()).toBe(true);
+    await expect.poll(() => page
+      .getByRole("button", { name: "Undo" })
+      .locator('[data-lucide-icon="undo-2"]')
+      .count()).toBe(1);
+
+    await page.keyboard.press("Control+z");
+    await expect.poll(() => field.getByText("Preferred name", { exact: false }).count()).toBe(1);
+    await expect.poll(() => page.getByRole("button", { name: "Redo" }).isEnabled()).toBe(true);
+
+    await page.keyboard.press("Control+Shift+z");
+    await expect.poll(() => field.getByText("Display name", { exact: false }).count()).toBe(1);
+    await expect.poll(() => page.evaluate(() =>
+      window.localStorage.getItem("foldworks-demo-documents-v1")?.includes("Display name"),
+    )).toBe(true);
+
+    await page.reload({ waitUntil: "networkidle" });
+    await expect.poll(() => page
+      .locator('[data-form-field-id="handoff-name"]')
+      .getByText("Display name", { exact: false })
+      .count()).toBe(1);
+
+    await page.getByLabel("Example form").selectOption("Simple");
+    await expect.poll(() => page.getByRole("heading", { name: "Contact details", level: 1 }).isVisible())
+      .toBe(true);
+    await page.getByLabel("Example form").selectOption("Handoff");
+    await expect.poll(() => page
+      .locator('[data-form-field-id="handoff-name"]')
+      .getByText("Display name", { exact: false })
+      .count()).toBe(1);
+  });
+
+  it("exports, validates, imports, and undoes form JSON", async () => {
+    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
+      waitUntil: "networkidle",
+    });
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export" }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe("new-hire-handoff.form.json");
+    const downloadPath = await download.path();
+    expect(downloadPath).not.toBeNull();
+    if (downloadPath === null) return;
+    const exported = JSON.parse(await readFile(downloadPath, "utf8"));
+    expect(exported.kind).toBe("form");
+    exported.document.title = "Imported workflow";
+
+    const chooserPromise = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Import" }).click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({
+      name: "imported.form.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(exported)),
+    });
+    await expect.poll(() => page.getByRole("heading", { name: "Imported workflow" }).count())
+      .toBe(1);
+
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect.poll(() => page.getByRole("heading", { name: "New hire workflow" }).count())
+      .toBe(1);
+
+    const invalidChooserPromise = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Import" }).click();
+    const invalidChooser = await invalidChooserPromise;
+    await invalidChooser.setFiles({
+      name: "invalid.json",
+      mimeType: "application/json",
+      buffer: Buffer.from('{"kind":"workflow"}'),
+    });
+    await expect.poll(() => page.getByText("That file is not a valid form export.").count())
+      .toBe(1);
+    await expect.poll(() => page.getByRole("heading", { name: "New hire workflow" }).count())
+      .toBe(1);
+  });
+
+  it("undoes, redoes, and restores autosaved workflow edits", async () => {
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
+    await expect.poll(() => page.locator("[data-node-id]").count()).toBe(5);
+    await page.locator("[data-location-id]").first().getByRole("button").click();
+    await expect.poll(() => page.locator("[data-node-id]").count()).toBe(6);
+
+    await page.keyboard.press("Control+z");
+    await expect.poll(() => page.locator("[data-node-id]").count()).toBe(5);
+    await page.keyboard.press("Control+Shift+z");
+    await expect.poll(() => page.locator("[data-node-id]").count()).toBe(6);
+    await expect.poll(() => page.evaluate(() =>
+      window.localStorage.getItem("foldworks-demo-documents-v1") !== null,
+    )).toBe(true);
+
+    await page.reload({ waitUntil: "networkidle" });
+    await expect.poll(() => page.locator("[data-node-id]").count()).toBe(6);
   });
 
   it("builds and previews section-first multi-actor forms", async () => {
@@ -334,6 +595,7 @@ describe.sequential("structured workflow builder", () => {
 
     await page.getByLabel("Example form").selectOption("Simple");
     await page.getByLabel("Example form").selectOption("Handoff");
+    await page.getByRole("button", { name: "Reset example" }).click();
     await expect.poll(() => page.locator("[data-form-section-id]").count()).toBe(3);
 
     await page.locator('[data-form-page-id="handoff-policies"]').getByRole("button").click();
@@ -393,4 +655,141 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.locator("[data-form-section-id]").count()).toBe(4);
     await expect.poll(() => page.getByText("Authorized representative", { exact: true }).count()).toBeGreaterThan(0);
   });
+
+  it("showcases every Foldkit UI primitive and its interactive variants", async () => {
+    await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
+
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/ui-kit");
+    const showcase = page.locator('[data-ui-kit="true"]');
+    await expect.poll(() => showcase.isVisible()).toBe(true);
+
+    for (const heading of [
+      "Button",
+      "Badge",
+      "Icon",
+      "Field and Select",
+      "Selection controls",
+      "Panel and Layout",
+      "Toolbar",
+      "Semantic tokens",
+    ]) {
+      await expect.poll(() => showcase.getByRole("heading", { name: heading }).count())
+        .toBe(1);
+    }
+    await expect.poll(() => showcase.locator("[data-lucide-icon]").count())
+      .toBeGreaterThanOrEqual(7);
+
+    await expect.poll(() => showcase.getByRole("button", { name: "Disabled" }).isDisabled())
+      .toBe(true);
+    await showcase.getByLabel("Display name").fill("Avery Stone");
+    await expect.poll(() => showcase.getByLabel("Display name").inputValue())
+      .toBe("Avery Stone");
+
+    await showcase.getByLabel("Department", { exact: true }).selectOption("Operations");
+    await expect.poll(() => showcase.getByLabel("Compact department").inputValue())
+      .toBe("Operations");
+
+    await showcase.getByRole("button", { name: "Activity" }).click();
+    await expect.poll(() => showcase.getByRole("button", { name: "Activity" }).getAttribute("aria-pressed"))
+      .toBe("true");
+
+    await screenshot("12-ui-kit");
+  });
+
+  it("persists the theme preference and keeps application colors semantic in dark mode", async () => {
+    await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
+    const themeSelect = page.getByLabel("Color theme");
+    await themeSelect.selectOption("Dark");
+
+    await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
+    await expect.poll(() => page.locator("html").getAttribute("data-theme-preference"))
+      .toBe("dark");
+    await expect.poll(() => page.evaluate(() =>
+      window.localStorage.getItem("foldworks-demo-theme"),
+    )).toBe("Dark");
+
+    const darkTokens = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return {
+        background: style.getPropertyValue("--background").trim(),
+        selection: style.getPropertyValue("--foldworks-ui-selection").trim(),
+        dropTarget: style.getPropertyValue("--foldworks-ui-drop-target-active").trim(),
+      };
+    });
+    expect(darkTokens).toEqual({
+      background: "oklch(14.5% 0 0)",
+      selection: "oklch(27% .045 156)",
+      dropTarget: "oklch(29% .055 156)",
+    });
+    await screenshot("13-ui-kit-dark");
+
+    await page.reload({ waitUntil: "networkidle" });
+    await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
+
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
+    await expect.poll(() => page.locator('[data-node-id="node-start"]').isVisible()).toBe(true);
+    await screenshot("14-workflow-dark");
+    const { target: darkWorkflowTarget } = await drag(
+      '[data-draggable-id="palette:approval"]',
+      thenTargetSelector,
+    );
+    await expect.poll(() => darkWorkflowTarget.getAttribute("data-drop-active"))
+      .toBe("true");
+    await screenshot("14-workflow-drop-dark");
+    await page.mouse.move(260, 700);
+    await page.mouse.up();
+
+    await page.goto(`${appUrl}/data-grid`, { waitUntil: "networkidle" });
+    await expect.poll(() => page.locator('[data-grid-id="people-directory"]').isVisible()).toBe(true);
+    await screenshot("15-data-grid-dark");
+
+    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
+      waitUntil: "networkidle",
+    });
+    await expect.poll(() => page.locator('[data-form-editor-canvas="true"]').isVisible())
+      .toBe(true);
+    await screenshot("16-form-builder-dark");
+    const darkFormSource = page.locator('[data-form-palette-drag="longText"]');
+    const darkFormSourceBox = await darkFormSource.boundingBox();
+    expect(darkFormSourceBox).not.toBeNull();
+    if (darkFormSourceBox === null) return;
+    await page.mouse.move(
+      darkFormSourceBox.x + darkFormSourceBox.width / 2,
+      darkFormSourceBox.y + darkFormSourceBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      darkFormSourceBox.x + darkFormSourceBox.width / 2 + 14,
+      darkFormSourceBox.y + 14,
+      { steps: 4 },
+    );
+    const darkFormTarget = page.locator(
+      '[data-form-page-id="handoff-about-you"] [data-form-drop-kind="field"]',
+    );
+    await expect.poll(() => darkFormTarget.count()).toBe(1);
+    const darkFormTargetBox = await darkFormTarget.boundingBox();
+    expect(darkFormTargetBox).not.toBeNull();
+    if (darkFormTargetBox === null) return;
+    await page.mouse.move(
+      darkFormTargetBox.x + darkFormTargetBox.width / 2,
+      darkFormTargetBox.y + darkFormTargetBox.height / 2,
+      { steps: 8 },
+    );
+    await expect.poll(() => darkFormTarget.getAttribute("data-form-drop-active"))
+      .toBe("true");
+    await screenshot("17-form-drop-dark");
+    await page.mouse.move(250, 700);
+    await page.mouse.up();
+
+    await page.getByLabel("Color theme").selectOption("Light");
+    await expect.poll(() => page.locator("html").getAttribute("class"))
+      .not.toContain("dark");
+
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.getByLabel("Color theme").selectOption("System");
+    await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect.poll(() => page.locator("html").getAttribute("class"))
+      .not.toContain("dark");
+  }, 60_000);
 });

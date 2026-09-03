@@ -7,6 +7,7 @@ import type {
 
 export type Point = Readonly<{ x: number; y: number }>;
 export type Dimensions = Readonly<{ width: number; height: number }>;
+export type LayoutOrientation = "Vertical" | "Horizontal";
 
 export type LayoutNode = Readonly<{
   id: string;
@@ -59,6 +60,7 @@ export type StructuredWorkflowLayout = Readonly<{
 
 export type StructuredLayoutConfig<Node> = Readonly<{
   nodeSize: (node: Node) => Dimensions;
+  orientation?: LayoutOrientation;
   gap?: number;
   branchGap?: number;
   branchPadding?: number;
@@ -135,7 +137,7 @@ export const pathForPoints = (
   return path;
 };
 
-export const createStructuredLayout = <Node extends ElementShape<Node>>(
+const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
   config: StructuredLayoutConfig<Node>,
 ) => {
   const gap = config.gap ?? 74;
@@ -363,6 +365,74 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
     const height = Math.max(measured.height + marginY * 2, config.minimumHeight ?? 620);
     return { width, height, nodes, connectors, insertions, branchLabels, junctions };
   };
+};
+
+const transposePoint = ({ x, y }: Point): Point => ({ x: y, y: x });
+
+const transposeLayout = (
+  layout: StructuredWorkflowLayout,
+): StructuredWorkflowLayout => ({
+  width: layout.height,
+  height: layout.width,
+  nodes: new Map(
+    [...layout.nodes].map(([id, node]) => [id, {
+      ...node,
+      x: node.y,
+      y: node.x,
+      width: node.height,
+      height: node.width,
+    }]),
+  ),
+  connectors: layout.connectors.map((connector) => ({
+    ...connector,
+    points: connector.points.map(transposePoint),
+  })),
+  insertions: layout.insertions.map((insertion) => ({
+    ...insertion,
+    x: insertion.y,
+    y: insertion.x,
+  })),
+  branchLabels: layout.branchLabels.map((label) => ({
+    ...label,
+    x: label.y,
+    y: label.x,
+  })),
+  junctions: layout.junctions.map((junction) => ({
+    ...junction,
+    x: junction.y,
+    y: junction.x,
+  })),
+});
+
+export const createStructuredLayout = <Node extends ElementShape<Node>>(
+  config: StructuredLayoutConfig<Node>,
+) => {
+  if ((config.orientation ?? "Vertical") === "Vertical") {
+    return createVerticalStructuredLayout(config);
+  }
+
+  const {
+    orientation: _orientation,
+    nodeSize,
+    marginX,
+    marginY,
+    minimumWidth,
+    minimumHeight,
+    ...sharedConfig
+  } = config;
+  const rotatedLayout = createVerticalStructuredLayout<Node>({
+    ...sharedConfig,
+    nodeSize: (node: Node) => {
+      const size = nodeSize(node);
+      return { width: size.height, height: size.width };
+    },
+    ...(marginY === undefined ? {} : { marginX: marginY }),
+    ...(marginX === undefined ? {} : { marginY: marginX }),
+    ...(minimumHeight === undefined ? {} : { minimumWidth: minimumHeight }),
+    ...(minimumWidth === undefined ? {} : { minimumHeight: minimumWidth }),
+  });
+  return (document: WorkflowDocument<Node>) =>
+    transposeLayout(rotatedLayout(document));
 };
 
 export const FLOW_TARGET_PREFIX = "flow-target:";
