@@ -1,26 +1,23 @@
 {
-  "name": "@foldworks/ui",
+  "name": "@foldworks/query-builder",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./icon": "./src/icon.ts",
-    "./tokens.stylex": "./src/tokens.stylex.ts",
-    "./theme.css": "./src/theme.css"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@foldkit/ui": "catalog:",
     "@lucide/icons": "catalog:",
+    "@foldworks/ui": "workspace:*",
     "@stylexjs/stylex": "catalog:",
+    "effect": "catalog:",
     "foldkit": "catalog:"
   },
   "devDependencies": {
-    "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

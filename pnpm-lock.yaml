@@ -73,6 +73,9 @@ importers:
       '@foldworks/history':
         specifier: workspace:*
         version: link:../../packages/history
+      '@foldworks/query-builder':
+        specifier: workspace:*
+        version: link:../../packages/query-builder
       '@foldworks/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -160,6 +163,31 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
+
+  packages/query-builder:
+    dependencies:
+      '@lucide/icons':
+        specifier: 'catalog:'
+        version: 1.40.0
+      '@foldworks/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@stylexjs/stylex':
+        specifier: 'catalog:'
+        version: 0.19.0
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
     devDependencies:
       typescript:
         specifier: 'catalog:'

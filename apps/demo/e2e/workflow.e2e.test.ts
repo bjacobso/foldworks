@@ -133,6 +133,30 @@ describe.sequential("structured workflow builder", () => {
     await screenshot("01-structured-initial");
   });
 
+  it("edits and renders the configured query builder", async () => {
+    await page.goto(`${appUrl}/query-builder`, { waitUntil: "networkidle" });
+
+    await expect.poll(() => page.locator("[data-query-group]").count()).toBe(2);
+    await expect.poll(() => page.locator("[data-query-rule]").count()).toBe(4);
+    await expect.poll(() => page.locator("[data-query-readonly=true]").textContent())
+      .toContain("DepartmentisEngineering");
+    await expect.poll(() => page.getByText("Query is valid", { exact: true }).count()).toBe(1);
+
+    await page.locator('[data-query-group="employee-filter-root"]')
+      .getByRole("button", { name: "Condition" })
+      .first()
+      .click();
+    await expect.poll(() => page.locator("[data-query-rule]").count()).toBe(5);
+    await expect.poll(() => page.getByText("1 issue to resolve", { exact: true }).count()).toBe(1);
+
+    const addedRule = page.locator("[data-query-rule]").last();
+    await addedRule.getByRole("textbox", { name: "Employee name value" }).fill("Maya");
+    await expect.poll(() => page.getByText("Query is valid", { exact: true }).count()).toBe(1);
+    await expect.poll(() => page.locator("[data-query-readonly=true]").textContent())
+      .toContain("Employee nameisMaya");
+    await screenshot("16-query-builder");
+  });
+
   it("switches to a horizontal, shareable workflow layout", async () => {
     await page.goto(appUrl, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Horizontal" }).click();
@@ -742,6 +766,11 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/data-grid`, { waitUntil: "networkidle" });
     await expect.poll(() => page.locator('[data-grid-id="people-directory"]').isVisible()).toBe(true);
     await screenshot("15-data-grid-dark");
+
+    await page.goto(`${appUrl}/query-builder`, { waitUntil: "networkidle" });
+    await expect.poll(() => page.locator('[data-query-builder="employee-query"]').isVisible())
+      .toBe(true);
+    await screenshot("16-query-builder-dark");
 
     await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
       waitUntil: "networkidle",

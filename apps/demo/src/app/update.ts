@@ -8,6 +8,7 @@ import { update as updateDataGrid } from "../data-grid/update";
 import { serializeWorkspace, writePersistedWorkspace } from "../document-storage";
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
+import { update as updateQueryBuilder } from "../query-builder/update";
 import { applyThemePreference } from "../theme";
 import { update as updateUiKit } from "../ui-kit/update";
 import { OutMessage as WorkflowOutMessage } from "../workflow/message";
@@ -118,6 +119,13 @@ const foldUiKit = Update.foldChild({
   toParentMessage: (message) => Message.GotUiKitMessage({ message }),
 });
 
+const foldQueryBuilder = Update.foldChild({
+  update: updateQueryBuilder,
+  read: (model: Model) => Option.some(model.queryBuilderDemo),
+  write: (model, queryBuilderDemo) => evo(model, { queryBuilderDemo: () => queryBuilderDemo }),
+  toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
+});
+
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
   if (route._tag === "Workflow") {
@@ -186,5 +194,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),
     GotDataGridDemoMessage: ({ message: childMessage }) =>
       foldDataGrid(model, childMessage),
+    GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
+      foldQueryBuilder(model, childMessage),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),
   });

@@ -7,6 +7,7 @@ import {
   demoFromRoute,
   formBuilderPath,
   formStateFromRoute,
+  queryBuilderRouter,
   uiKitRouter,
   urlToAppRoute,
   workflowOrientationFromRoute,
@@ -23,6 +24,8 @@ describe("demo routes", () => {
     expect(formBuilderPath("Complex", "Preview"))
       .toBe("/form-builder?example=Complex&mode=Preview");
     expect(uiKitRouter()).toBe("/ui-kit");
+    expect(queryBuilderRouter()).toBe("/query-builder");
+    expect(demoFromRoute(parseUrl("https://demo.test/query-builder"))).toBe("QueryBuilder");
     expect(demoFromRoute(parseUrl("https://demo.test/ui-kit"))).toBe("UiKit");
   });
 

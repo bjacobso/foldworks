@@ -5,6 +5,7 @@ import { Url } from "foldkit/url";
 
 import { Message as DataGridMessage } from "../data-grid/message";
 import { Message as FormEditorMessage } from "../form-builder/message";
+import { Message as QueryBuilderDemoMessage } from "../query-builder/message";
 import { ThemePreference } from "../theme";
 import { Message as UiKitMessage } from "../ui-kit/message";
 import { Message as WorkflowEditorMessage } from "../workflow/message";
@@ -21,6 +22,7 @@ export const Message = defineMessageUnion({
   GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
   GotFormEditorMessage: { message: FormEditorMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },
+  GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
   GotUiKitMessage: { message: UiKitMessage },
 });
 export type Message = typeof Message.Type;

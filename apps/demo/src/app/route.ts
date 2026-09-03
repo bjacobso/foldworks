@@ -4,7 +4,7 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Workflow" | "DataGrid" | "FormBuilder" | "UiKit";
+export type Demo = "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
@@ -16,6 +16,7 @@ export const AppRoute = defineRouteUnion({
     example: S.Option(FormExampleId),
     mode: S.Option(FormMode),
   },
+  QueryBuilder: {},
   UiKit: {},
   NotFound: { path: S.String },
 });
@@ -56,10 +57,16 @@ export const uiKitRouter = pipe(
   Route.mapTo(AppRoute.UiKit),
 );
 
+export const queryBuilderRouter = pipe(
+  Route.literal("query-builder"),
+  Route.mapTo(AppRoute.QueryBuilder),
+);
+
 const routeParser = Route.oneOf(
   workflowRouter,
   dataGridRouter,
   formBuilderRouter,
+  queryBuilderRouter,
   uiKitRouter,
   rootRouter,
 );
@@ -73,6 +80,7 @@ export const demoFromRoute = (route: AppRoute): Demo => {
   switch (route._tag) {
     case "DataGrid": return "DataGrid";
     case "FormBuilder": return "FormBuilder";
+    case "QueryBuilder": return "QueryBuilder";
     case "UiKit": return "UiKit";
     case "NotFound":
     case "Workflow": return "Workflow";

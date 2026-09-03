@@ -4,6 +4,7 @@ import type { PersistedWorkspace } from "../document-storage";
 import { Model as DataGridModel, initialModel as initialDataGrid } from "../data-grid/model";
 import { Model as FormEditorModel, init as initFormEditor } from "../form-builder/editor-model";
 import { exampleForms } from "../form-builder/model";
+import { Model as QueryBuilderDemoModel, initialModel as initialQueryBuilder } from "../query-builder/model";
 import { ThemePreference, type ThemeState } from "../theme";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
@@ -18,6 +19,7 @@ export const Model = S.Struct({
   workflowEditor: WorkflowEditorModel,
   formEditor: FormEditorModel,
   dataGridDemo: DataGridModel,
+  queryBuilderDemo: QueryBuilderDemoModel,
   uiKit: UiKitModel,
   themePreference: ThemePreference,
   systemIsDark: S.Boolean,
@@ -41,6 +43,7 @@ export const init = (
     ),
     formEditor: initFormEditor(persisted?.forms ?? exampleForms, exampleId, mode),
     dataGridDemo: initialDataGrid,
+    queryBuilderDemo: initialQueryBuilder,
     uiKit: initialUiKit,
     themePreference: theme.preference,
     systemIsDark: theme.systemIsDark,
