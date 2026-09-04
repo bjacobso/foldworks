@@ -17,6 +17,12 @@ export const Model = S.Struct({
   termsAccepted: S.Boolean,
   mixedPermissions: S.Boolean,
   isDetailsOpen: S.Boolean,
+  openComponent: S.String,
+  sliderValue: S.Number,
+  otp: S.String,
+  commandQuery: S.String,
+  page: S.Int,
+  selectedCalendarDay: S.Int,
   announcement: S.String,
 });
 export type Model = typeof Model.Type;
@@ -32,5 +38,11 @@ export const initialModel: Model = {
   termsAccepted: false,
   mixedPermissions: false,
   isDetailsOpen: true,
+  openComponent: "",
+  sliderValue: 64,
+  otp: "123",
+  commandQuery: "",
+  page: 2,
+  selectedCalendarDay: 4,
   announcement: "UI component demo ready.",
 };

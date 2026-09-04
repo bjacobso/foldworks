@@ -78,6 +78,8 @@ The UI component showcase demonstrates every `@foldworks/ui` primitive:
 - segmented controls and compact toolbar selects;
 - panel, row, stack, and toolbar composition;
 - the shared semantic color tokens used by the demos.
+- all 61 current shadcn-equivalent component families, including controlled
+  overlays, menus, navigation, tables, charts, calendars, and message views.
 
 From the repository root:
 

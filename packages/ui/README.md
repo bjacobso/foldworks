@@ -4,10 +4,13 @@ Opinionated application chrome for Foldkit, built with StyleX and the accessible
 
 The package owns semantic tokens, focus treatment, control density, and reusable visual primitives. Product concepts and feature behavior stay in their application or feature package.
 
-It currently wraps Foldkit's button, input, textarea, select, checkbox,
-switch, fieldset, and disclosure behavior. Layout, panel, badge, segmented
-control, toolbar, and Lucide icon helpers cover the shared visual composition
-used by the demo packages.
+The root export covers all 61 components in the current shadcn UI catalog,
+translated to Foldkit's controlled `view(config, h)` convention. That includes
+forms, feedback, data display, navigation, menus, overlays, layout primitives,
+calendar and chart views, and the attachment/message family. Existing Foldkit
+headless behavior remains the foundation for buttons, inputs, checkboxes,
+switches, fieldsets, and disclosures; other controls use native browser
+semantics and parent-owned state.
 
 ## Setup
 
@@ -22,6 +25,10 @@ Import the base contract and the themes your application supports:
 
 For a neutral-only application, `@foldworks/ui/theme.css` remains a convenient
 backward-compatible import.
+
+`base.css` also includes a modern browser reset in the low-priority
+`foldworks-reset` cascade layer. StyleX atomic styles and application CSS remain
+unlayered, so they always override the reset regardless of stylesheet order.
 
 The theme contract exposes the familiar shadcn semantic roles (`--background`,
 `--foreground`, `--card`, `--primary`, `--muted`, `--accent`, `--destructive`,
@@ -86,6 +93,29 @@ Toolbar.view(
   },
   h,
 );
+```
+
+All catalog entries use the same namespace-style surface:
+
+```ts
+import { Alert, Dialog, Progress, Table, Tabs } from "@foldworks/ui";
+
+Alert.view({ title: "Saved", description: "Your changes are live." }, h);
+Progress.view({ value: 72, ariaLabel: "Upload progress" }, h);
+Tabs.view({ id: "settings", value, tabs, onChange: Message.SelectedTab }, h);
+```
+
+Stateful families with a Foldkit engine are also available under `Headless`. Use that
+surface when an application needs the complete state machine, including focus
+management, keyboard navigation, floating-element anchoring, commands, and
+subscriptions:
+
+```ts
+import { Headless } from "@foldworks/ui";
+
+const model = Headless.Dialog.init({ id: "edit-profile", isAnimated: true });
+const update = Headless.Dialog.update;
+const view = Headless.Dialog.view;
 ```
 
 `Icon.view` converts Lucide's framework-neutral icon data into Foldkit SVG

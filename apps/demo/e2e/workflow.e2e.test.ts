@@ -829,6 +829,43 @@ describe.sequential("structured workflow builder", () => {
     await screenshot("12-ui-kit");
   });
 
+  it("exercises the complete shadcn-equivalent component catalog", async () => {
+    await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
+
+    const catalog = page.locator('[data-component-catalog="true"]');
+    await expect.poll(() => catalog.isVisible()).toBe(true);
+    await expect.poll(() => catalog.getByRole("heading").allTextContents()).toEqual([
+      "Data display and feedback",
+      "Team plan",
+      "No messages",
+      "Forms and selection",
+      "Navigation",
+      "Disclosure and layout",
+      "Overlays, menus, and command",
+      "Calendar and messages",
+    ]);
+    await expect.poll(() => catalog.getByRole("progressbar").count()).toBe(1);
+    await expect.poll(() => catalog.getByRole("grid").count()).toBe(1);
+    await expect.poll(() => catalog.getByRole("log", { name: "Messages" }).count()).toBe(1);
+
+    await catalog.getByRole("button", { name: "Dialog", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Dialog example" });
+    await expect.poll(() => dialog.isVisible()).toBe(true);
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    await expect.poll(() => dialog.isVisible()).toBe(false);
+
+    await catalog.getByRole("button", { name: "Popover", exact: true }).click();
+    await expect.poll(() => page.locator("#catalog-popover-content").isVisible()).toBe(true);
+
+    await catalog.getByRole("button", { name: "Page 3", exact: true }).click();
+    await expect.poll(() => catalog.getByRole("button", { name: "Page 3", exact: true }).getAttribute("aria-current"))
+      .toBe("page");
+
+    await catalog.getByRole("tab", { name: "Details", exact: true }).click();
+    await expect.poll(() => catalog.getByRole("tab", { name: "Details", exact: true }).getAttribute("aria-selected"))
+      .toBe("true");
+  });
+
   it("persists theme and appearance preferences while keeping colors semantic", async () => {
     await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
     const themeSelect = page.getByLabel("Theme");

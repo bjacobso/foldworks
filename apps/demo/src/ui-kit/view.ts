@@ -30,6 +30,7 @@ import {
 
 import { Message } from "./message";
 import type { Model } from "./model";
+import { catalogView } from "./catalog-view";
 import { className, uiKitStyles as styles } from "./styles";
 
 const uiKitDepartmentFromString = (
@@ -486,6 +487,7 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
     h.div([h.Class(className(styles.content))], [
       hero(model, h),
       h.div([h.Class(className(styles.sectionGrid))], [
+        h.div([h.Class(className(styles.wide))], [catalogView(model, h)]),
         buttonsPanel(h),
         badgesPanel(h),
         iconsPanel(h),

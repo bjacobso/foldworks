@@ -12,6 +12,7 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     SelectedDepartment: ({ value }) => ({
       model: evo(model, {
         department: () => value,
+        openComponent: () => "",
         announcement: () => `${value} department selected.`,
       }),
     }),
@@ -49,6 +50,36 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
       model: evo(model, {
         isDetailsOpen: () => isOpen,
         announcement: () => `Disclosure ${isOpen ? "expanded" : "collapsed"}.`,
+      }),
+    }),
+    ToggledComponent: ({ component, isOpen }) => ({
+      model: evo(model, {
+        openComponent: () => isOpen ? component : "",
+        announcement: () => `${component} ${isOpen ? "opened" : "closed"}.`,
+      }),
+    }),
+    ChangedSlider: ({ value }) => ({
+      model: evo(model, {
+        sliderValue: () => value,
+        announcement: () => `Slider changed to ${value}.`,
+      }),
+    }),
+    ChangedOtp: ({ value }) => ({
+      model: evo(model, { otp: () => value }),
+    }),
+    ChangedCommandQuery: ({ value }) => ({
+      model: evo(model, { commandQuery: () => value }),
+    }),
+    SelectedPage: ({ page }) => ({
+      model: evo(model, {
+        page: () => page,
+        announcement: () => `Page ${page} selected.`,
+      }),
+    }),
+    SelectedCalendarDay: ({ day }) => ({
+      model: evo(model, {
+        selectedCalendarDay: () => day,
+        announcement: () => `September ${day} selected.`,
       }),
     }),
     ClickedAction: ({ action }) => ({

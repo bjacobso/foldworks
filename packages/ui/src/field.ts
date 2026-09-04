@@ -6,6 +6,37 @@ import * as Description from "./description";
 import { fieldStyles } from "./styles";
 import { sxAttrs } from "./sx";
 
+export const group = <Message>(
+  config: Readonly<{ children: ReadonlyArray<Html | string> }>,
+  h: HtmlBuilder<Message>,
+): Html => h.div(sxAttrs(h, fieldStyles.root), config.children);
+
+export const view = <Message>(
+  config: Readonly<{
+    id: string;
+    label: string;
+    children: ReadonlyArray<Html | string>;
+    description?: string;
+    error?: string;
+    isRequired?: boolean;
+    isDisabled?: boolean;
+  }>,
+  h: HtmlBuilder<Message>,
+): Html => h.div([
+  ...sxAttrs(h, fieldStyles.root),
+  h.DataAttribute("invalid", config.error === undefined ? "false" : "true"),
+  h.DataAttribute("disabled", config.isDisabled === true ? "true" : "false"),
+], [
+  h.label([h.For(config.id), ...sxAttrs(h, fieldStyles.label)], labelContent(config)),
+  ...config.children,
+  Description.view(
+    config.error ?? config.description,
+    [h.Id(`${config.id}-description`)],
+    sxAttrs(h, fieldStyles.description, config.error !== undefined && fieldStyles.error),
+    h,
+  ),
+]);
+
 type CommonConfig = Readonly<{
   id: string;
   label: string;

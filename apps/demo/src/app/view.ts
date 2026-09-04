@@ -141,7 +141,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
         : demo === "QueryBuilder"
           ? "Configured attributes · recursive groups · live validation"
-        : "13 application primitives · Foldkit behavior · StyleX";
+        : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view({
     title,
     description,
@@ -153,7 +153,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           : demo === "QueryBuilder"
             ? [Badge.view({ label: "Validates as you edit", tone: "success", dot: true }, h)]
           : [
-              Badge.view({ label: "13 primitives", tone: "info", dot: true }, h),
+              Badge.view({ label: "61 primitives", tone: "info", dot: true }, h),
               Badge.view({ label: "StyleX + Foldkit" }, h),
             ]),
       Select.control({

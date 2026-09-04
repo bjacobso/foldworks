@@ -14,6 +14,12 @@ export const Message = defineMessageUnion({
   ToggledTerms: { isChecked: S.Boolean },
   ToggledMixedPermissions: { isChecked: S.Boolean },
   ToggledDetails: { isOpen: S.Boolean },
+  ToggledComponent: { component: S.String, isOpen: S.Boolean },
+  ChangedSlider: { value: S.Number },
+  ChangedOtp: { value: S.String },
+  ChangedCommandQuery: { value: S.String },
+  SelectedPage: { page: S.Int },
+  SelectedCalendarDay: { day: S.Int },
   ClickedAction: { action: S.String },
 });
 export type Message = typeof Message.Type;
