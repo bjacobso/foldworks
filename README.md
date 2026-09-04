@@ -84,6 +84,7 @@ Trusted publishing requires a one-time configuration on npm for every
 - Repository: `foldworks`
 - Workflow filename: `release.yml`
 - Environment: leave blank
+- Allowed actions: enable direct publishing with `npm publish`
 
 In the GitHub repository settings, enable **Allow GitHub Actions to create and
 approve pull requests**. The workflow uses short-lived OIDC credentials and
