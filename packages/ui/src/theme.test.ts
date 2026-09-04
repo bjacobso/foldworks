@@ -60,4 +60,15 @@ describe("theme contract", () => {
     expect(css).toContain("--ring-muted: color-mix(in oklch, var(--ring)");
     expect(css).toContain("--destructive-surface: color-mix(in oklch, var(--destructive)");
   });
+
+  it("includes a low-specificity browser reset", async () => {
+    const css = await readFile(resolve(import.meta.dirname, "base.css"), "utf8");
+
+    expect(css).toContain("@layer foldworks-reset");
+    expect(css).toContain("box-sizing: border-box");
+    expect(css).toContain("text-size-adjust: 100%");
+    expect(css).toContain(":where(button, input, optgroup, select, textarea)");
+    expect(css).toContain(":where(img, picture, video, canvas, svg)");
+    expect(css).toContain(":where([hidden])");
+  });
 });
