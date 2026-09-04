@@ -9,7 +9,7 @@ import { buttonStyles } from "./styles";
 import { sxAttrs } from "./sx";
 
 export type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
-export type Size = "sm" | "md" | "icon";
+export type Size = "xs" | "sm" | "md" | "lg" | "icon";
 
 export type ViewConfig<Message> = Readonly<{
   label?: string;
@@ -37,11 +37,16 @@ const variantStyle = (variant: Variant) => {
 
 const sizeStyle = (size: Size) => {
   switch (size) {
+    case "xs": return buttonStyles.xs;
     case "sm": return buttonStyles.sm;
     case "md": return buttonStyles.md;
+    case "lg": return buttonStyles.lg;
     case "icon": return buttonStyles.icon;
   }
 };
+
+const iconSize = (size: Size): number =>
+  size === "xs" ? 12 : size === "sm" ? 14 : 16;
 
 export const view = <Message>(
   config: ViewConfig<Message>,
@@ -71,11 +76,11 @@ export const view = <Message>(
         [
           ...(config.icon === undefined
             ? []
-            : [Icon.view({ icon: config.icon, size: 16 }, h)]),
+            : [Icon.view({ icon: config.icon, size: iconSize(size) }, h)]),
           ...(config.label === undefined ? [] : [config.label]),
           ...(config.trailingIcon === undefined
             ? []
-            : [Icon.view({ icon: config.trailingIcon, size: 16 }, h)]),
+            : [Icon.view({ icon: config.trailingIcon, size: iconSize(size) }, h)]),
         ],
       ),
     },

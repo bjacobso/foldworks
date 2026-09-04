@@ -796,6 +796,12 @@ describe.sequential("structured workflow builder", () => {
 
     await expect.poll(() => showcase.getByRole("button", { name: "Disabled" }).isDisabled())
       .toBe(true);
+    await expect.poll(async () => ({
+      xs: (await showcase.getByRole("button", { name: "Extra small" }).boundingBox())?.height,
+      sm: (await showcase.getByRole("button", { name: "Small", exact: true }).boundingBox())?.height,
+      md: (await showcase.getByRole("button", { name: "Default", exact: true }).boundingBox())?.height,
+      lg: (await showcase.getByRole("button", { name: "Large", exact: true }).boundingBox())?.height,
+    })).toEqual({ xs: 24, sm: 28, md: 32, lg: 36 });
     const email = showcase.getByRole("textbox", { name: "Work email" });
     await expect.poll(() => email.getAttribute("aria-invalid")).toBe("true");
     await email.fill("maya@example.com");
@@ -844,7 +850,7 @@ describe.sequential("structured workflow builder", () => {
       };
     });
     expect(darkTokens).toEqual({
-      background: "oklch(18.5% .04 252)",
+      background: "oklch(14.5% 0 0)",
       selection: "oklch(27% .045 156)",
       dropTarget: "oklch(29% .055 156)",
     });

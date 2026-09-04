@@ -51,29 +51,27 @@ const group = (
 
 const hero = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.section([h.Class(className(styles.hero))], [
-    h.div([h.Class(className(styles.heroCopy))], [
-      h.p([h.Class(className(styles.eyebrow))], ["Foldworks component library"]),
-      h.h2([h.Class(className(styles.heroTitle))], ["Polished primitives for serious product work."]),
-      h.p([h.Class(className(styles.heroDescription))], [
-        "A compact, expressive visual layer for Foldkit—designed for information-dense application interfaces and predictable interaction.",
-      ]),
-      Layout.row({
-        gap: "sm",
-        wrap: true,
-        children: [
-          Badge.view({ label: "13 primitives", tone: "info", dot: true }, h),
-          Badge.view({ label: "Accessible by default", tone: "success", dot: true }, h),
-          Badge.view({ label: "StyleX tokens" }, h),
-        ],
-      }, h),
-    ]),
     h.div([h.Class(className(styles.activity)), h.AriaLive("polite")], [
-      h.span([h.Class(className(styles.activityIcon)), h.AriaHidden(true)], [
-        Icon.view({ icon: Check, size: 14, strokeWidth: 2.5 }, h),
+      h.span([h.Class(className(styles.activityLabel))], ["Live"]),
+      h.p([h.Class(className(styles.activityMessage))], [model.announcement]),
+      Icon.view({ icon: ArrowRight, size: 14 }, h),
+    ]),
+    h.div([h.Class(className(styles.heroCopy))], [
+      h.h2([h.Class(className(styles.heroTitle))], ["Clean application primitives for Foldkit."]),
+      h.p([h.Class(className(styles.heroDescription))], [
+        "A neutral, compact component layer with accessible behavior, predictable states, and the restraint to fit real product interfaces.",
       ]),
-      h.div([], [
-        h.p([h.Class(className(styles.activityLabel))], ["Live interaction"]),
-        h.p([h.Class(className(styles.activityMessage))], [model.announcement]),
+      h.div([h.Class(className(styles.heroActions))], [
+        Button.view({
+          label: "Explore components",
+          trailingIcon: ArrowRight,
+          onClick: Message.ClickedAction({ action: "Explore components" }),
+        }, h),
+        Button.view({
+          label: "View states",
+          variant: "outline",
+          onClick: Message.ClickedAction({ action: "View states" }),
+        }, h),
       ]),
     ]),
   ]);
@@ -82,7 +80,7 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
   Panel.view(
     {
       title: "Button",
-      description: "Five intent variants, three sizes, icons, and controlled disabled states.",
+      description: "Five intent variants, four text sizes, icons, and controlled disabled states.",
       children: [
         Layout.stack({
           gap: "lg",
@@ -106,8 +104,10 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
                 gap: "sm",
                 wrap: true,
                 children: [
+                  Button.view({ label: "Extra small", size: "xs", variant: "outline", onClick: Message.ClickedAction({ action: "Extra small" }) }, h),
                   Button.view({ label: "Small", size: "sm", variant: "outline", onClick: Message.ClickedAction({ action: "Small" }) }, h),
-                  Button.view({ label: "Medium", onClick: Message.ClickedAction({ action: "Medium" }) }, h),
+                  Button.view({ label: "Default", onClick: Message.ClickedAction({ action: "Default" }) }, h),
+                  Button.view({ label: "Large", size: "lg", variant: "outline", onClick: Message.ClickedAction({ action: "Large" }) }, h),
                   Button.view({ icon: Plus, size: "icon", ariaLabel: "Create item", onClick: Message.ClickedAction({ action: "Create item" }) }, h),
                   Button.view({ label: "With icon", icon: Check, variant: "secondary", onClick: Message.ClickedAction({ action: "Icon" }) }, h),
                   Button.view({ label: "Continue", trailingIcon: ArrowRight, variant: "ghost", onClick: Message.ClickedAction({ action: "Continue" }) }, h),
