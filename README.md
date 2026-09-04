@@ -69,9 +69,29 @@ pnpm release
 The release command refuses to publish while changesets are pending or a
 package still has the placeholder `0.0.0` version.
 
-The initial `0.1.0` release is already represented by a pending changeset. npm
-publishing requires an authenticated account with access to the `@foldworks`
-organization and any two-factor authentication required by that organization.
+### Automated releases
+
+The `Release` GitHub Actions workflow watches `main`. Pending changesets create
+or update a `Release packages` pull request. Merging that version PR validates
+and packs the release, publishes it through npm trusted publishing, creates
+GitHub releases, and pushes package tags.
+
+Trusted publishing requires a one-time configuration on npm for every
+`@foldworks/*` package:
+
+- Provider: GitHub Actions
+- Organization or user: `bjacobso`
+- Repository: `foldworks`
+- Workflow filename: `release.yml`
+- Environment: leave blank
+
+In the GitHub repository settings, enable **Allow GitHub Actions to create and
+approve pull requests**. The workflow uses short-lived OIDC credentials and
+does not require an `NPM_TOKEN` secret.
+
+The initial `0.1.0` release is published. Manual publishing remains available
+for maintainers authenticated to the `@foldworks` npm organization, but the
+automated trusted-publishing workflow is preferred for future releases.
 
 ## Deployment
 

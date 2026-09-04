@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  select-mode:
+    name: Select release mode
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.select-mode.outputs.mode }}
+      publish-plan-artifact-id: ${{ steps.select-mode.outputs.publish-plan-artifact-id }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Select Changesets mode
+        id: select-mode
+        uses: changesets/action/select-mode@v2
+
+  version:
+    name: Create or update version PR
+    if: needs.select-mode.outputs.mode == 'version'
+    needs: select-mode
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.0
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Version packages
+        uses: changesets/action/version@v2
+        with:
+          script: pnpm version-packages
+          commit-message: Version packages
+          pr-title: Release packages
+
+  pack:
+    name: Validate and pack packages
+    if: needs.select-mode.outputs.mode == 'publish'
+    needs: select-mode
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      pack-dir-artifact-id: ${{ steps.pack.outputs.pack-dir-artifact-id }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.0
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run release checks
+        run: pnpm release:check
+
+      - name: Pack packages
+        id: pack
+        uses: changesets/action/pack@v2
+        with:
+          publish-plan-artifact-id: ${{ needs.select-mode.outputs.publish-plan-artifact-id }}
+
+  publish:
+    name: Publish packages
+    needs: pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.0
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish packages
+        uses: changesets/action/publish@v2
+        with:
+          pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
+          create-github-releases: true
+          push-git-tags: true
