@@ -14,22 +14,31 @@
     "pnpm": ">=10.20"
   },
   "scripts": {
-    "dev": "pnpm --filter @foldworks/demo dev",
-    "build": "pnpm --filter @foldworks/demo build",
+    "dev": "pnpm run build:packages && pnpm --filter @foldworks/demo dev",
+    "build": "pnpm run build:packages && pnpm --filter @foldworks/demo build",
+    "build:packages": "pnpm --filter './packages/*' --workspace-concurrency=1 run build",
+    "changeset": "changeset",
     "deploy": "alchemy deploy --stage prod",
     "destroy": "alchemy destroy --stage prod",
-    "typecheck": "pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
+    "pack:check": "node scripts/check-packages.mjs",
+    "release": "pnpm run release:ready && pnpm run release:check && changeset publish",
+    "release:check": "pnpm run build && pnpm --recursive --if-present test && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck && pnpm pack:check",
+    "release:ready": "node scripts/check-release-ready.mjs",
+    "test": "pnpm run build:packages && pnpm --recursive --if-present test",
+    "typecheck": "pnpm run build:packages && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
     "typecheck:infra": "tsc --noEmit",
-    "test": "pnpm --recursive --if-present test",
-    "test:e2e": "pnpm --filter @foldworks/demo test:e2e"
+    "test:e2e": "pnpm run build:packages && pnpm --filter @foldworks/demo test:e2e",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
     "@alchemy.run/frontend-frameworks": "2.0.0-beta.76",
+    "@changesets/cli": "^3.0.2",
     "@effect/platform-node": "4.0.0-rc.112",
     "@types/node": "catalog:",
     "alchemy": "2.0.0-beta.76",
     "effect": "catalog:",
     "hono": "4.12.14",
+    "tsup": "^8.5.1",
     "typescript": "5.9.3"
   }
 }

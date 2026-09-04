@@ -14,6 +14,27 @@ semantics and parent-owned state.
 
 ## Setup
 
+Foldworks ships its StyleX expressions so applications can combine them with
+their own atomic styles. Configure the StyleX transform in the consuming
+application. For Vite:
+
+```sh
+pnpm add -D @stylexjs/unplugin
+```
+
+```ts
+// vite.config.ts
+import stylex from "@stylexjs/unplugin";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [stylex.vite({ runtimeInjection: false, useCSSLayers: true })],
+});
+```
+
+The plugin automatically discovers installed packages that depend on
+`@stylexjs/stylex`, including the Foldworks packages.
+
 Import the base contract and the themes your application supports:
 
 ```css
@@ -59,10 +80,10 @@ variables after the Foldworks imports:
 
 Application interactions use separate semantic roles for selection and drag
 intent: `--foldworks-ui-selection-*`, `--foldworks-ui-drop-target-*`, and
-`--foldworks-ui-overlay`. They are intentionally distinct from success, warning,
-danger, and information status colors, and include contrast-adjusted dark
-values. The same roles are available through the exported StyleX `colors`
-constants.
+`--foldworks-ui-overlay`. Selection and drag roles derive from the active
+theme's `--primary`, `--card`, and `--border` tokens, while remaining distinct
+from success, warning, danger, and information status colors. The same roles
+are available through the exported StyleX `colors` constants.
 
 ## Usage
 

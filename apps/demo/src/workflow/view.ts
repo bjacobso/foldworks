@@ -305,6 +305,12 @@ const connectorLayerView = (
                 ? "true"
                 : "false",
             ),
+            h.DataAttribute(
+              "drop-connector-active",
+              activeId !== undefined && connector.locationId === activeId
+                ? "true"
+                : "false",
+            ),
           ],
         ),
       ),

@@ -1,8 +1,10 @@
 import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
+import { Match } from "effect";
 
 import {
   Blocks,
   FileText,
+  House,
   ListFilter,
   ListChecks,
   Table2,
@@ -10,14 +12,15 @@ import {
 } from "@lucide/icons";
 import {
   Badge,
-  Icon,
   Select,
   Toolbar,
 } from "@foldworks/ui";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { Sidebar } from "@foldworks/sidebar";
 
 import { people, view as dataGridView } from "../data-grid/demo";
 import { view as formEditorView } from "../form-builder/view";
+import { view as homeView } from "../home/view";
 import { view as queryBuilderView } from "../query-builder/view";
 import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
@@ -25,10 +28,12 @@ import {
   dataGridRouter,
   demoFromRoute,
   formBuilderPath,
+  homeRouter,
   pdfAnnotatorRouter,
   queryBuilderRouter,
   uiKitRouter,
   workflowPath,
+  type Demo,
 } from "./route";
 import { className, styles } from "../workflow/styles";
 import { view as workflowEditorView } from "../workflow/view";
@@ -50,40 +55,43 @@ const activeAnnouncement = (model: Model): string => {
         : model.announcement;
 };
 
-const navigation = (model: Model, h: HtmlBuilder<Message>): Html => {
+const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
   const demo = demoFromRoute(model.route);
-  return h.nav([h.Class(className(styles.demoNav)), h.AriaLabel("Example views")], [
-    h.a([
-      h.Href(uiKitRouter()),
-      h.Class(className(styles.demoNavItem, demo === "UiKit" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "UiKit" ? "page" : "false"),
-    ], [Icon.view({ icon: Blocks, size: 15 }, h), "@foldworks/ui"]),
-    h.a([
-      h.Href(dataGridRouter()),
-      h.Class(className(styles.demoNavItem, demo === "DataGrid" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "DataGrid" ? "page" : "false"),
-    ], [Icon.view({ icon: Table2, size: 15 }, h), "Data grid"]),
-    h.a([
-      h.Href(queryBuilderRouter()),
-      h.Class(className(styles.demoNavItem, demo === "QueryBuilder" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "QueryBuilder" ? "page" : "false"),
-    ], [Icon.view({ icon: ListFilter, size: 15 }, h), "Query builder"]),
-    h.a([
-      h.Href(formBuilderPath(model.formEditor.exampleId, model.formEditor.mode)),
-      h.Class(className(styles.demoNavItem, demo === "FormBuilder" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "FormBuilder" ? "page" : "false"),
-    ], [Icon.view({ icon: ListChecks, size: 15 }, h), "Form builder"]),
-    h.a([
-      h.Href(workflowPath(model.workflowEditor.workflow.orientation)),
-      h.Class(className(styles.demoNavItem, demo === "Workflow" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "Workflow" ? "page" : "false"),
-    ], [Icon.view({ icon: WorkflowIcon, size: 15 }, h), "Workflow builder"]),
-    h.a([
-      h.Href(pdfAnnotatorRouter()),
-      h.Class(className(styles.demoNavItem, demo === "PdfAnnotator" && styles.demoNavItemActive)),
-      h.AriaCurrent(demo === "PdfAnnotator" ? "page" : "false"),
-    ], [Icon.view({ icon: FileText, size: 15 }, h), "PDF annotator"]),
-  ]);
+  return [
+    {
+      id: "overview",
+      label: "Overview",
+      items: [{
+        id: "home",
+        label: "Home",
+        href: homeRouter(),
+        icon: House,
+        isActive: demo === "Home",
+      }],
+    },
+    {
+      id: "foundation",
+      label: "Foundation",
+      items: [{
+        id: "ui",
+        label: "@foldworks/ui",
+        href: uiKitRouter(),
+        icon: Blocks,
+        isActive: demo === "UiKit",
+      }],
+    },
+    {
+      id: "application-primitives",
+      label: "Application primitives",
+      items: [
+        { id: "data-grid", label: "Data grid", href: dataGridRouter(), icon: Table2, isActive: demo === "DataGrid" },
+        { id: "query-builder", label: "Query builder", href: queryBuilderRouter(), icon: ListFilter, isActive: demo === "QueryBuilder" },
+        { id: "form-builder", label: "Form builder", href: formBuilderPath(model.formEditor.exampleId, model.formEditor.mode), icon: ListChecks, isActive: demo === "FormBuilder" },
+        { id: "workflow", label: "Workflow builder", href: workflowPath(model.workflowEditor.workflow.orientation), icon: WorkflowIcon, isActive: demo === "Workflow" },
+        { id: "pdf-annotator", label: "PDF annotator", href: pdfAnnotatorRouter(), icon: FileText, isActive: demo === "PdfAnnotator" },
+      ],
+    },
+  ];
 };
 
 const childRegion = (
@@ -113,18 +121,6 @@ const childRegion = (
   return h.empty;
 };
 
-const sidebar = (model: Model, h: HtmlBuilder<Message>): Html => {
-  return h.aside(
-    [h.Class(className(styles.sidebar)), h.AriaLabel("Foldworks navigation")],
-    [
-      h.div([h.Class(className(styles.brandRow))], [
-        h.p([h.Class(className(styles.brand))], ["Foldworks"]),
-      ]),
-      navigation(model, h),
-    ],
-  );
-};
-
 const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
   model.persistenceStatus === "Saved"
     ? Badge.view({ label: "Saved locally", tone: "success", dot: true }, h)
@@ -144,7 +140,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           ? "Employee query"
         : demo === "PdfAnnotator"
           ? "PDF annotator"
-        : "@foldworks/ui";
+        : demo === "Home"
+          ? "Foldworks"
+          : "@foldworks/ui";
   const description = demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
     : demo === "DataGrid"
@@ -155,7 +153,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           ? "Configured attributes · recursive groups · live validation"
         : demo === "PdfAnnotator"
           ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-        : "61 application primitives · Foldkit behavior · StyleX";
+        : demo === "Home"
+          ? "Polished application primitives for Foldkit and StyleX"
+          : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view({
     title,
     description,
@@ -168,7 +168,12 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Validates as you edit", tone: "success", dot: true }, h)]
           : demo === "PdfAnnotator"
             ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
-          : [
+          : demo === "Home"
+            ? [
+                Badge.view({ label: "8 packages", tone: "info", dot: true }, h),
+                Badge.view({ label: "Open source" }, h),
+              ]
+            : [
               Badge.view({ label: "61 primitives", tone: "info", dot: true }, h),
               Badge.view({ label: "StyleX + Foldkit" }, h),
             ]),
@@ -202,6 +207,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
 
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
+  if (demo === "Home") return homeView(h);
   if (demo === "Workflow" || (demo === "FormBuilder" && model.formEditor.mode === "Editor")) {
     const paletteLabel = demo === "Workflow" ? "Workflow nodes" : "Form fields";
     return h.div([h.Class(className(styles.editorWorkspace))], [
@@ -246,16 +252,48 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   });
 };
 
+const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
+  Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),
+  Match.when("DataGrid", () => "Data grid · Foldworks"),
+  Match.when("FormBuilder", () => "Form builder · Foldworks"),
+  Match.when("QueryBuilder", () => "Query builder · Foldworks"),
+  Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
+  Match.when("UiKit", () => "UI components · Foldworks"),
+  Match.when("Workflow", () => "Workflow · Foldworks"),
+  Match.exhaustive,
+);
+
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
   const demo = demoFromRoute(model.route);
   const preview = demo === "FormBuilder" && model.formEditor.mode === "Preview";
   return {
-    title: `${demo === "DataGrid" ? "Data grid" : demo === "FormBuilder" ? "Form builder" : demo === "QueryBuilder" ? "Query builder" : demo === "PdfAnnotator" ? "PDF annotator" : demo === "UiKit" ? "UI components" : "Workflow"} · Foldworks`,
+    title: documentTitle(demo),
     body: h.main(
-      [h.Class(className(styles.app, preview && styles.appFormPreview))],
+      [h.Class(className(styles.app))],
       [
-        preview ? h.empty : sidebar(model, h),
-        h.section([h.Class(className(styles.workspace))], [toolbar(model, h), content(model, h)]),
+        preview
+          ? h.section([h.Class(className(styles.workspace))], [toolbar(model, h), content(model, h)])
+          : Sidebar.view({
+              model: model.sidebar,
+              toParentMessage: (message) => Message.GotSidebarMessage({ message }),
+              brand: {
+                title: "Foldworks",
+                description: "Foldkit + StyleX",
+                href: homeRouter(),
+                icon: Blocks,
+              },
+              groups: navigationGroups(model),
+              header: toolbar(model, h),
+              content: content(model, h),
+              footer: {
+                title: "Application primitives",
+                description: "Eight Foldworks packages",
+                icon: Blocks,
+              },
+              ariaLabel: "Foldworks navigation",
+              variant: "inset",
+              collapsible: "icon",
+            }, h),
         demo === "Workflow" || demo === "FormBuilder"
           ? childRegion(model, "Overlay", h)
           : h.empty,

@@ -1,19 +1,46 @@
 {
   "name": "@foldworks/ui",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Themeable, accessible UI components for Foldkit applications styled with StyleX.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
   "type": "module",
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": ["**/*.css"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/ui"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": { "url": "https://github.com/bjacobso/foldworks/issues" },
+  "keywords": ["foldkit", "ui", "components", "accessibility", "stylex"],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "exports": {
-    ".": "./src/index.ts",
-    "./icon": "./src/icon.ts",
-    "./tokens.stylex": "./src/tokens.stylex.ts",
-    "./theme.css": "./src/theme.css",
-    "./base.css": "./src/base.css",
-    "./themes/neutral.css": "./src/themes/neutral.css",
-    "./themes/zinc.css": "./src/themes/zinc.css",
-    "./themes/blue.css": "./src/themes/blue.css"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./icon": {
+      "types": "./dist/icon.d.ts",
+      "import": "./dist/icon.js"
+    },
+    "./tokens.stylex": {
+      "types": "./dist/tokens.stylex.d.ts",
+      "import": "./dist/tokens.stylex.js"
+    },
+    "./theme.css": "./dist/theme.css",
+    "./base.css": "./dist/base.css",
+    "./themes/neutral.css": "./dist/themes/neutral.css",
+    "./themes/zinc.css": "./dist/themes/zinc.css",
+    "./themes/blue.css": "./dist/themes/blue.css"
   },
   "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

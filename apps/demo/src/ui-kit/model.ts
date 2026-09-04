@@ -39,7 +39,7 @@ export const initialModel: Model = {
   mixedPermissions: false,
   isDetailsOpen: true,
   openComponent: "",
-  sliderValue: 64,
+  sliderValue: 25,
   otp: "123",
   commandQuery: "",
   page: 2,

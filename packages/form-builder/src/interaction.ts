@@ -7,7 +7,7 @@ export type InitConfig = Readonly<
   Partial<Pick<DragAndDrop.InitConfig, "id" | "orientation" | "activationThreshold">>
 >;
 
-export const init = (config: InitConfig = {}) =>
+export const init = (config: InitConfig = {}): DragAndDrop.Model =>
   DragAndDrop.init({
     ...config,
     id: config.id ?? DEFAULT_ID,
@@ -15,18 +15,18 @@ export const init = (config: InitConfig = {}) =>
     orientation: config.orientation ?? "Vertical",
   });
 
-export const Model = DragAndDrop.Model;
+export const Model: typeof DragAndDrop.Model = DragAndDrop.Model;
 export type Model = DragAndDrop.Model;
-export const Message = DragAndDrop.Message;
+export const Message: typeof DragAndDrop.Message = DragAndDrop.Message;
 export type Message = DragAndDrop.Message;
-export const OutMessage = DragAndDrop.OutMessage;
+export const OutMessage: typeof DragAndDrop.OutMessage = DragAndDrop.OutMessage;
 export type OutMessage = DragAndDrop.OutMessage;
 
-export const update = DragAndDrop.update;
-export const subscriptions = DragAndDrop.subscriptions;
-export const draggable = DragAndDrop.draggable;
-export const droppable = DragAndDrop.droppable;
-export const ghostStyle = DragAndDrop.ghostStyle;
-export const isDragging = DragAndDrop.isDragging;
-export const maybeDraggedItemId = DragAndDrop.maybeDraggedItemId;
-export const maybeDropTarget = DragAndDrop.maybeDropTarget;
+export const update: typeof DragAndDrop.update = DragAndDrop.update;
+export const subscriptions: typeof DragAndDrop.subscriptions = DragAndDrop.subscriptions;
+export const draggable: typeof DragAndDrop.draggable = DragAndDrop.draggable;
+export const droppable: typeof DragAndDrop.droppable = DragAndDrop.droppable;
+export const ghostStyle: typeof DragAndDrop.ghostStyle = DragAndDrop.ghostStyle;
+export const isDragging: typeof DragAndDrop.isDragging = DragAndDrop.isDragging;
+export const maybeDraggedItemId: typeof DragAndDrop.maybeDraggedItemId = DragAndDrop.maybeDraggedItemId;
+export const maybeDropTarget: typeof DragAndDrop.maybeDropTarget = DragAndDrop.maybeDropTarget;

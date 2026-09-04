@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, motion, radii, shadows, space, typography } from "./tokens.stylex";
+import { colors, motion, radii, shadows, space, typography } from "./tokens.stylex.js";
 
 const spin = stylex.keyframes({
   to: { transform: "rotate(360deg)" },
@@ -100,7 +100,9 @@ export const catalogStyles = stylex.create({
   breadcrumbLink: { color: { default: colors.foregroundMuted, ":hover": colors.foreground }, textDecoration: "none" },
   breadcrumbCurrent: { color: colors.foreground, fontWeight: 550 },
   card: { display: "flex", flexDirection: "column", overflow: "hidden" },
-  cardHeader: { display: "grid", gap: space.xs, padding: "16px 16px 0" },
+  cardHeader: { alignItems: "start", display: "grid", gap: space.md, gridTemplateColumns: "minmax(0, 1fr) auto", padding: "16px 16px 0" },
+  cardHeading: { display: "grid", gap: space.xs, minWidth: 0 },
+  cardAction: { alignItems: "center", display: "flex", justifyContent: "flex-end" },
   cardContent: { padding: "16px" },
   cardFooter: { alignItems: "center", display: "flex", gap: space.sm, padding: "0 16px 16px" },
   separatorHorizontal: { backgroundColor: colors.border, border: 0, height: "1px", width: "100%" },

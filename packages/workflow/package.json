@@ -1,12 +1,33 @@
 {
   "name": "@foldworks/workflow",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Structured workflow models, layout, registries, and drag-and-drop behavior for Foldkit.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
   "type": "module",
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/workflow"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": { "url": "https://github.com/bjacobso/foldworks/issues" },
+  "keywords": ["foldkit", "workflow", "automation", "drag-and-drop", "layout"],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

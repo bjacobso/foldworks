@@ -56,5 +56,5 @@ export {
   sizes,
   space,
   typography,
-} from "./tokens.stylex";
+} from "./tokens.stylex.js";
 export { sxAttrs } from "./sx";

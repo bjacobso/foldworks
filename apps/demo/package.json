@@ -20,6 +20,7 @@
     "@foldworks/history": "workspace:*",
     "@foldworks/pdf-annotator": "workspace:*",
     "@foldworks/query-builder": "workspace:*",
+    "@foldworks/sidebar": "workspace:*",
     "@foldworks/ui": "workspace:*",
     "@foldworks/workflow": "workspace:*",
     "@stylexjs/stylex": "catalog:",

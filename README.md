@@ -17,6 +17,8 @@ accessible application interfaces with Foldkit:
   branch-aware operations, layout, and drag-and-drop primitives.
 - [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
   previews with draggable, resizable annotations and flattened PDF export.
+- [`@foldworks/sidebar`](./packages/sidebar) — collapsible application chrome,
+  grouped navigation, inset content, and responsive mobile drawer behavior.
 - [`@foldworks/history`](./packages/history) — immutable undo/redo history for
   application-owned documents.
 
@@ -36,6 +38,40 @@ pnpm build
 
 Run `pnpm dev` to start the demo application. Run `pnpm test:e2e` for its
 Playwright interaction suite.
+
+## Publishing
+
+Changesets records which packages changed and keeps versions and internal
+`workspace:*` dependencies in sync. Add a changeset with every publishable
+change:
+
+```sh
+pnpm changeset
+```
+
+When a release is ready, apply the pending changesets and inspect the generated
+versions and changelogs:
+
+```sh
+pnpm version-packages
+pnpm release:check
+```
+
+`release:check` runs the tests and type checks, builds the demo and every
+package, inspects the package tarballs, and installs those tarballs into a clean
+Vite application. It does not publish. Commit the version and changelog changes,
+then publish the public packages to npm with:
+
+```sh
+pnpm release
+```
+
+The release command refuses to publish while changesets are pending or a
+package still has the placeholder `0.0.0` version.
+
+The initial `0.1.0` release is already represented by a pending changeset. npm
+publishing requires an authenticated account with access to the `@foldworks`
+organization and any two-factor authentication required by that organization.
 
 ## Deployment
 

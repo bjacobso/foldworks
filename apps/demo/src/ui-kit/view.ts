@@ -31,6 +31,8 @@ import {
 import { Message } from "./message";
 import type { Model } from "./model";
 import { catalogView } from "./catalog-view";
+import { financeShowcase } from "./finance-showcase";
+import { financeStyles } from "./finance-styles";
 import { className, uiKitStyles as styles } from "./styles";
 
 const uiKitDepartmentFromString = (
@@ -49,33 +51,6 @@ const group = (
   h.p([h.Class(className(styles.groupLabel))], [label]),
   ...children,
 ]);
-
-const hero = (model: Model, h: HtmlBuilder<Message>): Html =>
-  h.section([h.Class(className(styles.hero))], [
-    h.div([h.Class(className(styles.activity)), h.AriaLive("polite")], [
-      h.span([h.Class(className(styles.activityLabel))], ["Live"]),
-      h.p([h.Class(className(styles.activityMessage))], [model.announcement]),
-      Icon.view({ icon: ArrowRight, size: 14 }, h),
-    ]),
-    h.div([h.Class(className(styles.heroCopy))], [
-      h.h2([h.Class(className(styles.heroTitle))], ["Clean application primitives for Foldkit."]),
-      h.p([h.Class(className(styles.heroDescription))], [
-        "A neutral, compact component layer with accessible behavior, predictable states, and the restraint to fit real product interfaces.",
-      ]),
-      h.div([h.Class(className(styles.heroActions))], [
-        Button.view({
-          label: "Explore components",
-          trailingIcon: ArrowRight,
-          onClick: Message.ClickedAction({ action: "Explore components" }),
-        }, h),
-        Button.view({
-          label: "View states",
-          variant: "outline",
-          onClick: Message.ClickedAction({ action: "View states" }),
-        }, h),
-      ]),
-    ]),
-  ]);
 
 const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
   Panel.view(
@@ -485,7 +460,18 @@ const tokensPanel = (h: HtmlBuilder<Message>): Html => {
 export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div([h.Class(className(styles.viewport)), h.DataAttribute("ui-kit", "true")], [
     h.div([h.Class(className(styles.content))], [
-      hero(model, h),
+      h.p([h.Class(className(styles.srOnly)), h.AriaLive("polite")], [model.announcement]),
+      financeShowcase(model, h),
+      h.header([h.Class(className(financeStyles.sectionIntro))], [
+        h.div([h.Class(className(financeStyles.sectionCopy))], [
+          h.span([h.Class(className(financeStyles.eyebrow))], ["Primitive library"]),
+          h.h2([h.Class(className(financeStyles.sectionTitle))], ["Complete component catalog"]),
+          h.p([h.Class(className(financeStyles.sectionDescription))], [
+            "Every Foldworks UI primitive, state, and composition remains available below the application examples.",
+          ]),
+        ]),
+        Badge.view({ label: "61 primitives", tone: "info" }, h),
+      ]),
       h.div([h.Class(className(styles.sectionGrid))], [
         h.div([h.Class(className(styles.wide))], [catalogView(model, h)]),
         buttonsPanel(h),

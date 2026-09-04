@@ -1,15 +1,17 @@
 # Foldworks demo
 
-A browser-only demo app built with Foldkit, StyleX, and Vite. Use the sidebar
-to switch between the workflow builder, Excel-like data grid, form builder, and
-UI component showcase.
+A browser-only demo app built with Foldkit, StyleX, and Vite. The homepage
+introduces the Foldworks package family, shows a live component composition,
+and explains the boundary between UI components and application primitives.
+Use the sidebar to move between every package showcase.
 
-Foldkit's bidirectional router owns navigational state. The demos live at
-`/workflow`, `/data-grid`, `/form-builder`, and `/ui-kit`; workflow orientation
-and the form's example and Editor/Preview mode live in query parameters so those
-states can be linked, reloaded, and traversed with browser history. Transient
-selections, drag state, column widths, and in-progress document edits remain in
-the application model.
+Foldkit's bidirectional router owns navigational state. The project overview
+lives at `/`; demos live at `/ui-kit`, `/data-grid`, `/query-builder`,
+`/form-builder`, `/workflow`, and `/pdf-annotator`. Workflow orientation and the
+form's example and Editor/Preview mode live in query parameters so those states
+can be linked, reloaded, and traversed with browser history. Transient selections,
+drag state, column widths, and in-progress document edits remain in the
+application model.
 
 The toolbar separates color theme from appearance. Neutral, Zinc, and Blue
 palettes can each use System, Light, or Dark appearance. Both choices are

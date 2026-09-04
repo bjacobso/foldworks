@@ -7,6 +7,7 @@ import {
   demoFromRoute,
   formBuilderPath,
   formStateFromRoute,
+  homeRouter,
   queryBuilderRouter,
   pdfAnnotatorRouter,
   uiKitRouter,
@@ -20,6 +21,7 @@ const parseUrl = (url: string) =>
 
 describe("demo routes", () => {
   it("builds stable paths for each demo", () => {
+    expect(homeRouter()).toBe("/");
     expect(workflowPath("Horizontal")).toBe("/workflow?orientation=Horizontal");
     expect(dataGridRouter()).toBe("/data-grid");
     expect(formBuilderPath("Complex", "Preview"))
@@ -46,9 +48,9 @@ describe("demo routes", () => {
       .toEqual({ exampleId: "Handoff", mode: "Editor" });
   });
 
-  it("keeps the root URL as a workflow alias", () => {
+  it("uses the root URL for the project homepage", () => {
     const route = parseUrl("https://demo.test/");
-    expect(demoFromRoute(route)).toBe("Workflow");
+    expect(demoFromRoute(route)).toBe("Home");
     expect(workflowOrientationFromRoute(route)).toBe("Vertical");
     expect(workflowOrientationFromRoute(
       parseUrl("https://demo.test/workflow?orientation=Horizontal"),

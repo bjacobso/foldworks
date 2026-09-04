@@ -63,16 +63,20 @@ const card = <Message>(
   config: StyledConfig<Message> & Readonly<{
     title?: string;
     description?: string;
+    action?: Children;
     children: Children;
     footer?: Children;
   }>,
   h: HtmlBuilder<Message>,
 ): Html => h.section(styledAttrs(config, h, styles.surface, styles.card), [
-  ...(config.title === undefined && config.description === undefined
+  ...(config.title === undefined && config.description === undefined && config.action === undefined
     ? []
     : [h.header(sxAttrs(h, styles.cardHeader), [
-        ...(config.title === undefined ? [] : [h.h3(sxAttrs(h, styles.title), [config.title])]),
-        ...(config.description === undefined ? [] : [h.p(sxAttrs(h, styles.description), [config.description])]),
+        h.div(sxAttrs(h, styles.cardHeading), [
+          ...(config.title === undefined ? [] : [h.h3(sxAttrs(h, styles.title), [config.title])]),
+          ...(config.description === undefined ? [] : [h.p(sxAttrs(h, styles.description), [config.description])]),
+        ]),
+        ...(config.action === undefined ? [] : [h.div(sxAttrs(h, styles.cardAction), config.action)]),
       ])]),
   h.div(sxAttrs(h, styles.cardContent), config.children),
   ...(config.footer === undefined ? [] : [h.footer(sxAttrs(h, styles.cardFooter), config.footer)]),

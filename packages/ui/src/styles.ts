@@ -9,7 +9,7 @@ import {
   sizes,
   space,
   typography,
-} from "./tokens.stylex";
+} from "./tokens.stylex.js";
 
 export const buttonStyles = stylex.create({
   base: {

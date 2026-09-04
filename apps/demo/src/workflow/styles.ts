@@ -14,93 +14,11 @@ export const styles = stylex.create({
   app: {
     backgroundColor: "var(--foldworks-ui-canvas)",
     color: "var(--foldworks-ui-foreground)",
-    display: "grid",
+    display: "block",
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    gridTemplateColumns: {
-      default: "252px minmax(0, 1fr)",
-      "@media (max-width: 820px)": "1fr",
-    },
     height: "100vh",
     overflow: "hidden",
-  },
-  appFormPreview: {
-    gridTemplateColumns: "1fr",
-  },
-  sidebar: {
-    backgroundColor: "var(--foldworks-ui-sidebar)",
-    borderRightColor: "var(--foldworks-ui-sidebar-border)",
-    borderRightStyle: "solid",
-    borderRightWidth: "1px",
-    color: "var(--foldworks-ui-foreground)",
-    display: {
-      default: "flex",
-      "@media (max-width: 820px)": "none",
-    },
-    flexDirection: "column",
-    minHeight: 0,
-    overflowY: "auto",
-    padding: "16px 14px",
-    zIndex: 4,
-  },
-  brandRow: {
-    alignItems: "center",
-    display: "flex",
-    marginBottom: "20px",
-    paddingLeft: "10px",
-  },
-  demoNav: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px",
-    marginBottom: "24px",
-  },
-  demoNavItem: {
-    alignItems: "center",
-    backgroundColor: {
-      default: "transparent",
-      ":hover": "var(--foldworks-ui-brand-surface)",
-    },
-    borderWidth: 0,
-    borderRadius: "9px",
-    color: {
-      default: "var(--foldworks-ui-foreground-muted)",
-      ":hover": "var(--foldworks-ui-brand-foreground)",
-    },
-    cursor: "pointer",
-    display: "flex",
-    fontFamily: "inherit",
-    fontSize: "13px",
-    fontWeight: 600,
-    gap: "9px",
-    minHeight: "36px",
-    outline: {
-      default: "none",
-      ":focus-visible": "2px solid var(--foldworks-ui-focus)",
-    },
-    outlineOffset: "2px",
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    textAlign: "left",
-    textDecoration: "none",
-    transform: {
-      default: "translateX(0) scale(1)",
-      ":hover": "translateX(2px) scale(1)",
-      ":active": "translateX(1px) scale(0.985)",
-    },
-    transitionDuration: "150ms",
-    transitionProperty: "background-color, color, transform",
-    transitionTimingFunction: "var(--foldworks-ui-ease-out)",
-  },
-  demoNavItemActive: {
-    backgroundColor: "var(--foldworks-ui-brand-surface)",
-    color: "var(--foldworks-ui-brand-foreground)",
-  },
-  brand: {
-    fontSize: "15px",
-    fontWeight: 750,
-    letterSpacing: "-0.01em",
-    margin: 0,
   },
   paletteLabel: {
     color: "var(--foldworks-ui-foreground-subtle)",
@@ -187,6 +105,7 @@ export const styles = stylex.create({
   workspace: {
     display: "grid",
     gridTemplateRows: "auto minmax(0, 1fr)",
+    height: "100%",
     minHeight: 0,
     minWidth: 0,
   },
@@ -326,7 +245,7 @@ export const styles = stylex.create({
     transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
   },
   edgePathActive: {
-    stroke: "var(--foldworks-ui-success)",
+    stroke: "var(--foldworks-ui-primary)",
     strokeWidth: 2.5,
   },
   edgePathDraggingSubtree: {
@@ -643,9 +562,9 @@ export const styles = stylex.create({
     zIndex: 100,
   },
   ghostCount: {
-    backgroundColor: "var(--foldworks-ui-success-surface)",
+    backgroundColor: "var(--foldworks-ui-selection)",
     borderRadius: "999px",
-    color: "var(--foldworks-ui-success)",
+    color: "var(--foldworks-ui-selection-foreground)",
     fontSize: "10px",
     fontWeight: 750,
     padding: "4px 7px",

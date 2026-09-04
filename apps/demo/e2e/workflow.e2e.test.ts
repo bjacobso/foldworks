@@ -115,7 +115,9 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
 
     const sidebar = page.getByRole("complementary", { name: "Foldworks navigation" });
-    await expect.poll(() => sidebar.getByRole("link").allTextContents()).toEqual([
+    const demoNavigation = sidebar.getByRole("navigation", { name: "Demo navigation" });
+    await expect.poll(() => demoNavigation.getByRole("link").allTextContents()).toEqual([
+      "Home",
       "@foldworks/ui",
       "Data grid",
       "Query builder",
@@ -125,6 +127,12 @@ describe.sequential("structured workflow builder", () => {
     ]);
     await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
     await expect.poll(() => sidebar.getByText("Design system", { exact: true }).count()).toBe(0);
+
+    const provider = page.locator('[data-sidebar-provider="foldworks-sidebar"]');
+    await page.locator('[aria-controls="foldworks-sidebar-desktop"]').click();
+    await expect.poll(() => provider.getAttribute("data-state")).toBe("collapsed");
+    await page.locator('[aria-controls="foldworks-sidebar-desktop"]').click();
+    await expect.poll(() => provider.getAttribute("data-state")).toBe("expanded");
 
     await page.getByRole("link", { name: "Workflow builder" }).click();
     await expect.poll(() => page.getByRole("complementary", { name: "Workflow nodes" }).count())
@@ -136,6 +144,60 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.getByRole("complementary", { name: "Form fields" }).count())
       .toBe(1);
     await expect.poll(() => sidebar.getByText("Add a field", { exact: true }).count()).toBe(0);
+  });
+
+  it("introduces Foldworks and links its live examples to the demos", async () => {
+    await page.goto(appUrl, { waitUntil: "networkidle" });
+
+    await expect.poll(() => page.locator('[data-home-page="true"]').isVisible()).toBe(true);
+    await expect.poll(() => page.getByRole("heading", {
+      name: "Application primitives for product teams.",
+    }).isVisible()).toBe(true);
+    await expect.poll(() => page.getByRole("progressbar", { name: "Launch readiness" }).getAttribute("aria-valuenow"))
+      .toBe("82");
+    await expect.poll(() => page.getByRole("img", {
+      name: "Workflow volume for the last seven days",
+    }).isVisible()).toBe(true);
+    await expect.poll(() => page.getByRole("link", { name: /@foldworks\/data-grid/ }).isVisible())
+      .toBe(true);
+
+    const homePage = page.locator('[data-home-page="true"]');
+    await expect.poll(() => homePage.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      overflowY: getComputedStyle(element).overflowY,
+      scrollHeight: element.scrollHeight,
+    }))).toMatchObject({ overflowY: "auto" });
+    const scrollArea = await homePage.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+    }));
+    expect(scrollArea.scrollHeight).toBeGreaterThan(scrollArea.clientHeight);
+    await homePage.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect.poll(() => homePage.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+    const homeLink = page.getByRole("complementary", { name: "Foldworks navigation" })
+      .getByRole("link", { name: "Home" });
+    await expect.poll(() => homeLink.getAttribute("aria-current")).toBe("page");
+    await screenshot("00-home");
+
+    await page.getByRole("link", { name: "Explore the UI system" }).click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/ui-kit");
+  });
+
+  it("uses the same navigation chrome as a mobile drawer", async () => {
+    await page.setViewportSize({ width: 760, height: 900 });
+    await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
+
+    const trigger = page.getByRole("button", { name: "Open navigation" });
+    await expect.poll(() => trigger.isVisible()).toBe(true);
+    await trigger.click();
+
+    const mobileSidebar = page.locator('[data-sidebar="mobile"]');
+    await expect.poll(() => mobileSidebar.getAttribute("aria-hidden")).toBe("false");
+    await expect.poll(() => mobileSidebar.getByRole("link", { name: "Data grid" }).isVisible()).toBe(true);
+    await mobileSidebar.getByRole("link", { name: "Data grid" }).click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/data-grid");
+    await expect.poll(() => mobileSidebar.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("annotates, resizes, pages through, and downloads a PDF", async () => {
@@ -205,13 +267,13 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("renders nested condition and switch branches without collisions", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     await expect.poll(() => page.locator("[data-node-id]").count()).toBe(5);
     await expect.poll(() => page.getByText("Then", { exact: true }).count()).toBe(1);
     await expect.poll(() => page.getByText("Else", { exact: true }).count()).toBe(1);
     await expect.poll(() => page.getByText("Default", { exact: true }).count()).toBe(1);
     await expect.poll(() => page.locator("[data-location-id]").count()).toBe(7);
-    await expect.poll(() => page.locator('[data-lucide-icon="workflow"]').count()).toBe(1);
+    await expect.poll(() => page.locator('[data-lucide-icon="workflow"]:visible').count()).toBe(1);
     await expect.poll(() => page.locator("[data-node-id] [data-lucide-icon]").count())
       .toBeGreaterThanOrEqual(5);
     await expectNoNodeOverlaps();
@@ -315,7 +377,7 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("switches to a horizontal, shareable workflow layout", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Horizontal" }).click();
     await expect.poll(() => new URL(page.url()).pathname).toBe("/workflow");
     await expect.poll(() => new URL(page.url()).searchParams.get("orientation"))
@@ -340,7 +402,7 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("highlights a nested drop target and inserts a registered type", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     const { target } = await drag(
       '[data-draggable-id="palette:approval"]',
       thenTargetSelector,
@@ -372,7 +434,7 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("keeps an outline placeholder while moving a node between branches", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     const { source, target } = await drag(
       '[data-node-id="node-action"]',
       thenTargetSelector,
@@ -407,7 +469,7 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("ghosts an entire registered subtree while its owner is dragged", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
+    await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     const { source, target } = await drag(
       '[data-node-id="node-switch"]',
       thenTargetSelector,
@@ -843,6 +905,23 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => new URL(page.url()).pathname).toBe("/ui-kit");
     const showcase = page.locator('[data-ui-kit="true"]');
     await expect.poll(() => showcase.isVisible()).toBe(true);
+    const financialShowcase = showcase.locator('[data-financial-showcase="true"]');
+    await expect.poll(() => financialShowcase.isVisible()).toBe(true);
+    for (const heading of [
+      "Contribution History",
+      "Payout Threshold",
+      "Savings Targets",
+      "Buy Investment",
+      "Recent Transactions",
+      "Account Access",
+      "Transfer Funds",
+    ]) {
+      await expect.poll(() => financialShowcase.getByRole("heading", { name: heading }).count())
+        .toBe(1);
+    }
+    await expect.poll(() => financialShowcase.getByRole("progressbar").count()).toBe(2);
+    await expect.poll(() => financialShowcase.getByRole("img", { name: "Monthly contribution history" }).count()).toBe(1);
+    await expect.poll(() => financialShowcase.getByRole("slider", { name: "Minimum payout amount" }).count()).toBe(1);
 
     for (const heading of [
       "Button",
@@ -965,12 +1044,12 @@ describe.sequential("structured workflow builder", () => {
         dropTarget: style.getPropertyValue("--foldworks-ui-drop-target-active").trim(),
       };
     });
-    expect(darkTokens).toEqual({
+    expect(darkTokens).toMatchObject({
       background: "oklch(14.5% 0 0)",
       primary: "oklch(70.7% .165 254.624)",
-      selection: "oklch(27% .045 156)",
-      dropTarget: "oklch(29% .055 156)",
     });
+    expect(darkTokens.selection).toContain(darkTokens.primary);
+    expect(darkTokens.dropTarget).toContain(darkTokens.primary);
     await screenshot("13-ui-kit-dark");
 
     await page.reload({ waitUntil: "networkidle" });
@@ -978,7 +1057,20 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.locator("html").getAttribute("data-theme")).toBe("blue");
 
     await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
-    await expect.poll(() => page.locator('[data-node-id="node-start"]').isVisible()).toBe(true);
+    const selectedNode = page.locator('[data-node-id="node-start"]');
+    await expect.poll(() => selectedNode.isVisible()).toBe(true);
+    await selectedNode.click();
+    await page.waitForTimeout(260);
+    const selectedColors = await selectedNode.evaluate((element) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--primary)";
+      document.body.append(probe);
+      const primary = getComputedStyle(probe).color;
+      probe.remove();
+      return { border: getComputedStyle(element).borderColor, primary };
+    });
+    expect(selectedColors.border).toBe(selectedColors.primary);
+    await page.keyboard.press("Escape");
     await screenshot("14-workflow-dark");
     const { target: darkWorkflowTarget } = await drag(
       '[data-draggable-id="palette:approval"]',
@@ -986,6 +1078,27 @@ describe.sequential("structured workflow builder", () => {
     );
     await expect.poll(() => darkWorkflowTarget.getAttribute("data-drop-active"))
       .toBe("true");
+    await page.waitForTimeout(300);
+    const activeTargetColors = await darkWorkflowTarget.getByRole("button").evaluate((element) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--primary)";
+      document.body.append(probe);
+      const primary = getComputedStyle(probe).color;
+      probe.remove();
+      return { border: getComputedStyle(element).borderColor, primary };
+    });
+    expect(activeTargetColors.border).toBe(activeTargetColors.primary);
+    const activeConnector = page.locator('[data-drop-connector-active="true"]');
+    await expect.poll(() => activeConnector.count()).toBeGreaterThan(0);
+    const connectorColors = await activeConnector.first().evaluate((element) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--primary)";
+      document.body.append(probe);
+      const primary = getComputedStyle(probe).color;
+      probe.remove();
+      return { primary, stroke: getComputedStyle(element).stroke };
+    });
+    expect(connectorColors.stroke).toBe(connectorColors.primary);
     await screenshot("14-workflow-drop-dark");
     await page.mouse.move(260, 700);
     await page.mouse.up();

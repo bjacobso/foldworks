@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => ({
       '@foldworks/data-grid',
       '@foldworks/form-builder',
       '@foldworks/query-builder',
+      '@foldworks/sidebar',
       '@foldworks/ui',
       '@foldworks/workflow',
       'effect',
