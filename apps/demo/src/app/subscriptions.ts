@@ -1,4 +1,5 @@
 import { Effect, Schema as S, Stream } from "effect";
+import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Subscription } from "foldkit";
 
 import { subscriptions as dataGridSubscriptions } from "../data-grid/subscriptions";
@@ -82,11 +83,17 @@ const queryBuilder = Subscription.lift(queryBuilderSubscriptions)<Model, Message
   toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
 });
 
+const pdfAnnotator = Subscription.lift(PdfAnnotator.subscriptions)<Model, Message>({
+  toChildModel: (model) => model.pdfAnnotator,
+  toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
+});
+
 export const subscriptions = Subscription.aggregate<Model, Message>()(
   workflow,
   form,
   dataGrid,
   queryBuilder,
+  pdfAnnotator,
   themeSubscriptions,
   historySubscriptions,
 );

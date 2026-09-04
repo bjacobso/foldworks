@@ -18,6 +18,7 @@
     "@foldworks/data-grid": "workspace:*",
     "@foldworks/form-builder": "workspace:*",
     "@foldworks/history": "workspace:*",
+    "@foldworks/pdf-annotator": "workspace:*",
     "@foldworks/query-builder": "workspace:*",
     "@foldworks/ui": "workspace:*",
     "@foldworks/workflow": "workspace:*",

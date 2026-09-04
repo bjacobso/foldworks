@@ -121,6 +121,7 @@ describe.sequential("structured workflow builder", () => {
       "Query builder",
       "Form builder",
       "Workflow builder",
+      "PDF annotator",
     ]);
     await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
     await expect.poll(() => sidebar.getByText("Design system", { exact: true }).count()).toBe(0);
@@ -135,6 +136,72 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.getByRole("complementary", { name: "Form fields" }).count())
       .toBe(1);
     await expect.poll(() => sidebar.getByText("Add a field", { exact: true }).count()).toBe(0);
+  });
+
+  it("annotates, resizes, pages through, and downloads a PDF", async () => {
+    await page.goto(`${appUrl}/pdf-annotator`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Try the sample document" }).click();
+
+    const canvas = page.locator('[data-pdf-canvas-id="foldworks-pdf-annotator"]');
+    await expect.poll(() => canvas.isVisible()).toBe(true);
+    await expect.poll(() => page.getByText("Page 1 of 2", { exact: true }).isVisible()).toBe(true);
+
+    const source = page.locator('[data-draggable-id="palette:Text"]');
+    const sourceBox = await source.boundingBox();
+    const canvasBox = await canvas.boundingBox();
+    expect(sourceBox).not.toBeNull();
+    expect(canvasBox).not.toBeNull();
+    if (sourceBox === null || canvasBox === null) return;
+
+    await page.mouse.move(
+      sourceBox.x + sourceBox.width / 2,
+      sourceBox.y + sourceBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2 + 12, sourceBox.y + 12, {
+      steps: 3,
+    });
+    await page.mouse.move(canvasBox.x + canvasBox.width * 0.7, canvasBox.y + 220, {
+      steps: 12,
+    });
+    await page.mouse.up();
+
+    const annotation = page.locator('[data-draggable-id^="annotation:"]');
+    await expect.poll(() => annotation.count()).toBe(1);
+    const valueInput = page.getByRole("textbox", { name: "Value" });
+    await expect.poll(() => valueInput.count()).toBe(1);
+    await valueInput.fill("Reviewed by Foldworks");
+    await expect.poll(() => annotation.textContent()).toContain("Reviewed by Foldworks");
+
+    const beforeResize = await annotation.boundingBox();
+    const resizeHandle = page.getByRole("separator", { name: "Resize Text annotation" });
+    const resizeBox = await resizeHandle.boundingBox();
+    expect(beforeResize).not.toBeNull();
+    expect(resizeBox).not.toBeNull();
+    if (beforeResize === null || resizeBox === null) return;
+    await page.mouse.move(resizeBox.x + 4, resizeBox.y + 4);
+    await page.mouse.down();
+    await page.mouse.move(resizeBox.x + 74, resizeBox.y + 34, { steps: 8 });
+    await page.mouse.up();
+    const afterResize = await annotation.boundingBox();
+    expect(afterResize?.width ?? 0).toBeGreaterThan(beforeResize.width);
+
+    await page.getByRole("button", { name: "Next page" }).click();
+    await expect.poll(() => page.getByText("Page 2 of 2", { exact: true }).isVisible()).toBe(true);
+    await page.getByRole("button", { name: "Previous page" }).click();
+    await expect.poll(() => annotation.count()).toBe(1);
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download PDF" }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe("foldworks-sample-annotated.pdf");
+    const downloadedPath = await download.path();
+    expect(downloadedPath).not.toBeNull();
+    if (downloadedPath !== null) {
+      const bytes = await readFile(downloadedPath);
+      expect(bytes.subarray(0, 5).toString("ascii")).toBe("%PDF-");
+    }
+    await screenshot("00-pdf-annotator");
   });
 
   it("renders nested condition and switch branches without collisions", async () => {

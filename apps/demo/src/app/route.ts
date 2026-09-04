@@ -4,7 +4,7 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "UiKit";
+export type Demo = "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
@@ -17,6 +17,7 @@ export const AppRoute = defineRouteUnion({
     mode: S.Option(FormMode),
   },
   QueryBuilder: {},
+  PdfAnnotator: {},
   UiKit: {},
   NotFound: { path: S.String },
 });
@@ -62,11 +63,17 @@ export const queryBuilderRouter = pipe(
   Route.mapTo(AppRoute.QueryBuilder),
 );
 
+export const pdfAnnotatorRouter = pipe(
+  Route.literal("pdf-annotator"),
+  Route.mapTo(AppRoute.PdfAnnotator),
+);
+
 const routeParser = Route.oneOf(
   workflowRouter,
   dataGridRouter,
   formBuilderRouter,
   queryBuilderRouter,
+  pdfAnnotatorRouter,
   uiKitRouter,
   rootRouter,
 );
@@ -81,6 +88,7 @@ export const demoFromRoute = (route: AppRoute): Demo => {
     case "DataGrid": return "DataGrid";
     case "FormBuilder": return "FormBuilder";
     case "QueryBuilder": return "QueryBuilder";
+    case "PdfAnnotator": return "PdfAnnotator";
     case "UiKit": return "UiKit";
     case "NotFound":
     case "Workflow": return "Workflow";

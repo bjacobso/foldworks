@@ -8,6 +8,7 @@ import {
   formBuilderPath,
   formStateFromRoute,
   queryBuilderRouter,
+  pdfAnnotatorRouter,
   uiKitRouter,
   urlToAppRoute,
   workflowOrientationFromRoute,
@@ -25,8 +26,10 @@ describe("demo routes", () => {
       .toBe("/form-builder?example=Complex&mode=Preview");
     expect(uiKitRouter()).toBe("/ui-kit");
     expect(queryBuilderRouter()).toBe("/query-builder");
+    expect(pdfAnnotatorRouter()).toBe("/pdf-annotator");
     expect(demoFromRoute(parseUrl("https://demo.test/query-builder"))).toBe("QueryBuilder");
     expect(demoFromRoute(parseUrl("https://demo.test/ui-kit"))).toBe("UiKit");
+    expect(demoFromRoute(parseUrl("https://demo.test/pdf-annotator"))).toBe("PdfAnnotator");
   });
 
   it("parses form state and supplies defaults for a bare form route", () => {

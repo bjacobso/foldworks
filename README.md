@@ -7,14 +7,16 @@ accessible application interfaces with Foldkit:
 
 - [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic
   design tokens, and accessible visual primitives.
-- [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
-  branch-aware operations, layout, and drag-and-drop primitives.
-- [`@foldworks/form-builder`](./packages/form-builder) — section-first form
-  documents, immutable operations, registries, and drag-and-drop primitives.
 - [`@foldworks/data-grid`](./packages/data-grid) — a typed data-grid core with
   sorting, resizing, selection, keyboard navigation, and an accessible view.
 - [`@foldworks/query-builder`](./packages/query-builder) — configurable query
   documents, editing, validation, rendering, and rule reordering.
+- [`@foldworks/form-builder`](./packages/form-builder) — section-first form
+  documents, immutable operations, registries, and drag-and-drop primitives.
+- [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
+  branch-aware operations, layout, and drag-and-drop primitives.
+- [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
+  previews with draggable, resizable annotations and flattened PDF export.
 - [`@foldworks/history`](./packages/history) — immutable undo/redo history for
   application-owned documents.
 

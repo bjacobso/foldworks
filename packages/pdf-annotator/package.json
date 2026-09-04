@@ -1,0 +1,27 @@
+{
+  "name": "@foldworks/pdf-annotator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@foldkit/ui": "catalog:",
+    "@foldworks/ui": "workspace:*",
+    "@lucide/icons": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
+    "pdf-lib": "catalog:",
+    "pdfjs-dist": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

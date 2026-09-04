@@ -1,4 +1,5 @@
 import { Schema as S } from "effect";
+import { PdfAnnotator } from "@foldworks/pdf-annotator";
 
 import type { PersistedWorkspace } from "../document-storage";
 import { Model as DataGridModel, initialModel as initialDataGrid } from "../data-grid/model";
@@ -20,6 +21,7 @@ export const Model = S.Struct({
   formEditor: FormEditorModel,
   dataGridDemo: DataGridModel,
   queryBuilderDemo: QueryBuilderDemoModel,
+  pdfAnnotator: PdfAnnotator.Model,
   uiKit: UiKitModel,
   themeName: ThemeName,
   themePreference: ThemePreference,
@@ -45,6 +47,10 @@ export const init = (
     formEditor: initFormEditor(persisted?.forms ?? exampleForms, exampleId, mode),
     dataGridDemo: initialDataGrid,
     queryBuilderDemo: initialQueryBuilder,
+    pdfAnnotator: PdfAnnotator.init({
+      id: "foldworks-pdf-annotator",
+      sampleUrl: "/foldworks-sample.pdf",
+    }),
     uiKit: initialUiKit,
     themeName: theme.name,
     themePreference: theme.preference,

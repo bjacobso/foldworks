@@ -1,4 +1,5 @@
 import { Effect, Option, Schema as S } from "effect";
+import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Command, Update } from "foldkit";
 import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
@@ -127,6 +128,13 @@ const foldQueryBuilder = Update.foldChild({
   toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
 });
 
+const foldPdfAnnotator = Update.foldChild({
+  update: PdfAnnotator.update,
+  read: (model: Model) => Option.some(model.pdfAnnotator),
+  write: (model, pdfAnnotator) => evo(model, { pdfAnnotator: () => pdfAnnotator }),
+  toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
+});
+
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
   if (route._tag === "Workflow") {
@@ -210,5 +218,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       foldDataGrid(model, childMessage),
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
+    GotPdfAnnotatorMessage: ({ message: childMessage }) =>
+      foldPdfAnnotator(model, childMessage),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),
   });

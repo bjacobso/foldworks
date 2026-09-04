@@ -1,4 +1,5 @@
 import { Schema as S } from "effect";
+import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { defineMessageUnion } from "foldkit/message";
 import { UrlRequest } from "foldkit/navigation";
 import { Url } from "foldkit/url";
@@ -24,6 +25,7 @@ export const Message = defineMessageUnion({
   GotFormEditorMessage: { message: FormEditorMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
+  GotPdfAnnotatorMessage: { message: PdfAnnotator.Message },
   GotUiKitMessage: { message: UiKitMessage },
 });
 export type Message = typeof Message.Type;

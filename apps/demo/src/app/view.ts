@@ -2,6 +2,7 @@ import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
 
 import {
   Blocks,
+  FileText,
   ListFilter,
   ListChecks,
   Table2,
@@ -13,6 +14,7 @@ import {
   Select,
   Toolbar,
 } from "@foldworks/ui";
+import { PdfAnnotator } from "@foldworks/pdf-annotator";
 
 import { people, view as dataGridView } from "../data-grid/demo";
 import { view as formEditorView } from "../form-builder/view";
@@ -23,6 +25,7 @@ import {
   dataGridRouter,
   demoFromRoute,
   formBuilderPath,
+  pdfAnnotatorRouter,
   queryBuilderRouter,
   uiKitRouter,
   workflowPath,
@@ -40,6 +43,8 @@ const activeAnnouncement = (model: Model): string => {
       ? model.formEditor.announcement
       : demo === "QueryBuilder"
         ? model.queryBuilderDemo.announcement
+      : demo === "PdfAnnotator"
+        ? model.pdfAnnotator.announcement
       : demo === "UiKit"
         ? model.uiKit.announcement
         : model.announcement;
@@ -73,6 +78,11 @@ const navigation = (model: Model, h: HtmlBuilder<Message>): Html => {
       h.Class(className(styles.demoNavItem, demo === "Workflow" && styles.demoNavItemActive)),
       h.AriaCurrent(demo === "Workflow" ? "page" : "false"),
     ], [Icon.view({ icon: WorkflowIcon, size: 15 }, h), "Workflow builder"]),
+    h.a([
+      h.Href(pdfAnnotatorRouter()),
+      h.Class(className(styles.demoNavItem, demo === "PdfAnnotator" && styles.demoNavItemActive)),
+      h.AriaCurrent(demo === "PdfAnnotator" ? "page" : "false"),
+    ], [Icon.view({ icon: FileText, size: 15 }, h), "PDF annotator"]),
   ]);
 };
 
@@ -132,6 +142,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         ? model.formEditor.document.title
         : demo === "QueryBuilder"
           ? "Employee query"
+        : demo === "PdfAnnotator"
+          ? "PDF annotator"
         : "@foldworks/ui";
   const description = demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
@@ -141,6 +153,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
         : demo === "QueryBuilder"
           ? "Configured attributes · recursive groups · live validation"
+        : demo === "PdfAnnotator"
+          ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
         : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view({
     title,
@@ -152,6 +166,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           ? [Badge.view({ label: "Headless core + DOM view" }, h)]
           : demo === "QueryBuilder"
             ? [Badge.view({ label: "Validates as you edit", tone: "success", dot: true }, h)]
+          : demo === "PdfAnnotator"
+            ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
           : [
               Badge.view({ label: "61 primitives", tone: "info", dot: true }, h),
               Badge.view({ label: "StyleX + Foldkit" }, h),
@@ -214,6 +230,14 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
     });
   }
+  if (demo === "PdfAnnotator") {
+    return h.submodel({
+      slotId: "pdf-annotator-content",
+      model: model.pdfAnnotator,
+      view: PdfAnnotator.view,
+      toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
+    });
+  }
   return h.submodel({
     slotId: "ui-kit-content",
     model: model.uiKit,
@@ -226,7 +250,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
   const demo = demoFromRoute(model.route);
   const preview = demo === "FormBuilder" && model.formEditor.mode === "Preview";
   return {
-    title: `${demo === "DataGrid" ? "Data grid" : demo === "FormBuilder" ? "Form builder" : demo === "QueryBuilder" ? "Query builder" : demo === "UiKit" ? "UI components" : "Workflow"} · Foldworks`,
+    title: `${demo === "DataGrid" ? "Data grid" : demo === "FormBuilder" ? "Form builder" : demo === "QueryBuilder" ? "Query builder" : demo === "PdfAnnotator" ? "PDF annotator" : demo === "UiKit" ? "UI components" : "Workflow"} · Foldworks`,
     body: h.main(
       [h.Class(className(styles.app, preview && styles.appFormPreview))],
       [
