@@ -5,7 +5,7 @@ import { Model as DataGridModel, initialModel as initialDataGrid } from "../data
 import { Model as FormEditorModel, init as initFormEditor } from "../form-builder/editor-model";
 import { exampleForms } from "../form-builder/model";
 import { Model as QueryBuilderDemoModel, initialModel as initialQueryBuilder } from "../query-builder/model";
-import { ThemePreference, type ThemeState } from "../theme";
+import { ThemeName, ThemePreference, type ThemeState } from "../theme";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
 import {
@@ -21,6 +21,7 @@ export const Model = S.Struct({
   dataGridDemo: DataGridModel,
   queryBuilderDemo: QueryBuilderDemoModel,
   uiKit: UiKitModel,
+  themeName: ThemeName,
   themePreference: ThemePreference,
   systemIsDark: S.Boolean,
   persistenceStatus: S.Literals(["Saved", "Saving", "Error"]),
@@ -31,7 +32,7 @@ export type Model = typeof Model.Type;
 
 export const init = (
   route: AppRoute,
-  theme: ThemeState = { preference: "System", systemIsDark: false },
+  theme: ThemeState = { name: "Neutral", preference: "System", systemIsDark: false },
   persisted?: PersistedWorkspace,
 ): Model => {
   const { exampleId, mode } = formStateFromRoute(route);
@@ -45,6 +46,7 @@ export const init = (
     dataGridDemo: initialDataGrid,
     queryBuilderDemo: initialQueryBuilder,
     uiKit: initialUiKit,
+    themeName: theme.name,
     themePreference: theme.preference,
     systemIsDark: theme.systemIsDark,
     persistenceStatus: "Saved",

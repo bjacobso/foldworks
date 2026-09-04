@@ -11,18 +11,44 @@ used by the demo packages.
 
 ## Setup
 
-Import the theme once from the application stylesheet:
+Import the base contract and the themes your application supports:
 
 ```css
-@import "@foldworks/ui/theme.css";
+@import "@foldworks/ui/base.css";
+@import "@foldworks/ui/themes/neutral.css";
+@import "@foldworks/ui/themes/zinc.css";
+@import "@foldworks/ui/themes/blue.css";
 ```
 
-The theme exposes the default shadcn semantic roles (`--background`,
+For a neutral-only application, `@foldworks/ui/theme.css` remains a convenient
+backward-compatible import.
+
+The theme contract exposes the familiar shadcn semantic roles (`--background`,
 `--foreground`, `--card`, `--primary`, `--muted`, `--accent`, `--destructive`,
-`--border`, `--input`, `--ring`, and `--sidebar-*`) in OKLCH. Foldkit-specific
-tokens alias those roles, so consumers can override the familiar variables
-without rewriting components. Add `.dark` to a root ancestor to use the
-included dark palette.
+`--border`, `--input`, `--ring`, and `--sidebar-*`) in OKLCH. StyleX component
+recipes consume those native variables through `tokens.stylex.ts`, so changing
+a variable updates every component without rebuilding or rewriting styles.
+
+Set `data-theme` and the resolved `data-mode` on a root ancestor:
+
+```html
+<html data-theme="blue" data-mode="dark" class="dark">
+```
+
+`data-theme` accepts `neutral`, `zinc`, or `blue`. `data-mode` accepts `light`
+or `dark`; the optional `.dark` class remains compatible with shadcn theme
+providers. CSS variables cascade, so the same attributes can theme a nested
+subtree. An application can define its own theme by overriding the semantic
+variables after the Foldworks imports:
+
+```css
+[data-theme="product"] {
+  --primary: oklch(0.58 0.22 264);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.66 0.16 264);
+  --radius: 0.75rem;
+}
+```
 
 Application interactions use separate semantic roles for selection and drag
 intent: `--foldworks-ui-selection-*`, `--foldworks-ui-drop-target-*`, and
@@ -68,7 +94,8 @@ from assistive technology by default, and a `label` makes a standalone icon an
 accessible image. Buttons render their icons decoratively and keep their
 accessible name on the button label or `ariaLabel`.
 
-StyleX consumers can import semantic token groups directly:
+StyleX consumers can import semantic token groups directly. These constants
+resolve to the public CSS variables at runtime:
 
 ```ts
 import * as stylex from "@stylexjs/stylex";

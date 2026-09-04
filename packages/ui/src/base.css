@@ -1,0 +1,122 @@
+:root,
+[data-theme] {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  --primary-hover: color-mix(in oklch, var(--primary) 80%, transparent);
+  --ring-muted: color-mix(in oklch, var(--ring) 20%, transparent);
+  --destructive-surface: color-mix(in oklch, var(--destructive) 10%, var(--background));
+  --destructive-border: color-mix(in oklch, var(--destructive) 24%, var(--border));
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 5%);
+  --shadow-control: 0 1px 2px oklch(0 0 0 / 7%);
+  --shadow-interactive: 0 1px 2px oklch(0 0 0 / 8%);
+  --shadow-panel: 0 0 0 1px var(--border);
+  --shadow-float: 0 20px 45px oklch(0 0 0 / 22%);
+  --shadow-sheet: -24px 0 60px oklch(0 0 0 / 16%);
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.2, 0.8, 0.2, 1.08);
+
+  --foldworks-ui-success: oklch(0.527 0.154 150.069);
+  --foldworks-ui-success-surface: oklch(0.962 0.044 156.743);
+  --foldworks-ui-warning: oklch(0.555 0.135 66.442);
+  --foldworks-ui-warning-surface: oklch(0.973 0.071 103.193);
+  --foldworks-ui-info: oklch(0.546 0.245 262.881);
+  --foldworks-ui-info-surface: oklch(0.932 0.032 255.585);
+  --foldworks-ui-selection: oklch(0.962 0.024 158);
+  --foldworks-ui-selection-foreground: oklch(0.42 0.105 156);
+  --foldworks-ui-selection-border: oklch(0.82 0.065 157);
+  --foldworks-ui-drop-target: oklch(0.975 0.014 158);
+  --foldworks-ui-drop-target-border: oklch(0.82 0.065 157);
+  --foldworks-ui-drop-target-active: oklch(0.945 0.05 158);
+  --foldworks-ui-drop-target-active-border: oklch(0.625 0.135 158);
+  --foldworks-ui-overlay: oklch(0.145 0 0 / 30%);
+
+  /* Compatibility aliases for existing Foldworks feature packages. */
+  --foldworks-ui-background: var(--background);
+  --foldworks-ui-canvas: var(--muted);
+  --foldworks-ui-surface: var(--card);
+  --foldworks-ui-surface-subtle: var(--secondary);
+  --foldworks-ui-surface-hover: var(--accent);
+  --foldworks-ui-foreground: var(--foreground);
+  --foldworks-ui-foreground-muted: var(--muted-foreground);
+  --foldworks-ui-foreground-subtle: var(--ring);
+  --foldworks-ui-border: var(--border);
+  --foldworks-ui-border-strong: var(--input);
+  --foldworks-ui-input: var(--input);
+  --foldworks-ui-primary: var(--primary);
+  --foldworks-ui-primary-hover: var(--primary-hover);
+  --foldworks-ui-primary-foreground: var(--primary-foreground);
+  --foldworks-ui-brand: var(--primary);
+  --foldworks-ui-brand-hover: var(--primary-hover);
+  --foldworks-ui-brand-surface: var(--accent);
+  --foldworks-ui-brand-border: var(--border);
+  --foldworks-ui-brand-foreground: var(--accent-foreground);
+  --foldworks-ui-focus: var(--ring);
+  --foldworks-ui-focus-glow: var(--ring-muted);
+  --foldworks-ui-sidebar: var(--sidebar);
+  --foldworks-ui-sidebar-foreground: var(--sidebar-foreground);
+  --foldworks-ui-sidebar-accent: var(--sidebar-accent);
+  --foldworks-ui-sidebar-border: var(--sidebar-border);
+  --foldworks-ui-danger: var(--destructive);
+  --foldworks-ui-danger-surface: var(--destructive-surface);
+  --foldworks-ui-danger-border: var(--destructive-border);
+  --foldworks-ui-radius-sm: var(--radius-sm);
+  --foldworks-ui-radius-md: var(--radius-md);
+  --foldworks-ui-radius-lg: var(--radius-lg);
+  --foldworks-ui-shadow-sm: var(--shadow-sm);
+  --foldworks-ui-shadow-control: var(--shadow-control);
+  --foldworks-ui-shadow-interactive: var(--shadow-interactive);
+  --foldworks-ui-shadow-panel: var(--shadow-panel);
+  --foldworks-ui-shadow-float: var(--shadow-float);
+  --foldworks-ui-shadow-sheet: var(--shadow-sheet);
+  --foldworks-ui-duration-fast: var(--duration-fast);
+  --foldworks-ui-duration-normal: var(--duration-normal);
+  --foldworks-ui-duration-slow: var(--duration-slow);
+  --foldworks-ui-ease-out: var(--ease-out);
+  --foldworks-ui-spring: var(--spring);
+  --foldworks-ui-font: var(--font-sans);
+}
+
+.dark,
+[data-mode="dark"] {
+  --foldworks-ui-success: oklch(0.792 0.209 151.711);
+  --foldworks-ui-success-surface: oklch(0.266 0.065 152.934);
+  --foldworks-ui-warning: oklch(0.852 0.199 91.936);
+  --foldworks-ui-warning-surface: oklch(0.279 0.077 45.635);
+  --foldworks-ui-info: oklch(0.707 0.165 254.624);
+  --foldworks-ui-info-surface: oklch(0.282 0.091 267.935);
+  --foldworks-ui-selection: oklch(0.27 0.045 156);
+  --foldworks-ui-selection-foreground: oklch(0.85 0.13 154);
+  --foldworks-ui-selection-border: oklch(0.48 0.09 156);
+  --foldworks-ui-drop-target: oklch(0.225 0.022 156);
+  --foldworks-ui-drop-target-border: oklch(0.43 0.07 156);
+  --foldworks-ui-drop-target-active: oklch(0.29 0.055 156);
+  --foldworks-ui-drop-target-active-border: oklch(0.66 0.15 156);
+  --foldworks-ui-overlay: oklch(0 0 0 / 58%);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 22%);
+  --shadow-control: 0 1px 2px oklch(0 0 0 / 26%);
+  --shadow-interactive: 0 1px 2px oklch(0 0 0 / 28%);
+  --shadow-float: 0 20px 45px oklch(0 0 0 / 42%);
+  --shadow-sheet: -24px 0 60px oklch(0 0 0 / 38%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

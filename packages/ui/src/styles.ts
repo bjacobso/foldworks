@@ -172,7 +172,7 @@ export const fieldStyles = stylex.create({
   label: { color: colors.foreground, fontSize: "14px", fontWeight: 550, lineHeight: 1 },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   control: {
-    backgroundColor: "color-mix(in oklch, var(--foldworks-ui-input) 12%, transparent)",
+    backgroundColor: "color-mix(in oklch, var(--input) 12%, transparent)",
     borderColor: {
       default: colors.input,
       ":focus": colors.brand,

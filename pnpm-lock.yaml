@@ -236,6 +236,9 @@ importers:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112

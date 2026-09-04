@@ -157,15 +157,27 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
               Badge.view({ label: "StyleX + Foldkit" }, h),
             ]),
       Select.control({
+        value: model.themeName,
+        ariaLabel: "Theme",
+        onChange: (name) => Message.SelectedThemeName({
+          name: name as Model["themeName"],
+        }),
+        options: [
+          { value: "Neutral", label: "Neutral" },
+          { value: "Zinc", label: "Zinc" },
+          { value: "Blue", label: "Blue" },
+        ],
+      }, h),
+      Select.control({
         value: model.themePreference,
-        ariaLabel: "Color theme",
+        ariaLabel: "Appearance",
         onChange: (preference) => Message.SelectedThemePreference({
           preference: preference as Model["themePreference"],
         }),
         options: [
-          { value: "System", label: "System theme" },
-          { value: "Light", label: "Light theme" },
-          { value: "Dark", label: "Dark theme" },
+          { value: "System", label: "System" },
+          { value: "Light", label: "Light" },
+          { value: "Dark", label: "Dark" },
         ],
       }, h),
     ],

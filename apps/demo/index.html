@@ -10,16 +10,24 @@
     <script>
       (() => {
         const storageKey = "foldworks-demo-theme";
+        const colorThemeStorageKey = "foldworks-demo-color-theme";
         let preference = "System";
+        let colorTheme = "Neutral";
         try {
           const stored = window.localStorage.getItem(storageKey);
+          const storedColorTheme = window.localStorage.getItem(colorThemeStorageKey);
           if (stored === "Light" || stored === "Dark" || stored === "System") {
             preference = stored;
+          }
+          if (storedColorTheme === "Neutral" || storedColorTheme === "Zinc" || storedColorTheme === "Blue") {
+            colorTheme = storedColorTheme;
           }
         } catch {}
         const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         const isDark = preference === "Dark" ||
           (preference === "System" && systemIsDark);
+        document.documentElement.dataset.theme = colorTheme.toLowerCase();
+        document.documentElement.dataset.mode = isDark ? "dark" : "light";
         document.documentElement.classList.toggle("dark", isDark);
         document.documentElement.dataset.themePreference = preference.toLowerCase();
       })();

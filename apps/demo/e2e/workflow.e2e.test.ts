@@ -829,12 +829,23 @@ describe.sequential("structured workflow builder", () => {
     await screenshot("12-ui-kit");
   });
 
-  it("persists the theme preference and keeps application colors semantic in dark mode", async () => {
+  it("persists theme and appearance preferences while keeping colors semantic", async () => {
     await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
-    const themeSelect = page.getByLabel("Color theme");
-    await themeSelect.selectOption("Dark");
+    const themeSelect = page.getByLabel("Theme");
+    const appearanceSelect = page.getByLabel("Appearance");
+
+    await themeSelect.selectOption("Blue");
+    await expect.poll(() => page.locator("html").getAttribute("data-theme"))
+      .toBe("blue");
+    await expect.poll(() => page.evaluate(() =>
+      window.localStorage.getItem("foldworks-demo-color-theme"),
+    )).toBe("Blue");
+
+    await appearanceSelect.selectOption("Dark");
 
     await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
+    await expect.poll(() => page.locator("html").getAttribute("data-mode"))
+      .toBe("dark");
     await expect.poll(() => page.locator("html").getAttribute("data-theme-preference"))
       .toBe("dark");
     await expect.poll(() => page.evaluate(() =>
@@ -845,12 +856,14 @@ describe.sequential("structured workflow builder", () => {
       const style = getComputedStyle(document.documentElement);
       return {
         background: style.getPropertyValue("--background").trim(),
+        primary: style.getPropertyValue("--primary").trim(),
         selection: style.getPropertyValue("--foldworks-ui-selection").trim(),
         dropTarget: style.getPropertyValue("--foldworks-ui-drop-target-active").trim(),
       };
     });
     expect(darkTokens).toEqual({
       background: "oklch(14.5% 0 0)",
+      primary: "oklch(70.7% .165 254.624)",
       selection: "oklch(27% .045 156)",
       dropTarget: "oklch(29% .055 156)",
     });
@@ -858,6 +871,7 @@ describe.sequential("structured workflow builder", () => {
 
     await page.reload({ waitUntil: "networkidle" });
     await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
+    await expect.poll(() => page.locator("html").getAttribute("data-theme")).toBe("blue");
 
     await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     await expect.poll(() => page.locator('[data-node-id="node-start"]').isVisible()).toBe(true);
@@ -919,12 +933,12 @@ describe.sequential("structured workflow builder", () => {
     await page.mouse.move(250, 700);
     await page.mouse.up();
 
-    await page.getByLabel("Color theme").selectOption("Light");
+    await page.getByLabel("Appearance").selectOption("Light");
     await expect.poll(() => page.locator("html").getAttribute("class"))
       .not.toContain("dark");
 
     await page.emulateMedia({ colorScheme: "dark" });
-    await page.getByLabel("Color theme").selectOption("System");
+    await page.getByLabel("Appearance").selectOption("System");
     await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
     await page.emulateMedia({ colorScheme: "light" });
     await expect.poll(() => page.locator("html").getAttribute("class"))

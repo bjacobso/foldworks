@@ -1,27 +1,27 @@
 import * as stylex from "@stylexjs/stylex";
 
 export const colors = stylex.defineConsts({
-  background: "var(--foldworks-ui-background)",
-  canvas: "var(--foldworks-ui-canvas)",
-  surface: "var(--foldworks-ui-surface)",
-  surfaceSubtle: "var(--foldworks-ui-surface-subtle)",
-  surfaceHover: "var(--foldworks-ui-surface-hover)",
-  foreground: "var(--foldworks-ui-foreground)",
-  foregroundMuted: "var(--foldworks-ui-foreground-muted)",
-  foregroundSubtle: "var(--foldworks-ui-foreground-subtle)",
-  border: "var(--foldworks-ui-border)",
-  borderStrong: "var(--foldworks-ui-border-strong)",
-  input: "var(--foldworks-ui-input)",
-  primary: "var(--foldworks-ui-primary)",
-  primaryHover: "var(--foldworks-ui-primary-hover)",
-  primaryForeground: "var(--foldworks-ui-primary-foreground)",
-  brand: "var(--foldworks-ui-brand)",
-  brandHover: "var(--foldworks-ui-brand-hover)",
-  brandSurface: "var(--foldworks-ui-brand-surface)",
-  brandBorder: "var(--foldworks-ui-brand-border)",
-  brandForeground: "var(--foldworks-ui-brand-foreground)",
-  focus: "var(--foldworks-ui-focus)",
-  focusGlow: "var(--foldworks-ui-focus-glow)",
+  background: "var(--background)",
+  canvas: "var(--muted)",
+  surface: "var(--card)",
+  surfaceSubtle: "var(--secondary)",
+  surfaceHover: "var(--accent)",
+  foreground: "var(--foreground)",
+  foregroundMuted: "var(--muted-foreground)",
+  foregroundSubtle: "var(--ring)",
+  border: "var(--border)",
+  borderStrong: "var(--input)",
+  input: "var(--input)",
+  primary: "var(--primary)",
+  primaryHover: "var(--primary-hover)",
+  primaryForeground: "var(--primary-foreground)",
+  brand: "var(--primary)",
+  brandHover: "var(--primary-hover)",
+  brandSurface: "var(--accent)",
+  brandBorder: "var(--border)",
+  brandForeground: "var(--accent-foreground)",
+  focus: "var(--ring)",
+  focusGlow: "var(--ring-muted)",
   success: "var(--foldworks-ui-success)",
   successSurface: "var(--foldworks-ui-success-surface)",
   warning: "var(--foldworks-ui-warning)",
@@ -42,21 +42,21 @@ export const colors = stylex.defineConsts({
 });
 
 export const metrics = stylex.defineConsts({
-  radiusSm: "var(--foldworks-ui-radius-sm)",
-  radiusMd: "var(--foldworks-ui-radius-md)",
-  radiusLg: "var(--foldworks-ui-radius-lg)",
-  shadowSm: "var(--foldworks-ui-shadow-sm)",
-  shadowControl: "var(--foldworks-ui-shadow-control)",
-  shadowInteractive: "var(--foldworks-ui-shadow-interactive)",
-  shadowPanel: "var(--foldworks-ui-shadow-panel)",
-  shadowFloat: "var(--foldworks-ui-shadow-float)",
-  shadowSheet: "var(--foldworks-ui-shadow-sheet)",
-  durationFast: "var(--foldworks-ui-duration-fast)",
-  durationNormal: "var(--foldworks-ui-duration-normal)",
-  durationSlow: "var(--foldworks-ui-duration-slow)",
-  easeOut: "var(--foldworks-ui-ease-out)",
-  spring: "var(--foldworks-ui-spring)",
-  font: "var(--foldworks-ui-font)",
+  radiusSm: "var(--radius-sm)",
+  radiusMd: "var(--radius-md)",
+  radiusLg: "var(--radius-lg)",
+  shadowSm: "var(--shadow-sm)",
+  shadowControl: "var(--shadow-control)",
+  shadowInteractive: "var(--shadow-interactive)",
+  shadowPanel: "var(--shadow-panel)",
+  shadowFloat: "var(--shadow-float)",
+  shadowSheet: "var(--shadow-sheet)",
+  durationFast: "var(--duration-fast)",
+  durationNormal: "var(--duration-normal)",
+  durationSlow: "var(--duration-slow)",
+  easeOut: "var(--ease-out)",
+  spring: "var(--spring)",
+  font: "var(--font-sans)",
 });
 
 export const space = stylex.defineConsts({
@@ -70,7 +70,7 @@ export const space = stylex.defineConsts({
 });
 
 export const typography = stylex.defineConsts({
-  fontFamily: "var(--foldworks-ui-font)",
+  fontFamily: "var(--font-sans)",
   sizeXs: "11px",
   sizeSm: "12px",
   sizeMd: "13px",
@@ -84,9 +84,9 @@ export const typography = stylex.defineConsts({
 });
 
 export const radii = stylex.defineConsts({
-  sm: "var(--foldworks-ui-radius-sm)",
-  md: "var(--foldworks-ui-radius-md)",
-  lg: "var(--foldworks-ui-radius-lg)",
+  sm: "var(--radius-sm)",
+  md: "var(--radius-md)",
+  lg: "var(--radius-lg)",
   full: "999px",
 });
 
@@ -100,18 +100,18 @@ export const sizes = stylex.defineConsts({
 });
 
 export const shadows = stylex.defineConsts({
-  sm: "var(--foldworks-ui-shadow-sm)",
-  control: "var(--foldworks-ui-shadow-control)",
-  interactive: "var(--foldworks-ui-shadow-interactive)",
-  panel: "var(--foldworks-ui-shadow-panel)",
-  float: "var(--foldworks-ui-shadow-float)",
-  sheet: "var(--foldworks-ui-shadow-sheet)",
+  sm: "var(--shadow-sm)",
+  control: "var(--shadow-control)",
+  interactive: "var(--shadow-interactive)",
+  panel: "var(--shadow-panel)",
+  float: "var(--shadow-float)",
+  sheet: "var(--shadow-sheet)",
 });
 
 export const motion = stylex.defineConsts({
-  fast: "var(--foldworks-ui-duration-fast)",
-  normal: "var(--foldworks-ui-duration-normal)",
-  slow: "var(--foldworks-ui-duration-slow)",
-  easeOut: "var(--foldworks-ui-ease-out)",
-  spring: "var(--foldworks-ui-spring)",
+  fast: "var(--duration-fast)",
+  normal: "var(--duration-normal)",
+  slow: "var(--duration-slow)",
+  easeOut: "var(--ease-out)",
+  spring: "var(--spring)",
 });

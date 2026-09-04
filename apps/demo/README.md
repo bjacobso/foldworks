@@ -11,11 +11,12 @@ states can be linked, reloaded, and traversed with browser history. Transient
 selections, drag state, column widths, and in-progress document edits remain in
 the application model.
 
-The toolbar theme control supports System, Light, and Dark preferences. The
-choice is persisted locally, applied to the document root before the stylesheet
-loads to avoid a theme flash, and responds live when the system preference
-changes. Shared surface, text, status, selection, and drop-target tokens keep
-all four demos consistent in both themes.
+The toolbar separates color theme from appearance. Neutral, Zinc, and Blue
+palettes can each use System, Light, or Dark appearance. Both choices are
+persisted locally and applied to the document root before the stylesheet loads
+to avoid a theme flash; System appearance also responds live when the operating
+system preference changes. Shared surface, text, status, selection, and
+drop-target tokens keep every demo consistent across the theme matrix.
 
 Workflow and form documents autosave to local storage. Each form example keeps
 an independent draft, while the workflow keeps its own persisted document.

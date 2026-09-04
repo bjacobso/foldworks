@@ -9,7 +9,7 @@ import { serializeWorkspace, writePersistedWorkspace } from "../document-storage
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
 import { update as updateQueryBuilder } from "../query-builder/update";
-import { applyThemePreference } from "../theme";
+import { applyTheme } from "../theme";
 import { update as updateUiKit } from "../ui-kit/update";
 import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
@@ -37,15 +37,16 @@ const LoadExternal = Command.define("LoadExternal", {
   execute: ({ href }) => load(href).pipe(Effect.as(Message.CompletedLoadExternal())),
 });
 
-const ApplyThemePreference = Command.define("ApplyThemePreference", {
+const ApplyTheme = Command.define("ApplyTheme", {
   args: {
+    name: S.Literals(["Neutral", "Zinc", "Blue"]),
     preference: S.Literals(["System", "Light", "Dark"]),
     systemIsDark: S.Boolean,
   },
-  messages: [Message.CompletedApplyThemePreference],
-  execute: ({ preference, systemIsDark }) => Effect.sync(() => {
-    applyThemePreference(preference, systemIsDark);
-    return Message.CompletedApplyThemePreference();
+  messages: [Message.CompletedApplyTheme],
+  execute: ({ name, preference, systemIsDark }) => Effect.sync(() => {
+    applyTheme(name, preference, systemIsDark);
+    return Message.CompletedApplyTheme();
   }),
 });
 
@@ -156,7 +157,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
     CompletedNavigateInternal: () => ({ model }),
     CompletedLoadExternal: () => ({ model }),
-    CompletedApplyThemePreference: () => ({ model }),
+    CompletedApplyTheme: () => ({ model }),
     CompletedPersistWorkspace: ({ succeeded }) => ({
       model: evo(model, {
         persistenceStatus: () => succeeded ? "Saved" : "Error",
@@ -170,16 +171,29 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       return model.themePreference === "System"
         ? {
             model: next,
-            commands: [ApplyThemePreference({
+            commands: [ApplyTheme({
+              name: model.themeName,
               preference: "System",
               systemIsDark: isDark,
             })],
           }
         : { model: next };
     },
+    SelectedThemeName: ({ name }) => ({
+      model: evo(model, { themeName: () => name }),
+      commands: [ApplyTheme({
+        name,
+        preference: model.themePreference,
+        systemIsDark: model.systemIsDark,
+      })],
+    }),
     SelectedThemePreference: ({ preference }) => ({
       model: evo(model, { themePreference: () => preference }),
-      commands: [ApplyThemePreference({ preference, systemIsDark: model.systemIsDark })],
+      commands: [ApplyTheme({
+        name: model.themeName,
+        preference,
+        systemIsDark: model.systemIsDark,
+      })],
     }),
     ClickedLink: ({ request }) => UrlRequest.match<UpdateReturn>(request, {
       Internal: ({ url }) => ({

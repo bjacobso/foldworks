@@ -7,7 +7,11 @@
     ".": "./src/index.ts",
     "./icon": "./src/icon.ts",
     "./tokens.stylex": "./src/tokens.stylex.ts",
-    "./theme.css": "./src/theme.css"
+    "./theme.css": "./src/theme.css",
+    "./base.css": "./src/base.css",
+    "./themes/neutral.css": "./src/themes/neutral.css",
+    "./themes/zinc.css": "./src/themes/zinc.css",
+    "./themes/blue.css": "./src/themes/blue.css"
   },
   "scripts": {
     "test": "vitest run",
@@ -20,6 +24,7 @@
     "foldkit": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
