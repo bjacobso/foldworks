@@ -57,6 +57,9 @@ The theme contract exposes the familiar shadcn semantic roles (`--background`,
 recipes consume those native variables through `tokens.stylex.ts`, so changing
 a variable updates every component without rebuilding or rewriting styles.
 
+Light themes use a soft gray application background, a darker sidebar, and
+white card surfaces to distinguish the workspace from its content.
+
 Set `data-theme` and the resolved `data-mode` on a root ancestor:
 
 ```html

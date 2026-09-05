@@ -73,7 +73,7 @@ describe("theme contract", () => {
     expect(css).toContain("--primary: oklch(0.5 0.134 242.749)");
     expect(css).toContain("--muted: oklch(0.966 0.005 106.5)");
     expect(css).toContain("--chart-5: oklch(0.443 0.11 240.79)");
-    expect(css).toContain("--sidebar: oklch(0.988 0.003 106.5)");
+    expect(css).toContain("--sidebar: oklch(0.935 0 0)");
     expect(css).toContain("--background: oklch(0.153 0.006 107.1)");
     expect(css).toContain("--primary: oklch(0.443 0.11 240.79)");
   });
