@@ -99,7 +99,7 @@ automated trusted-publishing workflow is preferred for future releases.
 The demo is deployed to Cloudflare Workers with
 [Alchemy](https://alchemy.run):
 
-**[Open the live demo](https://foldworks-demo-prod-acvnipkoj23cgmkb.bjacobso.workers.dev)**
+**[Open Foldworks](https://foldworks.dev)**
 
 Authenticate with Cloudflare, then deploy the production stage with:
 

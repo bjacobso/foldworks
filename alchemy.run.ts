@@ -11,6 +11,10 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const demo = yield* Cloudflare.Website.Foldkit("Demo", {
       rootDir: "apps/demo",
+      domain: {
+        name: "foldworks.dev",
+        aliases: ["www.foldworks.dev"],
+      },
     });
 
     return {
