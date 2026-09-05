@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Foldworks light app icon</title>
+  <desc id="desc">The blue Foldworks mark on a white rounded square.</desc>
+  <defs>
+    <linearGradient id="tile" x1="25" y1="18" x2="230" y2="238" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#f6f8fa"/>
+    </linearGradient>
+    <linearGradient id="back" x1="105" y1="66" x2="128" y2="145" gradientUnits="userSpaceOnUse"><stop stop-color="#087dbb"/><stop offset="1" stop-color="#005487"/></linearGradient>
+    <linearGradient id="right" x1="142" y1="98" x2="158" y2="174" gradientUnits="userSpaceOnUse"><stop stop-color="#087ab7"/><stop offset="1" stop-color="#004a78"/></linearGradient>
+    <linearGradient id="front" x1="83" y1="102" x2="121" y2="190" gradientUnits="userSpaceOnUse"><stop stop-color="#12c8f4"/><stop offset="1" stop-color="#00a8e7"/></linearGradient>
+    <linearGradient id="crease" x1="86" y1="112" x2="104" y2="112" gradientUnits="userSpaceOnUse"><stop stop-color="#003757" stop-opacity=".42"/><stop offset="1" stop-color="#003757" stop-opacity="0"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#334155" flood-opacity=".10"/></filter>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="48" fill="url(#tile)"/>
+  <g filter="url(#shadow)" transform="translate(48 38)" data-element="foldworks-mark">
+    <path data-panel="top-arm" fill="url(#back)" d="M35 58 100 24c7-4 13 0 13 8v49l-61 33-24-13V70c0-5 3-10 7-12Z"/>
+    <path data-panel="middle-arm" fill="url(#right)" d="m86 82 49-26c7-4 13 0 13 8v58c0 5-3 10-8 12l-54 29V82Z"/>
+    <path fill="url(#crease)" d="m86 82 18-10v84l-18 10V82Z"/>
+    <path data-panel="stem" fill="url(#front)" d="m35 58 45 24c6 3 9 8 9 14v72c0 8-6 12-13 8l-48-25c-5-3-8-8-8-14V71c0-11 7-17 15-13Z"/>
+  </g>
+</svg>

@@ -25,6 +25,9 @@ accessible application interfaces with Foldkit:
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
 suite.
 
+Logo source files, SVG variants, and high-resolution PNG exports are available
+in the [`assets/brand`](./assets/brand) directory.
+
 ## Development
 
 This repository requires Node.js 24.13 or newer and pnpm 10.20 or newer.

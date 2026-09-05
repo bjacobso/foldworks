@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="280" viewBox="55 70 250 290" role="img" aria-label="Foldworks folded mark">
+  <defs>
+    <linearGradient id="back" x1="80" y1="150" x2="225" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2d6aa4"/>
+      <stop offset="1" stop-color="#126a9f"/>
+    </linearGradient>
+    <linearGradient id="right" x1="180" y1="185" x2="286" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d4774"/>
+      <stop offset="1" stop-color="#21527f"/>
+    </linearGradient>
+    <linearGradient id="front" x1="72" y1="150" x2="205" y2="345" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#19a7ea"/>
+      <stop offset="0.55" stop-color="#4aacf4"/>
+      <stop offset="1" stop-color="#61baf6"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#back)" d="M74 143 L210 80 C218 76 228 80 228 90 L229 178 L160 210 L74 171 C64 166 63 151 74 143Z"/>
+  <path fill="url(#right)" d="M158 211 L276 138 C284 134 293 139 293 149 L294 261 C294 272 289 279 280 283 L209 315 L205 214 L158 211Z"/>
+  <path fill="url(#front)" d="M73 144 L194 199 C202 203 206 209 206 219 L206 340 C206 350 200 356 191 352 L78 301 C69 297 65 290 65 281 L65 158 C65 151 68 147 73 144Z"/>
+</svg>
