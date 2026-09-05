@@ -7,7 +7,7 @@
     "type": "git",
     "url": "git+https://github.com/bjacobso/foldworks.git"
   },
-  "homepage": "https://foldworks-demo-prod-acvnipkoj23cgmkb.bjacobso.workers.dev",
+  "homepage": "https://foldworks.dev",
   "packageManager": "pnpm@10.20.0",
   "engines": {
     "node": ">=24.13",

@@ -66,16 +66,18 @@ describe("theme contract", () => {
     expect(css).toContain("--foldworks-ui-drop-target-active-border: var(--primary)");
   });
 
-  it("ships the finance showcase palette as the default neutral theme", async () => {
+  it("ships the neutral palette as the default theme", async () => {
     const css = await readFile(resolve(import.meta.dirname, "themes", "neutral.css"), "utf8");
 
-    expect(css).toContain("--foreground: oklch(0.153 0.006 107.1)");
-    expect(css).toContain("--primary: oklch(0.5 0.134 242.749)");
-    expect(css).toContain("--muted: oklch(0.966 0.005 106.5)");
-    expect(css).toContain("--chart-5: oklch(0.443 0.11 240.79)");
+    expect(css).toContain("--foreground: oklch(0.145 0 0)");
+    expect(css).toContain("--primary: oklch(0.205 0 0)");
+    expect(css).toContain("--muted: oklch(0.97 0 0)");
+    expect(css).toContain("--chart-5: oklch(0.269 0 0)");
+    expect(css).toContain("--radius: 0.45rem");
+    expect(css).toContain("--background: oklch(0.96 0 0)");
     expect(css).toContain("--sidebar: oklch(0.935 0 0)");
-    expect(css).toContain("--background: oklch(0.153 0.006 107.1)");
-    expect(css).toContain("--primary: oklch(0.443 0.11 240.79)");
+    expect(css).toContain("--background: oklch(0.145 0 0)");
+    expect(css).toContain("--primary: oklch(0.922 0 0)");
   });
 
   it("includes a low-specificity browser reset", async () => {
