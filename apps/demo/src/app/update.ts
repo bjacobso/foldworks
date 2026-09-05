@@ -6,6 +6,7 @@ import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
 
+import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
 import { serializeWorkspace, writePersistedWorkspace } from "../document-storage";
 import { OutMessage as FormOutMessage } from "../form-builder/message";
@@ -106,6 +107,13 @@ const foldForm = Update.foldChild({
         commands: [NavigateInternal({ url: formBuilderPath(exampleId, mode) })],
       }),
     }),
+});
+
+const foldWorkbench = Update.foldChild({
+  update: updateWorkbench,
+  read: (model: Model) => Option.some(model.workbench),
+  write: (model, workbench) => ({ ...model, workbench }),
+  toParentMessage: (message) => Message.GotWorkbenchMessage({ message }),
 });
 
 const foldDataGrid = Update.foldChild({
@@ -222,6 +230,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotWorkflowEditorMessage: ({ message: childMessage }) =>
       foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),
+    GotWorkbenchMessage: ({ message }) => foldWorkbench(model, message),
     GotDataGridDemoMessage: ({ message: childMessage }) =>
       foldDataGrid(model, childMessage),
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>

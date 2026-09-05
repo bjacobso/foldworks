@@ -5,6 +5,7 @@ import { defineMessageUnion } from "foldkit/message";
 import { UrlRequest } from "foldkit/navigation";
 import { Url } from "foldkit/url";
 
+import { Message as WorkbenchMessage } from "../workbench/message";
 import { Message as DataGridMessage } from "../data-grid/message";
 import { Message as FormEditorMessage } from "../form-builder/message";
 import { Message as QueryBuilderDemoMessage } from "../query-builder/message";
@@ -24,6 +25,7 @@ export const Message = defineMessageUnion({
   SelectedThemePreference: { preference: ThemePreference },
   GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
   GotFormEditorMessage: { message: FormEditorMessage },
+  GotWorkbenchMessage: { message: WorkbenchMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
   GotPdfAnnotatorMessage: { message: PdfAnnotator.Message },

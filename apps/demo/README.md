@@ -93,3 +93,11 @@ pnpm dev
 Use `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify the example. Run
 `pnpm test:e2e` for the Vitest + Playwright interaction suite and screenshots in
 `apps/demo/test-results/demo`.
+
+## Workers reference workspace
+
+Open `/workbench` for the complete inspect → explain → propose → preview →
+apply → history loop. Changes and audit entries are saved in browser storage.
+The adapter uses illustrative local rules; it does not connect to Triplex.
+See [the reference guide and screenshots](../../docs/workbench/README.md) for
+behavior, architecture, and the focused end-to-end test command.
