@@ -2,6 +2,7 @@ import { Effect, Schema as S, Stream } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Subscription } from "foldkit";
 
+import { subscriptions as workbenchSubscriptions } from "../workbench/subscriptions";
 import { subscriptions as dataGridSubscriptions } from "../data-grid/subscriptions";
 import { Message as DataGridMessage } from "../data-grid/message";
 import { subscriptions as formSubscriptions } from "../form-builder/subscriptions";
@@ -73,6 +74,12 @@ const form = Subscription.lift(formSubscriptions)<Model, Message>({
   toParentMessage: (message) => Message.GotFormEditorMessage({ message }),
 });
 
+const workbench = Subscription.lift(workbenchSubscriptions)<Model, Message>({
+  when: (model) => model.route._tag === "Workbench",
+  toChildModel: (model) => model.workbench,
+  toParentMessage: (message) => Message.GotWorkbenchMessage({ message }),
+});
+
 const dataGrid = Subscription.lift(dataGridSubscriptions)<Model, Message>({
   toChildModel: (model) => model.dataGridDemo,
   toParentMessage: (message) => Message.GotDataGridDemoMessage({ message }),
@@ -92,6 +99,7 @@ export const subscriptions = Subscription.aggregate<Model, Message>()(
   workflow,
   form,
   dataGrid,
+  workbench,
   queryBuilder,
   pdfAnnotator,
   themeSubscriptions,

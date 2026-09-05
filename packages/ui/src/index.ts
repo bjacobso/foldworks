@@ -11,6 +11,8 @@ export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";
 export * as Switch from "./switch";
 export * as Toolbar from "./toolbar";
+export { ChangeSetPreview, ExplanationTree, TransactionTimeline, ValueInspector } from "./operational";
+export type { Consequence, ExplanationNode, TimelineEntry, ValueChange } from "./operational";
 export { Accordion, Collapsible } from "./collections";
 export {
   Alert,

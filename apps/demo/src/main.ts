@@ -1,5 +1,6 @@
 import { Runtime } from "foldkit";
 
+import { readSnapshot } from "./workbench/domain";
 import { readThemeState } from "./theme";
 import { readPersistedWorkspace } from "./document-storage";
 import { Message } from "./app/message";
@@ -16,5 +17,6 @@ export const init: Runtime.RoutingApplicationInit<Model, Message> = (url) => ({
     urlToAppRoute(url),
     readThemeState(),
     readPersistedWorkspace(),
+    readSnapshot(),
   ),
 });

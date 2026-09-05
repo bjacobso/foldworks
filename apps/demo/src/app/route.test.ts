@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   dataGridRouter,
+  workbenchRouter,
   demoFromRoute,
   formBuilderPath,
   formStateFromRoute,
@@ -22,6 +23,8 @@ const parseUrl = (url: string) =>
 describe("demo routes", () => {
   it("builds stable paths for each demo", () => {
     expect(homeRouter()).toBe("/");
+    expect(workbenchRouter()).toBe("/workbench");
+    expect(demoFromRoute(parseUrl("https://demo.test/workbench"))).toBe("Workbench");
     expect(workflowPath("Horizontal")).toBe("/workflow?orientation=Horizontal");
     expect(dataGridRouter()).toBe("/data-grid");
     expect(formBuilderPath("Complex", "Preview"))

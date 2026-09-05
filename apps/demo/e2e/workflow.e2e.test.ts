@@ -5,6 +5,8 @@ import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { build, preview, type PreviewServer } from "vite";
 
+import { workbenchScenarios } from "./workbench.scenarios";
+
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
 const appUrl = "http://127.0.0.1:4174";
@@ -99,11 +101,12 @@ describe.sequential("structured workflow builder", () => {
   });
 
   beforeEach(async () => {
-    page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    page = await context.newPage();
   });
 
   afterEach(async () => {
-    await page?.close();
+    await page?.context().close();
   });
 
   afterAll(async () => {
@@ -118,6 +121,7 @@ describe.sequential("structured workflow builder", () => {
     const demoNavigation = sidebar.getByRole("navigation", { name: "Demo navigation" });
     await expect.poll(() => demoNavigation.getByRole("link").allTextContents()).toEqual([
       "Home",
+      "Workers workbench",
       "@foldworks/ui",
       "Data grid",
       "Query builder",
@@ -1161,4 +1165,6 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.locator("html").getAttribute("class"))
       .not.toContain("dark");
   }, 60_000);
+
+  workbenchScenarios(() => page, appUrl, screenshot);
 });

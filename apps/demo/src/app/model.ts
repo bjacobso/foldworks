@@ -2,6 +2,9 @@ import { Schema as S } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Sidebar } from "@foldworks/sidebar";
 
+import { Model as WorkbenchModel, init as initWorkbench } from "../workbench/model";
+import type { Snapshot } from "../workbench/domain";
+
 import type { PersistedWorkspace } from "../document-storage";
 import { Model as DataGridModel, initialModel as initialDataGrid } from "../data-grid/model";
 import { Model as FormEditorModel, init as initFormEditor } from "../form-builder/editor-model";
@@ -18,6 +21,7 @@ import {
 
 export const Model = S.Struct({
   route: AppRoute,
+  workbench: WorkbenchModel,
   workflowEditor: WorkflowEditorModel,
   formEditor: FormEditorModel,
   dataGridDemo: DataGridModel,
@@ -38,10 +42,12 @@ export const init = (
   route: AppRoute,
   theme: ThemeState = { name: "Neutral", preference: "System", systemIsDark: false },
   persisted?: PersistedWorkspace,
+  workers?: Readonly<{ snapshot: Snapshot; error: string }>,
 ): Model => {
   const { exampleId, mode } = formStateFromRoute(route);
   return {
     route,
+    workbench: initWorkbench(workers?.snapshot, workers?.error),
     workflowEditor: initWorkflowEditor(
       persisted?.workflow,
       workflowOrientationFromRoute(route),

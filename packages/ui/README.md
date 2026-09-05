@@ -173,3 +173,25 @@ const styles = stylex.create({
 - Applications map domain states onto generic variants such as `success`, `warning`, and `danger`.
 
 Start with existing primitives. Add a new primitive only after the same visual or composition pattern appears in multiple real views.
+
+## Operational compositions
+
+`ValueInspector`, `ExplanationTree`, `ChangeSetPreview`, and `TransactionTimeline`
+provide controlled presentation for inspecting values, explaining outcomes,
+reviewing proposed changes, and reading attributed history. Import them from
+`@foldworks/ui` and call `view(config, h)`.
+
+- `ValueInspector` separates a value's origin from its freshness.
+- `ExplanationTree` renders nested passed, failed, and unknown conditions with
+  optional evidence descriptions. It uses semantic nested lists rather than an
+  interactive ARIA tree widget.
+- `ChangeSetPreview` accepts before/after values, added/removed/changed
+  consequences, notices, and application-owned action elements.
+- `TransactionTimeline` accepts attributed entries with timestamps, context,
+  and value changes. Supply entries in the desired display order.
+
+Applications own evaluation, permissions, temporal context, persistence, and
+execution. These components render the data supplied to them and do not infer
+business consequences or generate explanations. See the
+[Workers reference](../../docs/workbench/README.md) for a complete composition
+and browser-test screenshots.

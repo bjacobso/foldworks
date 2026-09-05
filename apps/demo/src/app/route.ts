@@ -4,13 +4,14 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Home" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
+export type Demo = "Home" | "Workbench" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
 
 export const AppRoute = defineRouteUnion({
   Home: {},
+  Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
   DataGrid: {},
   FormBuilder: {
@@ -36,6 +37,8 @@ export const homeRouter = pipe(
   Route.root,
   Route.mapTo(AppRoute.Home),
 );
+
+export const workbenchRouter = pipe(Route.literal("workbench"), Route.mapTo(AppRoute.Workbench));
 
 export const dataGridRouter = pipe(
   Route.literal("data-grid"),
@@ -68,6 +71,7 @@ export const pdfAnnotatorRouter = pipe(
 
 const routeParser = Route.oneOf(
   workflowRouter,
+  workbenchRouter,
   dataGridRouter,
   formBuilderRouter,
   queryBuilderRouter,
@@ -84,6 +88,7 @@ export const urlToAppRoute = Route.parseUrlWithFallback(
 export const demoFromRoute = (route: AppRoute): Demo => {
   switch (route._tag) {
     case "Home": return "Home";
+    case "Workbench": return "Workbench";
     case "DataGrid": return "DataGrid";
     case "FormBuilder": return "FormBuilder";
     case "QueryBuilder": return "QueryBuilder";
