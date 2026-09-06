@@ -13,7 +13,7 @@ export const financeStyles = stylex.create({
   },
   card: {
     borderRadius: "var(--radius-xl)",
-    boxShadow: "none",
+    boxShadow: "var(--shadow-card)",
     minWidth: 0,
   },
   spanTwo: {

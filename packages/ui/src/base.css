@@ -5,6 +5,14 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
+  --radius-button: var(--radius-lg);
+  --radius-button-sm: var(--radius-md);
+  --radius-badge: 999px;
+  --radius-panel: 12px;
+  --badge-border: transparent;
+  --button-outline-surface: var(--background);
+  --button-outline-shadow: none;
+  --shadow-card: none;
   --radius-xl: calc(var(--radius) * 1.4);
 
   --primary-hover: color-mix(in oklch, var(--primary) 80%, transparent);

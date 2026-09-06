@@ -1016,6 +1016,41 @@ describe.sequential("structured workflow builder", () => {
       .toBe("true");
   });
 
+  it("preserves control typography across themes and appearances", async () => {
+    await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
+    const showcase = page.locator('[data-ui-kit="true"]');
+    const buttonSizes = [
+      ["Extra small", "12px", "24px"],
+      ["Small", "12px", "28px"],
+      ["Default", "13px", "32px"],
+      ["Large", "14px", "36px"],
+    ] as const;
+
+    for (const theme of ["Neutral", "Zinc", "Blue", "Soft"]) {
+      await page.getByLabel("Theme", { exact: true }).selectOption(theme);
+      for (const appearance of ["Light", "Dark"]) {
+        await page.getByLabel("Appearance", { exact: true }).selectOption(appearance);
+        for (const [name, fontSize, height] of buttonSizes) {
+          const actual = await showcase.getByRole("button", { name, exact: true })
+            .evaluate((element) => {
+              const style = getComputedStyle(element);
+              return { fontSize: style.fontSize, fontWeight: style.fontWeight, height: style.height };
+            });
+          expect(actual, `${theme} ${appearance}: ${name}`)
+            .toEqual({ fontSize, fontWeight: "550", height });
+        }
+        // The demo reset must not override other control recipes either.
+        for (const control of [
+          page.getByLabel("Theme", { exact: true }),
+          showcase.getByLabel("Display name", { exact: true }),
+        ]) {
+          expect(await control.evaluate((element) => getComputedStyle(element).fontSize))
+            .toBe("14px");
+        }
+      }
+    }
+  });
+
   it("persists theme and appearance preferences while keeping colors semantic", async () => {
     await page.goto(`${appUrl}/ui-kit`, { waitUntil: "networkidle" });
     const themeSelect = page.getByLabel("Theme");

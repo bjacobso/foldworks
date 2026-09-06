@@ -36,7 +36,8 @@
     "./base.css": "./dist/base.css",
     "./themes/neutral.css": "./dist/themes/neutral.css",
     "./themes/zinc.css": "./dist/themes/zinc.css",
-    "./themes/blue.css": "./dist/themes/blue.css"
+    "./themes/blue.css": "./dist/themes/blue.css",
+    "./themes/soft.css": "./dist/themes/soft.css"
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",

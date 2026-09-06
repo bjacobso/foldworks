@@ -13,7 +13,7 @@ can be linked, reloaded, and traversed with browser history. Transient selection
 drag state, column widths, and in-progress document edits remain in the
 application model.
 
-The toolbar separates color theme from appearance. Neutral, Zinc, and Blue
+The toolbar separates color theme from appearance. Neutral, Zinc, Blue, and Soft
 palettes can each use System, Light, or Dark appearance. Both choices are
 persisted locally and applied to the document root before the stylesheet loads
 to avoid a theme flash; System appearance also responds live when the operating

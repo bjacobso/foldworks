@@ -39,7 +39,7 @@ const requiredThemeTokens = [
 ] as const;
 
 describe("theme contract", () => {
-  for (const theme of ["neutral", "zinc", "blue"] as const) {
+  for (const theme of ["neutral", "zinc", "blue", "soft"] as const) {
     it(`${theme} defines every semantic token in light and dark mode`, async () => {
       const css = await readFile(
         resolve(import.meta.dirname, "themes", `${theme}.css`),
