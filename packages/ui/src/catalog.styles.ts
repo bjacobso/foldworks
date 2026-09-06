@@ -99,7 +99,7 @@ export const catalogStyles = stylex.create({
   breadcrumbItem: { alignItems: "center", display: "inline-flex", gap: space.sm },
   breadcrumbLink: { color: { default: colors.foregroundMuted, ":hover": colors.foreground }, textDecoration: "none" },
   breadcrumbCurrent: { color: colors.foreground, fontWeight: 550 },
-  card: { display: "flex", flexDirection: "column", overflow: "hidden" },
+  card: { boxShadow: "var(--shadow-card)", display: "flex", flexDirection: "column", overflow: "hidden" },
   cardHeader: { alignItems: "start", display: "grid", gap: space.md, gridTemplateColumns: "minmax(0, 1fr) auto", padding: "16px 16px 0" },
   cardHeading: { display: "grid", gap: space.xs, minWidth: 0 },
   cardAction: { alignItems: "center", display: "flex", justifyContent: "flex-end" },

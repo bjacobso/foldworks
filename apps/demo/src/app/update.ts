@@ -12,7 +12,7 @@ import { serializeWorkspace, writePersistedWorkspace } from "../document-storage
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
 import { update as updateQueryBuilder } from "../query-builder/update";
-import { applyTheme } from "../theme";
+import { applyTheme, ThemeName } from "../theme";
 import { update as updateUiKit } from "../ui-kit/update";
 import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
@@ -42,7 +42,7 @@ const LoadExternal = Command.define("LoadExternal", {
 
 const ApplyTheme = Command.define("ApplyTheme", {
   args: {
-    name: S.Literals(["Neutral", "Zinc", "Blue"]),
+    name: ThemeName,
     preference: S.Literals(["System", "Light", "Dark"]),
     systemIsDark: S.Boolean,
   },

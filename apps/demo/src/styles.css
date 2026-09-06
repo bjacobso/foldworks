@@ -2,6 +2,7 @@
 @import "@foldworks/ui/themes/neutral.css";
 @import "@foldworks/ui/themes/zinc.css";
 @import "@foldworks/ui/themes/blue.css";
+@import "@foldworks/ui/themes/soft.css";
 @import "@foldworks/data-grid/styles.css";
 @import "@foldworks/pdf-annotator/styles.css";
 
@@ -16,11 +17,4 @@ body {
   height: 100%;
   margin: 0;
   overscroll-behavior: none;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
 }

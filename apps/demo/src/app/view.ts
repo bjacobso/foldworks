@@ -196,6 +196,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           { value: "Neutral", label: "Neutral" },
           { value: "Zinc", label: "Zinc" },
           { value: "Blue", label: "Blue" },
+          { value: "Soft", label: "Soft" },
         ],
       }, h),
       Select.control({

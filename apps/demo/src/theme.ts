@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 
-export const ThemeName = S.Literals(["Neutral", "Zinc", "Blue"]);
+export const ThemeName = S.Literals(["Neutral", "Zinc", "Blue", "Soft"]);
 export type ThemeName = typeof ThemeName.Type;
 
 export const ThemePreference = S.Literals(["System", "Light", "Dark"]);
@@ -17,7 +17,7 @@ export const COLOR_THEME_STORAGE_KEY = "foldworks-demo-color-theme";
 export const SYSTEM_DARK_QUERY = "(prefers-color-scheme: dark)";
 
 const isThemeName = (value: string | null): value is ThemeName =>
-  value === "Neutral" || value === "Zinc" || value === "Blue";
+  value === "Neutral" || value === "Zinc" || value === "Blue" || value === "Soft";
 
 const isThemePreference = (value: string | null): value is ThemePreference =>
   value === "System" || value === "Light" || value === "Dark";
