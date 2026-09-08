@@ -19,7 +19,8 @@ import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Sidebar } from "@foldworks/sidebar";
 
 import { view as workbenchView } from "../workbench/view";
-import { people, view as dataGridView } from "../data-grid/demo";
+import { view as dataGridView } from "../data-grid/demo";
+import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
 import { view as homeView } from "../home/view";
 import { view as queryBuilderView } from "../query-builder/view";

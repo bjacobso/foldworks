@@ -8,53 +8,7 @@ import type { Model } from "./model";
 import { className } from "../workflow/styles";
 import { dataGridStyles, statusStyles } from "./styles";
 
-type EmploymentStatus = "Active" | "On leave" | "Contractor";
-
-type Person = Readonly<{
-  id: string;
-  name: string;
-  email: string;
-  status: EmploymentStatus;
-  department: string;
-  role: string;
-  location: string;
-  startDate: string;
-  salary: number;
-}>;
-
-const firstNames = [
-  "Maya", "Noah", "Iris", "Leo", "Ava", "Theo", "Nina", "Ezra",
-  "Sofia", "Miles", "Lina", "Owen", "Zoe", "Jules", "Amara", "Kai",
-];
-const lastNames = [
-  "Chen", "Williams", "Patel", "Martinez", "Kim", "Johnson", "Okafor", "Silva",
-];
-const departments = ["Engineering", "Design", "Operations", "Sales", "People"];
-const roles = [
-  "Software engineer", "Product designer", "Operations lead", "Account executive",
-  "People partner", "Data analyst", "Product manager",
-];
-const locations = ["San Francisco", "New York", "Austin", "London", "Remote"];
-const statuses: ReadonlyArray<EmploymentStatus> = ["Active", "Active", "Active", "On leave", "Contractor"];
-
-export const people: ReadonlyArray<Person> = Array.from({ length: 120 }, (_, index) => {
-  const firstName = firstNames[index % firstNames.length] ?? "Alex";
-  const lastName = lastNames[(index * 3) % lastNames.length] ?? "Morgan";
-  const year = 2019 + (index % 7);
-  const month = String((index % 12) + 1).padStart(2, "0");
-  const day = String((index % 24) + 1).padStart(2, "0");
-  return {
-    id: `person-${index + 1}`,
-    name: `${firstName} ${lastName}`,
-    email: `${firstName}.${lastName}${index + 1}@example.com`.toLowerCase(),
-    status: statuses[index % statuses.length] ?? "Active",
-    department: departments[(index * 2) % departments.length] ?? "Operations",
-    role: roles[(index * 5) % roles.length] ?? "Specialist",
-    location: locations[(index * 3) % locations.length] ?? "Remote",
-    startDate: `${year}-${month}-${day}`,
-    salary: 72_000 + (index % 18) * 4_500,
-  };
-});
+import { type Person } from "./rows";
 
 const employeeCell = (
   person: Person,
@@ -84,10 +38,11 @@ export const columns = DataGrid.defineColumns<Person, Message>()([
     header: "Status",
     accessor: (person) => person.status,
     width: 130,
-    renderCell: ({ row }, h) =>
+    editor: { kind: "Select", options: ["Active", "On leave", "Contractor"].map((value) => ({ value, label: value })) },
+    renderCell: ({ value }, h) =>
       h.span(
-        [h.Class(className(dataGridStyles.status, statusStyles[row.status]))],
-        [h.span([h.Class(className(dataGridStyles.statusDot)), h.AriaHidden(true)]), row.status],
+        [h.Class(className(dataGridStyles.status, statusStyles[value as Person["status"]]))],
+        [h.span([h.Class(className(dataGridStyles.statusDot)), h.AriaHidden(true)]), String(value)],
       ),
   },
   {
@@ -95,18 +50,26 @@ export const columns = DataGrid.defineColumns<Person, Message>()([
     header: "Department",
     accessor: (person) => person.department,
     width: 170,
+    editor: { kind: "Text", validate: (value) => String(value).trim() ? undefined : "Enter a value." },
   },
   {
     id: "role",
     header: "Role",
     accessor: (person) => person.role,
     width: 220,
+    editor: { kind: "Text" },
+    renderEditor: (editor, h) => h.input([
+      h.Id(editor.id), h.AriaLabel(editor.label), h.Type("text"),
+      h.Class("fk-data-grid__editor"), h.Value(editor.input),
+      h.AriaInvalid(editor.error !== ""), h.OnInput(editor.onInput),
+    ]),
   },
   {
     id: "location",
     header: "Location",
     accessor: (person) => person.location,
     width: 170,
+    editor: { kind: "Text", validate: (value) => String(value).trim() ? undefined : "Enter a value." },
   },
   {
     id: "startDate",
@@ -120,15 +83,17 @@ export const columns = DataGrid.defineColumns<Person, Message>()([
     accessor: (person) => person.salary,
     width: 130,
     align: "End",
-    renderCell: ({ row }, h) =>
+    editor: { kind: "Number", validate: (value) => typeof value === "number" && value >= 0 ? undefined : "Salary must be zero or greater." },
+    renderCell: ({ value }, h) =>
       h.span([h.Class(className(dataGridStyles.money))], [
         new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
           maximumFractionDigits: 0,
-        }).format(row.salary),
+        }).format(Number(value)),
       ]),
   },
+  { id: "equipmentIssued", header: "Equipment issued", accessor: (person) => person.equipmentIssued, width: 155, editor: { kind: "Checkbox" } },
 ]);
 
 export const dataGridView = (
@@ -144,15 +109,20 @@ export const dataGridView = (
             "A controlled, typed grid assembled from application-owned rows and columns.",
           ]),
         ]),
+        h.label([], ["Save behavior ", h.select([
+          h.AriaLabel("Save behavior"), h.Value(model.grid.editingMode),
+          h.Disabled(model.grid.drafts.length > 0 || model.grid.activeEdit._tag === "Some" || model.grid.pendingSubmission._tag === "Some"),
+          h.OnChange((mode) => Message.ChangedEditingMode({ mode: mode === "Immediate" ? "Immediate" : "Batch" })),
+        ], [h.option([h.Value("Batch")], ["Batch"]), h.option([h.Value("Immediate")], ["Immediate"])])]),
         h.span([h.Class(className(dataGridStyles.rowCount))], [
-          `${people.length} rows`,
+          `${model.rows.length} rows`,
         ]),
       ]),
       DataGrid.view(
         {
           model: model.grid,
           columns,
-          rows: people,
+          rows: model.rows,
           getRowId: (person) => person.id,
           toParentMessage: (message) => Message.GotGridMessage({ message }),
           label: "Team directory",
@@ -162,7 +132,7 @@ export const dataGridView = (
         h,
       ),
       h.footer([h.Class(className(dataGridStyles.footer))], [
-        h.span([], ["Click a cell, then use arrow keys to move"]),
+        h.span([], ["Enter or double-click to edit · Enter to commit · Escape to cancel"]),
         h.span([], ["Drag a column edge to resize · double-click to reset"]),
       ]),
     ]),

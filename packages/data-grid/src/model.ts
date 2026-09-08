@@ -2,6 +2,7 @@ import { Option, Schema as S } from "effect";
 import { defineTaggedUnion } from "foldkit/schema";
 
 import { DEFAULT_COLUMN_WIDTH, type ColumnDef } from "./core";
+import { ActiveEdit, Draft, Submission } from "./editing-model";
 
 export const SortDirection = S.Literals(["Ascending", "Descending"]);
 export type SortDirection = typeof SortDirection.Type;
@@ -42,12 +43,19 @@ export const Model = S.Struct({
   sorting: S.Option(Sorting),
   columnSizes: S.Array(ColumnSize),
   resizeState: ResizeState,
+  editingMode: S.Literals(["Disabled", "Immediate", "Batch"]),
+  drafts: S.Array(Draft),
+  activeEdit: S.Option(ActiveEdit),
+  pendingSubmission: S.Option(Submission),
+  nextSubmissionId: S.Number,
+  saveError: S.String,
 });
 export type Model = typeof Model.Type;
 
 export type InitConfig<Row = unknown, ParentMessage = never> = Readonly<{
   id: string;
   columns: ReadonlyArray<Pick<ColumnDef<Row, ParentMessage>, "id" | "width">>;
+  editing?: Readonly<{ mode: "Immediate" | "Batch" }>;
 }>;
 
 export const init = (config: InitConfig): Model => ({
@@ -59,4 +67,10 @@ export const init = (config: InitConfig): Model => ({
     width: column.width ?? DEFAULT_COLUMN_WIDTH,
   })),
   resizeState: ResizeState.Idle(),
+  editingMode: config.editing?.mode ?? "Disabled",
+  drafts: [],
+  activeEdit: Option.none(),
+  pendingSubmission: Option.none(),
+  nextSubmissionId: 1,
+  saveError: "",
 });

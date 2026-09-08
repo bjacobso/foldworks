@@ -34,6 +34,8 @@ const foldGrid = Update.foldChild({
   read: (model: Model) => Option.some(model.grid),
   write: (model, grid) => ({ ...model, grid }),
   toParentMessage: (message) => Message.GotGridMessage({ message }),
+  // This grid is read-only; workbench proposals use their own application commands.
+  foldOutMessage: (_message: DataGrid.OutMessage) => (model: Model) => ({ model }),
 });
 
 export const update = (model: Model, message: Message): Update.Return<Model, Message> => {

@@ -1,4 +1,5 @@
 export * from "./core";
+export { Edit, CellIssue, Submission } from "./editing-model";
 export {
   CellAddress,
   ColumnSize,
