@@ -106,3 +106,23 @@ Authenticate with Cloudflare, then deploy the production stage with:
 ```sh
 pnpm run deploy
 ```
+
+The `Deploy` GitHub Actions workflow also deploys the exact revision validated
+by `CI` after every successful push or merge to `main`. In automation, it runs
+the non-interactive equivalent, `pnpm exec alchemy deploy --stage prod --yes`,
+then verifies that `https://foldworks.dev` serves the Foldworks application.
+Alchemy also retains the Worker's generated `workers.dev` URL.
+
+The `production` GitHub environment requires these Actions secrets:
+
+- `CLOUDFLARE_ACCOUNT_ID` — the Cloudflare account that owns `foldworks.dev`.
+- `CLOUDFLARE_API_TOKEN` — a dedicated deployment token scoped to that account
+  and zone.
+
+Give the deployment token only these Cloudflare permissions:
+
+- Account: Workers Scripts Edit
+- Account: Account Settings Read
+- Account: Secrets Store Edit
+- Zone `foldworks.dev`: Zone Read
+- Zone `foldworks.dev`: Workers Routes Edit
