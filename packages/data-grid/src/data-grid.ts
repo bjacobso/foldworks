@@ -10,3 +10,6 @@ export { init, type InitConfig } from "./model";
 export { subscriptions } from "./subscriptions";
 export { update } from "./update";
 export { view, type ViewConfig } from "./view";
+export { OutMessage } from "./message";
+export { Edit, CellIssue, Submission } from "./editing-model";
+export { commitMessage, editIssues, saveMessage } from "./editing";

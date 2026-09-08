@@ -2,12 +2,30 @@ import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import type { Model, SortDirection } from "./model";
+import { sameCell } from "./editing-model";
 
 export const DEFAULT_COLUMN_WIDTH = 160;
 export const MIN_COLUMN_WIDTH = 72;
 export const MAX_COLUMN_WIDTH = 640;
 
 export type CellValue = string | number | boolean | null | undefined;
+
+export type CellEditor<Row> = Readonly<{
+  kind: "Text" | "Number" | "Select" | "Checkbox";
+  options?: ReadonlyArray<Readonly<{ value: string; label: string }>>;
+  validate?: (value: CellValue, row: Row) => string | undefined;
+}>;
+
+export type EditorContext<ParentMessage> = Readonly<{
+  id: string;
+  label: string;
+  input: string;
+  value: CellValue;
+  error: string;
+  onInput: (input: string) => ParentMessage;
+  onCommit: ParentMessage;
+  onCancel: ParentMessage;
+}>;
 
 export type CellContext<Row> = Readonly<{
   row: Row;
@@ -41,6 +59,8 @@ export type ColumnDef<Row, ParentMessage = never> = Readonly<{
     h: HtmlBuilder<ParentMessage>,
   ) => Html;
   meta?: unknown;
+  editor?: CellEditor<Row>;
+  renderEditor?: (context: EditorContext<ParentMessage>, h: HtmlBuilder<ParentMessage>) => Html;
 }>;
 
 export type TableCell<Row, ParentMessage> = Readonly<{
@@ -134,7 +154,10 @@ export const createTable = <Row, ParentMessage>(
       cells: config.columns.map((column) => ({
         id: `${rowId}:${column.id}`,
         column,
-        value: column.accessor(row),
+        value: (() => {
+          const draft = config.model.drafts.find((item) => sameCell(item, { rowId, columnId: column.id }));
+          return draft === undefined ? column.accessor(row) : draft.value;
+        })(),
       })),
     };
   });

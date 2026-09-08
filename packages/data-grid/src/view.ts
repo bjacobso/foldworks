@@ -15,6 +15,9 @@ import {
 } from "./core";
 import { Message } from "./message";
 import type { Model } from "./model";
+import { cellId, sameCell } from "./editing-model";
+import { commitMessage, editIssues, parseInput } from "./editing";
+import { editingToolbar, editorView } from "./editing-view";
 
 export type ViewConfig<Row, ParentMessage> = Readonly<{
   model: Model;
@@ -26,6 +29,7 @@ export type ViewConfig<Row, ParentMessage> = Readonly<{
   emptyText?: string;
   rowHeight?: number;
   appearance?: "standalone" | "embedded";
+  showEditingToolbar?: boolean;
 }>;
 
 const cellPosition = (rowIndex: number, columnIndex: number) =>
@@ -44,8 +48,11 @@ export const view = <Row, ParentMessage>(
   const table = createTable(config);
   const selected = Option.getOrUndefined(config.model.selectedCell);
   const rowHeight = config.rowHeight ?? 42;
+  const active = Option.getOrUndefined(config.model.activeEdit);
+  const pending = Option.isSome(config.model.pendingSubmission);
+  const issues = editIssues(config);
 
-  return h.div(
+  const grid = h.div(
     [
       h.Class("fk-data-grid"),
       h.Role("grid"),
@@ -202,7 +209,28 @@ export const view = <Row, ParentMessage>(
                             columnIndex === 0
                           );
                           const align = cell.column.align ?? "Start";
+                          const address = { rowId: row.id, columnId: cell.column.id };
+                          const id = cellId(config.model.id, row.id, cell.column.id);
+                          const draft = config.model.drafts.find((draft) => sameCell(draft, address));
+                          const editing = active !== undefined && sameCell(active, address);
+                          const editor = cell.column.editor;
+                          const editable = editor !== undefined && config.model.editingMode !== "Disabled";
+                          const error = issues.find((issue) => sameCell(issue, address))?.error || draft?.error || "";
+                          const start = () => Message.StartedEditing({
+                            ...address,
+                            previousValue: draft === undefined ? cell.column.accessor(row.original) : draft.previousValue,
+                            ...parseInput(editor!, cell.value == null ? "" : String(cell.value), row.original),
+                          });
                           const move = (key: string) => {
+                            // Editors retain native arrow-key behavior. Enter/Escape are grid actions.
+                            if (editing) return key === "Enter" || key === "Escape" ? Option.some({
+                              focusSelector: `[id="${id}:editor"]`,
+                              message: config.toParentMessage(key === "Escape" ? Message.CancelledEdit() : commitMessage(config)),
+                            }) : Option.none();
+                            if (active !== undefined) return Option.none();
+                            if ((key === "Enter" || key === "F2") && editable && !pending) return Option.some({
+                              focusSelector: `[id="${id}"]`, message: config.toParentMessage(start()),
+                            });
                             const offsets: Record<string, readonly [number, number]> = {
                               ArrowUp: [-1, 0],
                               ArrowDown: [1, 0],
@@ -225,7 +253,7 @@ export const view = <Row, ParentMessage>(
                               return Option.none();
                             }
                             return Option.some({
-                              focusSelector: `[data-grid-cell-position="${cellPosition(nextRowIndex, nextColumnIndex)}"]`,
+                              focusSelector: `[id="${cellId(config.model.id, nextRow.id, nextColumn.definition.id)}"]`,
                               message: config.toParentMessage(
                                 Message.SelectedCell({
                                   rowId: nextRow.id,
@@ -238,6 +266,7 @@ export const view = <Row, ParentMessage>(
                             cell.id,
                             [
                               h.Class("fk-data-grid__cell"),
+                              h.Id(id),
                               h.Role("gridcell"),
                               h.AriaColindex(columnIndex + 1),
                               h.AriaSelected(isSelected),
@@ -248,6 +277,13 @@ export const view = <Row, ParentMessage>(
                               ),
                               h.DataAttribute("selected", isSelected ? "true" : "false"),
                               h.DataAttribute("align", align.toLowerCase()),
+                              h.DataAttribute("dirty", draft === undefined ? "false" : "true"),
+                              h.DataAttribute("editable", editable ? "true" : "false"),
+                              h.DataAttribute("error", error ? "true" : "false"),
+                              h.AriaReadonly(!editable || pending),
+                              h.AriaInvalid(!!error),
+                              ...(draft === undefined ? [] : [h.Title(`Original: ${formatValue(draft.previousValue)}${error ? ` · ${error}` : " · Unsaved change"}`)]),
+                              ...(editable && !pending && active === undefined ? [h.OnDoubleClick(config.toParentMessage(start()))] : []),
                               h.OnClick(
                                 config.toParentMessage(
                                   Message.SelectedCell({
@@ -259,7 +295,13 @@ export const view = <Row, ParentMessage>(
                               h.OnKeyDownFocus(move),
                             ],
                             [
-                              cell.column.renderCell?.(
+                              editing && editor !== undefined ? (cell.column.renderEditor?.({
+                                id: `${id}:editor`, label: `Edit ${cell.column.header}`,
+                                input: active.input, value: active.value, error: active.error,
+                                onInput: (input) => config.toParentMessage(Message.ChangedEdit(parseInput(editor, input, row.original))),
+                                onCommit: config.toParentMessage(commitMessage(config)),
+                                onCancel: config.toParentMessage(Message.CancelledEdit()),
+                              }, h) ?? editorView(editor, active, row.original, `${id}:editor`, `Edit ${cell.column.header}`, config.toParentMessage, h)) : cell.column.renderCell?.(
                                 {
                                   row: row.original,
                                   rowId: row.id,
@@ -269,6 +311,8 @@ export const view = <Row, ParentMessage>(
                                 },
                                 h,
                               ) ?? formatValue(cell.value),
+                              ...(draft === undefined || editing ? [] : [h.span([h.Class("fk-data-grid__dirty-marker"), h.AriaLabel(error || "Unsaved change")], [error ? "!" : "•"])]),
+                              ...(editing ? [h.span([h.Id(`${id}:editor:help`), h.Class("fk-data-grid__sr-only")], [active.error || "Enter to commit. Escape to cancel."])] : []),
                             ],
                           );
                         }),
@@ -281,4 +325,8 @@ export const view = <Row, ParentMessage>(
       ),
     ],
   );
+  return config.model.editingMode === "Disabled" ? grid : h.div([h.Class("fk-data-grid__editable-container")], [
+    config.showEditingToolbar === false ? h.empty : editingToolbar(config, h),
+    grid,
+  ]);
 };

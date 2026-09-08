@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { build, preview, type PreviewServer } from "vite";
 
 import { workbenchScenarios } from "./workbench.scenarios";
+import { dataGridEditingScenarios } from "./data-grid.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
@@ -1202,4 +1203,5 @@ describe.sequential("structured workflow builder", () => {
   }, 60_000);
 
   workbenchScenarios(() => page, appUrl, screenshot);
+  dataGridEditingScenarios(() => page, appUrl, screenshot);
 });
