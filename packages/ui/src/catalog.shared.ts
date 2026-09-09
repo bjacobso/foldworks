@@ -1,12 +1,12 @@
 import type * as stylex from "@stylexjs/stylex";
-import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, ChildAttribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { sxAttrs } from "./sx";
 
 export type Children = ReadonlyArray<Html | string>;
 
 export type StyledConfig<Message> = Readonly<{
-  attributes?: ReadonlyArray<Attribute<Message>>;
+  attributes?: ReadonlyArray<Attribute<Message> | ChildAttribute>;
   style?: stylex.StyleXStyles;
 }>;
 
@@ -14,7 +14,7 @@ export const styledAttrs = <Message>(
   config: StyledConfig<Message>,
   h: HtmlBuilder<Message>,
   ...styles: ReadonlyArray<stylex.StyleXStyles | stylex.CompiledStyles>
-): ReadonlyArray<Attribute<Message>> => [
+): ReadonlyArray<Attribute<Message> | ChildAttribute> => [
   ...(config.attributes ?? []),
   ...sxAttrs(h, ...styles, config.style),
 ];

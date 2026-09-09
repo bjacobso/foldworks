@@ -1,6 +1,6 @@
 import type { LucideIconData } from "@lucide/icons";
 import type * as stylex from "@stylexjs/stylex";
-import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, ChildAttribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { Button } from "@foldkit/ui";
 
@@ -21,7 +21,7 @@ export type ViewConfig<Message> = Readonly<{
   isDisabled?: boolean;
   isFullWidth?: boolean;
   ariaLabel?: string;
-  attributes?: ReadonlyArray<Attribute<Message>>;
+  attributes?: ReadonlyArray<Attribute<Message> | ChildAttribute>;
   style?: stylex.StyleXStyles;
 }>;
 

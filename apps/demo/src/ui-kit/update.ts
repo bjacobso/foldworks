@@ -1,11 +1,60 @@
 import { Update } from "foldkit";
+import { Option } from "effect";
+import { Stateful } from "@foldworks/ui";
 import { evo } from "foldkit/struct";
 
 import { Message } from "./message";
 import type { Model } from "./model";
+import { AccountTabs, DepartmentSelect } from "./components";
+
+const foldTabs = Update.foldChild({
+  update: AccountTabs.update,
+  read: (model: Model) => Option.some(model.tabs),
+  write: (model, tabs) => ({ ...model, tabs }),
+  toParentMessage: (message) => Message.GotTabsMessage({ message }),
+  foldOutMessage: (outMessage) => (model: Model) => ({
+    model: { ...model, selectedView: outMessage.value, announcement: `${outMessage.value} view selected.` },
+  }),
+});
+
+const foldDialog = Update.foldChild({
+  update: Stateful.Dialog.update,
+  read: (model: Model) => Option.some(model.dialog),
+  write: (model, dialog) => ({ ...model, dialog }),
+  toParentMessage: (message) => Message.GotDialogMessage({ message }),
+  foldOutMessage: (outMessage: Stateful.Dialog.OutMessage) => (model: Model) => ({
+    model: { ...model, announcement: `Dialog ${outMessage._tag === "Opened" ? "opened" : "closed"}.` },
+  }),
+});
+
+const foldSelect = Update.foldChild({
+  update: DepartmentSelect.update,
+  read: (model: Model) => Option.some(model.departmentSelect),
+  write: (model, departmentSelect) => ({ ...model, departmentSelect }),
+  toParentMessage: (message) => Message.GotSelectMessage({ message }),
+  foldOutMessage: (outMessage) => (model: Model) => ({
+    model: { ...model, department: outMessage.value, announcement: `${outMessage.value} department selected.` },
+  }),
+});
+
+const foldCommand = Update.foldChild({
+  update: Stateful.Command.update,
+  read: (model: Model) => Option.some(model.command),
+  write: (model, command) => ({ ...model, command }),
+  toParentMessage: (message) => Message.GotCommandMessage({ message }),
+  foldOutMessage: (outMessage: Stateful.Command.OutMessage) => (model: Model) => ({
+    model: outMessage._tag === "Selected"
+      ? { ...model, announcement: `${outMessage.value} command selected.` }
+      : model,
+  }),
+});
 
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match(message, {
+    GotTabsMessage: ({ message }) => foldTabs(model, message),
+    GotDialogMessage: ({ message }) => foldDialog(model, message),
+    GotSelectMessage: ({ message }) => foldSelect(model, message),
+    GotCommandMessage: ({ message }) => foldCommand(model, message),
     ChangedName: ({ value }) => ({ model: evo(model, { name: () => value }) }),
     ChangedEmail: ({ value }) => ({ model: evo(model, { email: () => value }) }),
     ChangedNotes: ({ value }) => ({ model: evo(model, { notes: () => value }) }),

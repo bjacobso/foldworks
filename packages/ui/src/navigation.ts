@@ -65,6 +65,7 @@ const pagination = <Message>(
 
 type Tab<Value extends string> = Readonly<{ value: Value; label: string; content: Children; isDisabled?: boolean }>;
 
+/** @deprecated Use Stateful.Tabs for keyboard navigation and managed focus. */
 const tabs = <Message, Value extends string>(
   config: StyledConfig<Message> & Readonly<{
     id: string;

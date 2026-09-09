@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "Ben Jacobson",
   "type": "module",
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": ["dist", "docs", "README.md", "LICENSE"],
   "sideEffects": ["**/*.css"],
   "repository": {
     "type": "git",
@@ -49,11 +49,11 @@
     "@foldkit/ui": "catalog:",
     "@lucide/icons": "catalog:",
     "@stylexjs/stylex": "catalog:",
+    "effect": "catalog:",
     "foldkit": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

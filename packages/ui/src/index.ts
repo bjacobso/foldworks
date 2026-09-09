@@ -49,6 +49,7 @@ export { Calendar } from "./calendar";
 export { Carousel, Resizable, ScrollArea } from "./containers";
 export { Attachment, Bubble, Marker, Message, MessageScroller } from "./ai";
 export * as Headless from "./headless";
+export * as Stateful from "./stateful";
 export {
   colors,
   metrics,

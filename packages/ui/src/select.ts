@@ -27,6 +27,7 @@ export const control = <Message>(
   )),
 );
 
+/** @deprecated Use Stateful.Select for custom dropdowns, or control for a native select. */
 export const view = <Message>(
   config: Readonly<{
     id: string;

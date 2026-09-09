@@ -17,9 +17,7 @@ import {
   Chart,
   Collapsible,
   Combobox,
-  Command,
   ContextMenu,
-  Dialog,
   Direction,
   Drawer,
   DropdownMenu,
@@ -44,7 +42,6 @@ import {
   RadioGroup,
   Resizable,
   ScrollArea,
-  Select,
   Separator,
   Sheet,
   Sidebar,
@@ -52,8 +49,8 @@ import {
   Slider,
   Sonner,
   Spinner,
+  Stateful,
   Table,
-  Tabs,
   Textarea,
   Toggle,
   ToggleGroup,
@@ -64,6 +61,7 @@ import { Icon } from "@foldworks/ui";
 
 import { Message } from "./message";
 import type { Model } from "./model";
+import { AccountTabs, DepartmentSelect } from "./components";
 import { className, uiKitStyles as styles } from "./styles";
 
 const action = (label: string) => Message.ClickedAction({ action: label });
@@ -161,15 +159,22 @@ const forms = (model: Model, h: HtmlBuilder<Message>): Html => section("Forms an
     onChange: (value) => Message.SelectedDepartment({ value: value === "Engineering" || value === "Operations" ? value : "People" }),
     options: ["Engineering", "Operations", "People"].map((value) => ({ value, label: value })),
   }, h),
-  Select.view({
-    id: "catalog-select",
-    value: model.department,
-    ariaLabel: "Custom department select",
-    isOpen: model.openComponent === "Select",
-    onOpenChange: (isOpen) => toggleComponent("Select", isOpen),
-    onChange: (value) => Message.SelectedDepartment({ value: value === "Engineering" || value === "Operations" ? value : "People" }),
-    options: ["Engineering", "Operations", "People"].map((value) => ({ value, label: value })),
-  }, h),
+  h.submodel({
+    slotId: model.departmentSelect.id,
+    model: model.departmentSelect,
+    view: DepartmentSelect.view,
+    viewInputs: Stateful.Select.styledViewInputs({
+      value: model.department,
+      ariaLabel: "Custom department select",
+      name: "department",
+      options: [
+        { value: "Engineering", label: "Engineering" },
+        { value: "Operations", label: "Operations", isDisabled: true },
+        { value: "People", label: "People" },
+      ],
+    }, h),
+    toParentMessage: (message) => Message.GotSelectMessage({ message }),
+  }),
   InputOtp.view({
     value: model.otp,
     length: 6,
@@ -222,16 +227,21 @@ const navigation = (model: Model, h: HtmlBuilder<Message>): Html => section("Nav
   Breadcrumb.view({ items: [{ label: "Home", href: "#" }, { label: "Settings", href: "#" }], current: "Billing" }, h),
   NavigationMenu.view({ items: [{ label: "Products", href: "#" }, { label: "Docs", href: "#" }, { label: "Pricing", href: "#" }] }, h),
   Pagination.view({ page: model.page, pageCount: 4, onChange: (page) => Message.SelectedPage({ page }) }, h),
-  Tabs.view({
-    id: "catalog-tabs",
-    value: model.selectedView,
-    onChange: (value) => Message.SelectedView({ value }),
-    tabs: [
-      { value: "Overview", label: "Overview", content: ["Account overview"] },
-      { value: "Details", label: "Details", content: ["Account details"] },
-      { value: "Activity", label: "Activity", content: ["Recent activity"] },
-    ],
-  }, h),
+  h.submodel({
+    slotId: model.tabs.id,
+    model: model.tabs,
+    view: AccountTabs.view,
+    viewInputs: Stateful.Tabs.styledViewInputs({
+      selectedValue: model.selectedView,
+      ariaLabel: "Account views",
+      tabs: [
+        { value: "Overview", label: "Overview", content: ["Account overview"] },
+        { value: "Details", label: "Details", content: ["Account details"] },
+        { value: "Activity", label: "Activity", content: ["Recent activity"] },
+      ],
+    }, h),
+    toParentMessage: (message) => Message.GotTabsMessage({ message }),
+  }),
   h.div([h.Class(className(styles.catalogSidebar))], [Sidebar.view({
     header: [h.strong([], ["Acme"] )],
     groups: [{ label: "Workspace", items: [
@@ -289,7 +299,30 @@ const overlayDialog = (
   model: Model,
   h: HtmlBuilder<Message>,
 ): Html => {
-  const component = kind === "Dialog" ? Dialog : kind === "AlertDialog" ? AlertDialog : kind === "Sheet" ? Sheet : Drawer;
+  if (kind === "Dialog") return h.submodel({
+    slotId: model.dialog.id,
+    model: model.dialog,
+    view: Stateful.Dialog.view,
+    viewInputs: Stateful.Dialog.styledViewInputs({
+      title: "Dialog example",
+      description: "Edit your profile. Escape closes and restores focus to the trigger.",
+      content: ({ initialFocus }, h) => [
+        h.label([h.For("dialog-name")], ["Display name"]),
+        Input.view({
+          id: "dialog-name",
+          ariaLabel: "Display name",
+          value: model.name,
+          onInput: (value) => Message.ChangedName({ value }),
+          attributes: initialFocus,
+        }, h),
+      ],
+      footer: ({ closeButton }, h) => [
+        Button.view({ label: "Close", variant: "outline", attributes: closeButton }, h),
+      ],
+    }, h),
+    toParentMessage: (message) => Message.GotDialogMessage({ message }),
+  });
+  const component = kind === "AlertDialog" ? AlertDialog : kind === "Sheet" ? Sheet : Drawer;
   return component.view({
     id: `catalog-${kind.toLocaleLowerCase()}`,
     title: kind === "AlertDialog" ? "Delete project?" : `${kind} example`,
@@ -310,7 +343,9 @@ const overlaysAndMenus = (model: Model, h: HtmlBuilder<Message>): Html => {
   return section("Overlays, menus, and command", [
     h.div([h.Class(className(styles.catalogOverlayButtons))], [
       ...(["Dialog", "AlertDialog", "Sheet", "Drawer"] as const).map((kind) =>
-        Button.view({ label: kind, size: "sm", variant: "outline", onClick: toggleComponent(kind, true) }, h)),
+        Button.view({ label: kind, size: "sm", variant: "outline", onClick: kind === "Dialog"
+          ? Message.GotDialogMessage({ message: Stateful.Dialog.Message.RequestedOpen() })
+          : toggleComponent(kind, true) }, h)),
     ]),
     overlayDialog("Dialog", model, h),
     overlayDialog("AlertDialog", model, h),
@@ -362,14 +397,21 @@ const overlaysAndMenus = (model: Model, h: HtmlBuilder<Message>): Html => {
         onToggle: toggleComponent(`Menubar${label}`, model.openComponent !== `Menubar${label}`),
       })),
     }, h),
-    Command.view({
-      query: model.commandQuery,
-      onQueryChange: (value) => Message.ChangedCommandQuery({ value }),
-      items: [
-        { id: "profile", label: "Open profile", group: "Navigation", media: Icon.view({ icon: User, size: 15 }, h), onSelect: action("Open profile") },
-        { id: "settings", label: "Open settings", group: "Navigation", media: Icon.view({ icon: Settings, size: 15 }, h), onSelect: action("Open settings") },
-      ],
-    }, h),
+    h.submodel({
+      slotId: model.command.id,
+      model: model.command,
+      view: Stateful.Command.view,
+      viewInputs: {
+        ariaLabel: "Workspace commands",
+        items: [
+          { value: "profile", label: "Open profile", group: "Navigation", media: [Icon.view({ icon: User, size: 15 }, h)] },
+          { value: "admin", label: "Administration", group: "Navigation", isDisabled: true },
+          { value: "settings", label: "Open settings", keywords: ["preferences"], group: "Navigation", media: [Icon.view({ icon: Settings, size: 15 }, h)] },
+          { value: "publish", label: "Publish changes", group: "Actions" },
+        ],
+      },
+      toParentMessage: (message) => Message.GotCommandMessage({ message }),
+    }),
     Combobox.view({
       id: "catalog-combobox",
       value: model.commandQuery,

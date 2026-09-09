@@ -12,6 +12,12 @@ headless behavior remains the foundation for buttons, inputs, checkboxes,
 switches, fieldsets, and disclosures; other controls use native browser
 semantics and parent-owned state.
 
+For interactive tabs, modal dialogs, custom selects, and command palettes, use
+the `Stateful` namespace. These styled submodels integrate models, messages,
+commands, and focus behavior. The existing view-only APIs remain available for
+compatibility. Catalog coverage does not imply behavioral parity: see the
+[capability guide](docs/capabilities.md) and [stateful integration examples](docs/stateful.md).
+
 ## Setup
 
 Foldworks ships its StyleX expressions so applications can combine them with
@@ -155,17 +161,31 @@ Toolbar.view(
 );
 ```
 
-All catalog entries use the same namespace-style surface:
+Presentation helpers use the namespace-style surface:
 
 ```ts
-import { Alert, Dialog, Progress, Table, Tabs } from "@foldworks/ui";
+import { Alert, Progress } from "@foldworks/ui";
 
 Alert.view({ title: "Saved", description: "Your changes are live." }, h);
 Progress.view({ value: 72, ariaLabel: "Upload progress" }, h);
-Tabs.view({ id: "settings", value, tabs, onChange: Message.SelectedTab }, h);
 ```
 
-Stateful families with a Foldkit engine are also available under `Headless`. Use that
+Styled stateful families are available under `Stateful`. Embed them with
+`h.submodel` and forward child updates through `Update.foldChild`:
+
+```ts
+import { Stateful } from "@foldworks/ui";
+
+const AccountTabs = Stateful.Tabs.create<"overview" | "settings">();
+const tabsModel = Stateful.Tabs.init({ id: "account-tabs" });
+```
+
+The [integration guide](docs/stateful.md) includes complete tabs wiring and
+Dialog, Select, and Command usage. Dialog and Select support optional transitions
+that respect reduced motion. Select uses Foldkit's custom Listbox engine;
+`Select.control` and `NativeSelect.view` remain native browser controls.
+
+Unstyled Foldkit engines are available under `Headless`. Use that
 surface when an application needs the complete state machine, including focus
 management, keyboard navigation, floating-element anchoring, commands, and
 subscriptions:
@@ -177,6 +197,9 @@ const model = Headless.Dialog.init({ id: "edit-profile", isAnimated: true });
 const update = Headless.Dialog.update;
 const view = Headless.Dialog.view;
 ```
+
+Documentation is also published on the demo site at `/llms.txt`,
+`/docs/ui/setup.md`, `/docs/ui/stateful.md`, and `/docs/ui/capabilities.md`.
 
 `Icon.view` converts Lucide's framework-neutral icon data into Foldkit SVG
 nodes. Static icon imports remain tree-shakeable, decorative icons are hidden
@@ -202,6 +225,11 @@ const styles = stylex.create({
   },
 });
 ```
+
+Use matching foreground roles when choosing a surface: `surfaceForeground` for
+`surface`, `popoverForeground` for `popover`, `secondaryForeground` for
+`surfaceSubtle`, and `accentForeground` for `surfaceHover`. These use the existing
+theme variables and allow custom card and overlay palettes to differ from the canvas.
 
 ## Boundaries
 

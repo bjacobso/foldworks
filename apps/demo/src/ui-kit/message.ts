@@ -1,9 +1,14 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+import { Stateful } from "@foldworks/ui";
 
 import { Department, View } from "./model";
 
 export const Message = defineMessageUnion({
+  GotTabsMessage: { message: Stateful.Tabs.Message },
+  GotDialogMessage: { message: Stateful.Dialog.Message },
+  GotSelectMessage: { message: Stateful.Select.Message },
+  GotCommandMessage: { message: Stateful.Command.Message },
   ChangedName: { value: S.String },
   ChangedEmail: { value: S.String },
   ChangedNotes: { value: S.String },

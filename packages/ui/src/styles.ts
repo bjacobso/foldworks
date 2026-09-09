@@ -45,7 +45,7 @@ export const buttonStyles = stylex.create({
   },
   secondary: {
     backgroundColor: { default: colors.surfaceSubtle, ":hover": colors.surfaceHover },
-    color: colors.foreground,
+    color: { default: colors.secondaryForeground, ":hover": colors.accentForeground },
   },
   outline: {
     boxShadow: "var(--button-outline-shadow)",
@@ -181,7 +181,7 @@ export const fieldStyles = stylex.create({
     borderRadius: metrics.radiusMd,
     borderStyle: "solid",
     borderWidth: "1px",
-    color: colors.foreground,
+    color: "inherit",
     fontFamily: metrics.font,
     fontSize: "14px",
     minHeight: "32px",
@@ -390,12 +390,13 @@ export const disclosureStyles = stylex.create({
 export const panelStyles = stylex.create({
   root: {
     backgroundColor: colors.surface,
+    color: colors.surfaceForeground,
     borderRadius: "var(--radius-panel)",
     boxShadow: metrics.shadowPanel,
     overflow: "hidden",
   },
   header: { borderBottomColor: colors.border, borderBottomStyle: "solid", borderBottomWidth: "1px", padding: "16px" },
-  title: { color: colors.foreground, fontSize: "16px", fontWeight: 550, lineHeight: 1.35, margin: 0 },
+  title: { color: "inherit", fontSize: "16px", fontWeight: 550, lineHeight: 1.35, margin: 0 },
   description: { color: colors.foregroundMuted, fontSize: "14px", lineHeight: 1.45, marginBottom: 0, marginTop: "4px" },
   body: { padding: "16px" },
 });
