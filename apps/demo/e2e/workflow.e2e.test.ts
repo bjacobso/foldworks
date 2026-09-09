@@ -7,6 +7,7 @@ import { build, preview, type PreviewServer } from "vite";
 
 import { workbenchScenarios } from "./workbench.scenarios";
 import { dataGridEditingScenarios } from "./data-grid.scenarios";
+import { statefulUiScenarios } from "./stateful-ui.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
@@ -1204,4 +1205,5 @@ describe.sequential("structured workflow builder", () => {
 
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
+  statefulUiScenarios(() => page, appUrl, screenshot);
 });

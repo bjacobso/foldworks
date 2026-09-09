@@ -22,7 +22,7 @@ export const catalogStyles = stylex.create({
     borderRadius: radii.lg,
     borderStyle: "solid",
     borderWidth: "1px",
-    color: colors.foreground,
+    color: colors.surfaceForeground,
   },
   inset: {
     backgroundColor: colors.surfaceSubtle,
@@ -140,7 +140,7 @@ export const catalogStyles = stylex.create({
     borderRadius: radii.md,
     borderStyle: "solid",
     borderWidth: "1px",
-    color: colors.foreground,
+    color: "inherit",
     fontFamily: typography.fontFamily,
     fontSize: "14px",
     minHeight: "32px",

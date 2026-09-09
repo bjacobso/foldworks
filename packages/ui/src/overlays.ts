@@ -62,6 +62,7 @@ const dialogView = <Message>(
   ])],
 );
 
+/** @deprecated Use Stateful.Dialog for modal focus management and cleanup. */
 const dialog = <Message>(config: DialogConfig<Message>, h: HtmlBuilder<Message>): Html =>
   dialogView(config, h);
 

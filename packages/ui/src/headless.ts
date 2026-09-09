@@ -7,6 +7,7 @@ export * as Menu from "@foldkit/ui/menu";
 export * as Popover from "@foldkit/ui/popover";
 export * as RadioGroup from "@foldkit/ui/radioGroup";
 export * as Select from "@foldkit/ui/select";
+export * as Listbox from "@foldkit/ui/listbox";
 export * as Slider from "@foldkit/ui/slider";
 export * as Tabs from "@foldkit/ui/tabs";
 export * as Toast from "@foldkit/ui/toast";

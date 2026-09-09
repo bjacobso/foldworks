@@ -119,6 +119,7 @@ type CommandItem<Message> = Readonly<{
   onSelect: Message;
 }>;
 
+/** @deprecated Use Stateful.Command for keyboard selection and fuzzy search. */
 const command = <Message>(
   config: StyledConfig<Message> & Readonly<{
     query: string;

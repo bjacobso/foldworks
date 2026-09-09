@@ -2,12 +2,14 @@ import { foldkit } from '@foldkit/vite-plugin'
 import stylex from '@stylexjs/unplugin'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
+import { uiDocs } from './ui-docs.ts'
 
 export default defineConfig(({ mode }) => ({
   plugins:
     mode === 'test'
       ? []
       : [
+          uiDocs(),
           stylex.vite({
             dev: mode === 'development',
             runtimeInjection: false,

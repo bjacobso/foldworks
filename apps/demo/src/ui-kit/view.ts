@@ -472,6 +472,16 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
         ]),
         Badge.view({ label: "61 primitives", tone: "info" }, h),
       ]),
+      Panel.view({
+        title: "Interaction support",
+        description: "Tabs, Dialog, Custom department select, and Workspace commands below use styled Foldkit submodels.",
+        children: [
+          h.p([], ["Other catalog examples have different behavior limits. Check the capability guide when choosing a component."]),
+          h.a([h.Href("/docs/ui/capabilities.md"), h.Attribute("target", "_blank"), h.Attribute("rel", "noopener")], ["Component capabilities"]),
+          " · ",
+          h.a([h.Href("/docs/ui/stateful.md"), h.Attribute("target", "_blank"), h.Attribute("rel", "noopener")], ["Stateful integration examples"]),
+        ],
+      }, h),
       h.div([h.Class(className(styles.sectionGrid))], [
         h.div([h.Class(className(styles.wide))], [catalogView(model, h)]),
         buttonsPanel(h),
