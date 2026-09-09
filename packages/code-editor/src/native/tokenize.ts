@@ -1,8 +1,9 @@
 import { Schema as S } from "effect";
+import { tokenizeYamlLine } from "./yaml-tokenize";
 
 export const TokenKind = S.Literals(["plain", "keyword", "string", "number", "comment", "type", "property", "punctuation"]);
 export type TokenKind = typeof TokenKind.Type;
-export const LexState = S.Literals(["code", "comment", "template"]);
+export const LexState = S.Union([S.Literals(["code", "comment", "template", "yaml-single", "yaml-double"]), S.TemplateLiteral(["yaml-block:", S.Number])]);
 export type LexState = typeof LexState.Type;
 export const Token = S.Struct({ from: S.Number, to: S.Number, kind: TokenKind });
 export type Token = typeof Token.Type;
@@ -12,6 +13,7 @@ export const keywords = new Set("as async await break case catch class const con
 
 /** A deliberately small stateful lexer, not a JavaScript/TypeScript parser. */
 export const tokenizeLine = (text: string, language: string, incoming: LexState): Line => {
+  if (language === "yaml" || language === "yml") return tokenizeYamlLine(text, incoming);
   if (language === "text" || !["json", "javascript", "typescript", "jsx", "tsx"].includes(language)) {
     return { text, incoming: "code", outgoing: "code", tokens: [{ from: 0, to: text.length, kind: "plain" }] };
   }

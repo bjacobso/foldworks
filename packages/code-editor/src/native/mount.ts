@@ -174,7 +174,7 @@ export const ObserveInput = Mount.defineStream("ObserveNativeEditor", {
           : mod && event.key === "/" ? "comment"
           : mod && event.shiftKey && event.key.toLowerCase() === "k" ? "deleteLine"
           : event.altKey && event.shiftKey && event.key === "ArrowDown" ? "duplicate" : undefined;
-        if (action) { event.preventDefault(); apply(editingPlan(text, selectionOf(input), action, model.options.tabSize), action); }
+        if (action) { event.preventDefault(); apply(editingPlan(text, selectionOf(input), action, model.options.tabSize, ["yaml", "yml"].includes(model.document.languageId) ? "#" : "//"), action); }
         // Tab intentionally stays browser navigation; indentation has dedicated shortcuts.
       };
       const compositionStart = () => { composing = true; compositionId++; capturedBefore = selectionOf(input); emit(Message.Composition({ ...identity(), active: true })); };

@@ -91,7 +91,7 @@ const run = (model: Model, action: Action): Result => {
     const head = edits[0]!.from + edits[0]!.insert.length;
     return request(model, { edits, selection: { anchor: head, head }, kind: action });
   }
-  return request(model, { ...editingPlan(text, selection, action as EditingAction, model.options.tabSize), kind: action });
+  return request(model, { ...editingPlan(text, selection, action as EditingAction, model.options.tabSize, ["yaml", "yml"].includes(model.document.languageId) ? "#" : "//"), kind: action });
 };
 
 export const update = (model: Model, message: Message): Result => Message.match<Result>(message, {

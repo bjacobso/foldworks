@@ -93,10 +93,63 @@ pairs is rejected. Internal text uses LF; `normalizeText` converts external text
 
 ## Highlighting and validation
 
-JSON, JavaScript, and TypeScript use a small stateful lexer; unknown language IDs
+JSON, YAML, JavaScript, and TypeScript use a small stateful lexer; unknown language IDs
 fall back to plain text. This does not perform type checking or parse full JSX/TSX
 syntax. JSON syntax validation runs locally and shows squiggles and a navigable
 problems list. It does not validate JSON Schema.
+
+### JSON and YAML with an Effect Schema
+
+Wrap an implementation with `withSchema` and use the resulting `init` and `update`
+when composing your app. Its model, messages, view, and operations stay the same:
+
+```ts
+import { Schema as S } from "effect";
+import { CodeEditor } from "@foldworks/code-editor";
+import { withSchema, validate } from "@foldworks/code-editor/structured";
+
+const Configuration = S.Struct({
+  name: S.String.check(S.isMinLength(1)),
+  enabled: S.Boolean,
+  retries: S.Number.check(S.isInt(), S.isBetween({ minimum: 0, maximum: 10 })),
+});
+const ConfigurationEditor = withSchema(CodeEditor.implementation, Configuration);
+const editor = ConfigurationEditor.init({
+  id: "configuration",
+  uri: "file:///configuration.yaml",
+  languageId: "yaml", // Or "json"; "yml" is also accepted.
+  text: "name: Demo\nenabled: true\nretries: 3\n",
+});
+
+// Use ConfigurationEditor.update in Update.foldChild; keep CodeEditor.Model/Message.
+// You can also validate a document directly, independently of any editor:
+const diagnostics = validate(Configuration, editor.document);
+```
+
+Validation runs on initialization and document changes, including undo/redo,
+replacement, and language changes. It checks strict JSON syntax or a single YAML
+1.2 document before decoding the parsed value with the Effect Schema. All schema
+errors are collected; unknown properties are errors by default. Pass
+`{ onExcessProperty: "ignore" }` to either helper to allow them. Other languages
+are left alone. Schema transformations validate the encoded input without rewriting
+the source text or applying defaults to it.
+
+Errors point to field values and array elements using source offsets. Missing
+fields point to the nearest existing container, and paths through YAML aliases
+point to the alias. The problems list includes the schema path and supports jumping
+to its range. YAML comments, block scalars, and ordinary aliases are supported;
+cyclic aliases and excessive alias expansion produce errors. YAML mapping keys
+must be strings. The wrapper owns the `json` and `yaml` diagnostic sources and
+preserves other sources when applying results. Editing and saving remain available
+even when the document is invalid.
+
+The schema stays in the composition closure, outside the serializable Foldkit
+model. This helper accepts synchronous decoders without required Effect services;
+asynchronous checks belong in a host command or worker that returns versioned
+diagnostics. Parsing and decoding currently scan the complete document per edit.
+The separate `/structured` entry imports the `yaml` parser; the default editor and
+`/contracts` entries do not load it. The demo's JSON and YAML configuration examples
+share one schema; select either from **Example language** at `/code-editor`.
 
 External diagnostics use `Operation.SetDiagnostics({ uri, session, revision,
 languageId, source, diagnostics })`. Each issue has `from`, `to`, `severity`,

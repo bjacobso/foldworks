@@ -32,6 +32,10 @@
     "./contracts": {
       "types": "./dist/contracts.d.ts",
       "import": "./dist/contracts.js"
+    },
+    "./structured": {
+      "types": "./dist/structured.d.ts",
+      "import": "./dist/structured.js"
     }
   },
   "scripts": {
@@ -42,7 +46,8 @@
   },
   "dependencies": {
     "effect": "catalog:",
-    "foldkit": "catalog:"
+    "foldkit": "catalog:",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "typescript": "catalog:",

@@ -1,6 +1,8 @@
 import type { Page } from "playwright";
 import { expect, it } from "vitest";
 import type { CodeEditor } from "@foldworks/code-editor";
+import { jsonSample } from "../src/code-editor/model";
+import { yamlSample } from "../src/code-editor/configuration";
 
 const input = (page: Page) => page.getByRole("textbox", { name: "Working document", exact: true });
 const editor = (page: Page) => page.locator('[data-native-editor="native-working"]');
@@ -42,9 +44,46 @@ export const nativeEditorScenarios = (getPage: () => Page, appUrl: string, scree
     await expect.poll(() => editor(page).locator(".native-token--issue").count()).toBeGreaterThan(0);
     await editor(page).getByRole("list", { name: "Working document problems" }).getByRole("button").click();
     await expect.poll(async () => (await snapshot(page)).selection.head).toBeGreaterThan(0);
-    await input(page).fill('{"fixed": true}');
+    await input(page).fill(jsonSample);
     await expect.poll(() => editor(page).locator(".native-editor__problems").count()).toBe(0);
     await screenshot("native-editor-light");
+  });
+  it("native editor validates JSON and YAML against the same Effect Schema", async () => {
+    const page = await open();
+    const problems = editor(page).getByRole("list", { name: "Working document problems" });
+    await input(page).fill(jsonSample.replace('"retryAttempts": 3', '"retryAttempts": 20'));
+    await expect.poll(() => problems.getByRole("button").count()).toBe(1);
+    expect(await problems.textContent()).toContain("retryAttempts");
+    await problems.getByRole("button").click();
+    await expect.poll(async () => {
+      const model = await snapshot(page);
+      return model.document.text.slice(model.selection.anchor, model.selection.head);
+    }).toBe("20");
+    await editor(page).getByRole("button", { name: "Undo", exact: true }).click();
+    await expect.poll(() => editor(page).locator(".native-editor__problems").count()).toBe(0);
+    await page.getByLabel("Example language").selectOption("yaml");
+    await expect.poll(async () => (await snapshot(page)).document.languageId).toBe("yaml");
+    await expect.poll(async () => (await snapshot(page)).status).toBe("Ready");
+    expect(await editor(page).locator(".native-token--property").count()).toBeGreaterThan(2);
+    expect(await editor(page).locator(".native-editor__problems").count()).toBe(0);
+    await input(page).fill(yamlSample.replace("validation: true", 'validation: "yes"'));
+    await expect.poll(() => problems.getByRole("button").count()).toBe(1);
+    expect(await problems.textContent()).toContain("features.validation");
+    await problems.getByRole("button").click();
+    await expect.poll(async () => {
+      const model = await snapshot(page);
+      return model.document.text.slice(model.selection.anchor, model.selection.head);
+    }).toBe('"yes"');
+    await screenshot("native-editor-yaml-validation");
+    const sidebar = page.getByRole("complementary", { name: "Foldworks navigation" });
+    await sidebar.getByRole("link", { name: "Home", exact: true }).click();
+    await sidebar.getByRole("link", { name: "Code editor", exact: true }).click();
+    await expect.poll(() => problems.getByRole("button").count()).toBe(1);
+    expect(await problems.textContent()).toContain("features.validation");
+    await input(page).fill("features: [\n");
+    await expect.poll(() => problems.getByRole("button").count()).toBeGreaterThan(0);
+    await input(page).fill(yamlSample);
+    await expect.poll(() => editor(page).locator(".native-editor__problems").count()).toBe(0);
   });
   it("native editor handles rapid typing, own undo and redo, and Unicode input", async () => {
     const page = await open();

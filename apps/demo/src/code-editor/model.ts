@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 import { CodeEditor } from "@foldworks/code-editor";
-
+import { ConfigurationEditor } from "./configuration";
 
 export const jsonSample = `{
   "name": "Welcome to Foldworks",
@@ -32,7 +32,7 @@ export const Model = S.Struct({
 });
 export type Model = typeof Model.Type;
 export const init = (): Model => ({
-  editor: CodeEditor.init({ id: "native-working", uri: "file:///configuration.json", languageId: "json", text: jsonSample }),
+  editor: ConfigurationEditor.init({ id: "native-working", uri: "file:///configuration.json", languageId: "json", text: jsonSample }),
   reference: CodeEditor.init({ id: "native-reference", uri: "file:///configuration.ts", languageId: "typescript", text: typescriptSample, readOnly: true }),
   savedText: jsonSample, savedSession: 0, announcement: "Ready to edit.",
 });

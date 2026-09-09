@@ -31,7 +31,8 @@ and fold `CodeEditor.update` using `Update.foldChild`, as in the package
 README. `OutMessage.ChangedDocument` supplies a document snapshot for persistence
 or validation. `RejectedOperation` reports commands that could not be applied.
 No registration, custom element, or parent subscription is needed. Importing the
-entry does not access browser globals. The package depends only on Foldkit and Effect.
+entry does not access browser globals. The core editor imports Foldkit and Effect;
+the separate `/structured` entry uses the `yaml` parser for schema validation.
 
 The native API has `Message.Run({ action })`, with actions such as `undo`, `redo`,
 `indent`, `outdent`, `comment`, `duplicate`, `deleteLine`, `format`, `findNext`,
@@ -91,12 +92,12 @@ this plumbing but cannot establish real IME compatibility.
 | Document | LF normalization, revision/session identity, validated UTF-16 range edits | Full strings; no rope or piece tree |
 | Selection | Browser caret, native selection, backward ranges, selection restoration | One range; model columns count UTF-16 units |
 | History | Inverse range edits, grouped typing/deletion/composition, undo/redo branching | 100 groups, up to 100 steps per group; no byte budget |
-| Highlighting | JSON/JS/TS lexer; comments, strings, numbers, keywords; multiline lexical state | No parser, template interpolation, JSX structure, regex literals, or semantic tokens |
+| Highlighting | JSON/YAML/JS/TS lexer; comments, strings, numbers, keywords; multiline lexical state | Approximate coloring; no template interpolation, JSX structure, regex literals, or semantic tokens |
 | Rendering | Highlighted DOM; fixed-height visible lines with overscan when unwrapped | Browser still lays out the full textarea; wrapped mode renders all logical lines |
 | Editing | Auto pairs, smart Enter, indent/outdent, comment toggle, duplicate/delete line | Heuristics, not language-aware structural editing |
 | Find | Literal, case-sensitive/insensitive, next/previous, replace and undo | First 1,000 matches highlighted; navigation and replacement scan all matches |
 | Completion | Keywords and document-word prefixes, keyboard and button selection | No types, member lookup, snippets, ranking, or server provider |
-| Diagnostics | JSON syntax checks, source-scoped external batches, squiggles and problem navigation | JSON.parse location quality varies; no schema/type checking or LSP transport |
+| Diagnostics | JSON syntax checks; optional Effect Schema validation for JSON/YAML; source-scoped batches, squiggles and problem navigation | Synchronous full-document validation; no type checking or LSP transport |
 | Accessibility | Labeled textarea, native text selection, keyboard controls, Tab exits, forced-color fallback | Real screen-reader, Safari, mobile and IME checks still needed |
 
 Tab navigates normally. Ctrl/Cmd + ] and [ indent/outdent; Ctrl/Cmd + / toggles
@@ -108,7 +109,9 @@ provides discoverable equivalents for the most common commands.
 External diagnostics use `Message.SetDiagnostics({ uri, session, revision,
 languageId, source, diagnostics })`, with the same range/severity shape as the
 shared contracts. Old results are discarded and new edits clear previous results.
-The native entry runs JSON syntax validation synchronously. For costly validation,
+The native entry runs JSON syntax validation synchronously. The `/structured`
+entry decorates any implementation with Effect Schema validation for JSON/YAML,
+mapping schema paths to source ranges; see the README for `withSchema`. For costly validation,
 react to `ChangedDocument` in the parent, debounce/cancel a worker or server request,
 and return a batch tagged with the original document identity. The editor
 does not bundle an asynchronous validator runner.

@@ -168,6 +168,9 @@ importers:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       typescript:
         specifier: 'catalog:'

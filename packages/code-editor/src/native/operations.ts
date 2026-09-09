@@ -46,7 +46,7 @@ const replace = (selection: Selection, insert: string, caret?: number): EditPlan
   return { edits: [{ from, to, insert }], selection: collapsed(caret ?? from + insert.length) };
 };
 
-export const editingPlan = (text: string, selection: Selection, action: EditingAction, tabSize = 2): EditPlan => {
+export const editingPlan = (text: string, selection: Selection, action: EditingAction, tabSize = 2, commentPrefix = "//"): EditPlan => {
   if (!validSelection(text, selection)) throw new Error("Invalid selection.");
   const { from, to } = bounds(selection);
   const start = from === 0 ? 0 : text.lastIndexOf("\n", from - 1) + 1;
@@ -72,7 +72,7 @@ export const editingPlan = (text: string, selection: Selection, action: EditingA
     const last = end < text.length ? end + 1 : end;
     return { edits: [{ from: first, to: last, insert: "" }], selection: collapsed(Math.min(first, text.length - (last - first))) };
   }
-  const uncomment = lines.every((line) => !line.trim() || /^\s*\/\//.test(line));
+  const uncomment = lines.every((line) => !line.trim() || line.trimStart().startsWith(commentPrefix));
   let at = start;
   const edits: TextEdit[] = [];
   for (const line of lines) {
@@ -83,7 +83,7 @@ export const editingPlan = (text: string, selection: Selection, action: EditingA
     } else if (line.trim()) {
       const whitespace = /^\s*/.exec(line)![0].length;
       const position = at + whitespace;
-      edits.push(uncomment ? { from: position, to: position + (line.slice(whitespace).startsWith("// ") ? 3 : 2), insert: "" } : { from: position, to: position, insert: "// " });
+      edits.push(uncomment ? { from: position, to: position + commentPrefix.length + (line.slice(whitespace + commentPrefix.length).startsWith(" ") ? 1 : 0), insert: "" } : { from: position, to: position, insert: `${commentPrefix} ` });
     }
     at += line.length + 1;
   }
