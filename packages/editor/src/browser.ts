@@ -111,6 +111,7 @@ class Surface {
   private composition: { id: string; revision: number } | undefined;
   private compositionTimer: ReturnType<typeof setTimeout> | undefined;
   private dragged: string | undefined;
+  private blockActions: string | undefined;
   private destroyed = false;
   private selectionMenu: HTMLElement | undefined;
   private observer: MutationObserver;
@@ -153,6 +154,21 @@ class Surface {
     });
     listen(host, "keydown", (event: KeyboardEvent) => this.keydown(event));
     listen(host, "click", (event: MouseEvent) => this.click(event));
+    const closeOutsideActions = (event: Event) => {
+      const controls = this.blockActions
+        ? this.nodes
+            .get(this.blockActions)
+            ?.dom.querySelector(".fw-editor__block-tools")
+        : undefined;
+      if (controls && !controls.contains(event.target as Node))
+        this.setBlockActions();
+    };
+    listen(document, "pointerdown", closeOutsideActions);
+    listen(document, "focusin", closeOutsideActions);
+    listen(host.closest(".fw-editor") ?? host, "scroll", () =>
+      this.positionBlockActions(),
+    );
+    listen(window, "resize", () => this.positionBlockActions());
     listen(host, "paste", (event: ClipboardEvent) => {
       if (!this.model.editable) return;
       event.preventDefault();
@@ -170,6 +186,8 @@ class Surface {
         return;
       }
       this.dragged = handle.dataset.dragBlock;
+      this.setBlockActions();
+      this.nodes.get(this.dragged!)?.dom.setAttribute("data-dragging", "true");
       event.dataTransfer?.setData("text/x-foldworks-block", this.dragged ?? "");
       if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
     });
@@ -203,10 +221,12 @@ class Surface {
         );
       this.dragged = undefined;
       this.clearDrop();
+      this.clearDragging();
     });
     listen(host, "dragend", () => {
       this.dragged = undefined;
       this.clearDrop();
+      this.clearDragging();
     });
     this.observer = new MutationObserver(() => {
       if (this.composing || this.reconciliationScheduled) return;
@@ -353,6 +373,15 @@ class Surface {
     this.input(kind, event.data ?? "", selection);
   }
   private keydown(event: KeyboardEvent) {
+    if (event.key === "Escape" && this.blockActions) {
+      event.preventDefault();
+      const handle = this.nodes
+        .get(this.blockActions)
+        ?.dom.querySelector<HTMLButtonElement>("[data-drag-block]");
+      this.setBlockActions();
+      handle?.focus({ preventScroll: true });
+      return;
+    }
     if (
       this.composing ||
       event.isComposing ||
@@ -398,6 +427,7 @@ class Surface {
     if (event.key === "Escape") {
       this.dragged = undefined;
       this.clearDrop();
+      this.clearDragging();
       if (this.model.slashOpen) {
         event.preventDefault();
         this.send(Message.ToggleSlash());
@@ -421,14 +451,34 @@ class Surface {
   private click(event: MouseEvent) {
     const element = event.target as HTMLElement;
     if (element.closest("a") && this.model.editable) event.preventDefault();
+    const handle = element.closest<HTMLButtonElement>("[data-drag-block]");
+    if (handle && this.model.editable) {
+      event.preventDefault();
+      const id = handle.dataset.dragBlock;
+      this.setBlockActions(
+        this.blockActions === id ? undefined : id,
+        event.detail === 0,
+      );
+      return;
+    }
     const control = element.closest<HTMLButtonElement>("[data-block-action]");
     if (control?.dataset.id && this.model.editable) {
+      event.preventDefault();
       const id = control.dataset.id;
       const action = control.dataset.blockAction;
+      this.setBlockActions();
       if (action === "up" || action === "down")
-        this.send(Message.Move({ id, direction: action }));
-      else if (action === "duplicate") this.send(Message.Duplicate({ id }));
-      else if (action === "delete") this.send(Message.DeleteBlock({ id }));
+        this.send(Message.Move({ id, direction: action }), false);
+      else if (action === "duplicate")
+        this.send(Message.Duplicate({ id }), false);
+      else if (action === "delete")
+        this.send(Message.DeleteBlock({ id }), false);
+      const nextHandle = this.nodes
+        .get(id)
+        ?.dom.querySelector<HTMLButtonElement>("[data-drag-block]");
+      if (nextHandle) nextHandle.focus({ preventScroll: true });
+      else this.restoreSelection();
+      return;
     }
     const task = element.closest<HTMLElement>("[data-task-id]");
     if (task && this.model.editable) {
@@ -495,6 +545,92 @@ class Surface {
     this.host
       .querySelectorAll<HTMLElement>("[data-drop]")
       .forEach((node) => delete node.dataset.drop);
+  }
+  private clearDragging() {
+    this.host
+      .querySelectorAll<HTMLElement>("[data-dragging]")
+      .forEach((node) => delete node.dataset.dragging);
+  }
+  private setBlockActions(id?: string, focus = false) {
+    if (this.blockActions && this.blockActions !== id) {
+      const previous = this.nodes.get(this.blockActions)?.dom;
+      previous?.removeAttribute("data-actions-open");
+      previous
+        ?.querySelector("[data-drag-block]")
+        ?.setAttribute("aria-expanded", "false");
+      const panel = previous?.querySelector<HTMLElement>(
+        ".fw-editor__block-actions",
+      );
+      if (panel) panel.hidden = true;
+    }
+    this.blockActions = id;
+    if (!id) return;
+    const record = this.nodes.get(id);
+    const panel = record?.dom.querySelector<HTMLElement>(
+      ".fw-editor__block-actions",
+    );
+    if (!record || !panel || !this.model.editable) {
+      this.setBlockActions();
+      return;
+    }
+    const index = this.model.document.blocks.findIndex(
+      (node) => node.id === id,
+    );
+    const label = `${this.registry.get(record.node.type)!.label} · Block ${index + 1}`;
+    const title = panel.querySelector("strong")!;
+    if (title.textContent !== label) title.textContent = label;
+    const preview = panel.querySelector("p")!;
+    const description = (
+      record.node.attrs.label ||
+      walk([record.node]).map(plainText).join(" ").trim() ||
+      "Empty block"
+    ).slice(0, 80);
+    if (preview.textContent !== description) preview.textContent = description;
+    panel.setAttribute("aria-label", `${label} actions`);
+    panel.querySelector<HTMLButtonElement>(
+      '[data-block-action="up"]',
+    )!.disabled = index === 0;
+    panel.querySelector<HTMLButtonElement>(
+      '[data-block-action="down"]',
+    )!.disabled = index === this.model.document.blocks.length - 1;
+    record.dom.setAttribute("data-actions-open", "true");
+    record.dom
+      .querySelector("[data-drag-block]")
+      ?.setAttribute("aria-expanded", "true");
+    panel.hidden = false;
+    if (this.selectionMenu) this.selectionMenu.hidden = true;
+    this.positionBlockActions();
+    if (focus)
+      panel
+        .querySelector<HTMLButtonElement>("button:not(:disabled)")
+        ?.focus({ preventScroll: true });
+  }
+  private positionBlockActions() {
+    if (!this.blockActions) return;
+    const block = this.nodes.get(this.blockActions)?.dom;
+    const controls = block?.querySelector<HTMLElement>(
+      ".fw-editor__block-tools",
+    );
+    const panel = controls?.querySelector<HTMLElement>(
+      ".fw-editor__block-actions",
+    );
+    if (!controls || !panel) return;
+    const editor = this.host.closest(".fw-editor");
+    const frame = editor?.getBoundingClientRect();
+    const toolbar = editor
+      ?.querySelector(".fw-editor__toolbar")
+      ?.getBoundingClientRect();
+    const top = Math.max(0, frame?.top ?? 0, toolbar?.bottom ?? 0) + 8;
+    const bottom =
+      Math.min(window.innerHeight, frame?.bottom ?? window.innerHeight) - 8;
+    const anchor = controls.getBoundingClientRect();
+    if (anchor.bottom < top || anchor.top > bottom) {
+      this.setBlockActions();
+      return;
+    }
+    panel.style.maxHeight = `${Math.max(44, bottom - top)}px`;
+    const y = Math.max(top, Math.min(anchor.top, bottom - panel.offsetHeight));
+    panel.style.top = `${y - anchor.top}px`;
   }
   private render(focus: boolean) {
     if (this.composing || this.destroyed) return;
@@ -570,22 +706,35 @@ class Surface {
                 icon.append(dot);
               }
             grip.append(icon);
-            grip.setAttribute("aria-label", `Drag ${definition.label} block`);
+            grip.setAttribute(
+              "aria-label",
+              `${definition.label} block actions`,
+            );
+            grip.setAttribute("aria-expanded", "false");
+            grip.title = `Click for ${definition.label.toLowerCase()} actions; drag to move`;
             controls.append(grip);
+            const panel = document.createElement("div");
+            panel.className = "fw-editor__block-actions";
+            panel.hidden = true;
+            panel.setAttribute("role", "group");
+            panel.append(
+              document.createElement("strong"),
+              document.createElement("p"),
+            );
             for (const [action, label] of [
-              ["up", "↑"],
-              ["down", "↓"],
-              ["duplicate", "+"],
-              ["delete", "×"],
+              ["up", "Move up"],
+              ["down", "Move down"],
+              ["duplicate", "Duplicate"],
+              ["delete", "Delete"],
             ]) {
               const button = document.createElement("button");
               button.type = "button";
               button.dataset.blockAction = action;
               button.dataset.id = node.id;
               button.textContent = label!;
-              button.setAttribute("aria-label", `${action} block`);
-              controls.append(button);
+              panel.append(button);
             }
+            controls.append(panel);
             dom.append(controls);
           }
           if (definition.view) {
@@ -715,6 +864,7 @@ class Surface {
         record.dom.remove();
         this.nodes.delete(id);
       }
+    if (this.blockActions) this.setBlockActions(this.blockActions);
     if (
       focus &&
       this.model.editable &&
@@ -763,6 +913,7 @@ class Surface {
     if (!menu) return;
     const selection = document.getSelection();
     const show =
+      !this.blockActions &&
       this.model.editable &&
       !this.model.sourceOpen &&
       !this.model.linkOpen &&

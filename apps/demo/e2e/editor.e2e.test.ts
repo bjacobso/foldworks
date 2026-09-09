@@ -174,16 +174,14 @@ describe.sequential("native document editor", () => {
           nodes.map((node) => (node as HTMLElement).dataset.topBlock),
         );
     const before = await ids();
-    await project.hover();
-    await project
-      .getByRole("button", { name: "up block", exact: true })
-      .click();
+    await project.locator("[data-drag-block]").click();
+    await project.getByRole("button", { name: "Move up", exact: true }).click();
     expect(await ids()).not.toEqual(before);
     await page.getByRole("button", { name: "Undo", exact: true }).click();
     await expect.poll(ids).toEqual(before);
-    await project.hover();
+    await project.locator("[data-drag-block]").click();
     await project
-      .getByRole("button", { name: "duplicate block", exact: true })
+      .getByRole("button", { name: "Duplicate", exact: true })
       .click();
     await expect
       .poll(() => page.getByRole("textbox", { name: "Project label" }).count())
@@ -321,6 +319,78 @@ describe.sequential("native document editor", () => {
     expect(await first.locator("[data-text-id]").textContent()).toBe(
       "First 0 changed",
     );
+  });
+
+  it("keeps labeled block actions open across pointer movement and acts on the outlined block", async () => {
+    await source("Alpha\n\nBeta\n\nGamma");
+    const blocks = page.locator("[data-top-block]");
+    const handle = blocks.nth(1).locator("[data-drag-block]");
+    const panel = page.getByRole("group", {
+      name: "Text · Block 2 actions",
+      exact: true,
+    });
+    await handle.click();
+    await page.mouse.move(10, 10);
+    expect(await panel.isVisible()).toBe(true);
+    expect(await panel.locator("p").textContent()).toBe("Beta");
+    expect(await page.locator("[data-actions-open]").count()).toBe(1);
+    expect(await blocks.nth(1).getAttribute("data-actions-open")).toBe("true");
+    expect(
+      await blocks
+        .nth(1)
+        .evaluate((node) => getComputedStyle(node).outlineWidth),
+    ).toBe("2px");
+    await panel.getByRole("button", { name: "Duplicate", exact: true }).click();
+    await expect
+      .poll(() => page.locator("[data-text-id]").allTextContents())
+      .toEqual(["Alpha", "Beta", "Beta", "Gamma"]);
+    expect(await page.locator("[data-actions-open]").count()).toBe(0);
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await handle.focus();
+    await page.keyboard.press("Enter");
+    expect(
+      await panel
+        .getByRole("button", { name: "Move up", exact: true })
+        .evaluate((node) => node === document.activeElement),
+    ).toBe(true);
+    await page.keyboard.press("Escape");
+    expect(await panel.isVisible()).toBe(false);
+    expect(
+      await handle.evaluate((node) => node === document.activeElement),
+    ).toBe(true);
+    await handle.click();
+    await blocks.first().locator("[data-text-id]").click();
+    expect(await panel.isVisible()).toBe(false);
+    await blocks.first().locator("[data-drag-block]").click();
+    expect(
+      await blocks
+        .first()
+        .getByRole("button", { name: "Move up", exact: true })
+        .isDisabled(),
+    ).toBe(true);
+  });
+
+  it("fits block action targets and their panel on a narrow screen", async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await source("Alpha\n\nBeta");
+    const handle = page.locator("[data-drag-block]").first();
+    const target = await handle.boundingBox();
+    expect(target!.width).toBeGreaterThanOrEqual(44);
+    expect(target!.height).toBeGreaterThanOrEqual(44);
+    await handle.click();
+    const panel = page.getByRole("group", {
+      name: "Text · Block 1 actions",
+      exact: true,
+    });
+    const bounds = await panel.boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
+    await panel.getByRole("button", { name: "Move down", exact: true }).click();
+    await expect
+      .poll(() => page.locator("[data-text-id]").allTextContents())
+      .toEqual(["Beta", "Alpha"]);
   });
 
   it("moves a block through native dragging and restores it on undo", async () => {

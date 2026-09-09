@@ -143,6 +143,8 @@ limited to 1 MB.
   deletion, list-item split/empty-item exit, Tab/Shift+Tab indent/outdent, and bounded undo/redo with typing groups.
 - Top-level drag handles and keyboard-accessible move up/down, duplicate, and
   delete controls. Lists and containers move as units. Duplicates get fresh IDs.
+  Click a handle to open labeled actions with a block preview and target outline;
+  the panel stays open until an action, outside click, or Escape.
 - `.md` import, export/download, source Apply/Cancel, and read-only mode.
 - Native Foldkit custom block chrome and semantic token-based styling.
 
