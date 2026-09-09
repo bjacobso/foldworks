@@ -125,6 +125,7 @@ describe.sequential("structured workflow builder", () => {
       "Home",
       "Workers workbench",
       "@foldworks/ui",
+      "Document editor",
       "Data grid",
       "Query builder",
       "Form builder",

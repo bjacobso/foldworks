@@ -1,3 +1,4 @@
+@import "@foldworks/editor/styles.css";
 @import "@foldworks/ui/base.css";
 @import "@foldworks/ui/themes/neutral.css";
 @import "@foldworks/ui/themes/zinc.css";
@@ -17,4 +18,52 @@ body {
   height: 100%;
   margin: 0;
   overscroll-behavior: none;
+}
+
+.editor-demo-project {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  background: var(--card);
+}
+.editor-demo-project__icon {
+  padding: 10px 15px;
+  border-radius: 8px;
+  background: var(--muted);
+  font-size: 24px;
+}
+.editor-demo-project > div {
+  flex: 1;
+  min-width: 0;
+}
+.editor-demo-project small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+}
+.editor-demo-project input {
+  width: 100%;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+  border: none;
+}
+.editor-demo-project select {
+  max-width: 120px;
+}
+@media (max-width: 640px) {
+  .editor-demo-project {
+    flex-wrap: wrap;
+  }
+  .editor-demo-project__icon {
+    display: none;
+  }
+  .editor-demo-project > div {
+    min-width: 140px;
+  }
 }

@@ -4,13 +4,14 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Home" | "Workbench" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
+export type Demo = "Home" | "Editor" | "Workbench" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
 
 export const AppRoute = defineRouteUnion({
   Home: {},
+  Editor: {},
   Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
   DataGrid: {},
@@ -69,7 +70,10 @@ export const pdfAnnotatorRouter = pipe(
   Route.mapTo(AppRoute.PdfAnnotator),
 );
 
+export const editorRouter = pipe(Route.literal("editor"), Route.mapTo(AppRoute.Editor));
+
 const routeParser = Route.oneOf(
+  editorRouter,
   workflowRouter,
   workbenchRouter,
   dataGridRouter,
@@ -88,6 +92,7 @@ export const urlToAppRoute = Route.parseUrlWithFallback(
 export const demoFromRoute = (route: AppRoute): Demo => {
   switch (route._tag) {
     case "Home": return "Home";
+    case "Editor": return "Editor";
     case "Workbench": return "Workbench";
     case "DataGrid": return "DataGrid";
     case "FormBuilder": return "FormBuilder";

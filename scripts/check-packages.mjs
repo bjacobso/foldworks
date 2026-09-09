@@ -177,9 +177,11 @@ export default defineConfig({
     join(consumerDirectory, "src", "main.ts"),
     `import "@foldworks/ui/base.css";
 import "@foldworks/ui/themes/neutral.css";
+import "@foldworks/editor/styles.css";
 import "@foldworks/data-grid/styles.css";
 import "@foldworks/pdf-annotator/styles.css";
 
+import * as Editor from "@foldworks/editor";
 import * as DataGrid from "@foldworks/data-grid";
 import * as FormBuilder from "@foldworks/form-builder";
 import * as History from "@foldworks/history";
@@ -191,7 +193,7 @@ import * as UiIcon from "@foldworks/ui/icon";
 import * as UiTokens from "@foldworks/ui/tokens.stylex";
 import * as Workflow from "@foldworks/workflow";
 
-const modules = [DataGrid, FormBuilder, History, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
+const modules = [Editor, DataGrid, FormBuilder, History, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
 const app = document.querySelector<HTMLElement>("#app");
 if (app === null) throw new Error("Missing smoke-test mount point.");
 app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.keys(module).length, 0) + " Foldworks exports";

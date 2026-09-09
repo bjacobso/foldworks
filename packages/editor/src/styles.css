@@ -1,0 +1,417 @@
+.fw-editor {
+  color: var(--foreground);
+  background: var(--background);
+  height: 100%;
+  overflow: auto;
+  padding: 32px clamp(16px, 4vw, 64px) 64px;
+  font-family: inherit;
+}
+.fw-editor__header {
+  max-width: 1060px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.fw-editor__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+.fw-editor__header h1 {
+  font-size: 28px;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+  margin: 10px 0;
+}
+.fw-editor__header p {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.fw-editor__document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 450px;
+}
+.fw-editor__button,
+.fw-editor select,
+.fw-editor__block-tools button {
+  font: inherit;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+.fw-editor__button:hover,
+.fw-editor__button[aria-pressed="true"],
+.fw-editor__block-tools button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.fw-editor button:disabled,
+.fw-editor select:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.fw-editor :is(button, select, input, textarea, a):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.fw-editor__paper {
+  position: relative;
+  max-width: 1060px;
+  margin: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 3px 12px #00000006;
+}
+.fw-editor__toolbar {
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  background: var(--card);
+  position: sticky;
+  top: -32px;
+  z-index: 3;
+}
+.fw-editor__toolbar .fw-editor__button {
+  border-color: transparent;
+}
+.fw-editor__separator {
+  height: 20px;
+  width: 1px;
+  margin: 0 4px;
+  background: var(--border);
+}
+.fw-editor__content {
+  min-height: 480px;
+  padding: 44px clamp(28px, 6vw, 100px) 80px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.fw-editor__content:focus-visible {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+.fw-editor__block {
+  position: relative;
+}
+.fw-editor__block[data-top-block] {
+  margin: 0 0 16px;
+}
+.fw-editor__node-content {
+  margin: 0;
+}
+.fw-editor__content p {
+  min-height: 1.8em;
+}
+.fw-editor__content :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+  margin: 0.6em 0 0.4em;
+}
+.fw-editor__content h1 {
+  font-size: 32px;
+}
+.fw-editor__content h2 {
+  font-size: 25px;
+}
+.fw-editor__content h3 {
+  font-size: 20px;
+}
+.fw-editor__content strong {
+  font-weight: 700;
+}
+.fw-editor__content em {
+  font-style: italic;
+}
+.fw-editor__content s {
+  text-decoration: line-through;
+}
+.fw-editor__content a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.fw-editor__content :is(code, pre) {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  background: var(--muted);
+  border-radius: 5px;
+}
+.fw-editor__content code {
+  padding: 2px 4px;
+}
+.fw-editor__content pre {
+  padding: 18px;
+  white-space: pre-wrap;
+  tab-size: 2;
+}
+.fw-editor__content blockquote {
+  padding: 4px 20px;
+  border-left: 3px solid var(--border);
+  color: var(--muted-foreground);
+}
+.fw-editor__content ul {
+  list-style-type: disc;
+  padding-left: 24px;
+}
+.fw-editor__content ol {
+  list-style-type: decimal;
+  padding-left: 24px;
+}
+.fw-editor__content li {
+  display: list-item;
+  margin: 4px 0;
+}
+.fw-editor__content li p {
+  margin: 0;
+}
+.fw-editor__block--callout {
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--card));
+}
+.fw-editor__block--callout[data-tone="warning"] {
+  background: color-mix(in srgb, orange 8%, var(--card));
+}
+.fw-editor__block--callout[data-tone="success"] {
+  background: color-mix(in srgb, green 8%, var(--card));
+}
+.fw-editor__block--taskList > ul {
+  list-style: none;
+}
+.fw-editor__content [data-task-id] {
+  position: absolute;
+  left: -24px;
+  top: 2px;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  cursor: pointer;
+}
+.fw-editor__content hr {
+  height: 1px;
+  border: 0;
+  background: var(--border);
+  margin: 24px 0;
+}
+.fw-editor__block-tools {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 4px);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  z-index: 2;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.fw-editor__block:hover > .fw-editor__block-tools,
+.fw-editor__block-tools:focus-within {
+  opacity: 1;
+}
+.fw-editor__block-tools button {
+  padding: 0 4px;
+  min-width: 22px;
+  height: 23px;
+  font-size: 14px;
+  border: 0;
+}
+.fw-editor__block-tools button[draggable] {
+  cursor: grab;
+}
+.fw-editor__block[data-drop="before"]::before,
+.fw-editor__block[data-drop="after"]::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary);
+}
+.fw-editor__block[data-drop="before"]::before {
+  top: -8px;
+}
+.fw-editor__block[data-drop="after"]::after {
+  bottom: -8px;
+}
+.fw-editor__custom {
+  white-space: normal;
+}
+.fw-editor__custom input {
+  max-width: 100%;
+}
+.fw-editor__source,
+.fw-editor__export {
+  max-width: 1060px;
+  margin: auto;
+  padding: 22px;
+}
+.fw-editor__source textarea,
+.fw-editor__export textarea {
+  display: block;
+  width: 100%;
+  min-height: 400px;
+  margin: 12px 0;
+  padding: 18px;
+  font:
+    13px/1.8 ui-monospace,
+    monospace;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  resize: vertical;
+}
+.fw-editor__source button {
+  margin-right: 8px;
+}
+.fw-editor__export h2 {
+  margin: 0 0 16px;
+}
+.fw-editor__link {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.fw-editor__link input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px;
+  background: var(--card);
+  color: inherit;
+  border: 1px solid var(--border);
+}
+.fw-editor__slash {
+  position: absolute;
+  top: 64px;
+  right: 20px;
+  z-index: 5;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 8px 30px #0002;
+  width: 220px;
+  display: grid;
+  gap: 5px;
+}
+.fw-editor__slash strong {
+  font-size: 12px;
+  padding: 5px;
+}
+.fw-editor__slash button {
+  text-align: left;
+}
+.fw-editor__selection-tools {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: 0 4px 18px #0002;
+}
+.fw-editor__selection-tools[hidden] {
+  display: none;
+}
+.fw-editor__selection-tools button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.fw-editor__selection-tools button:hover {
+  background: var(--accent);
+}
+.fw-editor__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.fw-editor__diagnostics {
+  max-width: 1060px;
+  margin: 16px auto;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--destructive);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.fw-editor__file {
+  position: relative;
+  overflow: hidden;
+}
+.fw-editor__file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+.fw-editor__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .fw-editor {
+    padding: 20px 8px;
+  }
+  .fw-editor__content {
+    padding: 24px 20px 50px;
+  }
+  .fw-editor__block-tools {
+    position: static;
+    flex-direction: row;
+    width: fit-content;
+    margin-bottom: 8px;
+    opacity: 1;
+  }
+  .fw-editor__block-tools button {
+    min-width: 44px;
+    height: 44px;
+  }
+  .fw-editor__content[aria-readonly="true"] .fw-editor__block-tools {
+    display: none;
+  }
+  .fw-editor__toolbar {
+    top: -20px;
+  }
+  .fw-editor__footer {
+    flex-direction: column;
+  }
+}

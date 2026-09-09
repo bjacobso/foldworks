@@ -17,6 +17,7 @@ import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
+  editorRouter,
   dataGridRouter,
   formBuilderPath,
   pdfAnnotatorRouter,
@@ -35,6 +36,7 @@ type Package = Readonly<{
 }>;
 
 const packages: ReadonlyArray<Package> = [
+  { name: "@foldworks/editor", category: "Application primitive", description: "Native rich-text editing, Markdown, and extensible document blocks.", href: editorRouter(), icon: FileText },
   {
     name: "@foldworks/ui",
     category: "Foundation",
