@@ -17,6 +17,7 @@ import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
+  codeEditorRouter,
   dataGridRouter,
   formBuilderPath,
   pdfAnnotatorRouter,
@@ -48,6 +49,13 @@ const packages: ReadonlyArray<Package> = [
     description: "Responsive application chrome with controlled navigation state.",
     href: "/",
     icon: PanelLeft,
+  },
+  {
+    name: "@foldworks/code-editor",
+    category: "Application primitive",
+    description: "Code editing, syntax highlighting, and live diagnostics in a versioned document.",
+    href: codeEditorRouter(),
+    icon: Braces,
   },
   {
     name: "@foldworks/data-grid",

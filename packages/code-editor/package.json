@@ -1,0 +1,56 @@
+{
+  "name": "@foldworks/code-editor",
+  "version": "0.0.0",
+  "description": "A native Foldkit code editor with implementation-independent document and operation contracts.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NATIVE.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/code-editor"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "import": "./dist/contracts.js"
+    },
+    "./structured": {
+      "types": "./dist/structured.d.ts",
+      "import": "./dist/structured.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "effect": "catalog:",
+    "foldkit": "catalog:",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

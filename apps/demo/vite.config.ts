@@ -27,6 +27,7 @@ export default defineConfig(({ mode }) => ({
     entries: ['src/entry.ts'],
     exclude: [
       '@foldkit/ui',
+      '@foldworks/code-editor',
       '@foldworks/data-grid',
       '@foldworks/form-builder',
       '@foldworks/query-builder',

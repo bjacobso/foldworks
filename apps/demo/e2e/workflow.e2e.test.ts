@@ -8,6 +8,7 @@ import { build, preview, type PreviewServer } from "vite";
 import { workbenchScenarios } from "./workbench.scenarios";
 import { dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
+import { nativeEditorScenarios } from "./native-editor.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
@@ -125,6 +126,7 @@ describe.sequential("structured workflow builder", () => {
       "Home",
       "Workers workbench",
       "@foldworks/ui",
+      "Code editor",
       "Data grid",
       "Query builder",
       "Form builder",
@@ -362,7 +364,9 @@ describe.sequential("structured workflow builder", () => {
     const keyboardHandle = page.locator('[data-draggable-id="query-rule:rule-5"]');
     await keyboardHandle.focus();
     await keyboardHandle.press("Space");
+    await expect.poll(() => page.locator('[data-query-drop-active="true"]').count()).toBe(1);
     await page.keyboard.press("Shift+Tab");
+    await expect.poll(() => page.locator('[data-droppable-id="query-target:group-2:3"]').getAttribute("data-query-drop-active")).toBe("true");
     await page.keyboard.press("Space");
 
     await expect.poll(() => nestedGroup.locator("[data-query-rule]").count()).toBe(4);
@@ -1206,4 +1210,5 @@ describe.sequential("structured workflow builder", () => {
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
   statefulUiScenarios(() => page, appUrl, screenshot);
+  nativeEditorScenarios(() => page, appUrl, screenshot);
 });

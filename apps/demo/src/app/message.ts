@@ -5,6 +5,7 @@ import { defineMessageUnion } from "foldkit/message";
 import { UrlRequest } from "foldkit/navigation";
 import { Url } from "foldkit/url";
 
+import { Message as CodeEditorMessage } from "../code-editor/message";
 import { Message as WorkbenchMessage } from "../workbench/message";
 import { Message as DataGridMessage } from "../data-grid/message";
 import { Message as FormEditorMessage } from "../form-builder/message";
@@ -25,6 +26,7 @@ export const Message = defineMessageUnion({
   SelectedThemePreference: { preference: ThemePreference },
   GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
   GotFormEditorMessage: { message: FormEditorMessage },
+  GotCodeEditorMessage: { message: CodeEditorMessage },
   GotWorkbenchMessage: { message: WorkbenchMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },

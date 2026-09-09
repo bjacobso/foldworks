@@ -3,6 +3,7 @@ import { Match } from "effect";
 
 import {
   Blocks,
+  Braces,
   FileText,
   House,
   ListFilter,
@@ -18,6 +19,7 @@ import {
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Sidebar } from "@foldworks/sidebar";
 
+import { view as codeEditorView } from "../code-editor/view";
 import { view as workbenchView } from "../workbench/view";
 import { view as dataGridView } from "../data-grid/demo";
 import { people } from "../data-grid/rows";
@@ -28,6 +30,7 @@ import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
 import {
   dataGridRouter,
+  codeEditorRouter,
   workbenchRouter,
   demoFromRoute,
   formBuilderPath,
@@ -92,6 +95,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
       id: "application-primitives",
       label: "Application primitives",
       items: [
+        { id: "code-editor", label: "Code editor", href: codeEditorRouter(), icon: Braces, isActive: demo === "CodeEditor" },
         { id: "data-grid", label: "Data grid", href: dataGridRouter(), icon: Table2, isActive: demo === "DataGrid" },
         { id: "query-builder", label: "Query builder", href: queryBuilderRouter(), icon: ListFilter, isActive: demo === "QueryBuilder" },
         { id: "form-builder", label: "Form builder", href: formBuilderPath(model.formEditor.exampleId, model.formEditor.mode), icon: ListChecks, isActive: demo === "FormBuilder" },
@@ -138,7 +142,7 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
-  const title = demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
+  const title = demo === "CodeEditor" ? "Code editor" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
     ? "Candidate workflow"
     : demo === "DataGrid"
       ? "People operations"
@@ -151,7 +155,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         : demo === "Home"
           ? "Foldworks"
           : "@foldworks/ui";
-  const description = demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
+  const description = demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
     : demo === "DataGrid"
       ? `${people.length} people · controlled Foldkit data grid`
@@ -170,6 +174,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
     actions: [
       ...(demo === "Workflow" || demo === "FormBuilder"
         ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
+        : demo === "CodeEditor"
+          ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
         : demo === "Workbench"
           ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
         : demo === "DataGrid"
@@ -180,7 +186,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
           : demo === "Home"
             ? [
-                Badge.view({ label: "8 packages", tone: "info", dot: true }, h),
+                Badge.view({ label: "9 packages", tone: "info", dot: true }, h),
                 Badge.view({ label: "Open source" }, h),
               ]
             : [
@@ -219,6 +225,13 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   if (demo === "Home") return homeView(h);
+  if (demo === "CodeEditor") return h.submodel({
+    slotId: "code-editor-content",
+    model: model.codeEditor,
+    view: codeEditorView,
+    viewInputs: { isDark: model.themePreference === "Dark" || (model.themePreference === "System" && model.systemIsDark) },
+    toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
+  });
   if (demo === "Workbench") return h.submodel({
     slotId: "workbench-content",
     model: model.workbench,
@@ -270,6 +283,7 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
+  Match.when("CodeEditor", () => "Code editor · Foldworks"),
   Match.when("Workbench", () => "Workers workbench · Foldworks"),
   Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),
   Match.when("DataGrid", () => "Data grid · Foldworks"),
@@ -305,7 +319,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
               content: content(model, h),
               footer: {
                 title: "Application primitives",
-                description: "Eight Foldworks packages",
+                description: "Nine Foldworks packages",
                 icon: Blocks,
               },
               ariaLabel: "Foldworks navigation",

@@ -6,12 +6,54 @@ settings:
 
 catalogs:
   default:
+    '@foldkit/devtools':
+      specifier: 0.156.0
+      version: 0.156.0
+    '@foldkit/markdown':
+      specifier: 0.9.0
+      version: 0.9.0
+    '@foldkit/ui':
+      specifier: 0.156.0
+      version: 0.156.0
+    '@foldkit/vite-plugin':
+      specifier: 0.20.0
+      version: 0.20.0
+    '@lucide/icons':
+      specifier: 1.40.0
+      version: 1.40.0
+    '@stylexjs/stylex':
+      specifier: 0.19.0
+      version: 0.19.0
+    '@stylexjs/unplugin':
+      specifier: 0.19.0
+      version: 0.19.0
     '@types/node':
       specifier: 24.13.3
       version: 24.13.3
     effect:
       specifier: 4.0.0-rc.112
       version: 4.0.0-rc.112
+    foldkit:
+      specifier: 0.156.0
+      version: 0.156.0
+    pdf-lib:
+      specifier: 1.17.1
+      version: 1.17.1
+    pdfjs-dist:
+      specifier: 6.3.289
+      version: 6.3.289
+    playwright:
+      specifier: 1.62.1
+      version: 1.62.1
+    typescript:
+      specifier: 6.0.3
+      version: 6.0.3
+    vite:
+      specifier: 8.2.2
+      version: 8.2.2
+    vitest:
+      specifier: 4.1.11
+      version: 4.1.11
 
 importers:
 
@@ -53,6 +95,9 @@ importers:
       '@foldkit/ui':
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+      '@foldworks/code-editor':
+        specifier: workspace:*
+        version: link:../../packages/code-editor
       '@foldworks/data-grid':
         specifier: workspace:*
         version: link:../../packages/data-grid
@@ -111,6 +156,25 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
+  packages/code-editor:
+    dependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
