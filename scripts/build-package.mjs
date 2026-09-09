@@ -15,7 +15,9 @@ const entries = packageJson.name === "@foldworks/ui"
       index: "src/index.ts",
       "tokens.stylex": "src/tokens.stylex.ts",
     }
-  : { index: "src/index.ts" };
+  : packageJson.name === "@foldworks/code-editor"
+    ? { index: "src/index.ts", contracts: "src/contracts.ts" }
+    : { index: "src/index.ts" };
 await build({
   bundle: true,
   clean: true,
@@ -28,7 +30,7 @@ await build({
   platform: "browser",
   silent: false,
   sourcemap: true,
-  splitting: false,
+  splitting: packageJson.name === "@foldworks/code-editor",
   target: "es2022",
   treeshake: true,
 });

@@ -36,7 +36,10 @@ const historySubscriptions = Subscription.make<Model, Message>()((entry) => ({
         Stream.filter((event) => editor !== "None" &&
           event.key.toLowerCase() === "z" &&
           (event.metaKey || event.ctrlKey) &&
-          !event.altKey),
+          !event.altKey &&
+          !event.composedPath().some((target) => target instanceof Element && (
+            target.matches(".native-editor")
+          ))),
         Stream.mapEffect((event) => Effect.sync(() => {
           event.preventDefault();
           if (editor === "Workflow") {

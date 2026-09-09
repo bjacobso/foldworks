@@ -150,7 +150,17 @@ try {
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [stylex.vite({ runtimeInjection: false, useCSSLayers: true })],
+  plugins: [stylex.vite({ runtimeInjection: false, useCSSLayers: true }), {
+    name: "native-editor-isolation",
+    generateBundle(_options, bundle) {
+      if (process.env.FOLDWORKS_NATIVE_SMOKE !== "1") return;
+      for (const output of Object.values(bundle)) {
+        if (output.type === "chunk" && Object.keys(output.modules).some((id) => /@codemirror|@lezer|monaco-editor/.test(id))) {
+          this.error("The native editor imports an external editor engine.");
+        }
+      }
+    },
+  }],
 });
 `,
   );
@@ -177,9 +187,12 @@ export default defineConfig({
     join(consumerDirectory, "src", "main.ts"),
     `import "@foldworks/ui/base.css";
 import "@foldworks/ui/themes/neutral.css";
+import "@foldworks/code-editor/styles.css";
 import "@foldworks/data-grid/styles.css";
 import "@foldworks/pdf-annotator/styles.css";
 
+import * as CodeEditor from "@foldworks/code-editor";
+import * as EditorContracts from "@foldworks/code-editor/contracts";
 import * as DataGrid from "@foldworks/data-grid";
 import * as FormBuilder from "@foldworks/form-builder";
 import * as History from "@foldworks/history";
@@ -191,7 +204,7 @@ import * as UiIcon from "@foldworks/ui/icon";
 import * as UiTokens from "@foldworks/ui/tokens.stylex";
 import * as Workflow from "@foldworks/workflow";
 
-const modules = [DataGrid, FormBuilder, History, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
+const modules = [CodeEditor, EditorContracts, DataGrid, FormBuilder, History, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
 const app = document.querySelector<HTMLElement>("#app");
 if (app === null) throw new Error("Missing smoke-test mount point.");
 app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.keys(module).length, 0) + " Foldworks exports";
@@ -213,7 +226,18 @@ app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.k
     throw new Error("The clean consumer build did not emit CSS.");
   }
 
-  console.log(`\nValidated ${tarballs.size} package tarballs and a clean Vite consumer build.`);
+  // Check the default editor bundle independently of the other packages.
+  await writeFile(join(consumerDirectory, "src", "main.ts"), `
+import { CodeEditor } from "@foldworks/code-editor";
+import "@foldworks/code-editor/styles.css";
+document.querySelector("#app")!.textContent = Object.keys(CodeEditor).join(", ");
+`);
+  await run("npm", ["run", "build", "--", "--outDir", "dist-native"], {
+    cwd: consumerDirectory, env: { FOLDWORKS_NATIVE_SMOKE: "1" },
+  });
+  await run("node", ["--input-type=module", "-e", 'import { CodeEditor } from "@foldworks/code-editor"; if (CodeEditor.init({ id: "ssr", text: "ok" }).document.text !== "ok") throw new Error("Editor import failed");'], { cwd: consumerDirectory });
+
+  console.log(`\nValidated ${tarballs.size} package tarballs, a clean Vite consumer, and native-editor bundle isolation.`);
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
 }
