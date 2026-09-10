@@ -14,6 +14,12 @@ export const Message = defineMessageUnion({
   FailedSave: { batchId: S.String, error: S.String },
   CompletedEditFocus: {},
   SelectedCell: { rowId: S.String, columnId: S.String },
+  ExtendedSelection: {
+    rowId: S.String,
+    columnId: S.String,
+    anchorRowId: S.String,
+    anchorColumnId: S.String,
+  },
   ToggledSort: { columnId: S.String },
   StartedColumnResize: {
     columnId: S.String,

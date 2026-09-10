@@ -50,6 +50,7 @@ export type ColumnDef<Row, ParentMessage = never> = Readonly<{
   enableSorting?: boolean;
   enableResizing?: boolean;
   compare?: (left: Row, right: Row) => number;
+  clipboardValue?: (context: CellContext<Row>) => string;
   renderCell?: (
     context: CellContext<Row>,
     h: HtmlBuilder<ParentMessage>,
@@ -87,6 +88,13 @@ export type Table<Row, ParentMessage> = Readonly<{
   rows: ReadonlyArray<TableRow<Row, ParentMessage>>;
   templateColumns: string;
   totalWidth: number;
+}>;
+
+export type SelectionRange = Readonly<{
+  startRowIndex: number;
+  endRowIndex: number;
+  startColumnIndex: number;
+  endColumnIndex: number;
 }>;
 
 export type CreateTableConfig<Row, ParentMessage> = Readonly<{
@@ -169,6 +177,67 @@ export const createTable = <Row, ParentMessage>(
     totalWidth: widths.reduce((total, width) => total + width, 0),
   };
 };
+
+const addressIndexes = <Row, ParentMessage>(
+  table: Table<Row, ParentMessage>,
+  address: Readonly<{ rowId: string; columnId: string }>,
+): Readonly<{ rowIndex: number; columnIndex: number }> | undefined => {
+  const rowIndex = table.rows.findIndex((row) => row.id === address.rowId);
+  const columnIndex = table.columns.findIndex((column) => column.definition.id === address.columnId);
+  return rowIndex < 0 || columnIndex < 0 ? undefined : { rowIndex, columnIndex };
+};
+
+export const selectionRange = <Row, ParentMessage>(
+  model: Model,
+  table: Table<Row, ParentMessage>,
+): SelectionRange | undefined => {
+  const focus = Option.getOrUndefined(model.selectedCell);
+  if (focus === undefined) return undefined;
+  const focusIndexes = addressIndexes(table, focus);
+  if (focusIndexes === undefined) return undefined;
+  const anchor = Option.getOrUndefined(model.selectionAnchor);
+  const anchorIndexes = anchor === undefined ? focusIndexes : addressIndexes(table, anchor) ?? focusIndexes;
+  return {
+    startRowIndex: Math.min(anchorIndexes.rowIndex, focusIndexes.rowIndex),
+    endRowIndex: Math.max(anchorIndexes.rowIndex, focusIndexes.rowIndex),
+    startColumnIndex: Math.min(anchorIndexes.columnIndex, focusIndexes.columnIndex),
+    endColumnIndex: Math.max(anchorIndexes.columnIndex, focusIndexes.columnIndex),
+  };
+};
+
+export const isCellInSelection = (
+  range: SelectionRange | undefined,
+  rowIndex: number,
+  columnIndex: number,
+): boolean => range !== undefined &&
+  rowIndex >= range.startRowIndex && rowIndex <= range.endRowIndex &&
+  columnIndex >= range.startColumnIndex && columnIndex <= range.endColumnIndex;
+
+export const selectionSize = (range: SelectionRange | undefined): number => range === undefined
+  ? 0
+  : (range.endRowIndex - range.startRowIndex + 1) *
+    (range.endColumnIndex - range.startColumnIndex + 1);
+
+const clipboardField = (value: string): string => /[\t\r\n"]/.test(value)
+  ? `"${value.replaceAll('"', '""')}"`
+  : value;
+
+export const selectionText = <Row, ParentMessage>(
+  table: Table<Row, ParentMessage>,
+  range: SelectionRange | undefined,
+): string => range === undefined ? "" : table.rows
+  .slice(range.startRowIndex, range.endRowIndex + 1)
+  .map((row) => row.cells
+    .slice(range.startColumnIndex, range.endColumnIndex + 1)
+    .map((cell) => clipboardField(cell.column.clipboardValue?.({
+      row: row.original,
+      rowId: row.id,
+      rowIndex: row.index,
+      columnId: cell.column.id,
+      value: cell.value,
+    }) ?? (cell.value === null || cell.value === undefined ? "" : String(cell.value))))
+    .join("\t"))
+  .join("\n");
 
 export const defineColumns = <Row, ParentMessage = never>() =>
   <const Columns extends ReadonlyArray<ColumnDef<Row, ParentMessage>>>(columns: Columns) =>

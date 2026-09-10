@@ -1,7 +1,15 @@
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { compareValues, createTable, defineColumns } from "./core";
+import {
+  compareValues,
+  createTable,
+  defineColumns,
+  isCellInSelection,
+  selectionRange,
+  selectionSize,
+  selectionText,
+} from "./core";
 import { init } from "./model";
 
 type Person = Readonly<{
@@ -49,6 +57,59 @@ describe("createTable", () => {
 
     expect(table.rows.map((row) => row.id)).toEqual(["one", "two"]);
     expect(rows.map((row) => row.id)).toEqual(["two", "one"]);
+  });
+});
+
+describe("selection", () => {
+  it("derives a rectangular range from stable row and column ids", () => {
+    const model = {
+      ...init({ id: "people", columns }),
+      selectionAnchor: Option.some({ rowId: "two", columnId: "name" }),
+      selectedCell: Option.some({ rowId: "one", columnId: "score" }),
+    };
+    const table = createTable({
+      model,
+      columns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+    const range = selectionRange(model, table);
+
+    expect(range).toEqual({
+      startRowIndex: 0,
+      endRowIndex: 1,
+      startColumnIndex: 0,
+      endColumnIndex: 1,
+    });
+    expect(selectionSize(range)).toBe(4);
+    expect(isCellInSelection(range, 1, 1)).toBe(true);
+    expect(isCellInSelection(range, 2, 1)).toBe(false);
+    expect(selectionText(table, range)).toBe("Beta\t12\nAlpha\t4");
+  });
+
+  it("uses custom clipboard values and quotes fields for TSV", () => {
+    const clipboardColumns = defineColumns<Person>()([
+      {
+        id: "name",
+        header: "Name",
+        accessor: (person) => person.name,
+        clipboardValue: ({ row }) => `${row.name}\t\"quoted\"`,
+      },
+    ]);
+    const model = {
+      ...init({ id: "people", columns: clipboardColumns }),
+      selectedCell: Option.some({ rowId: "two", columnId: "name" }),
+      selectionAnchor: Option.some({ rowId: "two", columnId: "name" }),
+    };
+    const table = createTable({
+      model,
+      columns: clipboardColumns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+
+    expect(selectionText(table, selectionRange(model, table)))
+      .toBe("\"Beta\t\"\"quoted\"\"\"");
   });
 });
 

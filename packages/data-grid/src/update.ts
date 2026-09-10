@@ -70,7 +70,13 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       if (model.editingMode === "Disabled" || Option.isSome(model.pendingSubmission) || Option.isSome(model.activeEdit)) return { model };
       const draft = model.drafts.find((draft) => sameCell(draft, edit));
       return {
-        model: { ...model, selectedCell: Option.some({ rowId: edit.rowId, columnId: edit.columnId }), activeEdit: Option.some({ ...edit, previousValue: draft === undefined ? edit.previousValue : draft.previousValue }), saveError: "" },
+        model: {
+          ...model,
+          selectedCell: Option.some({ rowId: edit.rowId, columnId: edit.columnId }),
+          selectionAnchor: Option.some({ rowId: edit.rowId, columnId: edit.columnId }),
+          activeEdit: Option.some({ ...edit, previousValue: draft === undefined ? edit.previousValue : draft.previousValue }),
+          saveError: "",
+        },
         commands: [Focus({ id: `${cellId(model.id, edit.rowId, edit.columnId)}:editor` })],
       };
     },
@@ -114,7 +120,26 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     },
     SelectedCell: ({ rowId, columnId }) => Option.isSome(model.activeEdit) && !sameCell(model.activeEdit.value, { rowId, columnId })
       ? { model }
-      : { model: { ...model, selectedCell: Option.some({ rowId, columnId }) } },
+      : {
+          model: {
+            ...model,
+            selectedCell: Option.some({ rowId, columnId }),
+            selectionAnchor: Option.some({ rowId, columnId }),
+          },
+        },
+    ExtendedSelection: ({ rowId, columnId, anchorRowId, anchorColumnId }) => Option.isSome(model.activeEdit)
+      ? { model }
+      : {
+          model: {
+            ...model,
+            selectedCell: Option.some({ rowId, columnId }),
+            selectionAnchor: Option.orElse(model.selectionAnchor, () =>
+              Option.orElse(model.selectedCell, () => Option.some({
+                rowId: anchorRowId,
+                columnId: anchorColumnId,
+              }))),
+          },
+        },
     ToggledSort: ({ columnId }) => ({
       model: { ...model, sorting: nextSorting(model.sorting, columnId) },
     }),

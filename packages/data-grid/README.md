@@ -8,7 +8,8 @@ The first slice supports:
 - custom cell and header rendering;
 - three-state sorting;
 - pointer column resizing and double-click reset;
-- single-cell selection and arrow-key navigation;
+- rectangular selection with arrow and Shift+Arrow navigation;
+- spreadsheet-friendly TSV clipboard copy;
 - sticky headers, horizontal scrolling, and accessible grid semantics.
 
 ```ts
@@ -47,6 +48,20 @@ custom properties on `.fk-data-grid` provide the initial theming surface.
 Use `appearance: "embedded"` when a surrounding panel already owns the outer
 border and rounded corners; the default `"standalone"` appearance keeps the
 grid's complete frame.
+
+## Selection and clipboard
+
+Click a cell or use the arrow keys to create a single-cell selection. Hold
+Shift while pressing an arrow key to extend a rectangular range from its
+stable row-and-column-ID anchor. Pressing an arrow key without Shift collapses
+the range to the new focused cell.
+
+Copying a selection writes its accessor or draft values as tab-separated rows,
+ready to paste into a spreadsheet. Tabs, line breaks, and quotes are escaped
+using standard quoted-field syntax. A column can provide
+`clipboardValue(context): string` when its exported value should differ from
+its accessor value. While a cell editor is open, native text-input copying is
+left unchanged.
 
 ## Cell editing
 
@@ -176,5 +191,5 @@ Source checks protect local drafts, but the application must still validate
 writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
-Range selection, clipboard operations, column ordering, pinned columns, row
-virtualization, and infinite loading remain future work.
+Clipboard paste, column ordering, pinned columns, row virtualization, and
+infinite loading remain future work.

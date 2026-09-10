@@ -43,6 +43,59 @@ describe("update", () => {
       rowId: "person-1",
       columnId: "name",
     });
+    expect(Option.getOrUndefined(selected.selectionAnchor)).toEqual({
+      rowId: "person-1",
+      columnId: "name",
+    });
+  });
+
+  it("extends from the stable anchor and collapses on ordinary selection", () => {
+    const selected = update(
+      model(),
+      Message.SelectedCell({ rowId: "person-1", columnId: "name" }),
+    ).model;
+    const extended = update(
+      selected,
+      Message.ExtendedSelection({
+        rowId: "person-3",
+        columnId: "department",
+        anchorRowId: "person-1",
+        anchorColumnId: "name",
+      }),
+    ).model;
+    const collapsed = update(
+      extended,
+      Message.SelectedCell({ rowId: "person-2", columnId: "department" }),
+    ).model;
+
+    expect(Option.getOrUndefined(extended.selectionAnchor)).toEqual({
+      rowId: "person-1",
+      columnId: "name",
+    });
+    expect(Option.getOrUndefined(extended.selectedCell)).toEqual({
+      rowId: "person-3",
+      columnId: "department",
+    });
+    expect(Option.getOrUndefined(collapsed.selectionAnchor)).toEqual(
+      Option.getOrUndefined(collapsed.selectedCell),
+    );
+  });
+
+  it("uses the focused origin when extending an initially empty selection", () => {
+    const extended = update(
+      model(),
+      Message.ExtendedSelection({
+        rowId: "person-1",
+        columnId: "department",
+        anchorRowId: "person-1",
+        anchorColumnId: "name",
+      }),
+    ).model;
+
+    expect(Option.getOrUndefined(extended.selectionAnchor)).toEqual({
+      rowId: "person-1",
+      columnId: "name",
+    });
   });
 
   it("starts a different sort column in ascending order", () => {

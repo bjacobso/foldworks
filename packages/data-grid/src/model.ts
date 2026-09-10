@@ -40,6 +40,7 @@ export type ResizeState = typeof ResizeState.Type;
 export const Model = S.Struct({
   id: S.String,
   selectedCell: S.Option(CellAddress),
+  selectionAnchor: S.Option(CellAddress),
   sorting: S.Option(Sorting),
   columnSizes: S.Array(ColumnSize),
   resizeState: ResizeState,
@@ -61,6 +62,7 @@ export type InitConfig<Row = unknown, ParentMessage = never> = Readonly<{
 export const init = (config: InitConfig): Model => ({
   id: config.id,
   selectedCell: Option.none(),
+  selectionAnchor: Option.none(),
   sorting: Option.none(),
   columnSizes: config.columns.map((column) => ({
     columnId: column.id,

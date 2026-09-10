@@ -1,5 +1,5 @@
 import { Option } from "effect";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Html, HtmlBuilder, KeyboardModifiers } from "foldkit/html";
 
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "@lucide/icons";
 import * as Icon from "@foldworks/ui/icon";
@@ -10,6 +10,10 @@ import {
   MAX_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
   columnWidth,
+  isCellInSelection,
+  selectionRange,
+  selectionSize,
+  selectionText,
   type CellValue,
   type ColumnDef,
 } from "./core";
@@ -47,24 +51,30 @@ export const view = <Row, ParentMessage>(
 ): Html => {
   const table = createTable(config);
   const selected = Option.getOrUndefined(config.model.selectedCell);
+  const range = selectionRange(config.model, table);
+  const selectedCount = selectionSize(range);
   const rowHeight = config.rowHeight ?? 42;
   const active = Option.getOrUndefined(config.model.activeEdit);
   const pending = Option.isSome(config.model.pendingSubmission);
   const issues = editIssues(config);
+  const clipboard = selectionText(table, range);
 
   const grid = h.div(
     [
       h.Class("fk-data-grid"),
       h.Role("grid"),
       h.AriaLabel(config.label ?? "Data grid"),
+      h.AriaMultiSelectable(true),
       h.AriaRowcount(table.rows.length + 1),
       h.AriaColcount(table.columns.length),
       h.DataAttribute("grid-id", config.model.id),
+      h.DataAttribute("selection-size", String(selectedCount)),
       h.DataAttribute("appearance", config.appearance ?? "standalone"),
       h.DataAttribute(
         "resizing",
         config.model.resizeState._tag === "Resizing" ? "true" : "false",
       ),
+      ...(active === undefined && range !== undefined ? [h.OnCopyText(clipboard)] : []),
     ],
     [
       h.div(
@@ -200,10 +210,11 @@ export const view = <Row, ParentMessage>(
                           h.DataAttribute("row-id", row.id),
                         ],
                         row.cells.map((cell, columnIndex) => {
-                          const isSelected =
+                          const isFocus =
                             selected?.rowId === row.id &&
                             selected.columnId === cell.column.id;
-                          const isTabStop = isSelected || (
+                          const isSelected = isCellInSelection(range, row.index, columnIndex);
+                          const isTabStop = isFocus || (
                             selected === undefined &&
                             row.index === 0 &&
                             columnIndex === 0
@@ -221,7 +232,7 @@ export const view = <Row, ParentMessage>(
                             previousValue: draft === undefined ? cell.column.accessor(row.original) : draft.previousValue,
                             ...parseInput(editor!, cell.value == null ? "" : String(cell.value), row.original),
                           });
-                          const move = (key: string) => {
+                          const move = (key: string, modifiers: KeyboardModifiers) => {
                             // Editors retain native arrow-key behavior. Enter/Escape are grid actions.
                             if (editing) return key === "Enter" || key === "Escape" ? Option.some({
                               focusSelector: `[id="${id}:editor"]`,
@@ -255,10 +266,17 @@ export const view = <Row, ParentMessage>(
                             return Option.some({
                               focusSelector: `[id="${cellId(config.model.id, nextRow.id, nextColumn.definition.id)}"]`,
                               message: config.toParentMessage(
-                                Message.SelectedCell({
-                                  rowId: nextRow.id,
-                                  columnId: nextColumn.definition.id,
-                                }),
+                                modifiers.shiftKey
+                                  ? Message.ExtendedSelection({
+                                      rowId: nextRow.id,
+                                      columnId: nextColumn.definition.id,
+                                      anchorRowId: row.id,
+                                      anchorColumnId: cell.column.id,
+                                    })
+                                  : Message.SelectedCell({
+                                      rowId: nextRow.id,
+                                      columnId: nextColumn.definition.id,
+                                    }),
                               ),
                             });
                           };
@@ -276,6 +294,7 @@ export const view = <Row, ParentMessage>(
                                 cellPosition(row.index, columnIndex),
                               ),
                               h.DataAttribute("selected", isSelected ? "true" : "false"),
+                              h.DataAttribute("selection-focus", isFocus ? "true" : "false"),
                               h.DataAttribute("align", align.toLowerCase()),
                               h.DataAttribute("dirty", draft === undefined ? "false" : "true"),
                               h.DataAttribute("editable", editable ? "true" : "false"),

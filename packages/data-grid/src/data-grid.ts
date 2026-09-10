@@ -1,4 +1,11 @@
-export { defineColumns } from "./core";
+export {
+  defineColumns,
+  isCellInSelection,
+  selectionRange,
+  selectionSize,
+  selectionText,
+  type SelectionRange,
+} from "./core";
 import { Message as MessageSchema, type Message as MessageValue } from "./message";
 import { Model as ModelSchema, type Model as ModelValue } from "./model";
 
