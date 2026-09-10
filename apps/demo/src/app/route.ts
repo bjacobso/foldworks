@@ -4,13 +4,14 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Home" | "CodeEditor" | "Workbench" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
+export type Demo = "Home" | "Agent" | "CodeEditor" | "Workbench" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
 
 export const AppRoute = defineRouteUnion({
   Home: {},
+  Agent: {},
   CodeEditor: {},
   Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
@@ -40,6 +41,8 @@ export const homeRouter = pipe(
 );
 
 export const codeEditorRouter = pipe(Route.literal("code-editor"), Route.mapTo(AppRoute.CodeEditor));
+
+export const agentRouter = pipe(Route.literal("agent"), Route.mapTo(AppRoute.Agent));
 
 export const workbenchRouter = pipe(Route.literal("workbench"), Route.mapTo(AppRoute.Workbench));
 
@@ -74,6 +77,7 @@ export const pdfAnnotatorRouter = pipe(
 
 const routeParser = Route.oneOf(
   workflowRouter,
+  agentRouter,
   workbenchRouter,
   codeEditorRouter,
   dataGridRouter,
@@ -92,6 +96,7 @@ export const urlToAppRoute = Route.parseUrlWithFallback(
 export const demoFromRoute = (route: AppRoute): Demo => {
   switch (route._tag) {
     case "Home": return "Home";
+    case "Agent": return "Agent";
     case "CodeEditor": return "CodeEditor";
     case "Workbench": return "Workbench";
     case "DataGrid": return "DataGrid";

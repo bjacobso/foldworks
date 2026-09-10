@@ -9,6 +9,7 @@ import { workbenchScenarios } from "./workbench.scenarios";
 import { dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
+import { agentScenarios } from "./agent.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
@@ -124,6 +125,7 @@ describe.sequential("structured workflow builder", () => {
     const demoNavigation = sidebar.getByRole("navigation", { name: "Demo navigation" });
     await expect.poll(() => demoNavigation.getByRole("link").allTextContents()).toEqual([
       "Home",
+      "Agent playground",
       "Workers workbench",
       "@foldworks/ui",
       "Code editor",
@@ -167,6 +169,8 @@ describe.sequential("structured workflow builder", () => {
       name: "Workflow volume for the last seven days",
     }).isVisible()).toBe(true);
     await expect.poll(() => page.getByRole("link", { name: /@foldworks\/data-grid/ }).isVisible())
+      .toBe(true);
+    await expect.poll(() => page.getByRole("link", { name: "Try the agent playground" }).isVisible())
       .toBe(true);
 
     const homePage = page.locator('[data-home-page="true"]');
@@ -1211,4 +1215,5 @@ describe.sequential("structured workflow builder", () => {
   dataGridEditingScenarios(() => page, appUrl, screenshot);
   statefulUiScenarios(() => page, appUrl, screenshot);
   nativeEditorScenarios(() => page, appUrl, screenshot);
+  agentScenarios(() => page, appUrl, screenshot);
 });

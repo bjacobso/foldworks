@@ -6,6 +6,9 @@ import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
 
+import { Message as AgentMessage } from "../agent/message";
+import { isActive as isAgentActive } from "../agent/model";
+import { update as updateAgent } from "../agent/update";
 import { update as updateCodeEditor } from "../code-editor/update";
 import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
@@ -117,6 +120,13 @@ const foldCodeEditor = Update.foldChild({
   toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
 });
 
+const foldAgent = Update.foldChild({
+  update: updateAgent,
+  read: (model: Model) => Option.some(model.agent),
+  write: (model, agent) => ({ ...model, agent }),
+  toParentMessage: (message) => Message.GotAgentMessage({ message }),
+});
+
 const foldWorkbench = Update.foldChild({
   update: updateWorkbench,
   read: (model: Model) => Option.some(model.workbench),
@@ -161,6 +171,9 @@ const foldSidebar = Update.foldChild({
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
+  if (model.route._tag === "Agent" && route._tag !== "Agent" && isAgentActive(next.agent)) {
+    next = { ...next, agent: updateAgent(next.agent, AgentMessage.Stopped()).model };
+  }
   if (route._tag === "Workflow") {
     const workflowEditor = setOrientation(next.workflowEditor, workflowOrientationFromRoute(route));
     return workflowEditor === next.workflowEditor
@@ -235,6 +248,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       External: ({ href }) => ({ model, commands: [LoadExternal({ href })] }),
     }),
     ChangedUrl: ({ url }) => ({ model: applyRoute(model, urlToAppRoute(url)) }),
+    GotAgentMessage: ({ message }) => foldAgent(model, message),
     GotWorkflowEditorMessage: ({ message: childMessage }) =>
       foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),

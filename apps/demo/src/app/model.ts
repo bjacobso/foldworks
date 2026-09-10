@@ -2,6 +2,7 @@ import { Schema as S } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Sidebar } from "@foldworks/sidebar";
 
+import { Model as AgentModel, init as initAgent } from "../agent/model";
 import { Model as WorkbenchModel, init as initWorkbench } from "../workbench/model";
 import { Model as CodeEditorModel, init as initCodeEditor } from "../code-editor/model";
 import type { Snapshot } from "../workbench/domain";
@@ -22,6 +23,7 @@ import {
 
 export const Model = S.Struct({
   route: AppRoute,
+  agent: AgentModel,
   codeEditor: CodeEditorModel,
   workbench: WorkbenchModel,
   workflowEditor: WorkflowEditorModel,
@@ -49,6 +51,7 @@ export const init = (
   const { exampleId, mode } = formStateFromRoute(route);
   return {
     route,
+    agent: initAgent(),
     codeEditor: initCodeEditor(),
     workbench: initWorkbench(workers?.snapshot, workers?.error),
     workflowEditor: initWorkflowEditor(

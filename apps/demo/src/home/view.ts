@@ -17,6 +17,7 @@ import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
+  agentRouter,
   codeEditorRouter,
   dataGridRouter,
   formBuilderPath,
@@ -249,6 +250,7 @@ export const view = <Message>(h: HtmlBuilder<Message>): Html =>
           ]),
           h.div([h.Class(className(styles.actions))], [
             link("Explore the UI system", uiKitRouter(), "primary", h),
+            link("Try the agent playground", agentRouter(), "secondary", h),
             link("Open the workflow builder", workflowPath("Vertical"), "secondary", h),
           ]),
           h.div([h.Class(className(styles.heroMeta))], [

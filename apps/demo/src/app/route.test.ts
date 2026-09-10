@@ -3,6 +3,7 @@ import { fromString } from "foldkit/url";
 import { describe, expect, it } from "vitest";
 
 import {
+  agentRouter,
   dataGridRouter,
   codeEditorRouter,
   workbenchRouter,
@@ -24,6 +25,8 @@ const parseUrl = (url: string) =>
 describe("demo routes", () => {
   it("builds stable paths for each demo", () => {
     expect(homeRouter()).toBe("/");
+    expect(agentRouter()).toBe("/agent");
+    expect(demoFromRoute(parseUrl("https://demo.test/agent"))).toBe("Agent");
     expect(workbenchRouter()).toBe("/workbench");
     expect(demoFromRoute(parseUrl("https://demo.test/workbench"))).toBe("Workbench");
     expect(workflowPath("Horizontal")).toBe("/workflow?orientation=Horizontal");
