@@ -19,4 +19,10 @@ export { update } from "./update";
 export { view, type ViewConfig } from "./view";
 export { OutMessage } from "./message";
 export { Edit, CellIssue, Submission } from "./editing-model";
-export { commitMessage, editIssues, saveMessage } from "./editing";
+export {
+  commitMessage,
+  editIssues,
+  parseClipboardText,
+  pasteMessage,
+  saveMessage,
+} from "./editing";

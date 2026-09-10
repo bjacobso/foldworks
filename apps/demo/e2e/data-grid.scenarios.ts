@@ -37,6 +37,39 @@ export const dataGridEditingScenarios = (getPage: () => Page, appUrl: string, sc
       await expect.poll(() => page.locator('[role="grid"]').getAttribute("data-selection-size")).toBe("1");
     });
 
+    it("pastes a TSV matrix into editable cells and saves it", async () => {
+      const page = await start();
+      await cell(1, 2).click();
+      await cell(1, 2).evaluate((element) => {
+        const clipboardData = new DataTransfer();
+        clipboardData.setData(
+          "text/plain",
+          "Research\tPrincipal engineer\nFinance\tFinancial analyst",
+        );
+        element.dispatchEvent(new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData,
+        }));
+      });
+
+      await expect.poll(() => page.locator('[role="grid"]').getAttribute("data-selection-size")).toBe("4");
+      await expect.poll(() => page.locator('[data-dirty="true"]').count()).toBe(4);
+      await expect.poll(() => page.evaluate(() =>
+        document.activeElement?.getAttribute("data-grid-cell-position"),
+      )).toBe("1:3");
+      expect(await cell(1, 2).textContent()).toContain("Research");
+      expect(await cell(1, 3).textContent()).toContain("Principal engineer");
+      expect(await cell(2, 2).textContent()).toContain("Finance");
+      expect(await cell(2, 3).textContent()).toContain("Financial analyst");
+      await expect.poll(() => page.getByRole("status").allTextContents())
+        .toContain("4 changes across 2 rows");
+
+      await page.getByRole("button", { name: "Save changes", exact: true }).click();
+      await expect.poll(() => page.locator('[data-dirty="true"]').count()).toBe(0);
+      expect(await cell(2, 3).textContent()).toBe("Financial analyst");
+    });
+
     it("stages multiple cells, keeps sorted rows stable, and saves them together", async () => {
       const page = await start();
       const errors: string[] = [];

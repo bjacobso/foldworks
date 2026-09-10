@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { ActiveEdit, CellIssue, EditValue, Submission } from "./editing-model";
+import { ActiveEdit, CellIssue, Draft, EditValue, Submission } from "./editing-model";
 import { CellAddress } from "./model";
 
 export const Message = defineMessageUnion({
@@ -19,6 +19,11 @@ export const Message = defineMessageUnion({
     columnId: S.String,
     anchorRowId: S.String,
     anchorColumnId: S.String,
+  },
+  PastedCells: {
+    drafts: S.Array(Draft),
+    anchor: CellAddress,
+    focus: CellAddress,
   },
   ToggledSort: { columnId: S.String },
   StartedColumnResize: {

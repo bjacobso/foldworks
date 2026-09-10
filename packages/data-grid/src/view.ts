@@ -20,7 +20,7 @@ import {
 import { Message } from "./message";
 import type { Model } from "./model";
 import { cellId, sameCell } from "./editing-model";
-import { commitMessage, editIssues, parseInput } from "./editing";
+import { commitMessage, editIssues, parseInput, pasteMessage } from "./editing";
 import { editingToolbar, editorView } from "./editing-view";
 
 export type ViewConfig<Row, ParentMessage> = Readonly<{
@@ -75,6 +75,12 @@ export const view = <Row, ParentMessage>(
         config.model.resizeState._tag === "Resizing" ? "true" : "false",
       ),
       ...(active === undefined && range !== undefined ? [h.OnCopyText(clipboard)] : []),
+      ...(
+        config.model.editingMode !== "Disabled" && active === undefined && !pending
+          ? [h.OnPastePreventDefault((text) =>
+              Option.map(pasteMessage(config, text), config.toParentMessage))]
+          : []
+      ),
     ],
     [
       h.div(

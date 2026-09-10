@@ -18,6 +18,15 @@ const Focus = Command.define("FocusDataGridEdit", {
   })),
 });
 
+const FocusCell = Command.define("FocusDataGridCell", {
+  args: { id: S.String },
+  messages: [Message.CompletedEditFocus],
+  execute: ({ id }) => Effect.sync(() => {
+    document.getElementById(id)?.focus({ preventScroll: true });
+    return Message.CompletedEditFocus();
+  }),
+});
+
 const submit = (model: Model, allIssues: ReadonlyArray<CellIssue>, requested?: ReadonlyArray<Draft>): UpdateReturn => {
   if (model.editingMode === "Disabled" || Option.isSome(model.pendingSubmission) || Option.isSome(model.activeEdit) || !model.drafts.length) return { model };
   const drafts = requested ?? (model.editingMode === "Immediate" ? model.drafts.slice(0, 1) : model.drafts);
@@ -62,6 +71,12 @@ const writeColumnWidth = (model: Model, columnId: string, width: number): Model 
       )
     : [...model.columnSizes, { columnId, width }],
 });
+
+const mergeDrafts = (current: ReadonlyArray<Draft>, incoming: ReadonlyArray<Draft>): ReadonlyArray<Draft> =>
+  incoming.reduce<ReadonlyArray<Draft>>((drafts, draft) => {
+    const remaining = drafts.filter((item) => !sameCell(item, draft));
+    return Object.is(draft.previousValue, draft.value) ? remaining : [...remaining, draft];
+  }, current);
 
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
@@ -140,6 +155,28 @@ export const update = (model: Model, message: Message): UpdateReturn =>
               }))),
           },
         },
+    PastedCells: ({ drafts: pasted, anchor, focus }) => {
+      if (
+        model.editingMode === "Disabled" ||
+        Option.isSome(model.activeEdit) ||
+        Option.isSome(model.pendingSubmission)
+      ) return { model };
+      const drafts = mergeDrafts(model.drafts, pasted);
+      const next = {
+        ...model,
+        drafts,
+        selectedCell: Option.some(focus),
+        selectionAnchor: Option.some(anchor),
+        saveError: "",
+      };
+      const commands = [FocusCell({ id: cellId(model.id, focus.rowId, focus.columnId) })];
+      if (model.editingMode === "Batch") return { model: next, commands };
+      const requested = drafts.filter((draft) => pasted.some((item) => sameCell(item, draft)));
+      const issues = requested.flatMap((draft) => draft.error
+        ? [{ rowId: draft.rowId, columnId: draft.columnId, error: draft.error }]
+        : []);
+      return { ...submit(next, issues, requested), commands };
+    },
     ToggledSort: ({ columnId }) => ({
       model: { ...model, sorting: nextSorting(model.sorting, columnId) },
     }),

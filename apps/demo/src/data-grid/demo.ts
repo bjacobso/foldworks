@@ -132,8 +132,8 @@ export const dataGridView = (
         h,
       ),
       h.footer([h.Class(className(dataGridStyles.footer))], [
-        h.span([], ["Enter or double-click to edit · Enter to commit · Escape to cancel"]),
-        h.span([], ["Drag a column edge to resize · double-click to reset"]),
+        h.span([], ["Arrow to move · Shift+Arrow to select · ⌘/Ctrl+C or V to copy/paste"]),
+        h.span([], ["Enter or double-click to edit · drag a column edge to resize"]),
       ]),
     ]),
   ]);

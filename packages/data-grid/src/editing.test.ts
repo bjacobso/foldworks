@@ -1,7 +1,14 @@
 import { Option, Schema as S } from "effect";
 import { describe, expect, it } from "vitest";
 import { createTable, defineColumns } from "./core";
-import { commitMessage, editIssues, parseInput, saveMessage } from "./editing";
+import {
+  commitMessage,
+  editIssues,
+  parseClipboardText,
+  parseInput,
+  pasteMessage,
+  saveMessage,
+} from "./editing";
 import { Message } from "./message";
 import { init, Model } from "./model";
 import { update } from "./update";
@@ -19,6 +26,152 @@ const stage = (model: Model, rowId = "a", value = "Amy") => commit(start(model, 
 const save = (model: Model) => update(model, saveMessage(config(model)));
 
 describe("data grid editing", () => {
+  it("parses quoted TSV fields, CRLF rows, and trailing row separators", () => {
+    expect(parseClipboardText('"A\tvalue"\t"a ""quote"""\r\nnext\t2\r\n')).toEqual([
+      ["A\tvalue", 'a "quote"'],
+      ["next", "2"],
+    ]);
+    expect(parseClipboardText("\t")).toEqual([["", ""]]);
+  });
+
+  it("stages a pasted matrix, validates cells, and selects its bounds", () => {
+    const selected = update(
+      model(),
+      Message.SelectedCell({ rowId: "a", columnId: "name" }),
+    ).model;
+    const message = Option.getOrThrow(
+      pasteMessage(config(selected), "Ann\t31\nBill\tnot-a-number"),
+    );
+    const result = update(selected, message);
+    const pasted = result.model;
+
+    expect(pasted.drafts.map(({ rowId, columnId, value, error }) => ({
+      rowId,
+      columnId,
+      value,
+      error,
+    }))).toEqual([
+      { rowId: "a", columnId: "name", value: "Ann", error: "" },
+      { rowId: "a", columnId: "score", value: 31, error: "" },
+      { rowId: "b", columnId: "name", value: "Bill", error: "" },
+      { rowId: "b", columnId: "score", value: null, error: "Enter a finite number." },
+    ]);
+    expect(Option.getOrUndefined(pasted.selectionAnchor)).toEqual({
+      rowId: "a",
+      columnId: "name",
+    });
+    expect(Option.getOrUndefined(pasted.selectedCell)).toEqual({
+      rowId: "b",
+      columnId: "score",
+    });
+    expect(result.commands).toHaveLength(1);
+  });
+
+  it("submits a valid pasted matrix together in immediate mode", () => {
+    const selected = update(
+      model("Immediate"),
+      Message.SelectedCell({ rowId: "a", columnId: "name" }),
+    ).model;
+    const pasted = update(
+      selected,
+      Option.getOrThrow(pasteMessage(config(selected), "Ann\t31\nBill\t21")),
+    );
+
+    expect(pasted.outMessage?.edits).toHaveLength(4);
+    expect(Option.isSome(pasted.model.pendingSubmission)).toBe(true);
+  });
+
+  it("preserves original values across paste replacements and removes reversions", () => {
+    const drafted = stage(model(), "a", "Amy");
+    const selected = update(
+      drafted,
+      Message.SelectedCell({ rowId: "a", columnId: "name" }),
+    ).model;
+    const replaced = update(
+      selected,
+      Option.getOrThrow(pasteMessage(config(selected), "Ann")),
+    ).model;
+    const reverted = update(
+      replaced,
+      Option.getOrThrow(pasteMessage(config(replaced), "Alice")),
+    ).model;
+
+    expect(replaced.drafts[0]?.previousValue).toBe("Alice");
+    expect(replaced.drafts[0]?.value).toBe("Ann");
+    expect(reverted.drafts).toEqual([]);
+  });
+
+  it("maps select labels and common checkbox values while pasting", () => {
+    const typedRows = [{ id: "a", status: "Active", enabled: false }];
+    const typedColumns = defineColumns<typeof typedRows[number]>()([
+      {
+        id: "status",
+        header: "Status",
+        accessor: (row) => row.status,
+        editor: {
+          kind: "Select",
+          options: [{ value: "leave", label: "On leave" }],
+        },
+      },
+      {
+        id: "enabled",
+        header: "Enabled",
+        accessor: (row) => row.enabled,
+        editor: { kind: "Checkbox" },
+      },
+    ]);
+    const selected = update(
+      init({ id: "typed", columns: typedColumns, editing: { mode: "Batch" } }),
+      Message.SelectedCell({ rowId: "a", columnId: "status" }),
+    ).model;
+    const typedConfig = {
+      model: selected,
+      rows: typedRows,
+      columns: typedColumns,
+      getRowId: (row: typeof typedRows[number]) => row.id,
+    };
+    const pasted = update(
+      selected,
+      Option.getOrThrow(pasteMessage(typedConfig, "On leave\tyes")),
+    ).model;
+
+    expect(pasted.drafts.map((draft) => draft.value)).toEqual(["leave", true]);
+  });
+
+  it("skips read-only columns and clips pasted input to the grid bounds", () => {
+    const mixedColumns = defineColumns<typeof rows[number]>()([
+      { id: "name", header: "Name", accessor: (row) => row.name, editor: { kind: "Text" } },
+      { id: "score", header: "Score", accessor: (row) => row.score },
+    ]);
+    const selected = update(
+      init({ id: "mixed", columns: mixedColumns, editing: { mode: "Batch" } }),
+      Message.SelectedCell({ rowId: "a", columnId: "name" }),
+    ).model;
+    const mixedConfig = {
+      model: selected,
+      rows,
+      columns: mixedColumns,
+      getRowId: (row: typeof rows[number]) => row.id,
+    };
+    const pasted = update(
+      selected,
+      Option.getOrThrow(pasteMessage(mixedConfig, "Ann\t99\nBill\t21\nIgnored\t0")),
+    ).model;
+
+    expect(pasted.drafts.map(({ rowId, columnId, value }) => ({
+      rowId,
+      columnId,
+      value,
+    }))).toEqual([
+      { rowId: "a", columnId: "name", value: "Ann" },
+      { rowId: "b", columnId: "name", value: "Bill" },
+    ]);
+    expect(Option.getOrUndefined(pasted.selectedCell)).toEqual({
+      rowId: "b",
+      columnId: "score",
+    });
+  });
+
   it("stages edits without touching source rows and collapses repeated changes", () => {
     const first = commit(start(model()));
     expect(first.outMessage).toBeUndefined();

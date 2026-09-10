@@ -9,7 +9,7 @@ The first slice supports:
 - three-state sorting;
 - pointer column resizing and double-click reset;
 - rectangular selection with arrow and Shift+Arrow navigation;
-- spreadsheet-friendly TSV clipboard copy;
+- spreadsheet-friendly TSV clipboard copy and validated paste;
 - sticky headers, horizontal scrolling, and accessible grid semantics.
 
 ```ts
@@ -62,6 +62,14 @@ using standard quoted-field syntax. A column can provide
 `clipboardValue(context): string` when its exported value should differ from
 its accessor value. While a cell editor is open, native text-input copying is
 left unchanged.
+
+Pasting maps a TSV matrix from the focused cell, clips it at the grid bounds,
+and skips read-only columns without shifting the remaining values. Text,
+number, select, and checkbox editors use the same parsing and validation rules
+as direct edits; select labels and the checkbox values `true`/`false`,
+`yes`/`no`, and `1`/`0` are accepted. Invalid values remain highlighted drafts
+and block saving. Batch mode stages the matrix for review, while Immediate mode
+submits a valid matrix as one application-owned save request.
 
 ## Cell editing
 
@@ -191,5 +199,5 @@ Source checks protect local drafts, but the application must still validate
 writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
-Clipboard paste, column ordering, pinned columns, row virtualization, and
-infinite loading remain future work.
+Column ordering, pinned columns, row virtualization, and infinite loading
+remain future work.

@@ -55,7 +55,7 @@ The data grid currently demonstrates:
 - typed application-owned rows and column definitions;
 - custom cell rendering and numeric/text sorting;
 - sticky headers and horizontal/vertical scrolling;
-- rectangular keyboard selection with Shift+Arrow and TSV clipboard copy;
+- rectangular keyboard selection with Shift+Arrow and validated TSV copy/paste;
 - resizable columns with a double-click reset.
 
 The form builder demonstrates a section-first, multi-actor document model:
