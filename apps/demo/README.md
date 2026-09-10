@@ -59,6 +59,8 @@ Features include:
 The data grid currently demonstrates:
 
 - typed application-owned rows and column definitions;
+- an Excel-like worksheet shell with sticky row numbers, a live A1-style value
+  bar, compact 34px rows, and single-line cells;
 - custom cell rendering and numeric/text sorting;
 - sticky headers and horizontal/vertical scrolling;
 - rectangular keyboard selection with Shift+Arrow and validated TSV copy/paste;

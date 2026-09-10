@@ -40,6 +40,7 @@ export type ViewConfig<Row, ParentMessage> = Readonly<{
   emptyText?: string;
   rowHeight?: number;
   appearance?: "standalone" | "embedded";
+  showRowNumbers?: boolean;
   showEditingToolbar?: boolean;
   enableColumnReordering?: boolean;
   virtualization?: VirtualizationConfig;
@@ -68,6 +69,11 @@ export const view = <Row, ParentMessage>(
   const issues = editIssues(config);
   const clipboard = selectionText(table, range);
   const isVirtualized = config.virtualization !== undefined;
+  const rowNumberWidth = config.showRowNumbers === true ? 44 : 0;
+  const columnIndexOffset = config.showRowNumbers === true ? 1 : 0;
+  const templateColumns = config.showRowNumbers === true
+    ? `${rowNumberWidth}px ${table.templateColumns}`
+    : table.templateColumns;
   const viewportHeight = config.model.viewport.height > 0
     ? config.model.viewport.height
     : config.virtualization?.initialViewportHeight ?? rowHeight * 10;
@@ -108,7 +114,7 @@ export const view = <Row, ParentMessage>(
       h.AriaLabel(config.label ?? "Data grid"),
       h.AriaMultiSelectable(true),
       h.AriaRowcount(table.rows.length + 1),
-      h.AriaColcount(table.columns.length),
+      h.AriaColcount(table.columns.length + columnIndexOffset),
       h.DataAttribute("grid-id", config.model.id),
       h.DataAttribute("selection-size", String(selectedCount)),
       h.DataAttribute("virtualized", isVirtualized ? "true" : "false"),
@@ -141,16 +147,25 @@ export const view = <Row, ParentMessage>(
           h.div(
             [
               h.Class("fk-data-grid__table"),
-              h.Style({ minWidth: `${table.totalWidth}px` }),
+              h.Style({ minWidth: `${table.totalWidth + rowNumberWidth}px` }),
             ],
             [
               h.div(
                 [
                   h.Class("fk-data-grid__header"),
                   h.Role("row"),
-                  h.Style({ gridTemplateColumns: table.templateColumns }),
+                  h.Style({ gridTemplateColumns: templateColumns }),
                 ],
-                table.columns.map((column, columnIndex) => {
+                [
+                  ...(config.showRowNumbers === true
+                    ? [h.div([
+                        h.Class("fk-data-grid__row-header fk-data-grid__row-header--corner"),
+                        h.Role("columnheader"),
+                        h.AriaColindex(1),
+                        h.AriaLabel("Row numbers"),
+                      ], [])]
+                    : []),
+                  ...table.columns.map((column, columnIndex) => {
                   const definition = column.definition;
                   const canSort = definition.enableSorting !== false;
                   const canResize = definition.enableResizing !== false;
@@ -170,14 +185,14 @@ export const view = <Row, ParentMessage>(
                     [
                       h.Class("fk-data-grid__header-cell"),
                       h.Role("columnheader"),
-                      h.AriaColindex(columnIndex + 1),
+                      h.AriaColindex(columnIndex + 1 + columnIndexOffset),
                       h.AriaSort(ariaSort),
                       h.DataAttribute("column-id", definition.id),
                       h.DataAttribute("reordering", canReorder ? "true" : "false"),
                       h.DataAttribute("pinned", column.pinned?.toLowerCase() ?? "false"),
                       h.DataAttribute("pin-boundary", column.isPinBoundary ? "true" : "false"),
                       ...(column.pinned === "Start"
-                        ? [h.Style({ left: `${column.pinOffset}px` })]
+                        ? [h.Style({ left: `${column.pinOffset + rowNumberWidth}px` })]
                         : column.pinned === "End"
                           ? [h.Style({ right: `${column.pinOffset}px` })]
                           : []),
@@ -305,7 +320,8 @@ export const view = <Row, ParentMessage>(
                         : h.empty,
                     ],
                   );
-                }),
+                  }),
+                ],
               ),
               table.rows.length === 0
                 ? h.div([h.Class("fk-data-grid__empty")], [
@@ -325,12 +341,29 @@ export const view = <Row, ParentMessage>(
                             h.Role("row"),
                             h.AriaRowindex(row.index + 2),
                             h.Style({
-                              gridTemplateColumns: table.templateColumns,
+                              gridTemplateColumns: templateColumns,
                               height: `${rowHeight}px`,
                             }),
                             h.DataAttribute("row-id", row.id),
                           ],
-                          row.cells.map((cell, columnIndex) => {
+                          [
+                            ...(config.showRowNumbers === true
+                              ? [h.div([
+                                  h.Class("fk-data-grid__row-header"),
+                                  h.Role("rowheader"),
+                                  h.AriaColindex(1),
+                                  h.AriaLabel(`Row ${row.index + 1}`),
+                                  h.DataAttribute("row-number", String(row.index + 1)),
+                                  h.DataAttribute(
+                                    "selected",
+                                    range !== undefined && row.index >= range.startRowIndex &&
+                                        row.index <= range.endRowIndex
+                                      ? "true"
+                                      : "false",
+                                  ),
+                                ], [String(row.index + 1)])]
+                              : []),
+                            ...row.cells.map((cell, columnIndex) => {
                           const tableColumn = table.columns[columnIndex];
                           const isFocus =
                             selected?.rowId === row.id &&
@@ -408,14 +441,14 @@ export const view = <Row, ParentMessage>(
                               h.Class("fk-data-grid__cell"),
                               h.Id(id),
                               h.Role("gridcell"),
-                              h.AriaColindex(columnIndex + 1),
+                              h.AriaColindex(columnIndex + 1 + columnIndexOffset),
                               h.AriaSelected(isSelected),
                               h.Tabindex(isTabStop ? 0 : -1),
                               h.DataAttribute("cell-column-id", cell.column.id),
                               h.DataAttribute("pinned", tableColumn?.pinned?.toLowerCase() ?? "false"),
                               h.DataAttribute("pin-boundary", tableColumn?.isPinBoundary ? "true" : "false"),
                               ...(tableColumn?.pinned === "Start"
-                                ? [h.Style({ left: `${tableColumn.pinOffset}px` })]
+                                ? [h.Style({ left: `${tableColumn.pinOffset + rowNumberWidth}px` })]
                                 : tableColumn?.pinned === "End"
                                   ? [h.Style({ right: `${tableColumn.pinOffset}px` })]
                                   : []),
@@ -464,7 +497,8 @@ export const view = <Row, ParentMessage>(
                               ...(editing ? [h.span([h.Id(`${id}:editor:help`), h.Class("fk-data-grid__sr-only")], [active.error || "Enter to commit. Escape to cancel."])] : []),
                             ],
                           );
-                          }),
+                            }),
+                          ],
                         ),
                       ),
                       ...(rowWindow.paddingBottom > 0

@@ -39,6 +39,7 @@ DataGrid.view(
     getRowId: (person) => person.id,
     toParentMessage: (message) => Message.GotDataGridMessage({ message }),
     appearance: "embedded",
+    showRowNumbers: true,
   },
   h,
 )
@@ -55,6 +56,10 @@ custom properties on `.fk-data-grid` provide the initial theming surface.
 Use `appearance: "embedded"` when a surrounding panel already owns the outer
 border and rounded corners; the default `"standalone"` appearance keeps the
 grid's complete frame.
+
+Set `showRowNumbers: true` for spreadsheet-oriented surfaces. The grid adds a
+sticky row-header gutter, adjusts pinned-start offsets, and exposes the gutter
+through ARIA row and column indices without changing data-cell coordinates.
 
 ## Selection and clipboard
 

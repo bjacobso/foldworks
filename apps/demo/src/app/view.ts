@@ -161,7 +161,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
     : demo === "DataTable"
       ? "People"
     : demo === "DataGrid"
-      ? "People operations"
+      ? "Headcount worksheet"
       : demo === "FormBuilder"
         ? model.formEditor.document.title
         : demo === "QueryBuilder"
@@ -176,7 +176,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
     : demo === "DataTable"
       ? `${contacts.length} people · resource-first CRUD table`
     : demo === "DataGrid"
-      ? `${people.length} people · controlled Foldkit data grid`
+      ? `${people.length} rows · cell editing · spreadsheet controls`
       : demo === "FormBuilder"
         ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
         : demo === "QueryBuilder"
@@ -201,7 +201,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         : demo === "DataTable"
           ? [Badge.view({ label: "Semantic table + controlled data", tone: "info", dot: true }, h)]
         : demo === "DataGrid"
-          ? [Badge.view({ label: "Headless core + DOM view" }, h)]
+          ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
           : demo === "QueryBuilder"
             ? [Badge.view({ label: "Validates as you edit", tone: "success", dot: true }, h)]
           : demo === "PdfAnnotator"

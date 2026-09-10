@@ -554,6 +554,7 @@ describe.sequential("structured workflow builder", () => {
     const grid = page.locator('[data-grid-id="people-directory"]');
     await expect.poll(() => grid.isVisible()).toBe(true);
     await expect.poll(() => grid.getAttribute("aria-rowcount")).toBe("121");
+    await expect.poll(() => grid.getAttribute("aria-colcount")).toBe("9");
     await expect.poll(() => grid.getAttribute("data-virtualized")).toBe("true");
     await expect.poll(() => grid.locator('[data-row-id]').count()).toBeLessThan(120);
     await expect.poll(() => grid.getByText("Active", { exact: true }).count()).toBeGreaterThan(0);
@@ -584,6 +585,15 @@ describe.sequential("structured workflow builder", () => {
     const employeeCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="employee"]');
     const roleCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="role"]');
     const equipmentCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="equipmentIssued"]');
+    const firstRowHeader = grid.locator('[data-row-id="person-1"] [role="rowheader"]');
+    await expect.poll(() => firstRowHeader.textContent()).toBe("1");
+    await expect.poll(() => grid.locator('[data-row-id="person-1"]').evaluate((element) =>
+      element.getBoundingClientRect().height)).toBe(34);
+    await expect.poll(() => employeeCell.evaluate((element) => ({
+      left: getComputedStyle(element).left,
+      whiteSpace: getComputedStyle(element).whiteSpace,
+    }))).toEqual({ left: "44px", whiteSpace: "nowrap" });
+    await expect.poll(() => page.locator('[data-grid-cell-address]').textContent()).toBe("—");
     await expect.poll(() => employeeCell.getAttribute("data-pinned")).toBe("start");
     await expect.poll(() => equipmentCell.getAttribute("data-pinned")).toBe("end");
     await scroller.evaluate((element) => {
@@ -615,13 +625,13 @@ describe.sequential("structured workflow builder", () => {
     const locationHeader = grid.locator('[data-column-id="location"]');
     await locationHeader.hover();
     await locationHeader.getByRole("button", { name: "Move Location column left" }).click();
-    await expect.poll(() => grid.locator('[role="columnheader"]').nth(3).getAttribute("data-column-id"))
+    await expect.poll(() => grid.locator('[role="columnheader"]').nth(4).getAttribute("data-column-id"))
       .toBe("location");
     await expect.poll(() => grid.locator('[data-row-id="person-1"] [role="gridcell"]').nth(3).textContent())
       .toBe("San Francisco");
     await locationHeader.hover();
     await locationHeader.getByRole("button", { name: "Move Location column right" }).click();
-    await expect.poll(() => grid.locator('[role="columnheader"]').nth(4).getAttribute("data-column-id"))
+    await expect.poll(() => grid.locator('[role="columnheader"]').nth(5).getAttribute("data-column-id"))
       .toBe("location");
 
     const employeeHeader = grid.locator('[data-column-id="employee"]');
@@ -639,6 +649,8 @@ describe.sequential("structured workflow builder", () => {
     const firstCell = grid.locator('[data-grid-cell-position="0:0"]');
     await firstCell.click();
     await expect.poll(() => firstCell.getAttribute("data-selected")).toBe("true");
+    await expect.poll(() => page.locator('[data-grid-cell-address]').textContent()).toBe("A1");
+    await expect.poll(() => page.locator('[data-grid-cell-value]').textContent()).toBe("Zoe Kim");
     await page.keyboard.press("ArrowRight");
     await expect
       .poll(() => grid.locator('[data-grid-cell-position="0:1"]').getAttribute("data-selected"))
