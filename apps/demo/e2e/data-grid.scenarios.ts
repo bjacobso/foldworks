@@ -75,7 +75,7 @@ export const dataGridEditingScenarios = (getPage: () => Page, appUrl: string, sc
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await cell(1, 2).click();
-      await page.locator('[data-column-id="department"] button').click();
+      await page.locator('[data-column-id="department"] .fk-data-grid__header-button').click();
       await expect.poll(() =>
         page.locator('[data-column-id="department"]').getAttribute("aria-sort"),
       ).toBe("ascending");

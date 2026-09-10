@@ -11,6 +11,19 @@ const model = () => init({
 });
 
 describe("update", () => {
+  it("stores a deduplicated column order and skips redundant updates", () => {
+    const reordered = update(
+      model(),
+      Message.ChangedColumnOrder({ columnIds: ["department", "name", "name"] }),
+    ).model;
+
+    expect(reordered.columnOrder).toEqual(["department", "name"]);
+    expect(update(
+      reordered,
+      Message.ChangedColumnOrder({ columnIds: ["department", "name"] }),
+    ).model).toBe(reordered);
+  });
+
   it("records a clamped viewport measurement without redundant updates", () => {
     const measured = update(
       model(),

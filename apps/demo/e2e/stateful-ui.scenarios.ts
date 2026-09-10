@@ -63,6 +63,7 @@ export const statefulUiScenarios = (getPage: () => Page, appUrl: string, screens
       await expect.poll(() => listbox.isVisible()).toBe(true);
       await expect.poll(() => listbox.evaluate((element) => element === document.activeElement)).toBe(true);
       await page.keyboard.press("Home");
+      await expect.poll(() => listbox.getAttribute("aria-activedescendant")).toBe("catalog-select-item-0");
       await page.keyboard.press("ArrowDown");
       await expect.poll(() => listbox.getAttribute("aria-activedescendant")).toBe("catalog-select-item-2");
       expect(await listbox.getByRole("option", { name: "Operations" }).getAttribute("aria-disabled")).toBe("true");

@@ -45,6 +45,7 @@ export type Viewport = typeof Viewport.Type;
 
 export const Model = S.Struct({
   id: S.String,
+  columnOrder: S.Array(S.String),
   selectedCell: S.Option(CellAddress),
   selectionAnchor: S.Option(CellAddress),
   sorting: S.Option(Sorting),
@@ -68,6 +69,7 @@ export type InitConfig<Row = unknown, ParentMessage = never> = Readonly<{
 
 export const init = (config: InitConfig): Model => ({
   id: config.id,
+  columnOrder: config.columns.map((column) => column.id),
   selectedCell: Option.none(),
   selectionAnchor: Option.none(),
   sorting: Option.none(),

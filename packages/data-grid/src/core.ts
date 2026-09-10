@@ -104,6 +104,40 @@ export type CreateTableConfig<Row, ParentMessage> = Readonly<{
   getRowId: (row: Row) => string;
 }>;
 
+export type ColumnMoveDirection = "Before" | "After";
+
+export const orderedColumns = <Row, ParentMessage>(
+  columns: ReadonlyArray<ColumnDef<Row, ParentMessage>>,
+  columnOrder: ReadonlyArray<string>,
+): ReadonlyArray<ColumnDef<Row, ParentMessage>> => {
+  const byId = new Map(columns.map((column) => [column.id, column]));
+  const seen = new Set<string>();
+  const ordered = columnOrder.flatMap((columnId) => {
+    const column = byId.get(columnId);
+    if (column === undefined || seen.has(columnId)) return [];
+    seen.add(columnId);
+    return [column];
+  });
+  return [...ordered, ...columns.filter((column) => !seen.has(column.id))];
+};
+
+export const moveColumn = (
+  columnIds: ReadonlyArray<string>,
+  columnId: string,
+  direction: ColumnMoveDirection,
+): ReadonlyArray<string> => {
+  const uniqueIds = [...new Set(columnIds)];
+  const fromIndex = uniqueIds.indexOf(columnId);
+  const toIndex = fromIndex + (direction === "Before" ? -1 : 1);
+  if (fromIndex < 0 || toIndex < 0 || toIndex >= uniqueIds.length) return uniqueIds;
+  const reordered = [...uniqueIds];
+  [reordered[fromIndex], reordered[toIndex]] = [
+    reordered[toIndex]!,
+    reordered[fromIndex]!,
+  ];
+  return reordered;
+};
+
 export const compareValues = (left: CellValue, right: CellValue): number => {
   if (left === right) return 0;
   if (left === null || left === undefined) return -1;
@@ -128,10 +162,11 @@ export const columnWidth = (
 export const createTable = <Row, ParentMessage>(
   config: CreateTableConfig<Row, ParentMessage>,
 ): Table<Row, ParentMessage> => {
+  const definitions = orderedColumns(config.columns, config.model.columnOrder);
   const sorting = Option.getOrUndefined(config.model.sorting);
   const sortingColumn = sorting === undefined
     ? undefined
-    : config.columns.find((column) => column.id === sorting.columnId);
+    : definitions.find((column) => column.id === sorting.columnId);
   const rows = [...config.rows];
   if (sorting !== undefined && sortingColumn !== undefined) {
     const direction = sorting.direction === "Ascending" ? 1 : -1;
@@ -143,7 +178,7 @@ export const createTable = <Row, ParentMessage>(
     );
   }
 
-  const columns = config.columns.map((definition) => ({
+  const columns = definitions.map((definition) => ({
     definition,
     width: columnWidth(
       config.model,
@@ -159,7 +194,7 @@ export const createTable = <Row, ParentMessage>(
       id: rowId,
       index,
       original: row,
-      cells: config.columns.map((column) => ({
+      cells: definitions.map((column) => ({
         id: `${rowId}:${column.id}`,
         column,
         value: (() => {

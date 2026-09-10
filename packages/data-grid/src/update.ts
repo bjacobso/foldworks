@@ -178,6 +178,13 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         ? { model }
         : { model: { ...model, viewport } };
     },
+    ChangedColumnOrder: ({ columnIds }) => {
+      const columnOrder = [...new Set(columnIds)];
+      return columnOrder.length === model.columnOrder.length &&
+          columnOrder.every((columnId, index) => model.columnOrder[index] === columnId)
+        ? { model }
+        : { model: { ...model, columnOrder } };
+    },
     ToggledSort: ({ columnId }) => ({
       model: { ...model, sorting: nextSorting(model.sorting, columnId) },
     }),

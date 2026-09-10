@@ -78,6 +78,57 @@
   cursor: default;
 }
 
+.fk-data-grid__header-cell[data-reordering="true"] .fk-data-grid__header-button {
+  padding-right: 62px;
+}
+
+.fk-data-grid__reorder-controls {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  transition: opacity 120ms ease;
+  z-index: 2;
+}
+
+.fk-data-grid__header-cell:hover .fk-data-grid__reorder-controls,
+.fk-data-grid__header-cell:focus-within .fk-data-grid__reorder-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fk-data-grid__reorder-button {
+  align-items: center;
+  background: var(--foldworks-ui-surface, #fff);
+  border: 1px solid var(--data-grid-border-strong);
+  border-radius: 4px;
+  color: var(--data-grid-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  padding: 0;
+  width: 24px;
+}
+
+.fk-data-grid__reorder-button:hover:not(:disabled) {
+  color: var(--data-grid-text);
+}
+
+.fk-data-grid__reorder-button:focus-visible {
+  outline: 2px solid var(--data-grid-accent);
+  outline-offset: 1px;
+}
+
+.fk-data-grid__reorder-button:disabled {
+  cursor: default;
+  opacity: .35;
+}
+
 .fk-data-grid__sort {
   align-items: center;
   color: var(--data-grid-muted);

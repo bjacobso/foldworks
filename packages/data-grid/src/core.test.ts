@@ -6,6 +6,8 @@ import {
   createTable,
   defineColumns,
   isCellInSelection,
+  moveColumn,
+  orderedColumns,
   selectionRange,
   selectionSize,
   selectionText,
@@ -57,6 +59,50 @@ describe("createTable", () => {
 
     expect(table.rows.map((row) => row.id)).toEqual(["one", "two"]);
     expect(rows.map((row) => row.id)).toEqual(["two", "one"]);
+  });
+
+  it("orders columns by stable ids and appends newly supplied definitions", () => {
+    const extraColumns = defineColumns<Person>()([
+      ...columns,
+      { id: "rank", header: "Rank", accessor: (person) => person.score + 1 },
+    ]);
+    const model = {
+      ...init({ id: "people", columns }),
+      columnOrder: ["score", "missing", "score", "name"],
+    };
+    const table = createTable({
+      model,
+      columns: extraColumns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+
+    expect(table.columns.map((column) => column.definition.id))
+      .toEqual(["score", "name", "rank"]);
+    expect(table.templateColumns).toBe("90px 220px 160px");
+    expect(table.rows[0]?.cells.map((cell) => cell.value))
+      .toEqual([12, "Beta", 13]);
+    expect(orderedColumns(extraColumns, model.columnOrder)).toEqual([
+      extraColumns[1], extraColumns[0], extraColumns[2],
+    ]);
+  });
+});
+
+describe("moveColumn", () => {
+  it("moves a column one position without mutating the supplied order", () => {
+    const source = ["name", "score", "rank"];
+    expect(moveColumn(source, "score", "Before")).toEqual(["score", "name", "rank"]);
+    expect(moveColumn(source, "score", "After")).toEqual(["name", "rank", "score"]);
+    expect(source).toEqual(["name", "score", "rank"]);
+  });
+
+  it("deduplicates ids and leaves boundary and unknown moves in place", () => {
+    expect(moveColumn(["name", "name", "score"], "name", "Before"))
+      .toEqual(["name", "score"]);
+    expect(moveColumn(["name", "score"], "score", "After"))
+      .toEqual(["name", "score"]);
+    expect(moveColumn(["name", "score"], "missing", "Before"))
+      .toEqual(["name", "score"]);
   });
 });
 

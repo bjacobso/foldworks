@@ -128,13 +128,14 @@ export const dataGridView = (
           label: "Team directory",
           rowHeight: 52,
           appearance: "embedded",
+          enableColumnReordering: true,
           virtualization: { overscan: 4, initialViewportHeight: 700 },
         },
         h,
       ),
       h.footer([h.Class(className(dataGridStyles.footer))], [
         h.span([], ["Arrow to move · Shift+Arrow to select · ⌘/Ctrl+C or V to copy/paste"]),
-        h.span([], ["Enter or double-click to edit · drag a column edge to resize"]),
+        h.span([], ["Enter or double-click to edit · header arrows reorder · drag an edge to resize"]),
       ]),
     ]),
   ]);

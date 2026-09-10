@@ -8,6 +8,7 @@ The first slice supports:
 - custom cell and header rendering;
 - three-state sorting;
 - pointer column resizing and double-click reset;
+- opt-in accessible column reordering;
 - rectangular selection with arrow and Shift+Arrow navigation;
 - spreadsheet-friendly TSV clipboard copy and validated paste;
 - opt-in fixed-row virtualization with measured viewport overscan;
@@ -93,6 +94,19 @@ selection, editing, and clipboard operations continue to use the complete
 headless table, and `aria-rowcount`/`aria-rowindex` retain absolute values.
 At least one overscan row is always retained so arrow-key focus can cross a
 window boundary safely.
+
+## Column ordering
+
+Set `enableColumnReordering: true` on the view to add accessible move-left and
+move-right controls to each column header. The order is stored in the grid
+model as stable column IDs, so sorting, resized widths, selections, and staged
+edits remain attached to the correct column as it moves.
+
+The table reconciles the stored order with the definitions supplied on every
+render: removed IDs are ignored, duplicate IDs are collapsed, and new columns
+are appended in definition order. Applications can also build their own
+ordering UI with `moveColumn(columnIds, columnId, direction)` and dispatch
+`Message.ChangedColumnOrder({ columnIds })`.
 
 ## Cell editing
 
@@ -222,4 +236,4 @@ Source checks protect local drafts, but the application must still validate
 writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
-Column ordering, pinned columns, and infinite loading remain future work.
+Pinned columns and infinite loading remain future work.

@@ -2,7 +2,7 @@ import { Option } from "effect";
 import { Mount } from "foldkit";
 import type { Html, HtmlBuilder, KeyboardModifiers } from "foldkit/html";
 
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "@lucide/icons";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronsUpDown } from "@lucide/icons";
 import * as Icon from "@foldworks/ui/icon";
 
 import {
@@ -12,6 +12,7 @@ import {
   MIN_COLUMN_WIDTH,
   columnWidth,
   isCellInSelection,
+  moveColumn,
   selectionRange,
   selectionSize,
   selectionText,
@@ -40,6 +41,7 @@ export type ViewConfig<Row, ParentMessage> = Readonly<{
   rowHeight?: number;
   appearance?: "standalone" | "embedded";
   showEditingToolbar?: boolean;
+  enableColumnReordering?: boolean;
   virtualization?: VirtualizationConfig;
 }>;
 
@@ -87,6 +89,7 @@ export const view = <Row, ParentMessage>(
         paddingBottom: 0,
       };
   const renderedRows = table.rows.slice(rowWindow.startIndex, rowWindow.endIndex);
+  const columnIds = table.columns.map((column) => column.definition.id);
   const spacer = (position: "top" | "bottom", height: number) => h.div(
     [
       h.Class("fk-data-grid__virtual-spacer"),
@@ -151,6 +154,7 @@ export const view = <Row, ParentMessage>(
                   const definition = column.definition;
                   const canSort = definition.enableSorting !== false;
                   const canResize = definition.enableResizing !== false;
+                  const canReorder = config.enableColumnReordering === true;
                   const ariaSort = column.sortDirection === "Ascending"
                     ? "ascending"
                     : column.sortDirection === "Descending"
@@ -164,6 +168,7 @@ export const view = <Row, ParentMessage>(
                       h.AriaColindex(columnIndex + 1),
                       h.AriaSort(ariaSort),
                       h.DataAttribute("column-id", definition.id),
+                      h.DataAttribute("reordering", canReorder ? "true" : "false"),
                     ],
                     [
                       h.button(
@@ -203,6 +208,51 @@ export const view = <Row, ParentMessage>(
                             : h.empty,
                         ],
                       ),
+                      canReorder
+                        ? h.div(
+                            [
+                              h.Class("fk-data-grid__reorder-controls"),
+                              h.Role("group"),
+                              h.AriaLabel(`Reorder ${definition.header} column`),
+                            ],
+                            (["Before", "After"] as const).map((direction) => {
+                              const isBefore = direction === "Before";
+                              return h.button(
+                                [
+                                  h.Type("button"),
+                                  h.Class("fk-data-grid__reorder-button"),
+                                  h.AriaLabel(
+                                    `Move ${definition.header} column ${isBefore ? "left" : "right"}`,
+                                  ),
+                                  h.Title(
+                                    `Move ${definition.header} column ${isBefore ? "left" : "right"}`,
+                                  ),
+                                  h.Disabled(
+                                    isBefore
+                                      ? columnIndex === 0
+                                      : columnIndex === table.columns.length - 1,
+                                  ),
+                                  h.OnClick(config.toParentMessage(
+                                    Message.ChangedColumnOrder({
+                                      columnIds: moveColumn(
+                                        columnIds,
+                                        definition.id,
+                                        direction,
+                                      ),
+                                    }),
+                                  )),
+                                ],
+                                [
+                                  Icon.view({
+                                    icon: isBefore ? ArrowLeft : ArrowRight,
+                                    size: 13,
+                                    strokeWidth: 2.25,
+                                  }, h),
+                                ],
+                              );
+                            }),
+                          )
+                        : h.empty,
                       canResize
                         ? h.div(
                             [

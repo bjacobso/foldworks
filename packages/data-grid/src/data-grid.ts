@@ -1,9 +1,12 @@
 export {
   defineColumns,
   isCellInSelection,
+  moveColumn,
+  orderedColumns,
   selectionRange,
   selectionSize,
   selectionText,
+  type ColumnMoveDirection,
   type SelectionRange,
 } from "./core";
 import { Message as MessageSchema, type Message as MessageValue } from "./message";

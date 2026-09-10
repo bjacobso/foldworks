@@ -26,6 +26,7 @@ export const Message = defineMessageUnion({
     focus: CellAddress,
   },
   MeasuredViewport: { scrollTop: S.Number, height: S.Number },
+  ChangedColumnOrder: { columnIds: S.Array(S.String) },
   ToggledSort: { columnId: S.String },
   StartedColumnResize: {
     columnId: S.String,

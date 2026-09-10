@@ -545,8 +545,7 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("renders and operates the Foldkit-native data grid", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
-    await page.getByRole("link", { name: "Data grid" }).click();
+    await page.goto(`${appUrl}/data-grid`, { waitUntil: "networkidle" });
 
     const grid = page.locator('[data-grid-id="people-directory"]');
     await expect.poll(() => grid.isVisible()).toBe(true);
@@ -578,14 +577,26 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => grid.locator('[data-grid-cell-position="0:0"]').isVisible())
       .toBe(true);
 
+    const locationHeader = grid.locator('[data-column-id="location"]');
+    await locationHeader.hover();
+    await locationHeader.getByRole("button", { name: "Move Location column left" }).click();
+    await expect.poll(() => grid.locator('[role="columnheader"]').nth(3).getAttribute("data-column-id"))
+      .toBe("location");
+    await expect.poll(() => grid.locator('[data-row-id="person-1"] [role="gridcell"]').nth(3).textContent())
+      .toBe("San Francisco");
+    await locationHeader.hover();
+    await locationHeader.getByRole("button", { name: "Move Location column right" }).click();
+    await expect.poll(() => grid.locator('[role="columnheader"]').nth(4).getAttribute("data-column-id"))
+      .toBe("location");
+
     const employeeHeader = grid.locator('[data-column-id="employee"]');
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="chevrons-up-down"]').count())
       .toBe(1);
-    await employeeHeader.getByRole("button").click();
+    await employeeHeader.locator(".fk-data-grid__header-button").click();
     await expect.poll(() => employeeHeader.getAttribute("aria-sort")).toBe("ascending");
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="arrow-up"]').count())
       .toBe(1);
-    await employeeHeader.getByRole("button").click();
+    await employeeHeader.locator(".fk-data-grid__header-button").click();
     await expect.poll(() => employeeHeader.getAttribute("aria-sort")).toBe("descending");
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="arrow-down"]').count())
       .toBe(1);
