@@ -5,6 +5,8 @@ Polished application primitives for Foldkit and StyleX.
 Foldworks is an umbrella collection of reusable packages for building rich,
 accessible application interfaces with Foldkit:
 
+- [`@foldworks/editor`](./packages/editor) — a native rich-text editor with
+  Markdown import/export, draggable blocks, and application-defined Foldkit views.
 - [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic
   design tokens, and accessible visual primitives.
 - [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation

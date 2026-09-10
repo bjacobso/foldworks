@@ -2,6 +2,7 @@ import type { Page } from "playwright";
 import { describe, expect, it } from "vitest";
 
 const expectedPackages = [
+  "@foldworks/editor",
   "@foldworks/ui",
   "@foldworks/sidebar",
   "@foldworks/agent",

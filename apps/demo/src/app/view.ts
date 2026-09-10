@@ -18,6 +18,7 @@ import {
   Toolbar,
 } from "@foldworks/ui";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
 
 import { view as agentView } from "../agent/view";
@@ -33,6 +34,7 @@ import { view as queryBuilderView } from "../query-builder/view";
 import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
 import {
+  editorRouter,
   agentRouter,
   dataTablePath,
   dataGridRouter,
@@ -108,6 +110,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
       id: "application-primitives",
       label: "Application primitives",
       items: [
+        { id: "editor", label: "Document editor", href: editorRouter(), icon: FileText, isActive: demo === "Editor" },
         { id: "code-editor", label: "Code editor", href: codeEditorRouter(), icon: Braces, isActive: demo === "CodeEditor" },
         { id: "data-table", label: "Data table", href: dataTablePath(), icon: Table2, isActive: demo === "DataTable" },
         { id: "data-grid", label: "Data grid", href: dataGridRouter(), icon: Table2, isActive: demo === "DataGrid" },
@@ -156,7 +159,7 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
-  const title = demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
+  const title = demo === "Editor" ? "Document editor" : demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
     ? "Candidate workflow"
     : demo === "DataTable"
       ? "People"
@@ -171,7 +174,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         : demo === "Home"
           ? "Foldworks"
           : "@foldworks/ui";
-  const description = demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
+  const description = demo === "Editor" ? "Native Foldkit editing · Markdown · Custom blocks" : demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
     : demo === "DataTable"
       ? `${contacts.length} people · resource-first CRUD table`
@@ -190,7 +193,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
     title,
     description,
     actions: [
-      ...(demo === "Agent"
+      ...(demo === "Editor"
+        ? [Badge.view({ label: "Native editor preview", dot: true }, h)]
+        : demo === "Agent"
         ? [Badge.view({ label: "Simulated", tone: "info", dot: true }, h)]
         : demo === "Workflow" || demo === "FormBuilder"
         ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
@@ -208,7 +213,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
           : demo === "Home"
             ? [
-                Badge.view({ label: "11 packages", tone: "info", dot: true }, h),
+                Badge.view({ label: "12 packages", tone: "info", dot: true }, h),
                 Badge.view({ label: "Open source" }, h),
               ]
             : [
@@ -247,6 +252,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   if (demo === "Home") return homeView(h);
+  if (demo === "Editor") return h.submodel({ slotId: "document-editor", model: model.editor, view: ArticleEditor.view, toParentMessage: message => Message.GotEditorMessage({ message }) });
   if (demo === "Agent") return h.submodel({
     slotId: "agent-content",
     model: model.agent,
@@ -319,6 +325,7 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
+  Match.when("Editor", () => "Document editor · Foldworks"),
   Match.when("Agent", () => "Interactive agent · Foldworks"),
   Match.when("CodeEditor", () => "Code editor · Foldworks"),
   Match.when("Workbench", () => "Workers workbench · Foldworks"),
@@ -357,7 +364,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
               content: content(model, h),
               footer: {
                 title: "Application primitives",
-                description: "Eleven Foldworks packages",
+                description: "Twelve Foldworks packages",
                 icon: Blocks,
               },
               ariaLabel: "Foldworks navigation",

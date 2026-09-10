@@ -6,7 +6,7 @@ and explains the boundary between UI components and application primitives.
 Use the sidebar to move between every package showcase.
 
 Foldkit's bidirectional router owns navigational state. The project overview
-lives at `/`; demos live at `/ui-kit`, `/data-table`, `/data-grid`, `/query-builder`,
+lives at `/`; demos live at `/ui-kit`, `/editor`, `/data-table`, `/data-grid`, `/query-builder`,
 `/form-builder`, `/workflow`, `/pdf-annotator`, and `/agent`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,

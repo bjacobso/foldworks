@@ -1,6 +1,7 @@
 import { Effect, Option, Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
 import { Command, Update } from "foldkit";
 import { UrlRequest, load, pushUrl } from "foldkit/navigation";
@@ -170,6 +171,14 @@ const foldPdfAnnotator = Update.foldChild({
   toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
 });
 
+const foldEditor = Update.foldChild({
+  update: ArticleEditor.update,
+  read: (model: Model) => Option.some(model.editor),
+  write: (model, editor) => ({ ...model, editor }),
+  toParentMessage: message => Message.GotEditorMessage({ message }),
+  foldOutMessage: () => (model: Model): UpdateReturn => ({ model }),
+});
+
 const foldSidebar = Update.foldChild({
   update: Sidebar.update,
   read: (model: Model) => Option.some(model.sidebar),
@@ -277,6 +286,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       foldQueryBuilder(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) =>
       foldPdfAnnotator(model, childMessage),
+    GotEditorMessage: ({ message }) => foldEditor(model, message),
     GotSidebarMessage: ({ message: childMessage }) => foldSidebar(model, childMessage),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),
   });

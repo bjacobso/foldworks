@@ -1,6 +1,7 @@
 import { Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { Message as EditorMessage } from "@foldworks/editor";
 import { Sidebar } from "@foldworks/sidebar";
 import { defineMessageUnion } from "foldkit/message";
 import { UrlRequest } from "foldkit/navigation";
@@ -35,6 +36,7 @@ export const Message = defineMessageUnion({
   GotDataTableDemoMessage: { message: DataTableMessage },
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
   GotPdfAnnotatorMessage: { message: PdfAnnotator.Message },
+  GotEditorMessage: { message: EditorMessage },
   GotSidebarMessage: { message: Sidebar.Message },
   GotUiKitMessage: { message: UiKitMessage },
 });
