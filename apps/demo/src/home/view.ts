@@ -2,6 +2,7 @@ import type { LucideIconData } from "@lucide/icons";
 import {
   ArrowRight,
   Blocks,
+  Bot,
   Braces,
   CheckCircle2,
   FileText,
@@ -24,6 +25,7 @@ import {
   pdfAnnotatorRouter,
   queryBuilderRouter,
   uiKitRouter,
+  workbenchRouter,
   workflowPath,
 } from "../app/route";
 import { className, styles } from "./styles";
@@ -50,6 +52,13 @@ const packages: ReadonlyArray<Package> = [
     description: "Responsive application chrome with controlled navigation state.",
     href: "/",
     icon: PanelLeft,
+  },
+  {
+    name: "@foldworks/agent",
+    category: "Application primitive",
+    description: "Streaming conversations, tool states, approvals, cancellation, and retry.",
+    href: agentRouter(),
+    icon: Bot,
   },
   {
     name: "@foldworks/code-editor",
@@ -249,9 +258,9 @@ export const view = <Message>(h: HtmlBuilder<Message>): Html =>
             "Foldworks is a collection of polished, controlled building blocks for ambitious web applications—from interface components to complete editors and structured workflows.",
           ]),
           h.div([h.Class(className(styles.actions))], [
-            link("Explore the UI system", uiKitRouter(), "primary", h),
+            link("Open the Workers workbench", workbenchRouter(), "primary", h),
             link("Try the agent playground", agentRouter(), "secondary", h),
-            link("Open the workflow builder", workflowPath("Vertical"), "secondary", h),
+            link("Explore the UI system", uiKitRouter(), "secondary", h),
           ]),
           h.div([h.Class(className(styles.heroMeta))], [
             h.span([h.Class(className(styles.metaItem))], [Icon.view({ icon: CheckCircle2, size: 14 }, h), "Accessible by default"]),

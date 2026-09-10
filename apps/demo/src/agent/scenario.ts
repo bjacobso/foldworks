@@ -1,10 +1,9 @@
 import { Effect, Stream } from "effect";
+import type { Agent } from "@foldworks/agent";
 
-import type { EventEnvelope, AgentStreamEvent, Segment } from "./protocol";
+type Step = Readonly<{ delay: number; event: Agent.StreamEvent }>;
 
-type Step = Readonly<{ delay: number; event: AgentStreamEvent }>;
-
-const initialEvents = (runId: string, modelId: string): ReadonlyArray<AgentStreamEvent> => [
+const initialEvents = (runId: string, modelId: string): ReadonlyArray<Agent.StreamEvent> => [
   { _tag: "Started", runId, modelId },
   { _tag: "TextStarted", runId, partId: `${runId}-text-1` },
   { _tag: "TextDelta", runId, partId: `${runId}-text-1`, delta: "I’ll inspect the release setup first, " },
@@ -28,7 +27,7 @@ const initialEvents = (runId: string, modelId: string): ReadonlyArray<AgentStrea
   { _tag: "PermissionRequested", runId, callId: `${runId}-write`, reason: "Writing a project file changes the workspace and requires your approval." },
 ];
 
-const approvedEvents = (runId: string): ReadonlyArray<AgentStreamEvent> => [
+const approvedEvents = (runId: string): ReadonlyArray<Agent.StreamEvent> => [
   { _tag: "ToolStarted", runId, callId: `${runId}-write` },
   { _tag: "ToolResult", runId, callId: `${runId}-write`, output: "{\n  \"updated\": \"docs/launch-checklist.md\",\n  \"linesAdded\": 4,\n  \"simulated\": true\n}" },
   { _tag: "TextStarted", runId, partId: `${runId}-text-3` },
@@ -39,7 +38,7 @@ const approvedEvents = (runId: string): ReadonlyArray<AgentStreamEvent> => [
   { _tag: "Finished", runId },
 ];
 
-const deniedEvents = (runId: string): ReadonlyArray<AgentStreamEvent> => [
+const deniedEvents = (runId: string): ReadonlyArray<Agent.StreamEvent> => [
   { _tag: "TextStarted", runId, partId: `${runId}-text-3` },
   { _tag: "TextDelta", runId, partId: `${runId}-text-3`, delta: "Understood — I didn’t apply the checklist update. " },
   { _tag: "TextDelta", runId, partId: `${runId}-text-3`, delta: "The inspection result is still available above, and no file was changed." },
@@ -48,10 +47,10 @@ const deniedEvents = (runId: string): ReadonlyArray<AgentStreamEvent> => [
 ];
 
 export const scenarioEvents = (
-  segment: Segment,
+  segment: Agent.Segment,
   runId: string,
   modelId: string,
-): ReadonlyArray<EventEnvelope> => {
+): ReadonlyArray<Agent.EventEnvelope> => {
   const events = segment === "Initial"
     ? initialEvents(runId, modelId)
     : segment === "Approved"
@@ -61,18 +60,18 @@ export const scenarioEvents = (
   return events.map((event, index) => ({ sequence: start + index, event }));
 };
 
-const delayFor = (event: AgentStreamEvent): number =>
+const delayFor = (event: Agent.StreamEvent): number =>
   event._tag === "TextDelta" ? 85
     : event._tag === "ToolStarted" || event._tag === "ToolResult" ? 240
       : event._tag === "PermissionRequested" ? 160
         : 45;
 
 export const scenarioStream = (
-  segment: Segment,
+  segment: Agent.Segment,
   runId: string,
   modelId: string,
-): Stream.Stream<EventEnvelope> => Stream.fromIterable(
-  scenarioEvents(segment, runId, modelId).map((envelope): Step & Readonly<{ envelope: EventEnvelope }> => ({
+): Stream.Stream<Agent.EventEnvelope> => Stream.fromIterable(
+  scenarioEvents(segment, runId, modelId).map((envelope): Step & Readonly<{ envelope: Agent.EventEnvelope }> => ({
     delay: delayFor(envelope.event),
     event: envelope.event,
     envelope,

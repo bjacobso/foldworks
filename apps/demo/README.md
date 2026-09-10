@@ -83,13 +83,15 @@ The UI component showcase demonstrates every `@foldworks/ui` primitive:
 - all 61 current shadcn-equivalent component families, including controlled
   overlays, menus, navigation, tables, charts, calendars, and message views.
 
-The agent playground at `/agent` demonstrates a provider-neutral conversation
-surface with real incremental Effect streams, tool input and result states, an
+The agent playground at `/agent` demonstrates the provider-neutral
+`@foldworks/agent` conversation runtime with real incremental Effect streams,
+tool input and result states, an
 inline allow/deny permission checkpoint, model selection, and a multiline
 composer. Its model responses and tool results are deterministic local fixtures:
 the demo does not call a provider, use an API key, execute a command, or change a
 file. The normalized event protocol can later accept AI SDK UI message chunks or
-Effect AI `LanguageModel.streamText` parts without changing the reducer or view.
+Effect AI `LanguageModel.streamText` parts without changing the package reducer
+or application view.
 
 From the repository root:
 

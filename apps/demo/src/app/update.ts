@@ -1,4 +1,5 @@
 import { Effect, Option, Schema as S } from "effect";
+import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Sidebar } from "@foldworks/sidebar";
 import { Command, Update } from "foldkit";
@@ -6,9 +7,6 @@ import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
 
-import { Message as AgentMessage } from "../agent/message";
-import { isActive as isAgentActive } from "../agent/model";
-import { update as updateAgent } from "../agent/update";
 import { update as updateCodeEditor } from "../code-editor/update";
 import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
@@ -121,7 +119,7 @@ const foldCodeEditor = Update.foldChild({
 });
 
 const foldAgent = Update.foldChild({
-  update: updateAgent,
+  update: Agent.update,
   read: (model: Model) => Option.some(model.agent),
   write: (model, agent) => ({ ...model, agent }),
   toParentMessage: (message) => Message.GotAgentMessage({ message }),
@@ -171,8 +169,8 @@ const foldSidebar = Update.foldChild({
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
-  if (model.route._tag === "Agent" && route._tag !== "Agent" && isAgentActive(next.agent)) {
-    next = { ...next, agent: updateAgent(next.agent, AgentMessage.Stopped()).model };
+  if (model.route._tag === "Agent" && route._tag !== "Agent" && Agent.isActive(next.agent)) {
+    next = { ...next, agent: Agent.update(next.agent, Agent.Message.Stopped()).model };
   }
   if (route._tag === "Workflow") {
     const workflowEditor = setOrientation(next.workflowEditor, workflowOrientationFromRoute(route));

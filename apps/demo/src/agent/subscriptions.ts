@@ -1,16 +1,14 @@
 import { Schema as S, Stream } from "effect";
 import { Subscription } from "foldkit";
+import { Agent } from "@foldworks/agent";
 
-import { Message } from "./message";
-import type { Model } from "./model";
-import { Segment } from "./protocol";
 import { scenarioStream } from "./scenario";
 
-export const subscriptions = Subscription.make<Model, Message>()((entry) => ({
+export const subscriptions = Subscription.make<Agent.Model, Agent.Message>()((entry) => ({
   agentStream: entry(
     {
       runId: S.String,
-      segment: S.Union([Segment, S.Literal("None")]),
+      segment: S.Union([Agent.Segment, S.Literal("None")]),
       modelId: S.String,
     },
     {
@@ -20,7 +18,7 @@ export const subscriptions = Subscription.make<Model, Message>()((entry) => ({
       dependenciesToStream: ({ runId, segment, modelId }) => segment === "None"
         ? Stream.empty
         : scenarioStream(segment, runId, modelId).pipe(
-            Stream.map((envelope) => Message.ReceivedStreamEvent({ envelope })),
+            Stream.map((envelope) => Agent.Message.ReceivedStreamEvent({ envelope })),
           ),
     },
   ),

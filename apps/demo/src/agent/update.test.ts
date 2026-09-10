@@ -1,28 +1,27 @@
 import { describe, expect, it } from "vitest";
+import { Agent } from "@foldworks/agent";
 
-import { Message } from "./message";
-import { init, type Model, type ToolPart } from "./model";
-import type { EventEnvelope } from "./protocol";
 import { scenarioEvents } from "./scenario";
-import { update } from "./update";
 
-const dispatch = (model: Model, message: Message): Model => update(model, message).model;
+const dispatch = (model: Agent.Model, message: Agent.Message): Agent.Model => Agent.update(model, message).model;
 
-const send = (prompt = "Inspect the project"): Model => {
-  const withDraft = dispatch(init(), Message.ChangedDraft({ value: prompt }));
-  return dispatch(withDraft, Message.Submitted());
+const init = (): Agent.Model => Agent.init({ id: "agent", selectedModel: "atlas-balanced" });
+
+const send = (prompt = "Inspect the project"): Agent.Model => {
+  const withDraft = dispatch(init(), Agent.Message.ChangedDraft({ value: prompt }));
+  return dispatch(withDraft, Agent.Message.Submitted());
 };
 
-const receiveAll = (model: Model, envelopes: ReadonlyArray<EventEnvelope>): Model =>
+const receiveAll = (model: Agent.Model, envelopes: ReadonlyArray<Agent.EventEnvelope>): Agent.Model =>
   envelopes.reduce((current, envelope) =>
-    dispatch(current, Message.ReceivedStreamEvent({ envelope })), model);
+    dispatch(current, Agent.Message.ReceivedStreamEvent({ envelope })), model);
 
-const tools = (model: Model): ReadonlyArray<ToolPart> => model.transcript.flatMap((turn) =>
-  turn.parts.filter((part): part is ToolPart => part._tag === "Tool"));
+const tools = (model: Agent.Model): ReadonlyArray<Agent.ToolPart> => model.transcript.flatMap((turn) =>
+  turn.parts.filter((part): part is Agent.ToolPart => part._tag === "Tool"));
 
 describe("agent update", () => {
   it("ignores blank input and captures a valid prompt and selected model", () => {
-    const blank = dispatch(dispatch(init(), Message.ChangedDraft({ value: "   " })), Message.Submitted());
+    const blank = dispatch(dispatch(init(), Agent.Message.ChangedDraft({ value: "   " })), Agent.Message.Submitted());
     expect(blank.transcript).toEqual([]);
 
     const started = send("  Review release readiness  ");
@@ -58,7 +57,7 @@ describe("agent update", () => {
 
   it("continues through the approved branch and completes the same assistant turn", () => {
     const waiting = receiveAll(send(), scenarioEvents("Initial", "agent-run-1", "atlas-balanced"));
-    const allowed = dispatch(waiting, Message.ChosePermission({ decision: "Allow" }));
+    const allowed = dispatch(waiting, Agent.Message.ChosePermission({ decision: "Allow" }));
     expect(allowed.runState).toMatchObject({ _tag: "Streaming", segment: "Approved" });
     expect(tools(allowed)[1]?.status).toBe("Running");
 
@@ -75,8 +74,8 @@ describe("agent update", () => {
 
   it("records denial and streams a terminal response without running the tool", () => {
     const waiting = receiveAll(send(), scenarioEvents("Initial", "agent-run-1", "atlas-balanced"));
-    const denied = dispatch(waiting, Message.ChosePermission({ decision: "Deny" }));
-    expect(tools(denied)[1]).toMatchObject({ status: "Denied", output: expect.stringContaining("No file was changed") });
+    const denied = dispatch(waiting, Agent.Message.ChosePermission({ decision: "Deny" }));
+    expect(tools(denied)[1]).toMatchObject({ status: "Denied", output: expect.stringContaining("No action was taken") });
 
     const complete = receiveAll(denied, scenarioEvents("Denied", "agent-run-1", "atlas-balanced"));
     expect(complete.runState._tag).toBe("Idle");
@@ -87,14 +86,14 @@ describe("agent update", () => {
     const started = send();
     const [first, second] = scenarioEvents("Initial", "agent-run-1", "atlas-balanced");
     const streaming = receiveAll(started, [first!, second!]);
-    const duplicate = dispatch(streaming, Message.ReceivedStreamEvent({ envelope: second! }));
+    const duplicate = dispatch(streaming, Agent.Message.ReceivedStreamEvent({ envelope: second! }));
     expect(duplicate).toEqual(streaming);
 
-    const stopped = dispatch(streaming, Message.Stopped());
+    const stopped = dispatch(streaming, Agent.Message.Stopped());
     expect(stopped.runState._tag).toBe("Idle");
     expect(stopped.transcript[1]?.parts[0]).toMatchObject({ status: "Interrupted" });
 
-    const late = dispatch(stopped, Message.ReceivedStreamEvent({
+    const late = dispatch(stopped, Agent.Message.ReceivedStreamEvent({
       envelope: { sequence: 99, event: { _tag: "Finished", runId: "agent-run-1" } },
     }));
     expect(late).toEqual(stopped);
@@ -102,16 +101,16 @@ describe("agent update", () => {
 
   it("exposes failure, retries with a new stable run id, and resets safely", () => {
     const started = send();
-    const failed = dispatch(started, Message.ReceivedStreamEvent({
+    const failed = dispatch(started, Agent.Message.ReceivedStreamEvent({
       envelope: { sequence: 1, event: { _tag: "Failed", runId: "agent-run-1", message: "Fixture unavailable" } },
     }));
     expect(failed.runState).toMatchObject({ _tag: "Failed", message: "Fixture unavailable" });
 
-    const retried = dispatch(failed, Message.Retried());
+    const retried = dispatch(failed, Agent.Message.Retried());
     expect(retried.runState).toMatchObject({ _tag: "Streaming", runId: "agent-run-2" });
     expect(retried.transcript).toHaveLength(3);
 
-    const reset = dispatch(retried, Message.Reset());
+    const reset = dispatch(retried, Agent.Message.Reset());
     expect(reset.transcript).toEqual([]);
     expect(reset.runState._tag).toBe("Idle");
     expect(reset.nextRunNumber).toBe(3);
