@@ -9,6 +9,9 @@ accessible application interfaces with Foldkit:
   design tokens, and accessible visual primitives.
 - [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation
   runtime with streaming text, tool states, permission checkpoints, and retry.
+- [`@foldworks/data-table`](./packages/data-table) — a resource-first CRUD
+  table with semantic markup, sortable columns, bulk row selection, resource
+  links, density controls, and pinned columns.
 - [`@foldworks/data-grid`](./packages/data-grid) — a typed data-grid core with
   sorting, resizing, ordering, pinned columns, row virtualization, range
   selection, clipboard copy/paste, editing, and an accessible view.

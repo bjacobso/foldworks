@@ -10,6 +10,8 @@ import { toString as urlToString } from "foldkit/url";
 import { update as updateCodeEditor } from "../code-editor/update";
 import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
+import { setActiveContact, type Model as DataTableModel } from "../data-table/model";
+import { update as updateDataTable } from "../data-table/update";
 import { serializeWorkspace, writePersistedWorkspace } from "../document-storage";
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
@@ -20,6 +22,7 @@ import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
 import {
   formBuilderPath,
+  dataTablePersonFromRoute,
   formStateFromRoute,
   urlToAppRoute,
   workflowOrientationFromRoute,
@@ -139,6 +142,13 @@ const foldDataGrid = Update.foldChild({
   toParentMessage: (message) => Message.GotDataGridDemoMessage({ message }),
 });
 
+const foldDataTable = Update.foldChild({
+  update: updateDataTable,
+  read: (model: Model) => Option.some(model.dataTableDemo),
+  write: (model, dataTableDemo: DataTableModel) => ({ ...model, dataTableDemo }),
+  toParentMessage: (message) => Message.GotDataTableDemoMessage({ message }),
+});
+
 const foldUiKit = Update.foldChild({
   update: updateUiKit,
   read: (model: Model) => Option.some(model.uiKit),
@@ -169,6 +179,13 @@ const foldSidebar = Update.foldChild({
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
+  next = {
+    ...next,
+    dataTableDemo: setActiveContact(
+      next.dataTableDemo,
+      dataTablePersonFromRoute(route),
+    ),
+  };
   if (model.route._tag === "Agent" && route._tag !== "Agent" && Agent.isActive(next.agent)) {
     next = { ...next, agent: Agent.update(next.agent, Agent.Message.Stopped()).model };
   }
@@ -254,6 +271,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotWorkbenchMessage: ({ message }) => foldWorkbench(model, message),
     GotDataGridDemoMessage: ({ message: childMessage }) =>
       foldDataGrid(model, childMessage),
+    GotDataTableDemoMessage: ({ message: childMessage }) =>
+      foldDataTable(model, childMessage),
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) =>

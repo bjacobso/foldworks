@@ -9,6 +9,7 @@ import type { Snapshot } from "../workbench/domain";
 
 import type { PersistedWorkspace } from "../document-storage";
 import { Model as DataGridModel, initialModel as initialDataGrid } from "../data-grid/model";
+import { Model as DataTableModel, init as initDataTable } from "../data-table/model";
 import { Model as FormEditorModel, init as initFormEditor } from "../form-builder/editor-model";
 import { exampleForms } from "../form-builder/model";
 import { Model as QueryBuilderDemoModel, initialModel as initialQueryBuilder } from "../query-builder/model";
@@ -17,6 +18,7 @@ import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/mod
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
 import {
   AppRoute,
+  dataTablePersonFromRoute,
   formStateFromRoute,
   workflowOrientationFromRoute,
 } from "./route";
@@ -29,6 +31,7 @@ export const Model = S.Struct({
   workflowEditor: WorkflowEditorModel,
   formEditor: FormEditorModel,
   dataGridDemo: DataGridModel,
+  dataTableDemo: DataTableModel,
   queryBuilderDemo: QueryBuilderDemoModel,
   pdfAnnotator: PdfAnnotator.Model,
   sidebar: Sidebar.Model,
@@ -60,6 +63,7 @@ export const init = (
     ),
     formEditor: initFormEditor(persisted?.forms ?? exampleForms, exampleId, mode),
     dataGridDemo: initialDataGrid,
+    dataTableDemo: initDataTable(dataTablePersonFromRoute(route)),
     queryBuilderDemo: initialQueryBuilder,
     pdfAnnotator: PdfAnnotator.init({
       id: "foldworks-pdf-annotator",

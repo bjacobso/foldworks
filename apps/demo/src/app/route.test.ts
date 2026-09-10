@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   agentRouter,
+  dataTablePath,
   dataGridRouter,
   codeEditorRouter,
   workbenchRouter,
@@ -30,6 +31,10 @@ describe("demo routes", () => {
     expect(workbenchRouter()).toBe("/workbench");
     expect(demoFromRoute(parseUrl("https://demo.test/workbench"))).toBe("Workbench");
     expect(workflowPath("Horizontal")).toBe("/workflow?orientation=Horizontal");
+    expect(dataTablePath()).toBe("/data-table");
+    expect(dataTablePath("contact-1")).toBe("/data-table?person=contact-1");
+    expect(demoFromRoute(parseUrl("https://demo.test/data-table?person=contact-1")))
+      .toBe("DataTable");
     expect(dataGridRouter()).toBe("/data-grid");
     expect(codeEditorRouter()).toBe("/code-editor");
     expect(demoFromRoute(parseUrl("https://demo.test/code-editor"))).toBe("CodeEditor");

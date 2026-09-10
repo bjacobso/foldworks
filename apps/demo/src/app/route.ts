@@ -4,7 +4,7 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Home" | "Agent" | "CodeEditor" | "Workbench" | "Workflow" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
+export type Demo = "Home" | "Agent" | "CodeEditor" | "Workbench" | "Workflow" | "DataTable" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
@@ -15,6 +15,7 @@ export const AppRoute = defineRouteUnion({
   CodeEditor: {},
   Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
+  DataTable: { person: S.Option(S.String) },
   DataGrid: {},
   FormBuilder: {
     example: S.Option(FormExampleId),
@@ -45,6 +46,12 @@ export const codeEditorRouter = pipe(Route.literal("code-editor"), Route.mapTo(A
 export const agentRouter = pipe(Route.literal("agent"), Route.mapTo(AppRoute.Agent));
 
 export const workbenchRouter = pipe(Route.literal("workbench"), Route.mapTo(AppRoute.Workbench));
+
+export const dataTableRouter = pipe(
+  Route.literal("data-table"),
+  Route.query(S.Struct({ person: S.OptionFromOptional(S.String) })),
+  Route.mapTo(AppRoute.DataTable),
+);
 
 export const dataGridRouter = pipe(
   Route.literal("data-grid"),
@@ -80,6 +87,7 @@ const routeParser = Route.oneOf(
   agentRouter,
   workbenchRouter,
   codeEditorRouter,
+  dataTableRouter,
   dataGridRouter,
   formBuilderRouter,
   queryBuilderRouter,
@@ -99,6 +107,7 @@ export const demoFromRoute = (route: AppRoute): Demo => {
     case "Agent": return "Agent";
     case "CodeEditor": return "CodeEditor";
     case "Workbench": return "Workbench";
+    case "DataTable": return "DataTable";
     case "DataGrid": return "DataGrid";
     case "FormBuilder": return "FormBuilder";
     case "QueryBuilder": return "QueryBuilder";
@@ -127,6 +136,13 @@ export const workflowOrientationFromRoute = (
 
 export const workflowPath = (orientation: WorkflowOrientation): string =>
   workflowRouter({ orientation: Option.some(orientation) });
+
+export const dataTablePath = (personId?: string): string => dataTableRouter({
+  person: personId === undefined ? Option.none() : Option.some(personId),
+});
+
+export const dataTablePersonFromRoute = (route: AppRoute): string =>
+  route._tag === "DataTable" ? Option.getOrElse(route.person, () => "") : "";
 
 export const formBuilderPath = (
   exampleId: FormExampleId,

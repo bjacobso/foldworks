@@ -104,6 +104,9 @@ importers:
       '@foldworks/data-grid':
         specifier: workspace:*
         version: link:../../packages/data-grid
+      '@foldworks/data-table':
+        specifier: workspace:*
+        version: link:../../packages/data-table
       '@foldworks/form-builder':
         specifier: workspace:*
         version: link:../../packages/form-builder
@@ -212,6 +215,25 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
+  packages/data-table:
+    dependencies:
+      '@foldworks/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@lucide/icons':
+        specifier: 'catalog:'
+        version: 1.40.0
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)

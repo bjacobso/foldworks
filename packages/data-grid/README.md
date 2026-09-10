@@ -1,5 +1,9 @@
 # @foldworks/data-grid
 
+An Excel-like data surface for cell selection, clipboard workflows, and inline
+editing. For a traditional resource list with semantic table markup, links,
+sorting, and bulk row selection, use [`@foldworks/data-table`](../data-table).
+
 A typed, Foldkit-native data grid with a headless table core.
 
 The first slice supports:

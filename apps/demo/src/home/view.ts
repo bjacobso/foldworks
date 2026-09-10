@@ -20,6 +20,7 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 import {
   agentRouter,
   codeEditorRouter,
+  dataTablePath,
   dataGridRouter,
   formBuilderPath,
   pdfAnnotatorRouter,
@@ -66,6 +67,13 @@ const packages: ReadonlyArray<Package> = [
     description: "Code editing, syntax highlighting, and live diagnostics in a versioned document.",
     href: codeEditorRouter(),
     icon: Braces,
+  },
+  {
+    name: "@foldworks/data-table",
+    category: "Application primitive",
+    description: "Resource-first CRUD tables with links, sorting, bulk selection, density, and pinned columns.",
+    href: dataTablePath(),
+    icon: Table2,
   },
   {
     name: "@foldworks/data-grid",
@@ -212,7 +220,7 @@ const comparison = <Message>(h: HtmlBuilder<Message>): Html =>
       h.p([h.Class(className(styles.comparisonText))], [
         "Complete product capabilities with domain models, messages, updates, accessibility, and composition points—not just a styled surface.",
       ]),
-      h.div([h.Class(className(styles.chips))], ["DataGrid", "QueryBuilder", "FormBuilder", "Workflow", "PdfAnnotator"].map((name) =>
+      h.div([h.Class(className(styles.chips))], ["DataTable", "DataGrid", "QueryBuilder", "FormBuilder", "Workflow", "PdfAnnotator"].map((name) =>
         h.span([h.Class(className(styles.chip))], [name])
       )),
     ]),

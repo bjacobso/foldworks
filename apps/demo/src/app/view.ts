@@ -23,6 +23,8 @@ import { Sidebar } from "@foldworks/sidebar";
 import { view as agentView } from "../agent/view";
 import { view as codeEditorView } from "../code-editor/view";
 import { view as workbenchView } from "../workbench/view";
+import { contacts } from "../data-table/contacts";
+import { view as dataTableView } from "../data-table/view";
 import { view as dataGridView } from "../data-grid/demo";
 import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
@@ -32,6 +34,7 @@ import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
 import {
   agentRouter,
+  dataTablePath,
   dataGridRouter,
   codeEditorRouter,
   workbenchRouter,
@@ -63,6 +66,8 @@ const activeAnnouncement = (model: Model): string => {
         ? model.uiKit.announcement
       : demo === "Agent"
         ? ""
+      : demo === "DataTable"
+        ? model.dataTableDemo.announcement
         : model.announcement;
 };
 
@@ -104,6 +109,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
       label: "Application primitives",
       items: [
         { id: "code-editor", label: "Code editor", href: codeEditorRouter(), icon: Braces, isActive: demo === "CodeEditor" },
+        { id: "data-table", label: "Data table", href: dataTablePath(), icon: Table2, isActive: demo === "DataTable" },
         { id: "data-grid", label: "Data grid", href: dataGridRouter(), icon: Table2, isActive: demo === "DataGrid" },
         { id: "query-builder", label: "Query builder", href: queryBuilderRouter(), icon: ListFilter, isActive: demo === "QueryBuilder" },
         { id: "form-builder", label: "Form builder", href: formBuilderPath(model.formEditor.exampleId, model.formEditor.mode), icon: ListChecks, isActive: demo === "FormBuilder" },
@@ -152,6 +158,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   const title = demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
     ? "Candidate workflow"
+    : demo === "DataTable"
+      ? "People"
     : demo === "DataGrid"
       ? "People operations"
       : demo === "FormBuilder"
@@ -165,6 +173,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           : "@foldworks/ui";
   const description = demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
+    : demo === "DataTable"
+      ? `${contacts.length} people · resource-first CRUD table`
     : demo === "DataGrid"
       ? `${people.length} people · controlled Foldkit data grid`
       : demo === "FormBuilder"
@@ -188,6 +198,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
         : demo === "Workbench"
           ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
+        : demo === "DataTable"
+          ? [Badge.view({ label: "Semantic table + controlled data", tone: "info", dot: true }, h)]
         : demo === "DataGrid"
           ? [Badge.view({ label: "Headless core + DOM view" }, h)]
           : demo === "QueryBuilder"
@@ -196,7 +208,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
           : demo === "Home"
             ? [
-                Badge.view({ label: "10 packages", tone: "info", dot: true }, h),
+                Badge.view({ label: "11 packages", tone: "info", dot: true }, h),
                 Badge.view({ label: "Open source" }, h),
               ]
             : [
@@ -266,6 +278,14 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   if (demo === "FormBuilder") {
     return childRegion(model, "Content", h);
   }
+  if (demo === "DataTable") {
+    return h.submodel({
+      slotId: "data-table-content",
+      model: model.dataTableDemo,
+      view: dataTableView,
+      toParentMessage: (message) => Message.GotDataTableDemoMessage({ message }),
+    });
+  }
   if (demo === "DataGrid") {
     return h.submodel({
       slotId: "data-grid-content",
@@ -303,6 +323,7 @@ const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
   Match.when("CodeEditor", () => "Code editor · Foldworks"),
   Match.when("Workbench", () => "Workers workbench · Foldworks"),
   Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),
+  Match.when("DataTable", () => "Data table · Foldworks"),
   Match.when("DataGrid", () => "Data grid · Foldworks"),
   Match.when("FormBuilder", () => "Form builder · Foldworks"),
   Match.when("QueryBuilder", () => "Query builder · Foldworks"),
@@ -336,7 +357,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
               content: content(model, h),
               footer: {
                 title: "Application primitives",
-                description: "Ten Foldworks packages",
+                description: "Eleven Foldworks packages",
                 icon: Blocks,
               },
               ariaLabel: "Foldworks navigation",

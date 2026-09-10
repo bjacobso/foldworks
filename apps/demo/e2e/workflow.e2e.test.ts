@@ -129,6 +129,7 @@ describe.sequential("structured workflow builder", () => {
       "Workers workbench",
       "@foldworks/ui",
       "Code editor",
+      "Data table",
       "Data grid",
       "Query builder",
       "Form builder",
@@ -169,6 +170,8 @@ describe.sequential("structured workflow builder", () => {
       name: "Workflow volume for the last seven days",
     }).isVisible()).toBe(true);
     await expect.poll(() => page.getByRole("link", { name: /@foldworks\/data-grid/ }).isVisible())
+      .toBe(true);
+    await expect.poll(() => page.getByRole("link", { name: /@foldworks\/data-table/ }).isVisible())
       .toBe(true);
     await expect.poll(() => page.getByRole("link", { name: "Try the agent playground" }).isVisible())
       .toBe(true);
@@ -657,6 +660,57 @@ describe.sequential("structured workflow builder", () => {
     }
 
     await screenshot("09-data-grid");
+  });
+
+  it("renders a semantic, resource-first data table", async () => {
+    await page.goto(`${appUrl}/data-table`, { waitUntil: "networkidle" });
+
+    const tableRoot = page.locator('[data-table-id="people-resources"]');
+    const table = tableRoot.getByRole("table", { name: "People resources" });
+    await expect.poll(() => table.isVisible()).toBe(true);
+    await expect.poll(() => table.locator("thead").count()).toBe(1);
+    await expect.poll(() => table.locator("tbody").count()).toBe(1);
+    await expect.poll(() => table.locator('tbody [data-row-id]').count()).toBe(64);
+    await expect.poll(() => tableRoot.getAttribute("data-density")).toBe("Compact");
+    await expect.poll(() => table.getAttribute("role")).toBeNull();
+
+    const personCell = table.locator('[data-row-id="contact-1"] [data-cell-column-id="person"]');
+    const actionCell = table.locator('[data-row-id="contact-1"] [data-cell-column-id="actions"]');
+    await expect.poll(() => personCell.getAttribute("data-pinned")).toBe("start");
+    await expect.poll(() => actionCell.getAttribute("data-pinned")).toBe("end");
+    await expect.poll(() => personCell.evaluate((element) => ({
+      left: getComputedStyle(element).left,
+      position: getComputedStyle(element).position,
+    }))).toEqual({ left: "44px", position: "sticky" });
+
+    const lastContactHeader = table.locator('[data-column-id="lastContact"]');
+    await expect.poll(() => lastContactHeader.getAttribute("aria-sort")).toBe("ascending");
+    await lastContactHeader.getByRole("button").click();
+    await expect.poll(() => lastContactHeader.getAttribute("aria-sort")).toBe("descending");
+
+    await table.locator('[data-row-id="contact-1"]')
+      .getByRole("checkbox", { name: "Select Landon Ziemke" }).click();
+    await expect.poll(() => tableRoot.getAttribute("data-selected-count")).toBe("1");
+    await expect.poll(() => page.getByRole("button", { name: "Clear selection" }).isVisible())
+      .toBe(true);
+    await table.getByRole("checkbox", { name: "Select all visible rows" }).click();
+    await expect.poll(() => tableRoot.getAttribute("data-selected-count")).toBe("64");
+    await page.getByRole("button", { name: "Clear selection" }).click();
+    await expect.poll(() => tableRoot.getAttribute("data-selected-count")).toBe("0");
+
+    await page.getByRole("searchbox", { name: "Search people" }).fill("Helpstone");
+    await expect.poll(() => table.locator('tbody [data-row-id]').count()).toBe(8);
+    await expect.poll(() => page.getByText("8 people", { exact: true }).isVisible()).toBe(true);
+    await page.getByRole("searchbox", { name: "Search people" }).fill("");
+
+    await table.locator('[data-row-id="contact-1"] .fk-data-table__resource-link').click();
+    await expect.poll(() => new URL(page.url()).searchParams.get("person")).toBe("contact-1");
+    await expect.poll(() => page.locator('[data-contact-detail="contact-1"]').isVisible()).toBe(true);
+    await expect.poll(() => page.getByRole("heading", { name: "Landon Ziemke" }).isVisible()).toBe(true);
+    await page.getByRole("link", { name: "Close person details" }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.has("person")).toBe(false);
+
+    await screenshot("09-data-table");
   });
 
   it("keeps a field press selectable until deliberate movement starts a drag", async () => {

@@ -6,7 +6,7 @@ and explains the boundary between UI components and application primitives.
 Use the sidebar to move between every package showcase.
 
 Foldkit's bidirectional router owns navigational state. The project overview
-lives at `/`; demos live at `/ui-kit`, `/data-grid`, `/query-builder`,
+lives at `/`; demos live at `/ui-kit`, `/data-table`, `/data-grid`, `/query-builder`,
 `/form-builder`, `/workflow`, `/pdf-annotator`, and `/agent`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,
@@ -36,6 +36,12 @@ available node types, their factories, dimensions, palette metadata, and views.
 The private `@foldworks/data-grid` workspace package provides a typed,
 headless table model and a Foldkit DOM view. The demo supplies 120 rows, column
 configuration, and custom employee and status cell renderers.
+
+The `@foldworks/data-table` demo is deliberately resource-first: one compact
+row per person, semantic table markup, links into a route-driven detail panel,
+sorting, search, bulk selection, density, and pinned identity/actions columns.
+It owns no spreadsheet editing state; that richer interaction model remains in
+`@foldworks/data-grid`.
 
 Features include:
 
