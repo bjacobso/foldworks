@@ -3,6 +3,7 @@ import { Match } from "effect";
 
 import {
   Blocks,
+  Bot,
   Braces,
   FileText,
   House,
@@ -19,6 +20,7 @@ import {
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Sidebar } from "@foldworks/sidebar";
 
+import { view as agentView } from "../agent/view";
 import { view as codeEditorView } from "../code-editor/view";
 import { view as workbenchView } from "../workbench/view";
 import { view as dataGridView } from "../data-grid/demo";
@@ -29,6 +31,7 @@ import { view as queryBuilderView } from "../query-builder/view";
 import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
 import {
+  agentRouter,
   dataGridRouter,
   codeEditorRouter,
   workbenchRouter,
@@ -58,6 +61,8 @@ const activeAnnouncement = (model: Model): string => {
         ? model.pdfAnnotator.announcement
       : demo === "UiKit"
         ? model.uiKit.announcement
+      : demo === "Agent"
+        ? ""
         : model.announcement;
 };
 
@@ -78,7 +83,10 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
     {
       id: "reference-applications",
       label: "Reference applications",
-      items: [{ id: "workbench", label: "Workers workbench", href: workbenchRouter(), icon: Table2, isActive: demo === "Workbench" }],
+      items: [
+        { id: "agent", label: "Agent playground", href: agentRouter(), icon: Bot, isActive: demo === "Agent" },
+        { id: "workbench", label: "Workers workbench", href: workbenchRouter(), icon: Table2, isActive: demo === "Workbench" },
+      ],
     },
     {
       id: "foundation",
@@ -142,7 +150,7 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
-  const title = demo === "CodeEditor" ? "Code editor" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
+  const title = demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
     ? "Candidate workflow"
     : demo === "DataGrid"
       ? "People operations"
@@ -155,7 +163,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         : demo === "Home"
           ? "Foldworks"
           : "@foldworks/ui";
-  const description = demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
+  const description = demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
     : demo === "DataGrid"
       ? `${people.length} people · controlled Foldkit data grid`
@@ -172,7 +180,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
     title,
     description,
     actions: [
-      ...(demo === "Workflow" || demo === "FormBuilder"
+      ...(demo === "Agent"
+        ? [Badge.view({ label: "Simulated", tone: "info", dot: true }, h)]
+        : demo === "Workflow" || demo === "FormBuilder"
         ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
         : demo === "CodeEditor"
           ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
@@ -225,6 +235,12 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   if (demo === "Home") return homeView(h);
+  if (demo === "Agent") return h.submodel({
+    slotId: "agent-content",
+    model: model.agent,
+    view: agentView,
+    toParentMessage: (message) => Message.GotAgentMessage({ message }),
+  });
   if (demo === "CodeEditor") return h.submodel({
     slotId: "code-editor-content",
     model: model.codeEditor,
@@ -283,6 +299,7 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
+  Match.when("Agent", () => "Interactive agent · Foldworks"),
   Match.when("CodeEditor", () => "Code editor · Foldworks"),
   Match.when("Workbench", () => "Workers workbench · Foldworks"),
   Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),

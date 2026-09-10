@@ -26,7 +26,10 @@ accessible application interfaces with Foldkit:
   application-owned documents.
 
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
-suite.
+suite. Its `/agent` reference application also demonstrates streaming assistant
+text, tool calls and results, an interactive permission checkpoint, a model
+picker, and a prompt composer. The agent flow is a deterministic browser-only
+fixture and performs no provider calls or tool side effects.
 
 ## Development
 
