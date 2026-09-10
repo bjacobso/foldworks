@@ -51,6 +51,13 @@
   position: relative;
 }
 
+.fk-data-grid__header-cell[data-pinned="start"],
+.fk-data-grid__header-cell[data-pinned="end"] {
+  background: var(--data-grid-header);
+  position: sticky;
+  z-index: 3;
+}
+
 .fk-data-grid__header-button {
   align-items: center;
   background: transparent;
@@ -186,6 +193,27 @@
   padding: 0 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.fk-data-grid__cell[data-pinned="start"],
+.fk-data-grid__cell[data-pinned="end"] {
+  background: var(--foldworks-ui-surface, #fff);
+  position: sticky;
+  z-index: 1;
+}
+
+.fk-data-grid__header-cell[data-pinned="start"][data-pin-boundary="true"],
+.fk-data-grid__cell[data-pinned="start"][data-pin-boundary="true"] {
+  box-shadow: 5px 0 7px -6px var(--data-grid-muted);
+}
+
+.fk-data-grid__header-cell[data-pinned="end"][data-pin-boundary="true"],
+.fk-data-grid__cell[data-pinned="end"][data-pin-boundary="true"] {
+  box-shadow: -5px 0 7px -6px var(--data-grid-muted);
+}
+
+.fk-data-grid__row:hover .fk-data-grid__cell[data-pinned]:not([data-pinned="false"]):not([data-selected="true"]):not([data-dirty="true"]) {
+  background: var(--data-grid-hover);
 }
 
 .fk-data-grid__cell[data-align="center"] {

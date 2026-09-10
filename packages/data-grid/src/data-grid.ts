@@ -7,6 +7,7 @@ export {
   selectionSize,
   selectionText,
   type ColumnMoveDirection,
+  type ColumnPin,
   type SelectionRange,
 } from "./core";
 import { Message as MessageSchema, type Message as MessageValue } from "./message";

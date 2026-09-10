@@ -577,6 +577,37 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => grid.locator('[data-grid-cell-position="0:0"]').isVisible())
       .toBe(true);
 
+    const employeeCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="employee"]');
+    const roleCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="role"]');
+    const equipmentCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="equipmentIssued"]');
+    await expect.poll(() => employeeCell.getAttribute("data-pinned")).toBe("start");
+    await expect.poll(() => equipmentCell.getAttribute("data-pinned")).toBe("end");
+    await scroller.evaluate((element) => {
+      element.style.width = "800px";
+    });
+    await expect.poll(() => scroller.evaluate((element) => element.scrollWidth - element.clientWidth))
+      .toBeGreaterThan(500);
+    const beforeHorizontalScroll = await Promise.all(
+      [employeeCell, roleCell, equipmentCell].map((cell) =>
+        cell.evaluate((element) => element.getBoundingClientRect().x)),
+    );
+    await scroller.evaluate((element) => {
+      element.scrollLeft = 320;
+      element.dispatchEvent(new Event("scroll"));
+    });
+    const afterHorizontalScroll = await Promise.all(
+      [employeeCell, roleCell, equipmentCell].map((cell) =>
+        cell.evaluate((element) => element.getBoundingClientRect().x)),
+    );
+    expect(Math.abs(afterHorizontalScroll[0]! - beforeHorizontalScroll[0]!)).toBeLessThan(1);
+    expect(afterHorizontalScroll[1]!).toBeLessThan(beforeHorizontalScroll[1]! - 250);
+    expect(Math.abs(afterHorizontalScroll[2]! - beforeHorizontalScroll[2]!)).toBeLessThan(1);
+    await scroller.evaluate((element) => {
+      element.scrollLeft = 0;
+      element.style.width = "";
+      element.dispatchEvent(new Event("scroll"));
+    });
+
     const locationHeader = grid.locator('[data-column-id="location"]');
     await locationHeader.hover();
     await locationHeader.getByRole("button", { name: "Move Location column left" }).click();

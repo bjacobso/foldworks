@@ -31,6 +31,7 @@ export const columns = DataGrid.defineColumns<Person, Message>()([
     accessor: (person) => person.name,
     width: 280,
     minimumWidth: 210,
+    pinned: "Start",
     renderCell: ({ row }, h) => employeeCell(row, h),
   },
   {
@@ -93,7 +94,7 @@ export const columns = DataGrid.defineColumns<Person, Message>()([
         }).format(Number(value)),
       ]),
   },
-  { id: "equipmentIssued", header: "Equipment issued", accessor: (person) => person.equipmentIssued, width: 155, editor: { kind: "Checkbox" } },
+  { id: "equipmentIssued", header: "Equipment issued", accessor: (person) => person.equipmentIssued, width: 155, pinned: "End", editor: { kind: "Checkbox" } },
 ]);
 
 export const dataGridView = (
@@ -135,7 +136,7 @@ export const dataGridView = (
       ),
       h.footer([h.Class(className(dataGridStyles.footer))], [
         h.span([], ["Arrow to move · Shift+Arrow to select · ⌘/Ctrl+C or V to copy/paste"]),
-        h.span([], ["Enter or double-click to edit · header arrows reorder · drag an edge to resize"]),
+        h.span([], ["Pinned edges · header arrows reorder · drag an edge to resize"]),
       ]),
     ]),
   ]);

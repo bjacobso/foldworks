@@ -9,6 +9,7 @@ The first slice supports:
 - three-state sorting;
 - pointer column resizing and double-click reset;
 - opt-in accessible column reordering;
+- declarative start/end pinned columns with computed sticky offsets;
 - rectangular selection with arrow and Shift+Arrow navigation;
 - spreadsheet-friendly TSV clipboard copy and validated paste;
 - opt-in fixed-row virtualization with measured viewport overscan;
@@ -107,6 +108,27 @@ render: removed IDs are ignored, duplicate IDs are collapsed, and new columns
 are appended in definition order. Applications can also build their own
 ordering UI with `moveColumn(columnIds, columnId, direction)` and dispatch
 `Message.ChangedColumnOrder({ columnIds })`.
+
+## Pinned columns
+
+Set `pinned: "Start"` or `pinned: "End"` on a column definition to keep it
+visible while the grid scrolls horizontally:
+
+```ts
+const columns = DataGrid.defineColumns<Person, Message>()([
+  { id: "name", header: "Name", pinned: "Start", /* ... */ },
+  { id: "status", header: "Status", /* ... */ },
+  { id: "actions", header: "Actions", pinned: "End", /* ... */ },
+])
+```
+
+Pinned columns form stable start and end bands around unpinned columns. Their
+sticky offsets are derived from the grid model's live column widths, so resizing
+one pinned column updates every following offset. Saved ordering is preserved
+within each band; the built-in ordering controls do not move columns across a
+pin boundary. Header and body cells expose `data-pinned` and
+`data-pin-boundary`, while body cells also expose `data-cell-column-id` for
+targeted integrations and tests.
 
 ## Cell editing
 
@@ -236,4 +258,4 @@ Source checks protect local drafts, but the application must still validate
 writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
-Pinned columns and infinite loading remain future work.
+Infinite loading remains future work.

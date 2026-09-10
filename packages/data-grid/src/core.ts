@@ -9,6 +9,7 @@ export const MIN_COLUMN_WIDTH = 72;
 export const MAX_COLUMN_WIDTH = 640;
 
 export type CellValue = string | number | boolean | null | undefined;
+export type ColumnPin = "Start" | "End";
 
 export type CellEditor<Row> = Readonly<{
   kind: "Text" | "Number" | "Select" | "Checkbox";
@@ -49,6 +50,7 @@ export type ColumnDef<Row, ParentMessage = never> = Readonly<{
   align?: "Start" | "Center" | "End";
   enableSorting?: boolean;
   enableResizing?: boolean;
+  pinned?: ColumnPin;
   compare?: (left: Row, right: Row) => number;
   clipboardValue?: (context: CellContext<Row>) => string;
   renderCell?: (
@@ -81,6 +83,9 @@ export type TableColumn<Row, ParentMessage> = Readonly<{
   definition: ColumnDef<Row, ParentMessage>;
   width: number;
   sortDirection: SortDirection | undefined;
+  pinned: ColumnPin | undefined;
+  pinOffset: number;
+  isPinBoundary: boolean;
 }>;
 
 export type Table<Row, ParentMessage> = Readonly<{
@@ -118,7 +123,13 @@ export const orderedColumns = <Row, ParentMessage>(
     seen.add(columnId);
     return [column];
   });
-  return [...ordered, ...columns.filter((column) => !seen.has(column.id))];
+  const reconciled = [...ordered, ...columns.filter((column) => !seen.has(column.id))];
+  return [
+    ...reconciled.filter((column) => column.pinned === "Start"),
+    ...reconciled.filter((column) =>
+      column.pinned !== "Start" && column.pinned !== "End"),
+    ...reconciled.filter((column) => column.pinned === "End"),
+  ];
 };
 
 export const moveColumn = (
@@ -178,7 +189,7 @@ export const createTable = <Row, ParentMessage>(
     );
   }
 
-  const columns = definitions.map((definition) => ({
+  const baseColumns = definitions.map((definition) => ({
     definition,
     width: columnWidth(
       config.model,
@@ -188,6 +199,38 @@ export const createTable = <Row, ParentMessage>(
     sortDirection:
       sorting?.columnId === definition.id ? sorting.direction : undefined,
   }));
+  const startOffsets = new Map<string, number>();
+  let startOffset = 0;
+  for (const column of baseColumns) {
+    if (column.definition.pinned !== "Start") continue;
+    startOffsets.set(column.definition.id, startOffset);
+    startOffset += column.width;
+  }
+  const endOffsets = new Map<string, number>();
+  let endOffset = 0;
+  for (const column of [...baseColumns].reverse()) {
+    if (column.definition.pinned !== "End") continue;
+    endOffsets.set(column.definition.id, endOffset);
+    endOffset += column.width;
+  }
+  const columns = baseColumns.map((column, index) => {
+    const pinned = column.definition.pinned;
+    const neighbor = pinned === "Start"
+      ? baseColumns[index + 1]
+      : pinned === "End"
+        ? baseColumns[index - 1]
+        : undefined;
+    return {
+      ...column,
+      pinned,
+      pinOffset: pinned === "Start"
+        ? startOffsets.get(column.definition.id) ?? 0
+        : pinned === "End"
+          ? endOffsets.get(column.definition.id) ?? 0
+          : 0,
+      isPinBoundary: pinned !== undefined && neighbor?.definition.pinned !== pinned,
+    };
+  });
   const tableRows = rows.map((row, index) => {
     const rowId = config.getRowId(row);
     return {

@@ -86,6 +86,37 @@ describe("createTable", () => {
       extraColumns[1], extraColumns[0], extraColumns[2],
     ]);
   });
+
+  it("groups pinned columns and computes offsets from their live widths", () => {
+    const pinnedColumns = defineColumns<Person>()([
+      { id: "name", header: "Name", accessor: (person) => person.name, width: 220, pinned: "Start" },
+      { id: "score", header: "Score", accessor: (person) => person.score, width: 90 },
+      { id: "rank", header: "Rank", accessor: (person) => person.score + 1, width: 160, pinned: "End" },
+      { id: "id", header: "ID", accessor: (person) => person.id, width: 80, pinned: "Start" },
+    ]);
+    const table = createTable({
+      model: {
+        ...init({ id: "people", columns: pinnedColumns }),
+        columnOrder: ["id", "score", "rank", "name"],
+      },
+      columns: pinnedColumns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+
+    expect(table.columns.map((column) => ({
+      id: column.definition.id,
+      pinned: column.pinned,
+      offset: column.pinOffset,
+      boundary: column.isPinBoundary,
+    }))).toEqual([
+      { id: "id", pinned: "Start", offset: 0, boundary: false },
+      { id: "name", pinned: "Start", offset: 80, boundary: true },
+      { id: "score", pinned: undefined, offset: 0, boundary: false },
+      { id: "rank", pinned: "End", offset: 0, boundary: true },
+    ]);
+    expect(table.templateColumns).toBe("80px 220px 90px 160px");
+  });
 });
 
 describe("moveColumn", () => {

@@ -154,7 +154,12 @@ export const view = <Row, ParentMessage>(
                   const definition = column.definition;
                   const canSort = definition.enableSorting !== false;
                   const canResize = definition.enableResizing !== false;
-                  const canReorder = config.enableColumnReordering === true;
+                  const canMoveBefore = columnIndex > 0 &&
+                    table.columns[columnIndex - 1]?.pinned === column.pinned;
+                  const canMoveAfter = columnIndex < table.columns.length - 1 &&
+                    table.columns[columnIndex + 1]?.pinned === column.pinned;
+                  const canReorder = config.enableColumnReordering === true &&
+                    (canMoveBefore || canMoveAfter);
                   const ariaSort = column.sortDirection === "Ascending"
                     ? "ascending"
                     : column.sortDirection === "Descending"
@@ -169,6 +174,13 @@ export const view = <Row, ParentMessage>(
                       h.AriaSort(ariaSort),
                       h.DataAttribute("column-id", definition.id),
                       h.DataAttribute("reordering", canReorder ? "true" : "false"),
+                      h.DataAttribute("pinned", column.pinned?.toLowerCase() ?? "false"),
+                      h.DataAttribute("pin-boundary", column.isPinBoundary ? "true" : "false"),
+                      ...(column.pinned === "Start"
+                        ? [h.Style({ left: `${column.pinOffset}px` })]
+                        : column.pinned === "End"
+                          ? [h.Style({ right: `${column.pinOffset}px` })]
+                          : []),
                     ],
                     [
                       h.button(
@@ -229,8 +241,8 @@ export const view = <Row, ParentMessage>(
                                   ),
                                   h.Disabled(
                                     isBefore
-                                      ? columnIndex === 0
-                                      : columnIndex === table.columns.length - 1,
+                                      ? !canMoveBefore
+                                      : !canMoveAfter,
                                   ),
                                   h.OnClick(config.toParentMessage(
                                     Message.ChangedColumnOrder({
@@ -319,6 +331,7 @@ export const view = <Row, ParentMessage>(
                             h.DataAttribute("row-id", row.id),
                           ],
                           row.cells.map((cell, columnIndex) => {
+                          const tableColumn = table.columns[columnIndex];
                           const isFocus =
                             selected?.rowId === row.id &&
                             selected.columnId === cell.column.id;
@@ -398,6 +411,14 @@ export const view = <Row, ParentMessage>(
                               h.AriaColindex(columnIndex + 1),
                               h.AriaSelected(isSelected),
                               h.Tabindex(isTabStop ? 0 : -1),
+                              h.DataAttribute("cell-column-id", cell.column.id),
+                              h.DataAttribute("pinned", tableColumn?.pinned?.toLowerCase() ?? "false"),
+                              h.DataAttribute("pin-boundary", tableColumn?.isPinBoundary ? "true" : "false"),
+                              ...(tableColumn?.pinned === "Start"
+                                ? [h.Style({ left: `${tableColumn.pinOffset}px` })]
+                                : tableColumn?.pinned === "End"
+                                  ? [h.Style({ right: `${tableColumn.pinOffset}px` })]
+                                  : []),
                               h.DataAttribute(
                                 "grid-cell-position",
                                 cellPosition(row.index, columnIndex),

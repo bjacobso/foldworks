@@ -58,6 +58,7 @@ The data grid currently demonstrates:
 - rectangular keyboard selection with Shift+Arrow and validated TSV copy/paste;
 - measured row virtualization with overscan and absolute accessible indices;
 - accessible column ordering with stable column state;
+- start/end pinned columns across horizontal scrolling;
 - resizable columns with a double-click reset.
 
 The form builder demonstrates a section-first, multi-actor document model:

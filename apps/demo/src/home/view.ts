@@ -70,7 +70,7 @@ const packages: ReadonlyArray<Package> = [
   {
     name: "@foldworks/data-grid",
     category: "Application primitive",
-    description: "Virtualized rows, column ordering, range selection, copy/paste, editing, and keyboard navigation.",
+    description: "Pinned columns, virtualized rows, ordering, range selection, copy/paste, and editing.",
     href: dataGridRouter(),
     icon: Table2,
   },
