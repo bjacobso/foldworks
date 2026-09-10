@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { Mount } from "foldkit";
 import type { Html, HtmlBuilder, KeyboardModifiers } from "foldkit/html";
 
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "@lucide/icons";
@@ -22,6 +23,11 @@ import type { Model } from "./model";
 import { cellId, sameCell } from "./editing-model";
 import { commitMessage, editIssues, parseInput, pasteMessage } from "./editing";
 import { editingToolbar, editorView } from "./editing-view";
+import {
+  ObserveViewport,
+  virtualWindow,
+  type VirtualizationConfig,
+} from "./virtualization";
 
 export type ViewConfig<Row, ParentMessage> = Readonly<{
   model: Model;
@@ -34,6 +40,7 @@ export type ViewConfig<Row, ParentMessage> = Readonly<{
   rowHeight?: number;
   appearance?: "standalone" | "embedded";
   showEditingToolbar?: boolean;
+  virtualization?: VirtualizationConfig;
 }>;
 
 const cellPosition = (rowIndex: number, columnIndex: number) =>
@@ -53,11 +60,43 @@ export const view = <Row, ParentMessage>(
   const selected = Option.getOrUndefined(config.model.selectedCell);
   const range = selectionRange(config.model, table);
   const selectedCount = selectionSize(range);
-  const rowHeight = config.rowHeight ?? 42;
+  const rowHeight = Math.max(1, config.rowHeight ?? 42);
   const active = Option.getOrUndefined(config.model.activeEdit);
   const pending = Option.isSome(config.model.pendingSubmission);
   const issues = editIssues(config);
   const clipboard = selectionText(table, range);
+  const isVirtualized = config.virtualization !== undefined;
+  const viewportHeight = config.model.viewport.height > 0
+    ? config.model.viewport.height
+    : config.virtualization?.initialViewportHeight ?? rowHeight * 10;
+  const selectedRowIndex = selected === undefined
+    ? undefined
+    : table.rows.findIndex((row) => row.id === selected.rowId);
+  const rowWindow = isVirtualized
+    ? virtualWindow(
+        table.rows.length,
+        rowHeight,
+        { ...config.model.viewport, height: viewportHeight },
+        config.virtualization?.overscan,
+        selectedRowIndex === -1 ? undefined : selectedRowIndex,
+      )
+    : {
+        startIndex: 0,
+        endIndex: table.rows.length,
+        paddingTop: 0,
+        paddingBottom: 0,
+      };
+  const renderedRows = table.rows.slice(rowWindow.startIndex, rowWindow.endIndex);
+  const spacer = (position: "top" | "bottom", height: number) => h.div(
+    [
+      h.Class("fk-data-grid__virtual-spacer"),
+      h.Role("presentation"),
+      h.AriaHidden(true),
+      h.DataAttribute("virtual-spacer", position),
+      h.Style({ height: `${height}px` }),
+    ],
+    [],
+  );
 
   const grid = h.div(
     [
@@ -69,6 +108,10 @@ export const view = <Row, ParentMessage>(
       h.AriaColcount(table.columns.length),
       h.DataAttribute("grid-id", config.model.id),
       h.DataAttribute("selection-size", String(selectedCount)),
+      h.DataAttribute("virtualized", isVirtualized ? "true" : "false"),
+      h.DataAttribute("rendered-row-count", String(renderedRows.length)),
+      h.DataAttribute("virtual-start", String(rowWindow.startIndex)),
+      h.DataAttribute("virtual-end", String(rowWindow.endIndex)),
       h.DataAttribute("appearance", config.appearance ?? "standalone"),
       h.DataAttribute(
         "resizing",
@@ -84,7 +127,13 @@ export const view = <Row, ParentMessage>(
     ],
     [
       h.div(
-        [h.Class("fk-data-grid__scroller")],
+        [
+          h.Key(`${config.model.id}:scroller:${isVirtualized ? "virtual" : "full"}`),
+          h.Class("fk-data-grid__scroller"),
+          ...(isVirtualized
+            ? [h.OnMount(Mount.mapMessage(ObserveViewport(), config.toParentMessage))]
+            : []),
+        ],
         [
           h.div(
             [
@@ -202,20 +251,24 @@ export const view = <Row, ParentMessage>(
                   ])
                 : h.div(
                     [h.Class("fk-data-grid__body"), h.Role("rowgroup")],
-                    table.rows.map((row) =>
-                      h.keyed("div")(
-                        row.id,
-                        [
-                          h.Class("fk-data-grid__row"),
-                          h.Role("row"),
-                          h.AriaRowindex(row.index + 2),
-                          h.Style({
-                            gridTemplateColumns: table.templateColumns,
-                            height: `${rowHeight}px`,
-                          }),
-                          h.DataAttribute("row-id", row.id),
-                        ],
-                        row.cells.map((cell, columnIndex) => {
+                    [
+                      ...(rowWindow.paddingTop > 0
+                        ? [spacer("top", rowWindow.paddingTop)]
+                        : []),
+                      ...renderedRows.map((row) =>
+                        h.keyed("div")(
+                          row.id,
+                          [
+                            h.Class("fk-data-grid__row"),
+                            h.Role("row"),
+                            h.AriaRowindex(row.index + 2),
+                            h.Style({
+                              gridTemplateColumns: table.templateColumns,
+                              height: `${rowHeight}px`,
+                            }),
+                            h.DataAttribute("row-id", row.id),
+                          ],
+                          row.cells.map((cell, columnIndex) => {
                           const isFocus =
                             selected?.rowId === row.id &&
                             selected.columnId === cell.column.id;
@@ -340,9 +393,13 @@ export const view = <Row, ParentMessage>(
                               ...(editing ? [h.span([h.Id(`${id}:editor:help`), h.Class("fk-data-grid__sr-only")], [active.error || "Enter to commit. Escape to cancel."])] : []),
                             ],
                           );
-                        }),
+                          }),
+                        ),
                       ),
-                    ),
+                      ...(rowWindow.paddingBottom > 0
+                        ? [spacer("bottom", rowWindow.paddingBottom)]
+                        : []),
+                    ],
                   ),
             ],
           ),

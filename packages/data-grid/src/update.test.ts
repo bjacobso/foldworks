@@ -11,6 +11,19 @@ const model = () => init({
 });
 
 describe("update", () => {
+  it("records a clamped viewport measurement without redundant updates", () => {
+    const measured = update(
+      model(),
+      Message.MeasuredViewport({ scrollTop: -20, height: 480 }),
+    ).model;
+
+    expect(measured.viewport).toEqual({ scrollTop: 0, height: 480 });
+    expect(update(
+      measured,
+      Message.MeasuredViewport({ scrollTop: 0, height: 480 }),
+    ).model).toBe(measured);
+  });
+
   it("ignores resize movement while idle", () => {
     const idle = model();
     expect(update(idle, Message.MovedColumnResize({ screenX: 400 })).model)

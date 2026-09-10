@@ -18,15 +18,6 @@ const Focus = Command.define("FocusDataGridEdit", {
   })),
 });
 
-const FocusCell = Command.define("FocusDataGridCell", {
-  args: { id: S.String },
-  messages: [Message.CompletedEditFocus],
-  execute: ({ id }) => Effect.sync(() => {
-    document.getElementById(id)?.focus({ preventScroll: true });
-    return Message.CompletedEditFocus();
-  }),
-});
-
 const submit = (model: Model, allIssues: ReadonlyArray<CellIssue>, requested?: ReadonlyArray<Draft>): UpdateReturn => {
   if (model.editingMode === "Disabled" || Option.isSome(model.pendingSubmission) || Option.isSome(model.activeEdit) || !model.drafts.length) return { model };
   const drafts = requested ?? (model.editingMode === "Immediate" ? model.drafts.slice(0, 1) : model.drafts);
@@ -169,13 +160,23 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         selectionAnchor: Option.some(anchor),
         saveError: "",
       };
-      const commands = [FocusCell({ id: cellId(model.id, focus.rowId, focus.columnId) })];
+      const commands = [Focus({ id: cellId(model.id, focus.rowId, focus.columnId) })];
       if (model.editingMode === "Batch") return { model: next, commands };
       const requested = drafts.filter((draft) => pasted.some((item) => sameCell(item, draft)));
       const issues = requested.flatMap((draft) => draft.error
         ? [{ rowId: draft.rowId, columnId: draft.columnId, error: draft.error }]
         : []);
       return { ...submit(next, issues, requested), commands };
+    },
+    MeasuredViewport: ({ scrollTop, height }) => {
+      const viewport = {
+        scrollTop: Number.isFinite(scrollTop) ? Math.max(0, scrollTop) : 0,
+        height: Number.isFinite(height) ? Math.max(0, height) : 0,
+      };
+      return model.viewport.scrollTop === viewport.scrollTop &&
+          model.viewport.height === viewport.height
+        ? { model }
+        : { model: { ...model, viewport } };
     },
     ToggledSort: ({ columnId }) => ({
       model: { ...model, sorting: nextSorting(model.sorting, columnId) },

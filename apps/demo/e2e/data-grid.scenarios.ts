@@ -74,8 +74,12 @@ export const dataGridEditingScenarios = (getPage: () => Page, appUrl: string, sc
       const page = await start();
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
+      await cell(1, 2).click();
       await page.locator('[data-column-id="department"] button').click();
-      const before = await page.locator('[data-row-id]').evaluateAll((rows) => rows.map((row) => row.getAttribute("data-row-id")));
+      await expect.poll(() =>
+        page.locator('[data-column-id="department"]').getAttribute("aria-sort"),
+      ).toBe("ascending");
+      const before = await cell(1, 2).getAttribute("data-grid-cell-position");
       await cell(1, 2).focus();
       await cell(1, 2).press("Enter");
       const editor = page.getByRole("textbox", { name: "Edit Department" });
@@ -84,8 +88,9 @@ export const dataGridEditingScenarios = (getPage: () => Page, appUrl: string, sc
       await editor.press("Enter");
       await expect.poll(() => cell(1, 2).getAttribute("data-dirty")).toBe("true");
       expect(await cell(1, 2).getAttribute("title")).toContain("Original: Engineering");
-      expect(await page.locator('[data-row-id]').evaluateAll((rows) => rows.map((row) => row.getAttribute("data-row-id")))).toEqual(before);
-      await cell(2, 4).dblclick();
+      expect(await cell(1, 2).getAttribute("data-grid-cell-position")).toBe(before);
+      await expect.poll(() => cell(119, 4).isVisible()).toBe(true);
+      await cell(119, 4).dblclick();
       await page.getByRole("textbox", { name: "Edit Location" }).fill("Paris");
       await page.getByRole("button", { name: "Stage edit", exact: true }).click();
       await expect.poll(() => page.getByRole("status").allTextContents()).toContain("2 changes across 2 rows");
@@ -96,8 +101,12 @@ export const dataGridEditingScenarios = (getPage: () => Page, appUrl: string, sc
       await page.getByRole("button", { name: "Save changes", exact: true }).click();
       await expect.poll(() => page.getByRole("button", { name: "Discard changes", exact: true }).isDisabled()).toBe(true);
       await expect.poll(() => page.locator('[data-dirty="true"]').count()).toBe(0);
-      expect(await cell(1, 2).textContent()).toBe("Zoology");
-      expect(await cell(2, 4).textContent()).toBe("Paris");
+      expect(await cell(119, 4).textContent()).toBe("Paris");
+      await page.locator(".fk-data-grid__scroller").evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+        element.dispatchEvent(new Event("scroll"));
+      });
+      await expect.poll(() => cell(1, 2).textContent()).toBe("Zoology");
       expect(errors).toEqual([]);
     });
 

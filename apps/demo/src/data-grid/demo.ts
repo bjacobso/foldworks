@@ -128,6 +128,7 @@ export const dataGridView = (
           label: "Team directory",
           rowHeight: 52,
           appearance: "embedded",
+          virtualization: { overscan: 4, initialViewportHeight: 700 },
         },
         h,
       ),

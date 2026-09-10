@@ -10,6 +10,7 @@ The first slice supports:
 - pointer column resizing and double-click reset;
 - rectangular selection with arrow and Shift+Arrow navigation;
 - spreadsheet-friendly TSV clipboard copy and validated paste;
+- opt-in fixed-row virtualization with measured viewport overscan;
 - sticky headers, horizontal scrolling, and accessible grid semantics.
 
 ```ts
@@ -70,6 +71,28 @@ as direct edits; select labels and the checkbox values `true`/`false`,
 `yes`/`no`, and `1`/`0` are accepted. Invalid values remain highlighted drafts
 and block saving. Batch mode stages the matrix for review, while Immediate mode
 submits a valid matrix as one application-owned save request.
+
+## Row virtualization
+
+Set `virtualization` on the view when a grid has enough rows to benefit from
+windowed rendering:
+
+```ts
+DataGrid.view({
+  ...config,
+  rowHeight: 52,
+  virtualization: { overscan: 4, initialViewportHeight: 700 },
+}, h)
+```
+
+The grid measures its live scroll viewport with a mount-scoped
+`ResizeObserver`, throttles scroll updates to animation frames, and renders
+only the visible fixed-height rows plus overscan. `initialViewportHeight`
+provides the first-render estimate until measurement arrives. Sorting,
+selection, editing, and clipboard operations continue to use the complete
+headless table, and `aria-rowcount`/`aria-rowindex` retain absolute values.
+At least one overscan row is always retained so arrow-key focus can cross a
+window boundary safely.
 
 ## Cell editing
 
@@ -199,5 +222,4 @@ Source checks protect local drafts, but the application must still validate
 writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
-Column ordering, pinned columns, row virtualization, and infinite loading
-remain future work.
+Column ordering, pinned columns, and infinite loading remain future work.

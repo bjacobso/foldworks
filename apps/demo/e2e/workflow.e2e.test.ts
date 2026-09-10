@@ -551,13 +551,32 @@ describe.sequential("structured workflow builder", () => {
     const grid = page.locator('[data-grid-id="people-directory"]');
     await expect.poll(() => grid.isVisible()).toBe(true);
     await expect.poll(() => grid.getAttribute("aria-rowcount")).toBe("121");
-    await expect.poll(() => grid.locator('[data-row-id]').count()).toBe(120);
+    await expect.poll(() => grid.getAttribute("data-virtualized")).toBe("true");
+    await expect.poll(() => grid.locator('[data-row-id]').count()).toBeLessThan(120);
     await expect.poll(() => grid.getByText("Active", { exact: true }).count()).toBeGreaterThan(0);
     await expect.poll(() => grid.getAttribute("data-appearance")).toBe("embedded");
     await expect.poll(() => grid.evaluate((element) => {
       const style = getComputedStyle(element);
       return [style.borderTopLeftRadius, style.borderLeftWidth, style.borderRightWidth];
     })).toEqual(["0px", "0px", "0px"]);
+
+    const scroller = grid.locator(".fk-data-grid__scroller");
+    await scroller.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+      element.dispatchEvent(new Event("scroll"));
+    });
+    await expect.poll(async () => Number(await grid.getAttribute("data-virtual-start")))
+      .toBeGreaterThan(0);
+    await expect.poll(() => grid.locator('[data-row-id="person-120"]').isVisible())
+      .toBe(true);
+    await expect.poll(() => grid.locator('[data-row-id="person-120"]').getAttribute("aria-rowindex"))
+      .toBe("121");
+    await scroller.evaluate((element) => {
+      element.scrollTop = 0;
+      element.dispatchEvent(new Event("scroll"));
+    });
+    await expect.poll(() => grid.locator('[data-grid-cell-position="0:0"]').isVisible())
+      .toBe(true);
 
     const employeeHeader = grid.locator('[data-column-id="employee"]');
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="chevrons-up-down"]').count())

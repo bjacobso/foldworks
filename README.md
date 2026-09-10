@@ -10,8 +10,8 @@ accessible application interfaces with Foldkit:
 - [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation
   runtime with streaming text, tool states, permission checkpoints, and retry.
 - [`@foldworks/data-grid`](./packages/data-grid) — a typed data-grid core with
-  sorting, resizing, range selection, clipboard copy/paste, editing, and an
-  accessible view.
+  sorting, resizing, row virtualization, range selection, clipboard copy/paste,
+  editing, and an accessible view.
 - [`@foldworks/code-editor`](./packages/code-editor) — a native Foldkit editor with
   highlighting, undo/redo, find/replace, diagnostics, and shared implementation
   contracts. See the [architecture](./packages/code-editor/NATIVE.md).

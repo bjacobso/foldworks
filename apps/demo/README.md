@@ -56,6 +56,7 @@ The data grid currently demonstrates:
 - custom cell rendering and numeric/text sorting;
 - sticky headers and horizontal/vertical scrolling;
 - rectangular keyboard selection with Shift+Arrow and validated TSV copy/paste;
+- measured row virtualization with overscan and absolute accessible indices;
 - resizable columns with a double-click reset.
 
 The form builder demonstrates a section-first, multi-actor document model:

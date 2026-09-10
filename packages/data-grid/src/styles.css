@@ -113,10 +113,15 @@
 
 .fk-data-grid__row {
   border-bottom: 1px solid var(--data-grid-border);
+  box-sizing: border-box;
 }
 
 .fk-data-grid__row:hover {
   background: var(--data-grid-hover);
+}
+
+.fk-data-grid__virtual-spacer {
+  pointer-events: none;
 }
 
 .fk-data-grid__cell {

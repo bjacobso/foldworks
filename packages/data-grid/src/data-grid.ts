@@ -20,6 +20,11 @@ export { view, type ViewConfig } from "./view";
 export { OutMessage } from "./message";
 export { Edit, CellIssue, Submission } from "./editing-model";
 export {
+  virtualWindow,
+  type VirtualizationConfig,
+  type VirtualWindow,
+} from "./virtualization";
+export {
   commitMessage,
   editIssues,
   parseClipboardText,
