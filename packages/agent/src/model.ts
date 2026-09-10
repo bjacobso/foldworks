@@ -3,21 +3,12 @@ import { Stateful } from "@foldworks/ui";
 
 import { Segment } from "./protocol";
 
-export const ModelId = S.Literals(["atlas-fast", "atlas-balanced", "atlas-reasoning"]);
-export type ModelId = typeof ModelId.Type;
-
-export type ModelFixture = Readonly<{
-  id: ModelId;
+export type ModelOption = Readonly<{
+  id: string;
   label: string;
   provider: string;
   description: string;
 }>;
-
-export const modelFixtures: ReadonlyArray<ModelFixture> = [
-  { id: "atlas-fast", label: "Atlas Fast", provider: "Local fixture", description: "Quick responses with compact tool summaries" },
-  { id: "atlas-balanced", label: "Atlas Balanced", provider: "Local fixture", description: "Balanced planning and implementation detail" },
-  { id: "atlas-reasoning", label: "Atlas Reasoning", provider: "Local fixture", description: "Deeper analysis with deliberate tool use" },
-];
 
 export const TextPart = S.Struct({
   _tag: S.Literal("Text"),
@@ -80,9 +71,11 @@ export const RunState = S.Union([
 export type RunState = typeof RunState.Type;
 
 export const Model = S.Struct({
+  id: S.String,
   transcript: S.Array(Turn),
   draft: S.String,
-  selectedModel: ModelId,
+  selectedModel: S.String,
+  defaultModel: S.String,
   modelPicker: Stateful.Select.Model,
   runState: RunState,
   nextRunNumber: S.Int,
@@ -91,19 +84,35 @@ export const Model = S.Struct({
 });
 export type Model = typeof Model.Type;
 
-export const init = (): Model => ({
+export type InitConfig = Readonly<{
+  id: string;
+  selectedModel: string;
+}>;
+
+export const init = ({ id, selectedModel }: InitConfig): Model => ({
+  id,
   transcript: [],
   draft: "",
-  selectedModel: "atlas-balanced",
-  modelPicker: Stateful.Select.init({ id: "agent-model-picker", isAnimated: true }),
+  selectedModel,
+  defaultModel: selectedModel,
+  modelPicker: Stateful.Select.init({ id: `${id}-model-picker`, isAnimated: true }),
   runState: { _tag: "Idle" },
   nextRunNumber: 1,
   isFollowing: true,
-  announcement: "Agent playground ready.",
+  announcement: "Agent ready.",
 });
 
 export const isActive = (model: Model): boolean =>
   model.runState._tag === "Streaming" || model.runState._tag === "AwaitingPermission";
 
-export const selectedModelFixture = (model: Model): ModelFixture =>
-  modelFixtures.find((fixture) => fixture.id === model.selectedModel) ?? modelFixtures[1]!;
+export const transcriptId = (model: Model): string => `${model.id}-transcript`;
+
+export const latestUserPrompt = (model: Model): string => {
+  for (let index = model.transcript.length - 1; index >= 0; index -= 1) {
+    const turn = model.transcript[index];
+    if (turn?.role !== "User") continue;
+    const part = turn.parts.find((item) => item._tag === "Text");
+    return part?._tag === "Text" ? part.text : "";
+  }
+  return "";
+};

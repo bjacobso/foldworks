@@ -37,12 +37,21 @@ export const ResizeState = defineTaggedUnion({
 });
 export type ResizeState = typeof ResizeState.Type;
 
+export const Viewport = S.Struct({
+  scrollTop: S.Number,
+  height: S.Number,
+});
+export type Viewport = typeof Viewport.Type;
+
 export const Model = S.Struct({
   id: S.String,
+  columnOrder: S.Array(S.String),
   selectedCell: S.Option(CellAddress),
+  selectionAnchor: S.Option(CellAddress),
   sorting: S.Option(Sorting),
   columnSizes: S.Array(ColumnSize),
   resizeState: ResizeState,
+  viewport: Viewport,
   editingMode: S.Literals(["Disabled", "Immediate", "Batch"]),
   drafts: S.Array(Draft),
   activeEdit: S.Option(ActiveEdit),
@@ -60,13 +69,16 @@ export type InitConfig<Row = unknown, ParentMessage = never> = Readonly<{
 
 export const init = (config: InitConfig): Model => ({
   id: config.id,
+  columnOrder: config.columns.map((column) => column.id),
   selectedCell: Option.none(),
+  selectionAnchor: Option.none(),
   sorting: Option.none(),
   columnSizes: config.columns.map((column) => ({
     columnId: column.id,
     width: column.width ?? DEFAULT_COLUMN_WIDTH,
   })),
   resizeState: ResizeState.Idle(),
+  viewport: { scrollTop: 0, height: 0 },
   editingMode: config.editing?.mode ?? "Disabled",
   drafts: [],
   activeEdit: Option.none(),

@@ -6,7 +6,7 @@ and explains the boundary between UI components and application primitives.
 Use the sidebar to move between every package showcase.
 
 Foldkit's bidirectional router owns navigational state. The project overview
-lives at `/`; demos live at `/ui-kit`, `/data-grid`, `/query-builder`,
+lives at `/`; demos live at `/ui-kit`, `/editor`, `/data-table`, `/data-grid`, `/query-builder`,
 `/form-builder`, `/workflow`, `/pdf-annotator`, and `/agent`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,
@@ -37,6 +37,12 @@ The private `@foldworks/data-grid` workspace package provides a typed,
 headless table model and a Foldkit DOM view. The demo supplies 120 rows, column
 configuration, and custom employee and status cell renderers.
 
+The `@foldworks/data-table` demo is deliberately resource-first: one compact
+row per person, semantic table markup, links into a route-driven detail panel,
+sorting, search, bulk selection, density, and pinned identity/actions columns.
+It owns no spreadsheet editing state; that richer interaction model remains in
+`@foldworks/data-grid`.
+
 Features include:
 
 - nested Then, Else, and dynamic Switch flows;
@@ -53,9 +59,14 @@ Features include:
 The data grid currently demonstrates:
 
 - typed application-owned rows and column definitions;
+- an Excel-like worksheet shell with sticky row numbers, a live A1-style value
+  bar, compact 34px rows, and single-line cells;
 - custom cell rendering and numeric/text sorting;
 - sticky headers and horizontal/vertical scrolling;
-- single-cell selection with arrow-key navigation;
+- rectangular keyboard selection with Shift+Arrow and validated TSV copy/paste;
+- measured row virtualization with overscan and absolute accessible indices;
+- accessible column ordering with stable column state;
+- start/end pinned columns across horizontal scrolling;
 - resizable columns with a double-click reset.
 
 The form builder demonstrates a section-first, multi-actor document model:
@@ -83,13 +94,15 @@ The UI component showcase demonstrates every `@foldworks/ui` primitive:
 - all 61 current shadcn-equivalent component families, including controlled
   overlays, menus, navigation, tables, charts, calendars, and message views.
 
-The agent playground at `/agent` demonstrates a provider-neutral conversation
-surface with real incremental Effect streams, tool input and result states, an
+The agent playground at `/agent` demonstrates the provider-neutral
+`@foldworks/agent` conversation runtime with real incremental Effect streams,
+tool input and result states, an
 inline allow/deny permission checkpoint, model selection, and a multiline
 composer. Its model responses and tool results are deterministic local fixtures:
 the demo does not call a provider, use an API key, execute a command, or change a
 file. The normalized event protocol can later accept AI SDK UI message chunks or
-Effect AI `LanguageModel.streamText` parts without changing the reducer or view.
+Effect AI `LanguageModel.streamText` parts without changing the package reducer
+or application view.
 
 From the repository root:
 
@@ -101,6 +114,11 @@ pnpm dev
 Use `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify the example. Run
 `pnpm test:e2e` for the Vitest + Playwright interaction suite and screenshots in
 `apps/demo/test-results/demo`.
+
+The browser suite discovers the package catalog rendered on the homepage and
+captures every linked showcase as `site-docs-<package>.png`. This provides a
+consistent screenshot set for the site documentation and fails when the catalog
+changes without corresponding screenshot coverage.
 
 ## Workers reference workspace
 

@@ -2,6 +2,7 @@ import type { LucideIconData } from "@lucide/icons";
 import {
   ArrowRight,
   Blocks,
+  Bot,
   Braces,
   CheckCircle2,
   FileText,
@@ -20,11 +21,13 @@ import {
   editorRouter,
   agentRouter,
   codeEditorRouter,
+  dataTablePath,
   dataGridRouter,
   formBuilderPath,
   pdfAnnotatorRouter,
   queryBuilderRouter,
   uiKitRouter,
+  workbenchRouter,
   workflowPath,
 } from "../app/route";
 import { className, styles } from "./styles";
@@ -54,6 +57,13 @@ const packages: ReadonlyArray<Package> = [
     icon: PanelLeft,
   },
   {
+    name: "@foldworks/agent",
+    category: "Application primitive",
+    description: "Streaming conversations, tool states, approvals, cancellation, and retry.",
+    href: agentRouter(),
+    icon: Bot,
+  },
+  {
     name: "@foldworks/code-editor",
     category: "Application primitive",
     description: "Code editing, syntax highlighting, and live diagnostics in a versioned document.",
@@ -61,9 +71,16 @@ const packages: ReadonlyArray<Package> = [
     icon: Braces,
   },
   {
+    name: "@foldworks/data-table",
+    category: "Application primitive",
+    description: "Resource-first CRUD tables with links, sorting, bulk selection, density, and pinned columns.",
+    href: dataTablePath(),
+    icon: Table2,
+  },
+  {
     name: "@foldworks/data-grid",
     category: "Application primitive",
-    description: "Sorting, selection, virtualization, and keyboard navigation.",
+    description: "Pinned columns, virtualized rows, ordering, range selection, copy/paste, and editing.",
     href: dataGridRouter(),
     icon: Table2,
   },
@@ -205,7 +222,7 @@ const comparison = <Message>(h: HtmlBuilder<Message>): Html =>
       h.p([h.Class(className(styles.comparisonText))], [
         "Complete product capabilities with domain models, messages, updates, accessibility, and composition points—not just a styled surface.",
       ]),
-      h.div([h.Class(className(styles.chips))], ["DataGrid", "QueryBuilder", "FormBuilder", "Workflow", "PdfAnnotator"].map((name) =>
+      h.div([h.Class(className(styles.chips))], ["DataTable", "DataGrid", "QueryBuilder", "FormBuilder", "Workflow", "PdfAnnotator"].map((name) =>
         h.span([h.Class(className(styles.chip))], [name])
       )),
     ]),
@@ -251,9 +268,9 @@ export const view = <Message>(h: HtmlBuilder<Message>): Html =>
             "Foldworks is a collection of polished, controlled building blocks for ambitious web applications—from interface components to complete editors and structured workflows.",
           ]),
           h.div([h.Class(className(styles.actions))], [
-            link("Explore the UI system", uiKitRouter(), "primary", h),
+            link("Open the Workers workbench", workbenchRouter(), "primary", h),
             link("Try the agent playground", agentRouter(), "secondary", h),
-            link("Open the workflow builder", workflowPath("Vertical"), "secondary", h),
+            link("Explore the UI system", uiKitRouter(), "secondary", h),
           ]),
           h.div([h.Class(className(styles.heroMeta))], [
             h.span([h.Class(className(styles.metaItem))], [Icon.view({ icon: CheckCircle2, size: 14 }, h), "Accessible by default"]),

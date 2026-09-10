@@ -63,6 +63,12 @@ const writeColumnWidth = (model: Model, columnId: string, width: number): Model 
     : [...model.columnSizes, { columnId, width }],
 });
 
+const mergeDrafts = (current: ReadonlyArray<Draft>, incoming: ReadonlyArray<Draft>): ReadonlyArray<Draft> =>
+  incoming.reduce<ReadonlyArray<Draft>>((drafts, draft) => {
+    const remaining = drafts.filter((item) => !sameCell(item, draft));
+    return Object.is(draft.previousValue, draft.value) ? remaining : [...remaining, draft];
+  }, current);
+
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
     CompletedEditFocus: () => ({ model }),
@@ -70,7 +76,13 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       if (model.editingMode === "Disabled" || Option.isSome(model.pendingSubmission) || Option.isSome(model.activeEdit)) return { model };
       const draft = model.drafts.find((draft) => sameCell(draft, edit));
       return {
-        model: { ...model, selectedCell: Option.some({ rowId: edit.rowId, columnId: edit.columnId }), activeEdit: Option.some({ ...edit, previousValue: draft === undefined ? edit.previousValue : draft.previousValue }), saveError: "" },
+        model: {
+          ...model,
+          selectedCell: Option.some({ rowId: edit.rowId, columnId: edit.columnId }),
+          selectionAnchor: Option.some({ rowId: edit.rowId, columnId: edit.columnId }),
+          activeEdit: Option.some({ ...edit, previousValue: draft === undefined ? edit.previousValue : draft.previousValue }),
+          saveError: "",
+        },
         commands: [Focus({ id: `${cellId(model.id, edit.rowId, edit.columnId)}:editor` })],
       };
     },
@@ -114,7 +126,65 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     },
     SelectedCell: ({ rowId, columnId }) => Option.isSome(model.activeEdit) && !sameCell(model.activeEdit.value, { rowId, columnId })
       ? { model }
-      : { model: { ...model, selectedCell: Option.some({ rowId, columnId }) } },
+      : {
+          model: {
+            ...model,
+            selectedCell: Option.some({ rowId, columnId }),
+            selectionAnchor: Option.some({ rowId, columnId }),
+          },
+        },
+    ExtendedSelection: ({ rowId, columnId, anchorRowId, anchorColumnId }) => Option.isSome(model.activeEdit)
+      ? { model }
+      : {
+          model: {
+            ...model,
+            selectedCell: Option.some({ rowId, columnId }),
+            selectionAnchor: Option.orElse(model.selectionAnchor, () =>
+              Option.orElse(model.selectedCell, () => Option.some({
+                rowId: anchorRowId,
+                columnId: anchorColumnId,
+              }))),
+          },
+        },
+    PastedCells: ({ drafts: pasted, anchor, focus }) => {
+      if (
+        model.editingMode === "Disabled" ||
+        Option.isSome(model.activeEdit) ||
+        Option.isSome(model.pendingSubmission)
+      ) return { model };
+      const drafts = mergeDrafts(model.drafts, pasted);
+      const next = {
+        ...model,
+        drafts,
+        selectedCell: Option.some(focus),
+        selectionAnchor: Option.some(anchor),
+        saveError: "",
+      };
+      const commands = [Focus({ id: cellId(model.id, focus.rowId, focus.columnId) })];
+      if (model.editingMode === "Batch") return { model: next, commands };
+      const requested = drafts.filter((draft) => pasted.some((item) => sameCell(item, draft)));
+      const issues = requested.flatMap((draft) => draft.error
+        ? [{ rowId: draft.rowId, columnId: draft.columnId, error: draft.error }]
+        : []);
+      return { ...submit(next, issues, requested), commands };
+    },
+    MeasuredViewport: ({ scrollTop, height }) => {
+      const viewport = {
+        scrollTop: Number.isFinite(scrollTop) ? Math.max(0, scrollTop) : 0,
+        height: Number.isFinite(height) ? Math.max(0, height) : 0,
+      };
+      return model.viewport.scrollTop === viewport.scrollTop &&
+          model.viewport.height === viewport.height
+        ? { model }
+        : { model: { ...model, viewport } };
+    },
+    ChangedColumnOrder: ({ columnIds }) => {
+      const columnOrder = [...new Set(columnIds)];
+      return columnOrder.length === model.columnOrder.length &&
+          columnOrder.every((columnId, index) => model.columnOrder[index] === columnId)
+        ? { model }
+        : { model: { ...model, columnOrder } };
+    },
     ToggledSort: ({ columnId }) => ({
       model: { ...model, sorting: nextSorting(model.sorting, columnId) },
     }),

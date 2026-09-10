@@ -1,0 +1,44 @@
+{
+  "name": "@foldworks/data-table",
+  "version": "0.0.0",
+  "description": "A controlled, accessible resource table primitive for Foldkit applications.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": ["**/*.css"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/data-table"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": { "url": "https://github.com/bjacobso/foldworks/issues" },
+  "keywords": ["foldkit", "data-table", "table", "crud", "accessibility", "stylex"],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lucide/icons": "catalog:",
+    "@foldworks/ui": "workspace:*",
+    "foldkit": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

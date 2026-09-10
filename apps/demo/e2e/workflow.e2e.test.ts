@@ -10,6 +10,7 @@ import { dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
 import { agentScenarios } from "./agent.scenarios";
+import { packageDemoScreenshotScenarios } from "./package-demo.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
@@ -130,6 +131,7 @@ describe.sequential("structured workflow builder", () => {
       "@foldworks/ui",
       "Document editor",
       "Code editor",
+      "Data table",
       "Data grid",
       "Query builder",
       "Form builder",
@@ -170,6 +172,8 @@ describe.sequential("structured workflow builder", () => {
       name: "Workflow volume for the last seven days",
     }).isVisible()).toBe(true);
     await expect.poll(() => page.getByRole("link", { name: /@foldworks\/data-grid/ }).isVisible())
+      .toBe(true);
+    await expect.poll(() => page.getByRole("link", { name: /@foldworks\/data-table/ }).isVisible())
       .toBe(true);
     await expect.poll(() => page.getByRole("link", { name: "Try the agent playground" }).isVisible())
       .toBe(true);
@@ -546,13 +550,14 @@ describe.sequential("structured workflow builder", () => {
   });
 
   it("renders and operates the Foldkit-native data grid", async () => {
-    await page.goto(appUrl, { waitUntil: "networkidle" });
-    await page.getByRole("link", { name: "Data grid" }).click();
+    await page.goto(`${appUrl}/data-grid`, { waitUntil: "networkidle" });
 
     const grid = page.locator('[data-grid-id="people-directory"]');
     await expect.poll(() => grid.isVisible()).toBe(true);
     await expect.poll(() => grid.getAttribute("aria-rowcount")).toBe("121");
-    await expect.poll(() => grid.locator('[data-row-id]').count()).toBe(120);
+    await expect.poll(() => grid.getAttribute("aria-colcount")).toBe("9");
+    await expect.poll(() => grid.getAttribute("data-virtualized")).toBe("true");
+    await expect.poll(() => grid.locator('[data-row-id]').count()).toBeLessThan(120);
     await expect.poll(() => grid.getByText("Active", { exact: true }).count()).toBeGreaterThan(0);
     await expect.poll(() => grid.getAttribute("data-appearance")).toBe("embedded");
     await expect.poll(() => grid.evaluate((element) => {
@@ -560,14 +565,84 @@ describe.sequential("structured workflow builder", () => {
       return [style.borderTopLeftRadius, style.borderLeftWidth, style.borderRightWidth];
     })).toEqual(["0px", "0px", "0px"]);
 
+    const scroller = grid.locator(".fk-data-grid__scroller");
+    await scroller.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+      element.dispatchEvent(new Event("scroll"));
+    });
+    await expect.poll(async () => Number(await grid.getAttribute("data-virtual-start")))
+      .toBeGreaterThan(0);
+    await expect.poll(() => grid.locator('[data-row-id="person-120"]').isVisible())
+      .toBe(true);
+    await expect.poll(() => grid.locator('[data-row-id="person-120"]').getAttribute("aria-rowindex"))
+      .toBe("121");
+    await scroller.evaluate((element) => {
+      element.scrollTop = 0;
+      element.dispatchEvent(new Event("scroll"));
+    });
+    await expect.poll(() => grid.locator('[data-grid-cell-position="0:0"]').isVisible())
+      .toBe(true);
+
+    const employeeCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="employee"]');
+    const roleCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="role"]');
+    const equipmentCell = grid.locator('[data-row-id="person-1"] [data-cell-column-id="equipmentIssued"]');
+    const firstRowHeader = grid.locator('[data-row-id="person-1"] [role="rowheader"]');
+    await expect.poll(() => firstRowHeader.textContent()).toBe("1");
+    await expect.poll(() => grid.locator('[data-row-id="person-1"]').evaluate((element) =>
+      element.getBoundingClientRect().height)).toBe(34);
+    await expect.poll(() => employeeCell.evaluate((element) => ({
+      left: getComputedStyle(element).left,
+      whiteSpace: getComputedStyle(element).whiteSpace,
+    }))).toEqual({ left: "44px", whiteSpace: "nowrap" });
+    await expect.poll(() => page.locator('[data-grid-cell-address]').textContent()).toBe("—");
+    await expect.poll(() => employeeCell.getAttribute("data-pinned")).toBe("start");
+    await expect.poll(() => equipmentCell.getAttribute("data-pinned")).toBe("end");
+    await scroller.evaluate((element) => {
+      element.style.width = "800px";
+    });
+    await expect.poll(() => scroller.evaluate((element) => element.scrollWidth - element.clientWidth))
+      .toBeGreaterThan(500);
+    const beforeHorizontalScroll = await Promise.all(
+      [employeeCell, roleCell, equipmentCell].map((cell) =>
+        cell.evaluate((element) => element.getBoundingClientRect().x)),
+    );
+    await scroller.evaluate((element) => {
+      element.scrollLeft = 320;
+      element.dispatchEvent(new Event("scroll"));
+    });
+    const afterHorizontalScroll = await Promise.all(
+      [employeeCell, roleCell, equipmentCell].map((cell) =>
+        cell.evaluate((element) => element.getBoundingClientRect().x)),
+    );
+    expect(Math.abs(afterHorizontalScroll[0]! - beforeHorizontalScroll[0]!)).toBeLessThan(1);
+    expect(afterHorizontalScroll[1]!).toBeLessThan(beforeHorizontalScroll[1]! - 250);
+    expect(Math.abs(afterHorizontalScroll[2]! - beforeHorizontalScroll[2]!)).toBeLessThan(1);
+    await scroller.evaluate((element) => {
+      element.scrollLeft = 0;
+      element.style.width = "";
+      element.dispatchEvent(new Event("scroll"));
+    });
+
+    const locationHeader = grid.locator('[data-column-id="location"]');
+    await locationHeader.hover();
+    await locationHeader.getByRole("button", { name: "Move Location column left" }).click();
+    await expect.poll(() => grid.locator('[role="columnheader"]').nth(4).getAttribute("data-column-id"))
+      .toBe("location");
+    await expect.poll(() => grid.locator('[data-row-id="person-1"] [role="gridcell"]').nth(3).textContent())
+      .toBe("San Francisco");
+    await locationHeader.hover();
+    await locationHeader.getByRole("button", { name: "Move Location column right" }).click();
+    await expect.poll(() => grid.locator('[role="columnheader"]').nth(5).getAttribute("data-column-id"))
+      .toBe("location");
+
     const employeeHeader = grid.locator('[data-column-id="employee"]');
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="chevrons-up-down"]').count())
       .toBe(1);
-    await employeeHeader.getByRole("button").click();
+    await employeeHeader.locator(".fk-data-grid__header-button").click();
     await expect.poll(() => employeeHeader.getAttribute("aria-sort")).toBe("ascending");
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="arrow-up"]').count())
       .toBe(1);
-    await employeeHeader.getByRole("button").click();
+    await employeeHeader.locator(".fk-data-grid__header-button").click();
     await expect.poll(() => employeeHeader.getAttribute("aria-sort")).toBe("descending");
     await expect.poll(() => employeeHeader.locator('[data-lucide-icon="arrow-down"]').count())
       .toBe(1);
@@ -575,6 +650,8 @@ describe.sequential("structured workflow builder", () => {
     const firstCell = grid.locator('[data-grid-cell-position="0:0"]');
     await firstCell.click();
     await expect.poll(() => firstCell.getAttribute("data-selected")).toBe("true");
+    await expect.poll(() => page.locator('[data-grid-cell-address]').textContent()).toBe("A1");
+    await expect.poll(() => page.locator('[data-grid-cell-value]').textContent()).toBe("Zoe Kim");
     await page.keyboard.press("ArrowRight");
     await expect
       .poll(() => grid.locator('[data-grid-cell-position="0:1"]').getAttribute("data-selected"))
@@ -597,6 +674,57 @@ describe.sequential("structured workflow builder", () => {
     }
 
     await screenshot("09-data-grid");
+  });
+
+  it("renders a semantic, resource-first data table", async () => {
+    await page.goto(`${appUrl}/data-table`, { waitUntil: "networkidle" });
+
+    const tableRoot = page.locator('[data-table-id="people-resources"]');
+    const table = tableRoot.getByRole("table", { name: "People resources" });
+    await expect.poll(() => table.isVisible()).toBe(true);
+    await expect.poll(() => table.locator("thead").count()).toBe(1);
+    await expect.poll(() => table.locator("tbody").count()).toBe(1);
+    await expect.poll(() => table.locator('tbody [data-row-id]').count()).toBe(64);
+    await expect.poll(() => tableRoot.getAttribute("data-density")).toBe("Compact");
+    await expect.poll(() => table.getAttribute("role")).toBeNull();
+
+    const personCell = table.locator('[data-row-id="contact-1"] [data-cell-column-id="person"]');
+    const actionCell = table.locator('[data-row-id="contact-1"] [data-cell-column-id="actions"]');
+    await expect.poll(() => personCell.getAttribute("data-pinned")).toBe("start");
+    await expect.poll(() => actionCell.getAttribute("data-pinned")).toBe("end");
+    await expect.poll(() => personCell.evaluate((element) => ({
+      left: getComputedStyle(element).left,
+      position: getComputedStyle(element).position,
+    }))).toEqual({ left: "44px", position: "sticky" });
+
+    const lastContactHeader = table.locator('[data-column-id="lastContact"]');
+    await expect.poll(() => lastContactHeader.getAttribute("aria-sort")).toBe("ascending");
+    await lastContactHeader.getByRole("button").click();
+    await expect.poll(() => lastContactHeader.getAttribute("aria-sort")).toBe("descending");
+
+    await table.locator('[data-row-id="contact-1"]')
+      .getByRole("checkbox", { name: "Select Landon Ziemke" }).click();
+    await expect.poll(() => tableRoot.getAttribute("data-selected-count")).toBe("1");
+    await expect.poll(() => page.getByRole("button", { name: "Clear selection" }).isVisible())
+      .toBe(true);
+    await table.getByRole("checkbox", { name: "Select all visible rows" }).click();
+    await expect.poll(() => tableRoot.getAttribute("data-selected-count")).toBe("64");
+    await page.getByRole("button", { name: "Clear selection" }).click();
+    await expect.poll(() => tableRoot.getAttribute("data-selected-count")).toBe("0");
+
+    await page.getByRole("searchbox", { name: "Search people" }).fill("Helpstone");
+    await expect.poll(() => table.locator('tbody [data-row-id]').count()).toBe(8);
+    await expect.poll(() => page.getByText("8 people", { exact: true }).isVisible()).toBe(true);
+    await page.getByRole("searchbox", { name: "Search people" }).fill("");
+
+    await table.locator('[data-row-id="contact-1"] .fk-data-table__resource-link').click();
+    await expect.poll(() => new URL(page.url()).searchParams.get("person")).toBe("contact-1");
+    await expect.poll(() => page.locator('[data-contact-detail="contact-1"]').isVisible()).toBe(true);
+    await expect.poll(() => page.getByRole("heading", { name: "Landon Ziemke" }).isVisible()).toBe(true);
+    await page.getByRole("link", { name: "Close person details" }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.has("person")).toBe(false);
+
+    await screenshot("09-data-table");
   });
 
   it("keeps a field press selectable until deliberate movement starts a drag", async () => {
@@ -1217,4 +1345,5 @@ describe.sequential("structured workflow builder", () => {
   statefulUiScenarios(() => page, appUrl, screenshot);
   nativeEditorScenarios(() => page, appUrl, screenshot);
   agentScenarios(() => page, appUrl, screenshot);
+  packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

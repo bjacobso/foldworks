@@ -1,7 +1,8 @@
+import { Option } from "effect";
 import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { DataGrid } from "@foldworks/data-grid";
+import { createTable, DataGrid } from "@foldworks/data-grid";
 
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -14,23 +15,16 @@ const employeeCell = (
   person: Person,
   h: HtmlBuilder<Message>,
 ): Html =>
-  h.div([h.Class(className(dataGridStyles.person))], [
-    h.span([h.Class(className(dataGridStyles.avatar)), h.AriaHidden(true)], [
-      person.name.split(" ").map((part) => part[0]).join(""),
-    ]),
-    h.div([h.Class(className(dataGridStyles.personCopy))], [
-      h.span([h.Class(className(dataGridStyles.personName))], [person.name]),
-      h.span([h.Class(className(dataGridStyles.personEmail))], [person.email]),
-    ]),
-  ]);
+  h.span([h.Class(className(dataGridStyles.personName))], [person.name]);
 
 export const columns = DataGrid.defineColumns<Person, Message>()([
   {
     id: "employee",
     header: "Employee",
     accessor: (person) => person.name,
-    width: 280,
-    minimumWidth: 210,
+    width: 190,
+    minimumWidth: 150,
+    pinned: "Start",
     renderCell: ({ row }, h) => employeeCell(row, h),
   },
   {
@@ -93,30 +87,79 @@ export const columns = DataGrid.defineColumns<Person, Message>()([
         }).format(Number(value)),
       ]),
   },
-  { id: "equipmentIssued", header: "Equipment issued", accessor: (person) => person.equipmentIssued, width: 155, editor: { kind: "Checkbox" } },
+  { id: "equipmentIssued", header: "Equipment issued", accessor: (person) => person.equipmentIssued, width: 155, pinned: "End", editor: { kind: "Checkbox" } },
 ]);
+
+const columnName = (index: number): string => {
+  let value = index + 1;
+  let name = "";
+  while (value > 0) {
+    value -= 1;
+    name = String.fromCharCode(65 + (value % 26)) + name;
+    value = Math.floor(value / 26);
+  }
+  return name;
+};
+
+const formulaSelection = (model: Model): Readonly<{ address: string; value: string }> => {
+  const table = createTable({
+    model: model.grid,
+    columns,
+    rows: model.rows,
+    getRowId: (person) => person.id,
+  });
+  const selected = Option.getOrUndefined(model.grid.selectedCell);
+  if (selected === undefined) return { address: "—", value: "Select a cell" };
+  const rowIndex = table.rows.findIndex((row) => row.id === selected.rowId);
+  const columnIndex = table.columns.findIndex((column) =>
+    column.definition.id === selected.columnId);
+  if (rowIndex < 0 || columnIndex < 0) return { address: "—", value: "Select a cell" };
+  const safeRowIndex = Math.max(0, rowIndex);
+  const safeColumnIndex = Math.max(0, columnIndex);
+  const value = table.rows[safeRowIndex]?.cells[safeColumnIndex]?.value;
+  return {
+    address: `${columnName(safeColumnIndex)}${safeRowIndex + 1}`,
+    value: value === null || value === undefined
+      ? ""
+      : typeof value === "boolean"
+        ? value ? "TRUE" : "FALSE"
+        : String(value),
+  };
+};
 
 export const dataGridView = (
   model: Model,
   h: HtmlBuilder<Message>,
-): Html =>
-  h.div([h.Class(className(dataGridStyles.viewport))], [
+): Html => {
+  const selection = formulaSelection(model);
+  return h.div([h.Class(className(dataGridStyles.viewport))], [
     h.section([h.Class(className(dataGridStyles.card))], [
       h.div([h.Class(className(dataGridStyles.cardHeader))], [
         h.div([], [
-          h.h2([h.Class(className(dataGridStyles.title))], ["Team directory"]),
+          h.h2([h.Class(className(dataGridStyles.title))], ["Headcount planning"]),
           h.p([h.Class(className(dataGridStyles.description))], [
-            "A controlled, typed grid assembled from application-owned rows and columns.",
+            "Editable worksheet · single-line cells · application-owned data",
           ]),
         ]),
-        h.label([], ["Save behavior ", h.select([
-          h.AriaLabel("Save behavior"), h.Value(model.grid.editingMode),
+        h.label([h.Class(className(dataGridStyles.saveBehavior))], ["Save mode", h.select([
+          h.Class(className(dataGridStyles.select)), h.AriaLabel("Save behavior"), h.Value(model.grid.editingMode),
           h.Disabled(model.grid.drafts.length > 0 || model.grid.activeEdit._tag === "Some" || model.grid.pendingSubmission._tag === "Some"),
           h.OnChange((mode) => Message.ChangedEditingMode({ mode: mode === "Immediate" ? "Immediate" : "Batch" })),
         ], [h.option([h.Value("Batch")], ["Batch"]), h.option([h.Value("Immediate")], ["Immediate"])])]),
         h.span([h.Class(className(dataGridStyles.rowCount))], [
-          `${model.rows.length} rows`,
+          `${model.rows.length} rows × ${columns.length} columns`,
         ]),
+      ]),
+      h.div([h.Class(className(dataGridStyles.formulaBar)), h.AriaLabel("Selected cell value")], [
+        h.span([
+          h.Class(className(dataGridStyles.nameBox)),
+          h.DataAttribute("grid-cell-address", selection.address),
+        ], [selection.address]),
+        h.span([h.Class(className(dataGridStyles.formulaIcon)), h.AriaHidden(true)], ["fx"]),
+        h.span([
+          h.Class(className(dataGridStyles.formulaValue)),
+          h.DataAttribute("grid-cell-value", selection.value),
+        ], [selection.value]),
       ]),
       DataGrid.view(
         {
@@ -125,17 +168,22 @@ export const dataGridView = (
           rows: model.rows,
           getRowId: (person) => person.id,
           toParentMessage: (message) => Message.GotGridMessage({ message }),
-          label: "Team directory",
-          rowHeight: 52,
+          label: "Headcount planning worksheet",
+          rowHeight: 34,
           appearance: "embedded",
+          showRowNumbers: true,
+          enableColumnReordering: true,
+          virtualization: { overscan: 4, initialViewportHeight: 700 },
         },
         h,
       ),
       h.footer([h.Class(className(dataGridStyles.footer))], [
-        h.span([], ["Enter or double-click to edit · Enter to commit · Escape to cancel"]),
-        h.span([], ["Drag a column edge to resize · double-click to reset"]),
+        h.span([h.Class(className(dataGridStyles.sheetTab))], ["Employees"]),
+        h.span([], ["Enter or F2 to edit · Shift+Arrow to select · ⌘/Ctrl+C or V to copy/paste"]),
+        h.span([], ["Ready"]),
       ]),
     ]),
   ]);
+};
 
 export const view = defineView<Model, Message>((model, h) => dataGridView(model, h));

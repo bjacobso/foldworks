@@ -1,7 +1,17 @@
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { compareValues, createTable, defineColumns } from "./core";
+import {
+  compareValues,
+  createTable,
+  defineColumns,
+  isCellInSelection,
+  moveColumn,
+  orderedColumns,
+  selectionRange,
+  selectionSize,
+  selectionText,
+} from "./core";
 import { init } from "./model";
 
 type Person = Readonly<{
@@ -49,6 +59,134 @@ describe("createTable", () => {
 
     expect(table.rows.map((row) => row.id)).toEqual(["one", "two"]);
     expect(rows.map((row) => row.id)).toEqual(["two", "one"]);
+  });
+
+  it("orders columns by stable ids and appends newly supplied definitions", () => {
+    const extraColumns = defineColumns<Person>()([
+      ...columns,
+      { id: "rank", header: "Rank", accessor: (person) => person.score + 1 },
+    ]);
+    const model = {
+      ...init({ id: "people", columns }),
+      columnOrder: ["score", "missing", "score", "name"],
+    };
+    const table = createTable({
+      model,
+      columns: extraColumns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+
+    expect(table.columns.map((column) => column.definition.id))
+      .toEqual(["score", "name", "rank"]);
+    expect(table.templateColumns).toBe("90px 220px 160px");
+    expect(table.rows[0]?.cells.map((cell) => cell.value))
+      .toEqual([12, "Beta", 13]);
+    expect(orderedColumns(extraColumns, model.columnOrder)).toEqual([
+      extraColumns[1], extraColumns[0], extraColumns[2],
+    ]);
+  });
+
+  it("groups pinned columns and computes offsets from their live widths", () => {
+    const pinnedColumns = defineColumns<Person>()([
+      { id: "name", header: "Name", accessor: (person) => person.name, width: 220, pinned: "Start" },
+      { id: "score", header: "Score", accessor: (person) => person.score, width: 90 },
+      { id: "rank", header: "Rank", accessor: (person) => person.score + 1, width: 160, pinned: "End" },
+      { id: "id", header: "ID", accessor: (person) => person.id, width: 80, pinned: "Start" },
+    ]);
+    const table = createTable({
+      model: {
+        ...init({ id: "people", columns: pinnedColumns }),
+        columnOrder: ["id", "score", "rank", "name"],
+      },
+      columns: pinnedColumns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+
+    expect(table.columns.map((column) => ({
+      id: column.definition.id,
+      pinned: column.pinned,
+      offset: column.pinOffset,
+      boundary: column.isPinBoundary,
+    }))).toEqual([
+      { id: "id", pinned: "Start", offset: 0, boundary: false },
+      { id: "name", pinned: "Start", offset: 80, boundary: true },
+      { id: "score", pinned: undefined, offset: 0, boundary: false },
+      { id: "rank", pinned: "End", offset: 0, boundary: true },
+    ]);
+    expect(table.templateColumns).toBe("80px 220px 90px 160px");
+  });
+});
+
+describe("moveColumn", () => {
+  it("moves a column one position without mutating the supplied order", () => {
+    const source = ["name", "score", "rank"];
+    expect(moveColumn(source, "score", "Before")).toEqual(["score", "name", "rank"]);
+    expect(moveColumn(source, "score", "After")).toEqual(["name", "rank", "score"]);
+    expect(source).toEqual(["name", "score", "rank"]);
+  });
+
+  it("deduplicates ids and leaves boundary and unknown moves in place", () => {
+    expect(moveColumn(["name", "name", "score"], "name", "Before"))
+      .toEqual(["name", "score"]);
+    expect(moveColumn(["name", "score"], "score", "After"))
+      .toEqual(["name", "score"]);
+    expect(moveColumn(["name", "score"], "missing", "Before"))
+      .toEqual(["name", "score"]);
+  });
+});
+
+describe("selection", () => {
+  it("derives a rectangular range from stable row and column ids", () => {
+    const model = {
+      ...init({ id: "people", columns }),
+      selectionAnchor: Option.some({ rowId: "two", columnId: "name" }),
+      selectedCell: Option.some({ rowId: "one", columnId: "score" }),
+    };
+    const table = createTable({
+      model,
+      columns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+    const range = selectionRange(model, table);
+
+    expect(range).toEqual({
+      startRowIndex: 0,
+      endRowIndex: 1,
+      startColumnIndex: 0,
+      endColumnIndex: 1,
+    });
+    expect(selectionSize(range)).toBe(4);
+    expect(isCellInSelection(range, 1, 1)).toBe(true);
+    expect(isCellInSelection(range, 2, 1)).toBe(false);
+    expect(selectionText(table, range)).toBe("Beta\t12\nAlpha\t4");
+  });
+
+  it("uses custom clipboard values and quotes fields for TSV", () => {
+    const clipboardColumns = defineColumns<Person>()([
+      {
+        id: "name",
+        header: "Name",
+        accessor: (person) => person.name,
+        clipboardValue: ({ row }) => `${row.name}\t\"quoted\"`,
+      },
+    ]);
+    const model = {
+      ...init({ id: "people", columns: clipboardColumns }),
+      selectedCell: Option.some({ rowId: "two", columnId: "name" }),
+      selectionAnchor: Option.some({ rowId: "two", columnId: "name" }),
+    };
+    const table = createTable({
+      model,
+      columns: clipboardColumns,
+      rows,
+      getRowId: (person) => person.id,
+    });
+
+    expect(selectionText(table, selectionRange(model, table)))
+      .toBe("\"Beta\t\"\"quoted\"\"\"");
   });
 });
 

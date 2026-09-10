@@ -1,7 +1,8 @@
 import { Option } from "effect";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import { Mount } from "foldkit";
+import type { Html, HtmlBuilder, KeyboardModifiers } from "foldkit/html";
 
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "@lucide/icons";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronsUpDown } from "@lucide/icons";
 import * as Icon from "@foldworks/ui/icon";
 
 import {
@@ -10,14 +11,24 @@ import {
   MAX_COLUMN_WIDTH,
   MIN_COLUMN_WIDTH,
   columnWidth,
+  isCellInSelection,
+  moveColumn,
+  selectionRange,
+  selectionSize,
+  selectionText,
   type CellValue,
   type ColumnDef,
 } from "./core";
 import { Message } from "./message";
 import type { Model } from "./model";
 import { cellId, sameCell } from "./editing-model";
-import { commitMessage, editIssues, parseInput } from "./editing";
+import { commitMessage, editIssues, parseInput, pasteMessage } from "./editing";
 import { editingToolbar, editorView } from "./editing-view";
+import {
+  ObserveViewport,
+  virtualWindow,
+  type VirtualizationConfig,
+} from "./virtualization";
 
 export type ViewConfig<Row, ParentMessage> = Readonly<{
   model: Model;
@@ -29,7 +40,10 @@ export type ViewConfig<Row, ParentMessage> = Readonly<{
   emptyText?: string;
   rowHeight?: number;
   appearance?: "standalone" | "embedded";
+  showRowNumbers?: boolean;
   showEditingToolbar?: boolean;
+  enableColumnReordering?: boolean;
+  virtualization?: VirtualizationConfig;
 }>;
 
 const cellPosition = (rowIndex: number, columnIndex: number) =>
@@ -47,45 +61,120 @@ export const view = <Row, ParentMessage>(
 ): Html => {
   const table = createTable(config);
   const selected = Option.getOrUndefined(config.model.selectedCell);
-  const rowHeight = config.rowHeight ?? 42;
+  const range = selectionRange(config.model, table);
+  const selectedCount = selectionSize(range);
+  const rowHeight = Math.max(1, config.rowHeight ?? 42);
   const active = Option.getOrUndefined(config.model.activeEdit);
   const pending = Option.isSome(config.model.pendingSubmission);
   const issues = editIssues(config);
+  const clipboard = selectionText(table, range);
+  const isVirtualized = config.virtualization !== undefined;
+  const rowNumberWidth = config.showRowNumbers === true ? 44 : 0;
+  const columnIndexOffset = config.showRowNumbers === true ? 1 : 0;
+  const templateColumns = config.showRowNumbers === true
+    ? `${rowNumberWidth}px ${table.templateColumns}`
+    : table.templateColumns;
+  const viewportHeight = config.model.viewport.height > 0
+    ? config.model.viewport.height
+    : config.virtualization?.initialViewportHeight ?? rowHeight * 10;
+  const selectedRowIndex = selected === undefined
+    ? undefined
+    : table.rows.findIndex((row) => row.id === selected.rowId);
+  const rowWindow = isVirtualized
+    ? virtualWindow(
+        table.rows.length,
+        rowHeight,
+        { ...config.model.viewport, height: viewportHeight },
+        config.virtualization?.overscan,
+        selectedRowIndex === -1 ? undefined : selectedRowIndex,
+      )
+    : {
+        startIndex: 0,
+        endIndex: table.rows.length,
+        paddingTop: 0,
+        paddingBottom: 0,
+      };
+  const renderedRows = table.rows.slice(rowWindow.startIndex, rowWindow.endIndex);
+  const columnIds = table.columns.map((column) => column.definition.id);
+  const spacer = (position: "top" | "bottom", height: number) => h.div(
+    [
+      h.Class("fk-data-grid__virtual-spacer"),
+      h.Role("presentation"),
+      h.AriaHidden(true),
+      h.DataAttribute("virtual-spacer", position),
+      h.Style({ height: `${height}px` }),
+    ],
+    [],
+  );
 
   const grid = h.div(
     [
       h.Class("fk-data-grid"),
       h.Role("grid"),
       h.AriaLabel(config.label ?? "Data grid"),
+      h.AriaMultiSelectable(true),
       h.AriaRowcount(table.rows.length + 1),
-      h.AriaColcount(table.columns.length),
+      h.AriaColcount(table.columns.length + columnIndexOffset),
       h.DataAttribute("grid-id", config.model.id),
+      h.DataAttribute("selection-size", String(selectedCount)),
+      h.DataAttribute("virtualized", isVirtualized ? "true" : "false"),
+      h.DataAttribute("rendered-row-count", String(renderedRows.length)),
+      h.DataAttribute("virtual-start", String(rowWindow.startIndex)),
+      h.DataAttribute("virtual-end", String(rowWindow.endIndex)),
       h.DataAttribute("appearance", config.appearance ?? "standalone"),
       h.DataAttribute(
         "resizing",
         config.model.resizeState._tag === "Resizing" ? "true" : "false",
       ),
+      ...(active === undefined && range !== undefined ? [h.OnCopyText(clipboard)] : []),
+      ...(
+        config.model.editingMode !== "Disabled" && active === undefined && !pending
+          ? [h.OnPastePreventDefault((text) =>
+              Option.map(pasteMessage(config, text), config.toParentMessage))]
+          : []
+      ),
     ],
     [
       h.div(
-        [h.Class("fk-data-grid__scroller")],
+        [
+          h.Key(`${config.model.id}:scroller:${isVirtualized ? "virtual" : "full"}`),
+          h.Class("fk-data-grid__scroller"),
+          ...(isVirtualized
+            ? [h.OnMount(Mount.mapMessage(ObserveViewport(), config.toParentMessage))]
+            : []),
+        ],
         [
           h.div(
             [
               h.Class("fk-data-grid__table"),
-              h.Style({ minWidth: `${table.totalWidth}px` }),
+              h.Style({ minWidth: `${table.totalWidth + rowNumberWidth}px` }),
             ],
             [
               h.div(
                 [
                   h.Class("fk-data-grid__header"),
                   h.Role("row"),
-                  h.Style({ gridTemplateColumns: table.templateColumns }),
+                  h.Style({ gridTemplateColumns: templateColumns }),
                 ],
-                table.columns.map((column, columnIndex) => {
+                [
+                  ...(config.showRowNumbers === true
+                    ? [h.div([
+                        h.Class("fk-data-grid__row-header fk-data-grid__row-header--corner"),
+                        h.Role("columnheader"),
+                        h.AriaColindex(1),
+                        h.AriaLabel("Row numbers"),
+                      ], [])]
+                    : []),
+                  ...table.columns.map((column, columnIndex) => {
                   const definition = column.definition;
                   const canSort = definition.enableSorting !== false;
                   const canResize = definition.enableResizing !== false;
+                  const canMoveBefore = columnIndex > 0 &&
+                    table.columns[columnIndex - 1]?.pinned === column.pinned;
+                  const canMoveAfter = columnIndex < table.columns.length - 1 &&
+                    table.columns[columnIndex + 1]?.pinned === column.pinned;
+                  const canReorder = config.enableColumnReordering === true &&
+                    (canMoveBefore || canMoveAfter);
                   const ariaSort = column.sortDirection === "Ascending"
                     ? "ascending"
                     : column.sortDirection === "Descending"
@@ -96,9 +185,17 @@ export const view = <Row, ParentMessage>(
                     [
                       h.Class("fk-data-grid__header-cell"),
                       h.Role("columnheader"),
-                      h.AriaColindex(columnIndex + 1),
+                      h.AriaColindex(columnIndex + 1 + columnIndexOffset),
                       h.AriaSort(ariaSort),
                       h.DataAttribute("column-id", definition.id),
+                      h.DataAttribute("reordering", canReorder ? "true" : "false"),
+                      h.DataAttribute("pinned", column.pinned?.toLowerCase() ?? "false"),
+                      h.DataAttribute("pin-boundary", column.isPinBoundary ? "true" : "false"),
+                      ...(column.pinned === "Start"
+                        ? [h.Style({ left: `${column.pinOffset + rowNumberWidth}px` })]
+                        : column.pinned === "End"
+                          ? [h.Style({ right: `${column.pinOffset}px` })]
+                          : []),
                     ],
                     [
                       h.button(
@@ -138,6 +235,51 @@ export const view = <Row, ParentMessage>(
                             : h.empty,
                         ],
                       ),
+                      canReorder
+                        ? h.div(
+                            [
+                              h.Class("fk-data-grid__reorder-controls"),
+                              h.Role("group"),
+                              h.AriaLabel(`Reorder ${definition.header} column`),
+                            ],
+                            (["Before", "After"] as const).map((direction) => {
+                              const isBefore = direction === "Before";
+                              return h.button(
+                                [
+                                  h.Type("button"),
+                                  h.Class("fk-data-grid__reorder-button"),
+                                  h.AriaLabel(
+                                    `Move ${definition.header} column ${isBefore ? "left" : "right"}`,
+                                  ),
+                                  h.Title(
+                                    `Move ${definition.header} column ${isBefore ? "left" : "right"}`,
+                                  ),
+                                  h.Disabled(
+                                    isBefore
+                                      ? !canMoveBefore
+                                      : !canMoveAfter,
+                                  ),
+                                  h.OnClick(config.toParentMessage(
+                                    Message.ChangedColumnOrder({
+                                      columnIds: moveColumn(
+                                        columnIds,
+                                        definition.id,
+                                        direction,
+                                      ),
+                                    }),
+                                  )),
+                                ],
+                                [
+                                  Icon.view({
+                                    icon: isBefore ? ArrowLeft : ArrowRight,
+                                    size: 13,
+                                    strokeWidth: 2.25,
+                                  }, h),
+                                ],
+                              );
+                            }),
+                          )
+                        : h.empty,
                       canResize
                         ? h.div(
                             [
@@ -178,7 +320,8 @@ export const view = <Row, ParentMessage>(
                         : h.empty,
                     ],
                   );
-                }),
+                  }),
+                ],
               ),
               table.rows.length === 0
                 ? h.div([h.Class("fk-data-grid__empty")], [
@@ -186,24 +329,47 @@ export const view = <Row, ParentMessage>(
                   ])
                 : h.div(
                     [h.Class("fk-data-grid__body"), h.Role("rowgroup")],
-                    table.rows.map((row) =>
-                      h.keyed("div")(
-                        row.id,
-                        [
-                          h.Class("fk-data-grid__row"),
-                          h.Role("row"),
-                          h.AriaRowindex(row.index + 2),
-                          h.Style({
-                            gridTemplateColumns: table.templateColumns,
-                            height: `${rowHeight}px`,
-                          }),
-                          h.DataAttribute("row-id", row.id),
-                        ],
-                        row.cells.map((cell, columnIndex) => {
-                          const isSelected =
+                    [
+                      ...(rowWindow.paddingTop > 0
+                        ? [spacer("top", rowWindow.paddingTop)]
+                        : []),
+                      ...renderedRows.map((row) =>
+                        h.keyed("div")(
+                          row.id,
+                          [
+                            h.Class("fk-data-grid__row"),
+                            h.Role("row"),
+                            h.AriaRowindex(row.index + 2),
+                            h.Style({
+                              gridTemplateColumns: templateColumns,
+                              height: `${rowHeight}px`,
+                            }),
+                            h.DataAttribute("row-id", row.id),
+                          ],
+                          [
+                            ...(config.showRowNumbers === true
+                              ? [h.div([
+                                  h.Class("fk-data-grid__row-header"),
+                                  h.Role("rowheader"),
+                                  h.AriaColindex(1),
+                                  h.AriaLabel(`Row ${row.index + 1}`),
+                                  h.DataAttribute("row-number", String(row.index + 1)),
+                                  h.DataAttribute(
+                                    "selected",
+                                    range !== undefined && row.index >= range.startRowIndex &&
+                                        row.index <= range.endRowIndex
+                                      ? "true"
+                                      : "false",
+                                  ),
+                                ], [String(row.index + 1)])]
+                              : []),
+                            ...row.cells.map((cell, columnIndex) => {
+                          const tableColumn = table.columns[columnIndex];
+                          const isFocus =
                             selected?.rowId === row.id &&
                             selected.columnId === cell.column.id;
-                          const isTabStop = isSelected || (
+                          const isSelected = isCellInSelection(range, row.index, columnIndex);
+                          const isTabStop = isFocus || (
                             selected === undefined &&
                             row.index === 0 &&
                             columnIndex === 0
@@ -221,7 +387,7 @@ export const view = <Row, ParentMessage>(
                             previousValue: draft === undefined ? cell.column.accessor(row.original) : draft.previousValue,
                             ...parseInput(editor!, cell.value == null ? "" : String(cell.value), row.original),
                           });
-                          const move = (key: string) => {
+                          const move = (key: string, modifiers: KeyboardModifiers) => {
                             // Editors retain native arrow-key behavior. Enter/Escape are grid actions.
                             if (editing) return key === "Enter" || key === "Escape" ? Option.some({
                               focusSelector: `[id="${id}:editor"]`,
@@ -255,10 +421,17 @@ export const view = <Row, ParentMessage>(
                             return Option.some({
                               focusSelector: `[id="${cellId(config.model.id, nextRow.id, nextColumn.definition.id)}"]`,
                               message: config.toParentMessage(
-                                Message.SelectedCell({
-                                  rowId: nextRow.id,
-                                  columnId: nextColumn.definition.id,
-                                }),
+                                modifiers.shiftKey
+                                  ? Message.ExtendedSelection({
+                                      rowId: nextRow.id,
+                                      columnId: nextColumn.definition.id,
+                                      anchorRowId: row.id,
+                                      anchorColumnId: cell.column.id,
+                                    })
+                                  : Message.SelectedCell({
+                                      rowId: nextRow.id,
+                                      columnId: nextColumn.definition.id,
+                                    }),
                               ),
                             });
                           };
@@ -268,14 +441,23 @@ export const view = <Row, ParentMessage>(
                               h.Class("fk-data-grid__cell"),
                               h.Id(id),
                               h.Role("gridcell"),
-                              h.AriaColindex(columnIndex + 1),
+                              h.AriaColindex(columnIndex + 1 + columnIndexOffset),
                               h.AriaSelected(isSelected),
                               h.Tabindex(isTabStop ? 0 : -1),
+                              h.DataAttribute("cell-column-id", cell.column.id),
+                              h.DataAttribute("pinned", tableColumn?.pinned?.toLowerCase() ?? "false"),
+                              h.DataAttribute("pin-boundary", tableColumn?.isPinBoundary ? "true" : "false"),
+                              ...(tableColumn?.pinned === "Start"
+                                ? [h.Style({ left: `${tableColumn.pinOffset + rowNumberWidth}px` })]
+                                : tableColumn?.pinned === "End"
+                                  ? [h.Style({ right: `${tableColumn.pinOffset}px` })]
+                                  : []),
                               h.DataAttribute(
                                 "grid-cell-position",
                                 cellPosition(row.index, columnIndex),
                               ),
                               h.DataAttribute("selected", isSelected ? "true" : "false"),
+                              h.DataAttribute("selection-focus", isFocus ? "true" : "false"),
                               h.DataAttribute("align", align.toLowerCase()),
                               h.DataAttribute("dirty", draft === undefined ? "false" : "true"),
                               h.DataAttribute("editable", editable ? "true" : "false"),
@@ -315,9 +497,14 @@ export const view = <Row, ParentMessage>(
                               ...(editing ? [h.span([h.Id(`${id}:editor:help`), h.Class("fk-data-grid__sr-only")], [active.error || "Enter to commit. Escape to cancel."])] : []),
                             ],
                           );
-                        }),
+                            }),
+                          ],
+                        ),
                       ),
-                    ),
+                      ...(rowWindow.paddingBottom > 0
+                        ? [spacer("bottom", rowWindow.paddingBottom)]
+                        : []),
+                    ],
                   ),
             ],
           ),

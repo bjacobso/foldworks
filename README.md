@@ -9,8 +9,14 @@ accessible application interfaces with Foldkit:
   Markdown import/export, draggable blocks, and application-defined Foldkit views.
 - [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic
   design tokens, and accessible visual primitives.
+- [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation
+  runtime with streaming text, tool states, permission checkpoints, and retry.
+- [`@foldworks/data-table`](./packages/data-table) — a resource-first CRUD
+  table with semantic markup, sortable columns, bulk row selection, resource
+  links, density controls, and pinned columns.
 - [`@foldworks/data-grid`](./packages/data-grid) — a typed data-grid core with
-  sorting, resizing, selection, keyboard navigation, and an accessible view.
+  sorting, resizing, ordering, pinned columns, row virtualization, range
+  selection, clipboard copy/paste, editing, and an accessible view.
 - [`@foldworks/code-editor`](./packages/code-editor) — a native Foldkit editor with
   highlighting, undo/redo, find/replace, diagnostics, and shared implementation
   contracts. See the [architecture](./packages/code-editor/NATIVE.md).
@@ -28,7 +34,7 @@ accessible application interfaces with Foldkit:
   application-owned documents.
 
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
-suite. Its `/agent` reference application also demonstrates streaming assistant
+suite. Its `/agent` reference application demonstrates streaming assistant
 text, tool calls and results, an interactive permission checkpoint, a model
 picker, and a prompt composer. The agent flow is a deterministic browser-only
 fixture and performs no provider calls or tool side effects.

@@ -7,6 +7,7 @@
 @import "@foldworks/code-editor/styles.css";
 @import "./code-editor/styles.css";
 @import "@foldworks/data-grid/styles.css";
+@import "@foldworks/data-table/styles.css";
 @import "@foldworks/pdf-annotator/styles.css";
 
 *,

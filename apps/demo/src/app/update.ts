@@ -1,4 +1,5 @@
 import { Effect, Option, Schema as S } from "effect";
+import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
@@ -7,12 +8,11 @@ import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
 
-import { Message as AgentMessage } from "../agent/message";
-import { isActive as isAgentActive } from "../agent/model";
-import { update as updateAgent } from "../agent/update";
 import { update as updateCodeEditor } from "../code-editor/update";
 import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
+import { setActiveContact, type Model as DataTableModel } from "../data-table/model";
+import { update as updateDataTable } from "../data-table/update";
 import { serializeWorkspace, writePersistedWorkspace } from "../document-storage";
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
@@ -23,6 +23,7 @@ import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
 import {
   formBuilderPath,
+  dataTablePersonFromRoute,
   formStateFromRoute,
   urlToAppRoute,
   workflowOrientationFromRoute,
@@ -122,7 +123,7 @@ const foldCodeEditor = Update.foldChild({
 });
 
 const foldAgent = Update.foldChild({
-  update: updateAgent,
+  update: Agent.update,
   read: (model: Model) => Option.some(model.agent),
   write: (model, agent) => ({ ...model, agent }),
   toParentMessage: (message) => Message.GotAgentMessage({ message }),
@@ -140,6 +141,13 @@ const foldDataGrid = Update.foldChild({
   read: (model: Model) => Option.some(model.dataGridDemo),
   write: (model, dataGridDemo) => evo(model, { dataGridDemo: () => dataGridDemo }),
   toParentMessage: (message) => Message.GotDataGridDemoMessage({ message }),
+});
+
+const foldDataTable = Update.foldChild({
+  update: updateDataTable,
+  read: (model: Model) => Option.some(model.dataTableDemo),
+  write: (model, dataTableDemo: DataTableModel) => ({ ...model, dataTableDemo }),
+  toParentMessage: (message) => Message.GotDataTableDemoMessage({ message }),
 });
 
 const foldUiKit = Update.foldChild({
@@ -180,8 +188,15 @@ const foldSidebar = Update.foldChild({
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
-  if (model.route._tag === "Agent" && route._tag !== "Agent" && isAgentActive(next.agent)) {
-    next = { ...next, agent: updateAgent(next.agent, AgentMessage.Stopped()).model };
+  next = {
+    ...next,
+    dataTableDemo: setActiveContact(
+      next.dataTableDemo,
+      dataTablePersonFromRoute(route),
+    ),
+  };
+  if (model.route._tag === "Agent" && route._tag !== "Agent" && Agent.isActive(next.agent)) {
+    next = { ...next, agent: Agent.update(next.agent, Agent.Message.Stopped()).model };
   }
   if (route._tag === "Workflow") {
     const workflowEditor = setOrientation(next.workflowEditor, workflowOrientationFromRoute(route));
@@ -265,6 +280,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotWorkbenchMessage: ({ message }) => foldWorkbench(model, message),
     GotDataGridDemoMessage: ({ message: childMessage }) =>
       foldDataGrid(model, childMessage),
+    GotDataTableDemoMessage: ({ message: childMessage }) =>
+      foldDataTable(model, childMessage),
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) =>

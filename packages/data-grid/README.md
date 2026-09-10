@@ -1,5 +1,9 @@
 # @foldworks/data-grid
 
+An Excel-like data surface for cell selection, clipboard workflows, and inline
+editing. For a traditional resource list with semantic table markup, links,
+sorting, and bulk row selection, use [`@foldworks/data-table`](../data-table).
+
 A typed, Foldkit-native data grid with a headless table core.
 
 The first slice supports:
@@ -8,7 +12,11 @@ The first slice supports:
 - custom cell and header rendering;
 - three-state sorting;
 - pointer column resizing and double-click reset;
-- single-cell selection and arrow-key navigation;
+- opt-in accessible column reordering;
+- declarative start/end pinned columns with computed sticky offsets;
+- rectangular selection with arrow and Shift+Arrow navigation;
+- spreadsheet-friendly TSV clipboard copy and validated paste;
+- opt-in fixed-row virtualization with measured viewport overscan;
 - sticky headers, horizontal scrolling, and accessible grid semantics.
 
 ```ts
@@ -31,6 +39,7 @@ DataGrid.view(
     getRowId: (person) => person.id,
     toParentMessage: (message) => Message.GotDataGridMessage({ message }),
     appearance: "embedded",
+    showRowNumbers: true,
   },
   h,
 )
@@ -47,6 +56,88 @@ custom properties on `.fk-data-grid` provide the initial theming surface.
 Use `appearance: "embedded"` when a surrounding panel already owns the outer
 border and rounded corners; the default `"standalone"` appearance keeps the
 grid's complete frame.
+
+Set `showRowNumbers: true` for spreadsheet-oriented surfaces. The grid adds a
+sticky row-header gutter, adjusts pinned-start offsets, and exposes the gutter
+through ARIA row and column indices without changing data-cell coordinates.
+
+## Selection and clipboard
+
+Click a cell or use the arrow keys to create a single-cell selection. Hold
+Shift while pressing an arrow key to extend a rectangular range from its
+stable row-and-column-ID anchor. Pressing an arrow key without Shift collapses
+the range to the new focused cell.
+
+Copying a selection writes its accessor or draft values as tab-separated rows,
+ready to paste into a spreadsheet. Tabs, line breaks, and quotes are escaped
+using standard quoted-field syntax. A column can provide
+`clipboardValue(context): string` when its exported value should differ from
+its accessor value. While a cell editor is open, native text-input copying is
+left unchanged.
+
+Pasting maps a TSV matrix from the focused cell, clips it at the grid bounds,
+and skips read-only columns without shifting the remaining values. Text,
+number, select, and checkbox editors use the same parsing and validation rules
+as direct edits; select labels and the checkbox values `true`/`false`,
+`yes`/`no`, and `1`/`0` are accepted. Invalid values remain highlighted drafts
+and block saving. Batch mode stages the matrix for review, while Immediate mode
+submits a valid matrix as one application-owned save request.
+
+## Row virtualization
+
+Set `virtualization` on the view when a grid has enough rows to benefit from
+windowed rendering:
+
+```ts
+DataGrid.view({
+  ...config,
+  rowHeight: 52,
+  virtualization: { overscan: 4, initialViewportHeight: 700 },
+}, h)
+```
+
+The grid measures its live scroll viewport with a mount-scoped
+`ResizeObserver`, throttles scroll updates to animation frames, and renders
+only the visible fixed-height rows plus overscan. `initialViewportHeight`
+provides the first-render estimate until measurement arrives. Sorting,
+selection, editing, and clipboard operations continue to use the complete
+headless table, and `aria-rowcount`/`aria-rowindex` retain absolute values.
+At least one overscan row is always retained so arrow-key focus can cross a
+window boundary safely.
+
+## Column ordering
+
+Set `enableColumnReordering: true` on the view to add accessible move-left and
+move-right controls to each column header. The order is stored in the grid
+model as stable column IDs, so sorting, resized widths, selections, and staged
+edits remain attached to the correct column as it moves.
+
+The table reconciles the stored order with the definitions supplied on every
+render: removed IDs are ignored, duplicate IDs are collapsed, and new columns
+are appended in definition order. Applications can also build their own
+ordering UI with `moveColumn(columnIds, columnId, direction)` and dispatch
+`Message.ChangedColumnOrder({ columnIds })`.
+
+## Pinned columns
+
+Set `pinned: "Start"` or `pinned: "End"` on a column definition to keep it
+visible while the grid scrolls horizontally:
+
+```ts
+const columns = DataGrid.defineColumns<Person, Message>()([
+  { id: "name", header: "Name", pinned: "Start", /* ... */ },
+  { id: "status", header: "Status", /* ... */ },
+  { id: "actions", header: "Actions", pinned: "End", /* ... */ },
+])
+```
+
+Pinned columns form stable start and end bands around unpinned columns. Their
+sticky offsets are derived from the grid model's live column widths, so resizing
+one pinned column updates every following offset. Saved ordering is preserved
+within each band; the built-in ordering controls do not move columns across a
+pin boundary. Header and body cells expose `data-pinned` and
+`data-pin-boundary`, while body cells also expose `data-cell-column-id` for
+targeted integrations and tests.
 
 ## Cell editing
 
@@ -176,5 +267,4 @@ Source checks protect local drafts, but the application must still validate
 writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
-Range selection, clipboard operations, column ordering, pinned columns, row
-virtualization, and infinite loading remain future work.
+Infinite loading remains future work.

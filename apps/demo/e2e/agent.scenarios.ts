@@ -81,7 +81,7 @@ export const agentScenarios = (
       await expect.poll(() => page.locator('[data-agent-turn="assistant"]').textContent()).toContain("release setup first");
       await page.getByRole("link", { name: "Home", exact: true }).click();
       await expect.poll(() => new URL(page.url()).pathname).toBe("/");
-      await page.getByRole("link", { name: "Agent playground" }).click();
+      await page.getByRole("link", { name: "Agent playground", exact: true }).click();
       await expect.poll(() => new URL(page.url()).pathname).toBe("/agent");
       await expect.poll(() => page.getByText("Stopped", { exact: true }).first().isVisible()).toBe(true);
       await page.waitForTimeout(500);

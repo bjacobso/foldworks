@@ -51,6 +51,40 @@
   position: relative;
 }
 
+.fk-data-grid__row-header {
+  align-items: center;
+  background: var(--data-grid-header);
+  border-right: 1px solid var(--data-grid-border-strong);
+  color: var(--data-grid-muted);
+  display: flex;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  left: 0;
+  min-width: 0;
+  position: sticky;
+  user-select: none;
+  z-index: 2;
+}
+
+.fk-data-grid__row-header--corner {
+  border-bottom: 1px solid var(--data-grid-border-strong);
+  z-index: 4;
+}
+
+.fk-data-grid__row-header[data-selected="true"] {
+  background: var(--data-grid-selected);
+  color: var(--data-grid-accent);
+  font-weight: 750;
+}
+
+.fk-data-grid__header-cell[data-pinned="start"],
+.fk-data-grid__header-cell[data-pinned="end"] {
+  background: var(--data-grid-header);
+  position: sticky;
+  z-index: 3;
+}
+
 .fk-data-grid__header-button {
   align-items: center;
   background: transparent;
@@ -76,6 +110,57 @@
 
 .fk-data-grid__header-button:disabled {
   cursor: default;
+}
+
+.fk-data-grid__header-cell[data-reordering="true"] .fk-data-grid__header-button {
+  padding-right: 62px;
+}
+
+.fk-data-grid__reorder-controls {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  transition: opacity 120ms ease;
+  z-index: 2;
+}
+
+.fk-data-grid__header-cell:hover .fk-data-grid__reorder-controls,
+.fk-data-grid__header-cell:focus-within .fk-data-grid__reorder-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fk-data-grid__reorder-button {
+  align-items: center;
+  background: var(--foldworks-ui-surface, #fff);
+  border: 1px solid var(--data-grid-border-strong);
+  border-radius: 4px;
+  color: var(--data-grid-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  padding: 0;
+  width: 24px;
+}
+
+.fk-data-grid__reorder-button:hover:not(:disabled) {
+  color: var(--data-grid-text);
+}
+
+.fk-data-grid__reorder-button:focus-visible {
+  outline: 2px solid var(--data-grid-accent);
+  outline-offset: 1px;
+}
+
+.fk-data-grid__reorder-button:disabled {
+  cursor: default;
+  opacity: .35;
 }
 
 .fk-data-grid__sort {
@@ -113,10 +198,15 @@
 
 .fk-data-grid__row {
   border-bottom: 1px solid var(--data-grid-border);
+  box-sizing: border-box;
 }
 
 .fk-data-grid__row:hover {
   background: var(--data-grid-hover);
+}
+
+.fk-data-grid__virtual-spacer {
+  pointer-events: none;
 }
 
 .fk-data-grid__cell {
@@ -132,6 +222,27 @@
   white-space: nowrap;
 }
 
+.fk-data-grid__cell[data-pinned="start"],
+.fk-data-grid__cell[data-pinned="end"] {
+  background: var(--foldworks-ui-surface, #fff);
+  position: sticky;
+  z-index: 1;
+}
+
+.fk-data-grid__header-cell[data-pinned="start"][data-pin-boundary="true"],
+.fk-data-grid__cell[data-pinned="start"][data-pin-boundary="true"] {
+  box-shadow: 5px 0 7px -6px var(--data-grid-muted);
+}
+
+.fk-data-grid__header-cell[data-pinned="end"][data-pin-boundary="true"],
+.fk-data-grid__cell[data-pinned="end"][data-pin-boundary="true"] {
+  box-shadow: -5px 0 7px -6px var(--data-grid-muted);
+}
+
+.fk-data-grid__row:hover .fk-data-grid__cell[data-pinned]:not([data-pinned="false"]):not([data-selected="true"]):not([data-dirty="true"]) {
+  background: var(--data-grid-hover);
+}
+
 .fk-data-grid__cell[data-align="center"] {
   justify-content: center;
 }
@@ -142,6 +253,9 @@
 
 .fk-data-grid__cell[data-selected="true"] {
   background: var(--data-grid-selected);
+}
+
+.fk-data-grid__cell[data-selection-focus="true"] {
   box-shadow: inset 0 0 0 2px var(--data-grid-accent);
 }
 

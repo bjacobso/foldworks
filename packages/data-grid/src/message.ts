@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { ActiveEdit, CellIssue, EditValue, Submission } from "./editing-model";
+import { ActiveEdit, CellIssue, Draft, EditValue, Submission } from "./editing-model";
 import { CellAddress } from "./model";
 
 export const Message = defineMessageUnion({
@@ -14,6 +14,19 @@ export const Message = defineMessageUnion({
   FailedSave: { batchId: S.String, error: S.String },
   CompletedEditFocus: {},
   SelectedCell: { rowId: S.String, columnId: S.String },
+  ExtendedSelection: {
+    rowId: S.String,
+    columnId: S.String,
+    anchorRowId: S.String,
+    anchorColumnId: S.String,
+  },
+  PastedCells: {
+    drafts: S.Array(Draft),
+    anchor: CellAddress,
+    focus: CellAddress,
+  },
+  MeasuredViewport: { scrollTop: S.Number, height: S.Number },
+  ChangedColumnOrder: { columnIds: S.Array(S.String) },
   ToggledSort: { columnId: S.String },
   StartedColumnResize: {
     columnId: S.String,

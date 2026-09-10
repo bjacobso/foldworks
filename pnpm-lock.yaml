@@ -95,12 +95,18 @@ importers:
       '@foldkit/ui':
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+      '@foldworks/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
       '@foldworks/code-editor':
         specifier: workspace:*
         version: link:../../packages/code-editor
       '@foldworks/data-grid':
         specifier: workspace:*
         version: link:../../packages/data-grid
+      '@foldworks/data-table':
+        specifier: workspace:*
+        version: link:../../packages/data-table
       '@foldworks/editor':
         specifier: workspace:*
         version: link:../../packages/editor
@@ -163,6 +169,25 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
+  packages/agent:
+    dependencies:
+      '@foldworks/ui':
+        specifier: workspace:*
+        version: link:../ui
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
   packages/code-editor:
     dependencies:
       effect:
@@ -193,6 +218,25 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
+  packages/data-table:
+    dependencies:
+      '@foldworks/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@lucide/icons':
+        specifier: 'catalog:'
+        version: 1.40.0
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)

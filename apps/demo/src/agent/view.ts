@@ -1,15 +1,23 @@
 import * as Markdown from "@foldkit/markdown";
 import { parseMarkdown } from "@foldkit/markdown/vite";
 import { AlertTriangle, Bot, CheckCircle2, CircleStop, CircleX, LockKeyhole, RotateCcw, Send, Sparkles, User, Wrench } from "@lucide/icons";
+import { Agent } from "@foldworks/agent";
 import { Alert, Badge, Button, Icon, Spinner, Stateful, Textarea } from "@foldworks/ui";
 import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { AgentModelSelect } from "./components";
-import { Message } from "./message";
-import { isActive, modelFixtures, selectedModelFixture, type ConversationPart, type Model, type TextPart, type ToolPart, type Turn } from "./model";
+import { modelFixtures, selectedModelFixture } from "./components";
 import { className, styles as s } from "./styles";
+
+const Message = Agent.Message;
+type Message = Agent.Message;
+const AgentModelSelect = Agent.ModelSelect;
+type ConversationPart = Agent.ConversationPart;
+type Model = Agent.Model;
+type TextPart = Agent.TextPart;
+type ToolPart = Agent.ToolPart;
+type Turn = Agent.Turn;
 
 const SUGGESTION = "Inspect the release setup and update the launch checklist.";
 
@@ -159,7 +167,7 @@ const emptyState = (h: HtmlBuilder<Message>): Html => h.div([h.Class(className(s
 
 const sessionBar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const selected = selectedModelFixture(model);
-  const active = isActive(model);
+  const active = Agent.isActive(model);
   const status = statusLabel(model);
   return h.header([h.Class(className(s.sessionBar))], [
     h.div([h.Class(className(s.sessionControls))], [
@@ -192,7 +200,7 @@ const sessionBar = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const composer = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const active = isActive(model);
+  const active = Agent.isActive(model);
   return h.div([h.Class(className(s.composerShell))], [
     h.form([h.Class(className(s.composer)), h.OnSubmit(Message.Submitted()), h.AriaLabel("Agent prompt")], [
       h.label([h.Class(className(s.srOnly)), h.For("agent-prompt")], ["Message the agent"]),
@@ -225,7 +233,7 @@ export const view = defineView<Model, Message>((model, h) => h.section([
   sessionBar(model, h),
   h.div([
     h.Class(className(s.transcript)),
-    h.Id("agent-transcript"),
+    h.Id(Agent.transcriptId(model)),
     h.Role("log"),
     h.AriaLive("off"),
     h.AriaLabel("Agent conversation"),
