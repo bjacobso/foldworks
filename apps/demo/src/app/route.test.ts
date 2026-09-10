@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   agentRouter,
+  editorRouter,
   dataGridRouter,
   codeEditorRouter,
   workbenchRouter,
@@ -25,6 +26,8 @@ const parseUrl = (url: string) =>
 describe("demo routes", () => {
   it("builds stable paths for each demo", () => {
     expect(homeRouter()).toBe("/");
+    expect(editorRouter()).toBe("/editor");
+    expect(demoFromRoute(parseUrl("https://demo.test/editor"))).toBe("Editor");
     expect(agentRouter()).toBe("/agent");
     expect(demoFromRoute(parseUrl("https://demo.test/agent"))).toBe("Agent");
     expect(workbenchRouter()).toBe("/workbench");

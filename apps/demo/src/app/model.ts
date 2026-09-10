@@ -1,5 +1,6 @@
 import { Schema as S } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { ArticleEditor, initialEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
 
 import { Model as AgentModel, init as initAgent } from "../agent/model";
@@ -31,6 +32,7 @@ export const Model = S.Struct({
   dataGridDemo: DataGridModel,
   queryBuilderDemo: QueryBuilderDemoModel,
   pdfAnnotator: PdfAnnotator.Model,
+  editor: ArticleEditor.Model,
   sidebar: Sidebar.Model,
   uiKit: UiKitModel,
   themeName: ThemeName,
@@ -65,6 +67,7 @@ export const init = (
       id: "foldworks-pdf-annotator",
       sampleUrl: "/foldworks-sample.pdf",
     }),
+    editor: initialEditor(),
     sidebar: Sidebar.init({ id: "foldworks-sidebar" }),
     uiKit: initialUiKit,
     themeName: theme.name,

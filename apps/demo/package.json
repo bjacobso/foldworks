@@ -26,6 +26,7 @@
     "@stylexjs/stylex": "catalog:",
     "effect": "catalog:",
     "foldkit": "catalog:",
+    "@foldworks/editor": "workspace:*",
     "@foldworks/code-editor": "workspace:*"
   },
   "devDependencies": {
