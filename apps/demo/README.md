@@ -113,6 +113,11 @@ Use `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify the example. Run
 `pnpm test:e2e` for the Vitest + Playwright interaction suite and screenshots in
 `apps/demo/test-results/demo`.
 
+The browser suite discovers the package catalog rendered on the homepage and
+captures every linked showcase as `site-docs-<package>.png`. This provides a
+consistent screenshot set for the site documentation and fails when the catalog
+changes without corresponding screenshot coverage.
+
 ## Workers reference workspace
 
 Open `/workbench` for the complete inspect → explain → propose → preview →
