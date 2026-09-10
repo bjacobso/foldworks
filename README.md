@@ -11,6 +11,9 @@ accessible application interfaces with Foldkit:
   design tokens, and accessible visual primitives.
 - [`@foldworks/data-grid`](./packages/data-grid) — a typed data-grid core with
   sorting, resizing, selection, keyboard navigation, and an accessible view.
+- [`@foldworks/code-editor`](./packages/code-editor) — a native Foldkit editor with
+  highlighting, undo/redo, find/replace, diagnostics, and shared implementation
+  contracts. See the [architecture](./packages/code-editor/NATIVE.md).
 - [`@foldworks/query-builder`](./packages/query-builder) — configurable query
   documents, editing, validation, rendering, and rule reordering.
 - [`@foldworks/form-builder`](./packages/form-builder) — section-first form
@@ -25,7 +28,10 @@ accessible application interfaces with Foldkit:
   application-owned documents.
 
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
-suite.
+suite. Its `/agent` reference application also demonstrates streaming assistant
+text, tool calls and results, an interactive permission checkpoint, a model
+picker, and a prompt composer. The agent flow is a deterministic browser-only
+fixture and performs no provider calls or tool side effects.
 
 ## Development
 

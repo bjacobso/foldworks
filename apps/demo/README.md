@@ -7,7 +7,7 @@ Use the sidebar to move between every package showcase.
 
 Foldkit's bidirectional router owns navigational state. The project overview
 lives at `/`; demos live at `/ui-kit`, `/data-grid`, `/query-builder`,
-`/form-builder`, `/workflow`, and `/pdf-annotator`. Workflow orientation and the
+`/form-builder`, `/workflow`, `/pdf-annotator`, and `/agent`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,
 drag state, column widths, and in-progress document edits remain in the
@@ -82,6 +82,14 @@ The UI component showcase demonstrates every `@foldworks/ui` primitive:
 - the shared semantic color tokens used by the demos.
 - all 61 current shadcn-equivalent component families, including controlled
   overlays, menus, navigation, tables, charts, calendars, and message views.
+
+The agent playground at `/agent` demonstrates a provider-neutral conversation
+surface with real incremental Effect streams, tool input and result states, an
+inline allow/deny permission checkpoint, model selection, and a multiline
+composer. Its model responses and tool results are deterministic local fixtures:
+the demo does not call a provider, use an API key, execute a command, or change a
+file. The normalized event protocol can later accept AI SDK UI message chunks or
+Effect AI `LanguageModel.streamText` parts without changing the reducer or view.
 
 From the repository root:
 

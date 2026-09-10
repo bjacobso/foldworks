@@ -18,6 +18,8 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
   editorRouter,
+  agentRouter,
+  codeEditorRouter,
   dataGridRouter,
   formBuilderPath,
   pdfAnnotatorRouter,
@@ -50,6 +52,13 @@ const packages: ReadonlyArray<Package> = [
     description: "Responsive application chrome with controlled navigation state.",
     href: "/",
     icon: PanelLeft,
+  },
+  {
+    name: "@foldworks/code-editor",
+    category: "Application primitive",
+    description: "Code editing, syntax highlighting, and live diagnostics in a versioned document.",
+    href: codeEditorRouter(),
+    icon: Braces,
   },
   {
     name: "@foldworks/data-grid",
@@ -243,6 +252,7 @@ export const view = <Message>(h: HtmlBuilder<Message>): Html =>
           ]),
           h.div([h.Class(className(styles.actions))], [
             link("Explore the UI system", uiKitRouter(), "primary", h),
+            link("Try the agent playground", agentRouter(), "secondary", h),
             link("Open the workflow builder", workflowPath("Vertical"), "secondary", h),
           ]),
           h.div([h.Class(className(styles.heroMeta))], [

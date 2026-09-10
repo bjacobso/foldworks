@@ -2,6 +2,7 @@ import { Effect, Schema as S, Stream } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Subscription } from "foldkit";
 
+import { subscriptions as agentSubscriptions } from "../agent/subscriptions";
 import { subscriptions as workbenchSubscriptions } from "../workbench/subscriptions";
 import { subscriptions as dataGridSubscriptions } from "../data-grid/subscriptions";
 import { Message as DataGridMessage } from "../data-grid/message";
@@ -36,7 +37,10 @@ const historySubscriptions = Subscription.make<Model, Message>()((entry) => ({
         Stream.filter((event) => editor !== "None" &&
           event.key.toLowerCase() === "z" &&
           (event.metaKey || event.ctrlKey) &&
-          !event.altKey),
+          !event.altKey &&
+          !event.composedPath().some((target) => target instanceof Element && (
+            target.matches(".native-editor")
+          ))),
         Stream.mapEffect((event) => Effect.sync(() => {
           event.preventDefault();
           if (editor === "Workflow") {
@@ -69,6 +73,12 @@ const workflow = Subscription.lift(workflowSubscriptions)<Model, Message>({
   toParentMessage: (message) => Message.GotWorkflowEditorMessage({ message }),
 });
 
+const agent = Subscription.lift(agentSubscriptions)<Model, Message>({
+  when: (model) => model.route._tag === "Agent",
+  toChildModel: (model) => model.agent,
+  toParentMessage: (message) => Message.GotAgentMessage({ message }),
+});
+
 const form = Subscription.lift(formSubscriptions)<Model, Message>({
   toChildModel: (model) => model.formEditor,
   toParentMessage: (message) => Message.GotFormEditorMessage({ message }),
@@ -97,6 +107,7 @@ const pdfAnnotator = Subscription.lift(PdfAnnotator.subscriptions)<Model, Messag
 
 export const subscriptions = Subscription.aggregate<Model, Message>()(
   workflow,
+  agent,
   form,
   dataGrid,
   workbench,

@@ -4,6 +4,8 @@
 @import "@foldworks/ui/themes/zinc.css";
 @import "@foldworks/ui/themes/blue.css";
 @import "@foldworks/ui/themes/soft.css";
+@import "@foldworks/code-editor/styles.css";
+@import "./code-editor/styles.css";
 @import "@foldworks/data-grid/styles.css";
 @import "@foldworks/pdf-annotator/styles.css";
 
