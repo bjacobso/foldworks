@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/agent",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Provider-neutral agent conversation state and UI components for Foldkit applications.",
   "license": "MIT",
   "author": "Ben Jacobson",

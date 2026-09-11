@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/code-editor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A native Foldkit code editor with implementation-independent document and operation contracts.",
   "license": "MIT",
   "author": "Ben Jacobson",

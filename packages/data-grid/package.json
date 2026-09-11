@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/data-grid",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A controlled, accessible data grid primitive for Foldkit applications.",
   "license": "MIT",
   "author": "Ben Jacobson",

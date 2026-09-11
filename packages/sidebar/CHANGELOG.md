@@ -1,5 +1,15 @@
 # @foldworks/sidebar
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [140b35f]
+- Updated dependencies [c42f7c0]
+- Updated dependencies [7c9ef65]
+- Updated dependencies [1a632ef]
+  - @foldworks/ui@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
