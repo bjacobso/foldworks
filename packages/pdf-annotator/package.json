@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/pdf-annotator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A controlled PDF annotation canvas with drag, resize, delete, and export workflows.",
   "license": "MIT",
   "author": "Ben Jacobson",
