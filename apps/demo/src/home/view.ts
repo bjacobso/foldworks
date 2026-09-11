@@ -59,7 +59,7 @@ const packages: ReadonlyArray<Package> = [
   {
     name: "@foldworks/agent",
     category: "Application primitive",
-    description: "Streaming conversations, tool states, approvals, cancellation, and retry.",
+    description: "Composable chat UI with streaming conversations, tool states, approvals, cancellation, and retry.",
     href: agentRouter(),
     icon: Bot,
   },

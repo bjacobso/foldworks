@@ -1,7 +1,7 @@
 {
   "name": "@foldworks/agent",
   "version": "0.0.0",
-  "description": "A controlled, provider-neutral agent conversation runtime for Foldkit applications.",
+  "description": "Provider-neutral agent conversation state and UI components for Foldkit applications.",
   "license": "MIT",
   "author": "Ben Jacobson",
   "type": "module",
@@ -32,6 +32,8 @@
   },
   "dependencies": {
     "@foldworks/ui": "workspace:*",
+    "@lucide/icons": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "effect": "catalog:",
     "foldkit": "catalog:"
   },

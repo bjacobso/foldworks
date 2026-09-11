@@ -43,7 +43,30 @@ export type Segment = SegmentValue;
 export const StreamEvent = StreamEventSchema;
 export type StreamEvent = StreamEventValue;
 
-export { ModelSelect } from "./components";
+export {
+  Chat,
+  Composer,
+  ConversationTurn,
+  EmptyState,
+  ModelSelect,
+  PermissionRequest,
+  SessionBar,
+  TextResponse,
+  ToolCall,
+  Transcript,
+  statusLabel,
+  type ChatConfig,
+  type ComposerConfig,
+  type ConversationTurnConfig,
+  type EmptyStateConfig,
+  type PermissionPresentation,
+  type PermissionRequestConfig,
+  type SessionBarConfig,
+  type TextRenderer,
+  type TextResponseConfig,
+  type ToolCallConfig,
+  type TranscriptConfig,
+} from "./components";
 export {
   init,
   isActive,

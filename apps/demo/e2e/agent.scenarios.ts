@@ -10,7 +10,7 @@ export const agentScenarios = (
     const start = async () => {
       const page = getPage();
       await page.goto(`${appUrl}/agent`, { waitUntil: "networkidle" });
-      await expect.poll(() => page.locator('[data-agent-playground="true"]').isVisible()).toBe(true);
+      await expect.poll(() => page.locator('[data-agent-chat="true"]').isVisible()).toBe(true);
       return page;
     };
 
