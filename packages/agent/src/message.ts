@@ -13,10 +13,20 @@ export const Message = defineMessageUnion({
   ChosePermission: { decision: S.Literals(["Allow", "Deny"]) },
   Stopped: {},
   Retried: {},
+  RegeneratedTurn: { turnId: S.String },
+  CopiedTurn: { turnId: S.String },
+  CompletedCopyTurn: { turnId: S.String },
+  ClearedCopiedTurn: { turnId: S.String },
   Reset: {},
   ScrolledTranscript: { scrollTop: S.Number },
-  CompletedMeasureFollowing: { isFollowing: S.Boolean },
+  CompletedMeasureTranscript: {
+    isFollowing: S.Boolean,
+    currentTurnId: S.String,
+    visibleTurnIds: S.Array(S.String),
+  },
   JumpedLatest: {},
+  JumpedToTurn: { turnId: S.String },
   CompletedScrollLatest: {},
+  CompletedScrollToTurn: { turnId: S.String },
 });
 export type Message = typeof Message.Type;

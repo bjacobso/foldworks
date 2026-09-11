@@ -8,22 +8,48 @@ import {
   isActive,
   latestUserPrompt,
   transcriptId,
+  turnText,
   type ConversationPart,
   type Model,
+  type ReasoningPart,
   type ToolPart,
   type Turn,
 } from "./model";
 import type { EventEnvelope, StreamEvent } from "./protocol";
 
-const MeasureFollowing = Command.define("MeasureAgentTranscriptFollowing", {
-  args: { id: S.String, scrollTop: S.Number },
-  messages: [Message.CompletedMeasureFollowing],
-  execute: ({ id, scrollTop }) => Effect.sync(() => {
-    const element = document.getElementById(id);
-    return Message.CompletedMeasureFollowing({
-      isFollowing: element === null || element.scrollHeight - element.clientHeight - scrollTop < 72,
+const MeasureTranscript = Command.define("MeasureAgentTranscript", {
+  args: { id: S.String },
+  messages: [Message.CompletedMeasureTranscript],
+  execute: ({ id }) => Effect.promise(() => new Promise<ReturnType<typeof Message.CompletedMeasureTranscript>>((resolve) => {
+    requestAnimationFrame(() => {
+      const element = document.getElementById(id);
+      if (element === null) {
+        resolve(Message.CompletedMeasureTranscript({
+          isFollowing: true,
+          currentTurnId: "",
+          visibleTurnIds: [],
+        }));
+        return;
+      }
+      const viewport = element.getBoundingClientRect();
+      const turns = Array.from(element.querySelectorAll<HTMLElement>("[data-agent-turn-id]"));
+      const visibleTurnIds = turns
+        .filter((turn) => {
+          const bounds = turn.getBoundingClientRect();
+          return bounds.bottom > viewport.top && bounds.top < viewport.bottom;
+        })
+        .map((turn) => turn.dataset.agentTurnId ?? "")
+        .filter(Boolean);
+      const anchors = turns.filter((turn) => turn.dataset.agentScrollAnchor === "true");
+      const currentAnchor = [...anchors].reverse().find((turn) =>
+        turn.getBoundingClientRect().top <= viewport.top + 72);
+      resolve(Message.CompletedMeasureTranscript({
+        isFollowing: element.scrollHeight - element.clientHeight - element.scrollTop < 72,
+        currentTurnId: currentAnchor?.dataset.agentTurnId ?? visibleTurnIds[0] ?? "",
+        visibleTurnIds,
+      }));
     });
-  }),
+  })),
 });
 
 const ScrollLatest = Command.define("ScrollAgentTranscriptLatest", {
@@ -36,6 +62,45 @@ const ScrollLatest = Command.define("ScrollAgentTranscriptLatest", {
       resolve(Message.CompletedScrollLatest());
     });
   })),
+});
+
+const ScrollToTurn = Command.define("ScrollAgentTranscriptToTurn", {
+  args: { id: S.String, turnId: S.String, previousItemPeek: S.Number },
+  messages: [Message.CompletedScrollToTurn],
+  execute: ({ id, turnId, previousItemPeek }) => Effect.promise(() =>
+    new Promise<ReturnType<typeof Message.CompletedScrollToTurn>>((resolve) => {
+      requestAnimationFrame(() => {
+        const element = document.getElementById(id);
+        const turn = element === null
+          ? undefined
+          : Array.from(element.querySelectorAll<HTMLElement>("[data-agent-turn-id]"))
+              .find((candidate) => candidate.dataset.agentTurnId === turnId);
+        if (element !== null && turn !== undefined) {
+          const viewport = element.getBoundingClientRect();
+          const bounds = turn.getBoundingClientRect();
+          element.scrollTop += bounds.top - viewport.top - Math.max(0, previousItemPeek);
+        }
+        resolve(Message.CompletedScrollToTurn({ turnId }));
+      });
+    }),
+  ),
+});
+
+const CopyTurn = Command.define("CopyAgentTurn", {
+  args: { turnId: S.String, text: S.String },
+  messages: [Message.CompletedCopyTurn],
+  execute: ({ turnId, text }) => Effect.promise(async () => {
+    await navigator.clipboard.writeText(text);
+    return Message.CompletedCopyTurn({ turnId });
+  }),
+});
+
+const ClearCopiedTurn = Command.define("ClearCopiedAgentTurn", {
+  args: { turnId: S.String },
+  messages: [Message.ClearedCopiedTurn],
+  execute: ({ turnId }) => Effect.sleep("2 seconds").pipe(
+    Effect.as(Message.ClearedCopiedTurn({ turnId })),
+  ),
 });
 
 const mapParts = (
@@ -76,6 +141,16 @@ const updateText = (
   (part) => transform(part as Extract<ConversationPart, { _tag: "Text" }>),
 );
 
+const updateReasoning = (
+  model: Model,
+  partId: string,
+  transform: (part: ReasoningPart) => ConversationPart,
+): Model => mapParts(
+  model,
+  (part) => part._tag === "Reasoning" && part.id === partId,
+  (part) => transform(part as ReasoningPart),
+);
+
 const updateTool = (
   model: Model,
   callId: string,
@@ -95,9 +170,10 @@ const startRun = (
   if (!value || isActive(model)) return { model };
   const number = model.nextRunNumber;
   const runId = `${model.id}-run-${number}`;
+  const userTurnId = `${runId}-user`;
   const turns: ReadonlyArray<Turn> = [
     ...(appendUser ? [{
-      id: `${runId}-user`,
+      id: userTurnId,
       role: "User" as const,
       modelId: "",
       parts: [{ _tag: "Text" as const, id: `${runId}-prompt`, text: value, status: "Complete" as const }],
@@ -112,9 +188,12 @@ const startRun = (
       runState: { _tag: "Streaming", runId, segment: "Initial", lastSequence: 0 },
       nextRunNumber: number + 1,
       isFollowing: true,
+      anchoredTurnId: appendUser ? userTurnId : model.anchoredTurnId,
       announcement: "Assistant response started.",
     },
-    commands: [ScrollLatest({ id: transcriptId(model) })],
+    commands: appendUser
+      ? [ScrollToTurn({ id: transcriptId(model), turnId: userTurnId, previousItemPeek: 64 })]
+      : [ScrollLatest({ id: transcriptId(model) })],
   };
 };
 
@@ -132,6 +211,20 @@ const applyEvent = (model: Model, event: StreamEvent, sequence: number): Model =
       return updateText(next, event.partId, (part) => ({ ...part, text: part.text + event.delta }));
     case "TextFinished":
       return updateText(next, event.partId, (part) => ({ ...part, status: "Complete" }));
+    case "ReasoningStarted":
+      return appendAssistantPart(next, {
+        _tag: "Reasoning",
+        id: event.partId,
+        text: "",
+        status: "Streaming",
+      });
+    case "ReasoningDelta":
+      return updateReasoning(next, event.partId, (part) => ({
+        ...part,
+        text: part.text + event.delta,
+      }));
+    case "ReasoningFinished":
+      return updateReasoning(next, event.partId, (part) => ({ ...part, status: "Complete" }));
     case "ToolInputStarted":
       return appendAssistantPart({ ...next, announcement: `${event.name} tool call prepared.` }, {
         _tag: "Tool",
@@ -171,8 +264,10 @@ const applyEvent = (model: Model, event: StreamEvent, sequence: number): Model =
     case "Failed":
       next = mapParts(
         next,
-        (part) => part._tag === "Text" && part.status === "Streaming",
-        (part) => part._tag === "Text" ? { ...part, status: "Failed" } : part,
+        (part) => (part._tag === "Text" || part._tag === "Reasoning") && part.status === "Streaming",
+        (part) => part._tag === "Text" || part._tag === "Reasoning"
+          ? { ...part, status: "Failed" }
+          : part,
       );
       next = mapParts(
         next,
@@ -196,15 +291,21 @@ const receive = (model: Model, envelope: EventEnvelope): Update.Return<Model, Me
   const next = applyEvent(model, envelope.event, envelope.sequence);
   return {
     model: next,
-    ...(model.isFollowing ? { commands: [ScrollLatest({ id: transcriptId(model) })] } : {}),
+    commands: model.anchoredTurnId
+      ? [MeasureTranscript({ id: transcriptId(model) })]
+      : model.isFollowing
+        ? [ScrollLatest({ id: transcriptId(model) })]
+        : [MeasureTranscript({ id: transcriptId(model) })],
   };
 };
 
 const interrupt = (model: Model): Model => {
   let next = mapParts(
     model,
-    (part) => part._tag === "Text" && part.status === "Streaming",
-    (part) => part._tag === "Text" ? { ...part, status: "Interrupted" } : part,
+    (part) => (part._tag === "Text" || part._tag === "Reasoning") && part.status === "Streaming",
+    (part) => part._tag === "Text" || part._tag === "Reasoning"
+      ? { ...part, status: "Interrupted" }
+      : part,
   );
   next = mapParts(
     next,
@@ -265,20 +366,61 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     Retried: () => model.runState._tag === "Failed"
       ? startRun({ ...model, runState: { _tag: "Idle" } }, latestUserPrompt(model), false)
       : { model },
+    RegeneratedTurn: ({ turnId }) => {
+      if (isActive(model)) return { model };
+      const index = model.transcript.findIndex((turn) => turn.id === turnId && turn.role === "Assistant");
+      const latestAssistantIndex = model.transcript.findLastIndex((turn) => turn.role === "Assistant");
+      if (index < 0 || index !== latestAssistantIndex) return { model };
+      const prompt = [...model.transcript.slice(0, index)].reverse()
+        .find((turn) => turn.role === "User")?.parts
+        .find((part) => part._tag === "Text")?.text ?? "";
+      return startRun({
+        ...model,
+        transcript: model.transcript.filter((_, turnIndex) => turnIndex !== index),
+      }, prompt, false);
+    },
+    CopiedTurn: ({ turnId }) => {
+      const turn = model.transcript.find((candidate) => candidate.id === turnId);
+      const text = turn === undefined ? "" : turnText(turn);
+      return text ? { model, commands: [CopyTurn({ turnId, text })] } : { model };
+    },
+    CompletedCopyTurn: ({ turnId }) => ({
+      model: { ...model, copiedTurnId: turnId, announcement: "Response copied." },
+      commands: [ClearCopiedTurn({ turnId })],
+    }),
+    ClearedCopiedTurn: ({ turnId }) => ({
+      model: model.copiedTurnId === turnId ? { ...model, copiedTurnId: "" } : model,
+    }),
     Reset: () => ({
       model: {
         ...init({ id: model.id, selectedModel: model.defaultModel }),
         nextRunNumber: model.nextRunNumber,
       },
     }),
-    ScrolledTranscript: ({ scrollTop }) => ({
+    ScrolledTranscript: () => ({
       model,
-      commands: [MeasureFollowing({ id: transcriptId(model), scrollTop })],
+      commands: [MeasureTranscript({ id: transcriptId(model) })],
     }),
-    CompletedMeasureFollowing: ({ isFollowing }) => ({ model: { ...model, isFollowing } }),
+    CompletedMeasureTranscript: ({ isFollowing, currentTurnId, visibleTurnIds }) => ({
+      model: { ...model, isFollowing, currentTurnId, visibleTurnIds },
+    }),
     JumpedLatest: () => ({
-      model: { ...model, isFollowing: true },
+      model: { ...model, isFollowing: true, anchoredTurnId: "" },
       commands: [ScrollLatest({ id: transcriptId(model) })],
     }),
+    JumpedToTurn: ({ turnId }) => model.transcript.some((turn) => turn.id === turnId)
+      ? {
+          model: { ...model, isFollowing: false, anchoredTurnId: turnId },
+          commands: [ScrollToTurn({
+            id: transcriptId(model),
+            turnId,
+            previousItemPeek: 64,
+          })],
+        }
+      : { model },
     CompletedScrollLatest: () => ({ model }),
+    CompletedScrollToTurn: ({ turnId }) => ({
+      model: { ...model, currentTurnId: turnId },
+      commands: [MeasureTranscript({ id: transcriptId(model) })],
+    }),
   });

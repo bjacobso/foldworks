@@ -1,9 +1,12 @@
 import {
   Bot,
+  Check,
   CheckCircle2,
   CircleStop,
   CircleX,
+  Copy,
   LockKeyhole,
+  RefreshCcw,
   RotateCcw,
   Send,
   Sparkles,
@@ -18,9 +21,11 @@ import { Message } from "./message";
 import {
   isActive,
   transcriptId,
+  turnElementId,
   type ConversationPart,
   type Model,
   type ModelOption,
+  type ReasoningPart,
   type TextPart,
   type ToolPart,
   type Turn,
@@ -45,6 +50,19 @@ export type TextResponseConfig<ParentMessage> = Readonly<{
   renderComplete?: TextRenderer<ParentMessage>;
 }>;
 
+export type ReasoningPanelConfig = Readonly<{
+  part: ReasoningPart;
+  label?: string;
+}>;
+
+export type MessageActionsConfig<ParentMessage> = Readonly<{
+  turn: Turn;
+  isCopied?: boolean;
+  canRegenerate?: boolean;
+  onCopy: ParentMessage;
+  onRegenerate?: ParentMessage;
+}>;
+
 export type PermissionRequestConfig<ParentMessage> = Readonly<{
   part: ToolPart;
   onDecision: (decision: "Allow" | "Deny") => ParentMessage;
@@ -59,11 +77,14 @@ export type ToolCallConfig<ParentMessage> = Readonly<{
 
 export type ConversationTurnConfig<ParentMessage> = Readonly<{
   turn: Turn;
+  htmlId?: string;
+  scrollAnchor?: boolean;
   models?: ReadonlyArray<ModelOption>;
   assistantName?: string;
   renderText?: TextRenderer<ParentMessage>;
   onPermissionDecision: (decision: "Allow" | "Deny") => ParentMessage;
   permission?: PermissionPresentation<ParentMessage>;
+  actions?: Omit<MessageActionsConfig<ParentMessage>, "turn">;
 }>;
 
 export type EmptyStateConfig<ParentMessage> = Readonly<{
@@ -94,6 +115,7 @@ export type TranscriptConfig<ParentMessage> = Readonly<{
   empty?: EmptyStateConfig<ParentMessage>;
   failureTitle?: string;
   retryLabel?: string;
+  showMessageActions?: boolean;
 }>;
 
 export type ComposerConfig<ParentMessage> = Readonly<{
@@ -124,6 +146,7 @@ export type ChatConfig<ParentMessage> = Readonly<{
   failureTitle?: string;
   retryLabel?: string;
   jumpLabel?: string;
+  showMessageActions?: boolean;
 }>;
 
 export const statusLabel = (model: Model): string => {
@@ -137,7 +160,8 @@ export const statusLabel = (model: Model): string => {
   const latestAssistant = [...model.transcript].reverse().find((turn) => turn.role === "Assistant");
   const latestPart = latestAssistant?.parts.at(-1);
   if (
-    (latestPart?._tag === "Text" && latestPart.status === "Interrupted") ||
+    ((latestPart?._tag === "Text" || latestPart?._tag === "Reasoning") &&
+      latestPart.status === "Interrupted") ||
     (latestPart?._tag === "Tool" && latestPart.status === "Cancelled")
   ) return "Stopped";
   return model.transcript.length === 0 ? "Ready" : "Complete";
@@ -170,6 +194,63 @@ const textResponse = <ParentMessage>(
           ? []
           : [h.span([], [` ${config.part.status === "Failed" ? "(failed)" : "(stopped)"}`])]),
     ]);
+
+const reasoningPanel = <ParentMessage>(
+  config: ReasoningPanelConfig,
+  h: HtmlBuilder<ParentMessage>,
+): Html => h.details([
+  h.Class(className(s.reasoning)),
+  h.Open(config.part.status === "Streaming"),
+  h.DataAttribute("reasoning-status", config.part.status),
+], [
+  h.summary([h.Class(className(s.reasoningSummary))], [
+    h.span([h.Class(className(s.reasoningIcon)), h.AriaHidden(true)], [
+      Icon.view({ icon: Sparkles, size: 14 }, h),
+    ]),
+    h.span([h.Class(className(s.reasoningLabel))], [
+      config.label ?? (config.part.status === "Streaming" ? "Reasoning…" : "Reasoning"),
+    ]),
+    ...(config.part.status === "Streaming"
+      ? [Spinner.view({ label: "Reasoning in progress" }, h)]
+      : []),
+  ]),
+  h.p([h.Class(className(s.reasoningText))], [
+    config.part.text,
+    ...(config.part.status === "Interrupted"
+      ? [h.span([h.Class(className(s.interrupted))], [" (stopped)"])]
+      : config.part.status === "Failed"
+        ? [h.span([h.Class(className(s.interrupted))], [" (failed)"])]
+        : []),
+  ]),
+]);
+
+const messageActions = <ParentMessage>(
+  config: MessageActionsConfig<ParentMessage>,
+  h: HtmlBuilder<ParentMessage>,
+): Html => h.div([
+  h.Class(className(s.messageActions)),
+  h.Role("group"),
+  h.AriaLabel("Message actions"),
+], [
+  Button.view({
+    label: config.isCopied === true ? "Copied" : "Copy",
+    icon: config.isCopied === true ? Check : Copy,
+    variant: "ghost",
+    size: "sm",
+    onClick: config.onCopy,
+    isDisabled: !config.turn.parts.some((part) => part._tag === "Text" && part.text),
+  }, h),
+  ...(config.onRegenerate === undefined
+    ? []
+    : [Button.view({
+        label: "Regenerate",
+        icon: RefreshCcw,
+        variant: "ghost",
+        size: "sm",
+        onClick: config.onRegenerate,
+        isDisabled: config.canRegenerate === false,
+      }, h)]),
+]);
 
 const permissionRequest = <ParentMessage>(
   config: PermissionRequestConfig<ParentMessage>,
@@ -255,11 +336,13 @@ const conversationPart = <ParentMessage>(
   h: HtmlBuilder<ParentMessage>,
 ): Html => part._tag === "Text"
   ? textResponse({ part, ...(config.renderText === undefined ? {} : { renderComplete: config.renderText }) }, h)
-  : toolCall({
-      part,
-      onPermissionDecision: config.onPermissionDecision,
-      ...(config.permission === undefined ? {} : { permission: config.permission }),
-    }, h);
+  : part._tag === "Reasoning"
+    ? reasoningPanel({ part }, h)
+    : toolCall({
+        part,
+        onPermissionDecision: config.onPermissionDecision,
+        ...(config.permission === undefined ? {} : { permission: config.permission }),
+      }, h);
 
 const conversationTurn = <ParentMessage>(
   config: ConversationTurnConfig<ParentMessage>,
@@ -270,8 +353,11 @@ const conversationTurn = <ParentMessage>(
   const assistantName = config.assistantName ?? model?.label ?? "Assistant";
   return h.article([
     h.Class(className(s.turn, own && s.userTurn)),
+    ...(config.htmlId === undefined ? [] : [h.Id(config.htmlId)]),
     h.AriaLabel(`${own ? "You" : assistantName} message`),
     h.DataAttribute("agent-turn", config.turn.role.toLowerCase()),
+    h.DataAttribute("agent-turn-id", config.turn.id),
+    h.DataAttribute("agent-scroll-anchor", config.scrollAnchor === true ? "true" : "false"),
   ], [
     h.span([h.Class(className(s.avatar, own && s.userAvatar)), h.AriaHidden(true)], [
       Icon.view({ icon: own ? User : Bot, size: 15 }, h),
@@ -282,9 +368,14 @@ const conversationTurn = <ParentMessage>(
         ? [h.div([h.Class(className(s.userBubble))], [
             config.turn.parts[0]?._tag === "Text" ? config.turn.parts[0].text : "",
           ])]
-        : [h.div([h.Class(className(s.assistantContent))], config.turn.parts.length
-            ? config.turn.parts.map((part) => conversationPart(part, config, h))
-            : [h.div([], [Spinner.view({ label: "Assistant is starting" }, h)])])]),
+        : [
+            h.div([h.Class(className(s.assistantContent))], config.turn.parts.length
+              ? config.turn.parts.map((part) => conversationPart(part, config, h))
+              : [h.div([], [Spinner.view({ label: "Assistant is starting" }, h)])]),
+            ...(config.actions === undefined
+              ? []
+              : [messageActions({ turn: config.turn, ...config.actions }, h)]),
+          ]),
     ]),
   ]);
 };
@@ -369,6 +460,8 @@ const transcript = <ParentMessage>(
   h.AriaLive("off"),
   h.AriaLabel(config.ariaLabel ?? "Agent conversation"),
   h.AriaBusy(config.model.runState._tag === "Streaming"),
+  h.DataAttribute("current-turn-id", config.model.currentTurnId),
+  h.DataAttribute("visible-turn-count", String(config.model.visibleTurnIds.length)),
   h.Tabindex(0),
   h.OnScroll((scrollTop) => config.toParentMessage(Message.ScrolledTranscript({ scrollTop }))),
 ], config.model.transcript.length === 0
@@ -376,12 +469,26 @@ const transcript = <ParentMessage>(
   : [h.div([h.Class(className(s.transcriptInner))], [
       ...config.model.transcript.map((turn) => conversationTurn({
         turn,
+        htmlId: turnElementId(config.model, turn.id),
+        scrollAnchor: turn.role === "User",
         onPermissionDecision: (decision) =>
           config.toParentMessage(Message.ChosePermission({ decision })),
         ...(config.models === undefined ? {} : { models: config.models }),
         ...(config.assistantName === undefined ? {} : { assistantName: config.assistantName }),
         ...(config.renderText === undefined ? {} : { renderText: config.renderText }),
         ...(config.permission === undefined ? {} : { permission: config.permission }),
+        ...(turn.role !== "Assistant" || config.showMessageActions === false
+          ? {}
+          : {
+              actions: {
+                isCopied: config.model.copiedTurnId === turn.id,
+                canRegenerate: !isActive(config.model) &&
+                  turn.id === [...config.model.transcript].reverse()
+                    .find((candidate) => candidate.role === "Assistant")?.id,
+                onCopy: config.toParentMessage(Message.CopiedTurn({ turnId: turn.id })),
+                onRegenerate: config.toParentMessage(Message.RegeneratedTurn({ turnId: turn.id })),
+              },
+            }),
       }, h)),
       ...(config.model.runState._tag === "Failed"
         ? [Alert.view({
@@ -491,6 +598,9 @@ const chat = <ParentMessage>(
       ...(config.permission === undefined ? {} : { permission: config.permission }),
       ...(config.failureTitle === undefined ? {} : { failureTitle: config.failureTitle }),
       ...(config.retryLabel === undefined ? {} : { retryLabel: config.retryLabel }),
+      ...(config.showMessageActions === undefined
+        ? {}
+        : { showMessageActions: config.showMessageActions }),
     }, h),
     ...(!config.model.isFollowing && config.model.transcript.length
       ? [h.div([h.Class(className(s.jump))], [Button.view({
@@ -519,6 +629,8 @@ export const SessionBar = { view: sessionBar } as const;
 export const Transcript = { view: transcript } as const;
 export const ConversationTurn = { view: conversationTurn } as const;
 export const TextResponse = { view: textResponse } as const;
+export const ReasoningPanel = { view: reasoningPanel } as const;
+export const MessageActions = { view: messageActions } as const;
 export const ToolCall = { view: toolCall } as const;
 export const PermissionRequest = { view: permissionRequest } as const;
 export const EmptyState = { view: emptyState } as const;

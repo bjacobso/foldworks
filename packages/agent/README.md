@@ -74,10 +74,21 @@ does not require a Markdown parser or make assumptions about tool input.
 
 Every part is also exported for custom layouts: `Agent.SessionBar`,
 `Agent.Transcript`, `Agent.ConversationTurn`, `Agent.TextResponse`,
-`Agent.ToolCall`, `Agent.PermissionRequest`, `Agent.EmptyState`, and
-`Agent.Composer`. Each component accepts a typed config and a Foldkit
+`Agent.ToolCall`, `Agent.PermissionRequest`, `Agent.ReasoningPanel`,
+`Agent.MessageActions`, `Agent.EmptyState`, and `Agent.Composer`. Each component accepts a typed config and a Foldkit
 `HtmlBuilder`; state-changing components either accept `toParentMessage` or a
 focused callback.
+
+Assistant turns expose copy and latest-response regeneration actions by default.
+Set `showMessageActions: false` on `Agent.Chat` or `Agent.Transcript` to hide
+them. Reasoning streams through `ReasoningStarted`, `ReasoningDelta`, and
+`ReasoningFinished` events into a first-class `Agent.ReasoningPart` and the
+collapsible reasoning panel.
+
+The transcript gives every turn a stable DOM identity, anchors newly submitted
+user turns with previous-message context, and measures `currentTurnId`,
+`visibleTurnIds`, and `isFollowing`. Dispatch `JumpedToTurn` for outline,
+search, or permalink navigation and `JumpedLatest` to resume live following.
 
 Add `Agent.Model` to the parent model schema and `Agent.Message` to its message
 union. Fold updates through `Update.foldChild` as usual. A host subscription can
@@ -98,3 +109,30 @@ options and presentation configuration stay outside the serializable runtime.
 
 The browser demo at `/agent` uses `Agent.Chat` with a Markdown renderer and a
 deterministic Effect stream. It performs no provider calls or tool side effects.
+
+## Deterministic scenarios
+
+`@foldworks/agent/testing` builds complete event streams for demos, tests, and
+documentation without a provider or network request.
+
+```ts
+import { createScenario } from "@foldworks/agent/testing";
+
+const scenario = createScenario({
+  initial: (writer) => {
+    writer.reasoning("I should inspect the account first.");
+    writer.text("I’ll inspect the account.");
+    writer.requestPermission({
+      id: "update",
+      name: "update_account",
+      input: "{\"status\":\"active\"}",
+      reason: "This changes account data.",
+    });
+  },
+  approved: (writer) => writer.completeTool("update", "Updated."),
+  denied: (writer) => writer.text("No changes were made."),
+});
+
+scenario.events("Initial", "run-1", "fast-model");
+scenario.stream("Approved", "run-1", "fast-model");
+```

@@ -17,6 +17,8 @@ const entries = packageJson.name === "@foldworks/ui"
     }
   : packageJson.name === "@foldworks/code-editor"
     ? { index: "src/index.ts", contracts: "src/contracts.ts", structured: "src/structured.ts" }
+    : packageJson.name === "@foldworks/agent"
+      ? { index: "src/index.ts", testing: "src/testing.ts" }
     : { index: "src/index.ts" };
 await build({
   bundle: true,
@@ -30,7 +32,7 @@ await build({
   platform: "browser",
   silent: false,
   sourcemap: true,
-  splitting: packageJson.name === "@foldworks/code-editor",
+  splitting: packageJson.name === "@foldworks/code-editor" || packageJson.name === "@foldworks/agent",
   target: "es2022",
   treeshake: true,
 });

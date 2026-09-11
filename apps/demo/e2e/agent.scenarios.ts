@@ -35,6 +35,10 @@ export const agentScenarios = (
       await runToPermission(page);
       const assistant = page.locator('[data-agent-turn="assistant"]');
       expect(await assistant.textContent()).toContain("release setup first");
+      await expect.poll(() => page.locator('[data-reasoning-status="Complete"]').count())
+        .toBe(1);
+      expect(await page.locator('[data-reasoning-status="Complete"]').textContent())
+        .toContain("inspect the project scripts");
       expect(await page.locator('[data-tool-call="read_file"] pre').first().textContent()).toContain("package.json");
       expect(await page.getByRole("group", { name: "Permission request for write_file" }).textContent())
         .toContain("docs/launch-checklist.md");
@@ -46,6 +50,11 @@ export const agentScenarios = (
       await expect.poll(() => page.getByText("No real file was changed.", { exact: true }).isVisible(), { timeout: 5_000 })
         .toBe(true);
       await expect.poll(() => page.getByText("Complete", { exact: true }).first().isVisible()).toBe(true);
+      await page.getByRole("button", { name: "Copy", exact: true }).click();
+      await expect.poll(() => page.getByRole("button", { name: "Copied", exact: true }).isVisible())
+        .toBe(true);
+      await expect.poll(() => page.getByRole("button", { name: "Regenerate", exact: true }).isEnabled())
+        .toBe(true);
       await screenshot("19-agent-complete");
     });
 

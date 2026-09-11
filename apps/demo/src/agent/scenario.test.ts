@@ -8,6 +8,10 @@ describe("agent scenario", () => {
 
     expect(events.map(({ event }) => event._tag)).toEqual([
       "Started",
+      "ReasoningStarted",
+      "ReasoningDelta",
+      "ReasoningDelta",
+      "ReasoningFinished",
       "TextStarted",
       "TextDelta",
       "TextDelta",

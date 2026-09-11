@@ -2,12 +2,14 @@ import { Message as MessageSchema, type Message as MessageValue } from "./messag
 import {
   ConversationPart as ConversationPartSchema,
   Model as ModelSchema,
+  ReasoningPart as ReasoningPartSchema,
   RunState as RunStateSchema,
   TextPart as TextPartSchema,
   ToolPart as ToolPartSchema,
   Turn as TurnSchema,
   type ConversationPart as ConversationPartValue,
   type Model as ModelValue,
+  type ReasoningPart as ReasoningPartValue,
   type RunState as RunStateValue,
   type TextPart as TextPartValue,
   type ToolPart as ToolPartValue,
@@ -28,6 +30,8 @@ export const Model = ModelSchema;
 export type Model = ModelValue;
 export const ConversationPart = ConversationPartSchema;
 export type ConversationPart = ConversationPartValue;
+export const ReasoningPart = ReasoningPartSchema;
+export type ReasoningPart = ReasoningPartValue;
 export const RunState = RunStateSchema;
 export type RunState = RunStateValue;
 export const TextPart = TextPartSchema;
@@ -48,8 +52,10 @@ export {
   Composer,
   ConversationTurn,
   EmptyState,
+  MessageActions,
   ModelSelect,
   PermissionRequest,
+  ReasoningPanel,
   SessionBar,
   TextResponse,
   ToolCall,
@@ -59,8 +65,10 @@ export {
   type ComposerConfig,
   type ConversationTurnConfig,
   type EmptyStateConfig,
+  type MessageActionsConfig,
   type PermissionPresentation,
   type PermissionRequestConfig,
+  type ReasoningPanelConfig,
   type SessionBarConfig,
   type TextRenderer,
   type TextResponseConfig,
@@ -72,6 +80,8 @@ export {
   isActive,
   latestUserPrompt,
   transcriptId,
+  turnElementId,
+  turnText,
   type InitConfig,
   type ModelOption,
 } from "./model";

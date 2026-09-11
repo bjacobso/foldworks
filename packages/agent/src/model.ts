@@ -18,6 +18,14 @@ export const TextPart = S.Struct({
 });
 export type TextPart = typeof TextPart.Type;
 
+export const ReasoningPart = S.Struct({
+  _tag: S.Literal("Reasoning"),
+  id: S.String,
+  text: S.String,
+  status: S.Literals(["Streaming", "Complete", "Interrupted", "Failed"]),
+});
+export type ReasoningPart = typeof ReasoningPart.Type;
+
 export const ToolPart = S.Struct({
   _tag: S.Literal("Tool"),
   callId: S.String,
@@ -37,7 +45,7 @@ export const ToolPart = S.Struct({
 });
 export type ToolPart = typeof ToolPart.Type;
 
-export const ConversationPart = S.Union([TextPart, ToolPart]);
+export const ConversationPart = S.Union([TextPart, ReasoningPart, ToolPart]);
 export type ConversationPart = typeof ConversationPart.Type;
 
 export const Turn = S.Struct({
@@ -80,6 +88,10 @@ export const Model = S.Struct({
   runState: RunState,
   nextRunNumber: S.Int,
   isFollowing: S.Boolean,
+  anchoredTurnId: S.String,
+  currentTurnId: S.String,
+  visibleTurnIds: S.Array(S.String),
+  copiedTurnId: S.String,
   announcement: S.String,
 });
 export type Model = typeof Model.Type;
@@ -99,6 +111,10 @@ export const init = ({ id, selectedModel }: InitConfig): Model => ({
   runState: { _tag: "Idle" },
   nextRunNumber: 1,
   isFollowing: true,
+  anchoredTurnId: "",
+  currentTurnId: "",
+  visibleTurnIds: [],
+  copiedTurnId: "",
   announcement: "Agent ready.",
 });
 
@@ -106,6 +122,14 @@ export const isActive = (model: Model): boolean =>
   model.runState._tag === "Streaming" || model.runState._tag === "AwaitingPermission";
 
 export const transcriptId = (model: Model): string => `${model.id}-transcript`;
+
+export const turnElementId = (model: Model, turnId: string): string =>
+  `${model.id}-turn-${turnId}`;
+
+export const turnText = (turn: Turn): string => turn.parts
+  .filter((part): part is TextPart => part._tag === "Text")
+  .map((part) => part.text)
+  .join("\n\n");
 
 export const latestUserPrompt = (model: Model): string => {
   for (let index = model.transcript.length - 1; index >= 0; index -= 1) {
