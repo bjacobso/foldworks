@@ -99,4 +99,64 @@ describe("agent update", () => {
     expect(reset.nextRunNumber).toBe(3);
     expect(reset.id).toBe("test-agent");
   });
+
+  it("streams and interrupts first-class reasoning parts", () => {
+    const runId = "test-agent-run-1";
+    const reasoning = dispatch(
+      dispatch(send(), Message.ReceivedStreamEvent({ envelope: envelope(1, {
+        _tag: "ReasoningStarted", runId, partId: "reason",
+      }) })),
+      Message.ReceivedStreamEvent({ envelope: envelope(2, {
+        _tag: "ReasoningDelta", runId, partId: "reason", delta: "Inspecting the project.",
+      }) }),
+    );
+
+    expect(reasoning.transcript[1]?.parts[0]).toMatchObject({
+      _tag: "Reasoning",
+      text: "Inspecting the project.",
+      status: "Streaming",
+    });
+    expect(dispatch(reasoning, Message.Stopped()).transcript[1]?.parts[0])
+      .toMatchObject({ status: "Interrupted" });
+  });
+
+  it("copies responses, tracks transcript visibility, and regenerates the latest turn", () => {
+    const runId = "test-agent-run-1";
+    const complete = dispatch(
+      dispatch(
+        dispatch(send("Explain the release"), Message.ReceivedStreamEvent({ envelope: envelope(1, {
+          _tag: "TextStarted", runId, partId: "answer",
+        }) })),
+        Message.ReceivedStreamEvent({ envelope: envelope(2, {
+          _tag: "TextDelta", runId, partId: "answer", delta: "Release summary.",
+        }) }),
+      ),
+      Message.ReceivedStreamEvent({ envelope: envelope(3, { _tag: "Finished", runId }) }),
+    );
+    const assistantId = complete.transcript[1]?.id ?? "";
+    const copied = dispatch(complete, Message.CompletedCopyTurn({ turnId: assistantId }));
+    expect(copied.copiedTurnId).toBe(assistantId);
+    expect(dispatch(copied, Message.ClearedCopiedTurn({ turnId: assistantId })).copiedTurnId)
+      .toBe("");
+
+    const measured = dispatch(complete, Message.CompletedMeasureTranscript({
+      isFollowing: false,
+      currentTurnId: complete.transcript[0]?.id ?? "",
+      visibleTurnIds: complete.transcript.map((turn) => turn.id),
+    }));
+    expect(measured).toMatchObject({
+      isFollowing: false,
+      currentTurnId: complete.transcript[0]?.id,
+      visibleTurnIds: complete.transcript.map((turn) => turn.id),
+    });
+
+    const regenerated = dispatch(complete, Message.RegeneratedTurn({ turnId: assistantId }));
+    expect(regenerated.runState).toMatchObject({
+      _tag: "Streaming",
+      runId: "test-agent-run-2",
+    });
+    expect(regenerated.transcript).toHaveLength(2);
+    expect(regenerated.transcript[0]?.parts[0]).toMatchObject({ text: "Explain the release" });
+    expect(regenerated.transcript[1]).toMatchObject({ role: "Assistant", parts: [] });
+  });
 });

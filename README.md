@@ -10,7 +10,8 @@ accessible application interfaces with Foldkit:
 - [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic
   design tokens, and accessible visual primitives.
 - [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation
-  runtime with streaming text, tool states, permission checkpoints, and retry.
+  runtime and chat UI with streaming text, tool states, permission checkpoints,
+  and retry.
 - [`@foldworks/data-table`](./packages/data-table) — a resource-first CRUD
   table with semantic markup, sortable columns, bulk row selection, resource
   links, density controls, and pinned columns.

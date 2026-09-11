@@ -41,7 +41,7 @@ describe("agent update", () => {
       callId: "agent-run-1-write",
     });
     expect(waiting.transcript[1]?.parts.map((part) => part._tag)).toEqual([
-      "Text", "Tool", "Text", "Tool",
+      "Reasoning", "Text", "Tool", "Text", "Tool",
     ]);
     expect(tools(waiting)[0]).toMatchObject({
       name: "read_file",
