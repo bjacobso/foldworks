@@ -1,7 +1,17 @@
 import type { Agent } from "@foldworks/agent";
-import { createScenario } from "@foldworks/agent/testing";
+import { createScenario, defaultDelayFor } from "@foldworks/agent/testing";
+
+const modelSpeed: Readonly<Record<string, number>> = {
+  "atlas-fast": 0.35,
+  "atlas-balanced": 1,
+  "atlas-reasoning": 1.8,
+};
+
+export const scenarioDelayFor = (event: Agent.StreamEvent, modelId: string): number =>
+  Math.round(defaultDelayFor(event) * (modelSpeed[modelId] ?? 1));
 
 const scenario = createScenario({
+  delayFor: (event, { modelId }) => scenarioDelayFor(event, modelId),
   initial: (writer) => {
     writer.reasoning(
       "I should inspect the project scripts, verify the existing gates, and only then propose the smallest checklist change.",

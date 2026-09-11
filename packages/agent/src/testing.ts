@@ -22,11 +22,17 @@ export type ScenarioWriter = Readonly<{
   completeTool: (id: string, output: string) => void;
 }>;
 
+export type ScenarioContext = Readonly<{
+  segment: Segment;
+  runId: string;
+  modelId: string;
+}>;
+
 export type ScenarioConfig = Readonly<{
   initial: (writer: ScenarioWriter) => void;
   approved?: (writer: ScenarioWriter) => void;
   denied?: (writer: ScenarioWriter) => void;
-  delayFor?: (event: StreamEvent) => number;
+  delayFor?: (event: StreamEvent, context: ScenarioContext) => number;
   sequenceStarts?: Partial<Record<Segment, number>>;
 }>;
 
@@ -148,12 +154,13 @@ export const createScenario = (config: ScenarioConfig): Scenario => {
   };
   return {
     events,
-    stream: (segment, runId, modelId) => Stream.fromIterable(
-      events(segment, runId, modelId),
-    ).pipe(
-      Stream.mapEffect((envelope) => Effect.sleep(
-        `${config.delayFor?.(envelope.event) ?? defaultDelayFor(envelope.event)} millis`,
-      ).pipe(Effect.as(envelope))),
-    ),
+    stream: (segment, runId, modelId) => {
+      const context: ScenarioContext = { segment, runId, modelId };
+      return Stream.fromIterable(events(segment, runId, modelId)).pipe(
+        Stream.mapEffect((envelope) => Effect.sleep(
+          `${config.delayFor?.(envelope.event, context) ?? defaultDelayFor(envelope.event)} millis`,
+        ).pipe(Effect.as(envelope))),
+      );
+    },
   };
 };

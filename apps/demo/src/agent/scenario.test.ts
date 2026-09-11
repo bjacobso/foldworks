@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { scenarioEvents } from "./scenario";
+import type { Agent } from "@foldworks/agent";
+
+import { scenarioDelayFor, scenarioEvents } from "./scenario";
 
 describe("agent scenario", () => {
   it("streams text and tools before stopping at an approval boundary", () => {
@@ -51,5 +53,21 @@ describe("agent scenario", () => {
     expect(denied[0]).toMatchObject({ sequence: 200, event: { _tag: "TextStarted" } });
     expect(denied.some(({ event }) => event._tag === "ToolStarted")).toBe(false);
     expect(denied.at(-1)?.event._tag).toBe("Finished");
+  });
+
+  it("uses the selected model to control stream speed", () => {
+    const event: Agent.StreamEvent = {
+      _tag: "TextDelta",
+      runId: "run-1",
+      partId: "text-1",
+      delta: "Working.",
+    };
+    const fast = scenarioDelayFor(event, "atlas-fast");
+    const balanced = scenarioDelayFor(event, "atlas-balanced");
+    const reasoning = scenarioDelayFor(event, "atlas-reasoning");
+
+    expect(fast).toBeLessThan(balanced);
+    expect(balanced).toBeLessThan(reasoning);
+    expect(scenarioDelayFor(event, "unknown-model")).toBe(balanced);
   });
 });

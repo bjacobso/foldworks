@@ -116,9 +116,11 @@ deterministic Effect stream. It performs no provider calls or tool side effects.
 documentation without a provider or network request.
 
 ```ts
-import { createScenario } from "@foldworks/agent/testing";
+import { createScenario, defaultDelayFor } from "@foldworks/agent/testing";
 
 const scenario = createScenario({
+  delayFor: (event, { modelId }) =>
+    defaultDelayFor(event) * (modelId === "fast-model" ? 0.5 : 1),
   initial: (writer) => {
     writer.reasoning("I should inspect the account first.");
     writer.text("I’ll inspect the account.");
