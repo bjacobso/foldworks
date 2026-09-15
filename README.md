@@ -5,6 +5,8 @@ Polished application primitives for Foldkit and StyleX.
 Foldworks is an umbrella collection of reusable packages for building rich,
 accessible application interfaces with Foldkit:
 
+- [`@foldworks/codebase`](./packages/codebase) — a live, read-only web workbench
+  for repository documentation, source, history, and staged or unstaged Git diffs.
 - [`@foldworks/editor`](./packages/editor) — a native rich-text editor with
   Markdown import/export, draggable blocks, and application-defined Foldkit views.
 - [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic
@@ -53,6 +55,10 @@ pnpm build
 
 Run `pnpm dev` to start the demo application. Run `pnpm test:e2e` for its
 Playwright interaction suite.
+
+Run `pnpm codebase` to build and start the live codebase workbench on
+`http://127.0.0.1:4310`. Pass `--host` and `--port` to expose it through a
+development environment's port forwarding.
 
 ## Publishing
 

@@ -1,0 +1,47 @@
+{
+  "name": "@foldworks/codebase",
+  "version": "0.0.0",
+  "description": "A live, read-only codebase workbench with repository navigation, documentation, source, history, and Git diffs.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/codebase"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": { "url": "https://github.com/bjacobso/foldworks/issues" },
+  "keywords": ["codebase", "documentation", "git", "diff", "workbench"],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "bin": {
+    "foldworks-codebase": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
