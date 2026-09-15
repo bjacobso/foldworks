@@ -1,7 +1,7 @@
 import type { Page } from "playwright";
 import { expect, it } from "vitest";
 import type { CodeEditor } from "@foldworks/code-editor";
-import { jsonSample } from "../src/code-editor/model";
+import { jsonSample } from "../src/code-editor/samples";
 import { yamlSample } from "../src/code-editor/configuration";
 
 const input = (page: Page) => page.getByRole("textbox", { name: "Working document", exact: true });

@@ -1,6 +1,7 @@
 import { Option } from "effect";
 import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
+import { Workspace } from "@foldworks/ui";
 
 import {
   CheckCircle2,
@@ -120,7 +121,6 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
   const dragged = draggedItem(model);
   return h.aside([h.Class(className(formStyles.outline)), h.AriaLabel("Form structure")], [
     h.div([h.Class(className(formStyles.panelHeader))], [
-      h.p([h.Class(className(formStyles.panelTitle))], ["Form structure"]),
       h.button(
         [
           h.Type("button"),
@@ -397,7 +397,7 @@ const commonSettings = (
 ];
 
 const settingsView = (model: Model, h: HtmlBuilder<Message>): Html =>
-  h.aside([h.Class(className(formStyles.settings, formStyles.settingsHidden)), h.AriaLabel("Item settings")], [
+  h.aside([h.Class(className(formStyles.settings)), h.AriaLabel("Item settings")], [
     h.div([h.Class(className(formStyles.panelHeader))], [
       h.p([h.Class(className(formStyles.panelTitle))], ["Settings"]),
     ]),
@@ -479,11 +479,17 @@ const settingsView = (model: Model, h: HtmlBuilder<Message>): Html =>
   ]);
 
 const editorView = (model: Model, h: HtmlBuilder<Message>): Html =>
-  h.div([h.Class(className(formStyles.workspace))], [
-    outlineView(model, h),
-    canvasView(model, h),
-    settingsView(model, h),
-  ]);
+  Workspace.view({
+    model: model.outlinePane,
+    toParentMessage: (message) => Message.OutlinePane({ message }),
+    primary: { label: "Structure", children: [outlineView(model, h)] },
+    secondary: { label: "Form workspace", showHeader: false, scroll: "Contained", children: [Workspace.view({
+      model: model.settingsPane,
+      toParentMessage: (message) => Message.SettingsPane({ message }),
+      primary: { label: "Settings", children: [settingsView(model, h)] },
+      secondary: { label: "Page", showHeader: false, children: [canvasView(model, h)] },
+    }, h)] },
+  }, h);
 
 const answerValue = (model: Model, fieldId: string) =>
   model.answers.find((answer) => answer.fieldId === fieldId)?.value ?? "";

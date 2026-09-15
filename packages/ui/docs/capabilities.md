@@ -20,6 +20,7 @@ behavioral parity with shadcn/ui. Choose an API by the interaction it supports.
 | Calendar | `Calendar.view` | Single-date click selection and month callbacks | Weekday labels/start-of-week are fixed; no full calendar keyboard navigation; use `Headless.Calendar` |
 | Toasts | `Sonner.view` | Supplied messages, actions, live region, explicit dismissal | No auto-dismiss/hover-pause lifecycle; use `Headless.Toast` |
 | Layout and display | Card, Panel, Table, badges, operational compositions | Presentation of application-owned data | Table is presentational; use `@foldworks/data-grid` for grid behavior. Resizable uses native CSS resizing; Carousel uses native scrolling |
+| Workspace panes | `Workspace` | Nested horizontal/vertical splits, pointer capture, keyboard resizing, collapse/restore, focus recovery, controlled pixel sizes and scroll boundaries | Two panes per split; parent provides bounded height and owns persistence; no docking or automatic breakpoint collapse |
 
 `Headless.Select` is Foldkit's native select helper. `Headless.Listbox` is the
 custom selection engine underlying `Stateful.Select`.

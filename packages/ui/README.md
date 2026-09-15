@@ -241,6 +241,13 @@ theme variables and allow custom card and overlay palettes to differ from the ca
 
 Start with existing primitives. Add a new primitive only after the same visual or composition pattern appears in multiple real views.
 
+## Workspace panes
+
+`Workspace` provides nestable horizontal and vertical splits, pointer and keyboard
+resizing, collapsible panes, focus recovery, and explicit scroll regions. Add its
+serializable model to the parent and forward its updates and commands with
+`Update.foldChild`. See the [workspace integration guide](docs/workspace.md).
+
 ## Operational compositions
 
 `ValueInspector`, `ExplanationTree`, `ChangeSetPreview`, and `TransactionTimeline`

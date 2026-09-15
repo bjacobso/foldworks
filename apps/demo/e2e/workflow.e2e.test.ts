@@ -9,6 +9,7 @@ import { workbenchScenarios } from "./workbench.scenarios";
 import { dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
+import { workspaceScenarios } from "./workspace.scenarios";
 import { agentScenarios } from "./agent.scenarios";
 import { packageDemoScreenshotScenarios } from "./package-demo.scenarios";
 
@@ -1359,6 +1360,7 @@ describe.sequential("structured workflow builder", () => {
   dataGridEditingScenarios(() => page, appUrl, screenshot);
   statefulUiScenarios(() => page, appUrl, screenshot);
   nativeEditorScenarios(() => page, appUrl, screenshot);
+  workspaceScenarios(() => page, appUrl);
   agentScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

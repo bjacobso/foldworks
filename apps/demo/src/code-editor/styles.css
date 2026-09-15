@@ -1,4 +1,6 @@
 .code-demo { padding: 36px; overflow: auto; width: 100%; max-width: 1180px; margin: 0 auto; }
+.code-demo__workspace { height: 640px; min-width: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.code-demo__workspace .code-demo__reference-heading { margin: 16px; align-items: flex-start; flex-direction: column; }
 .code-demo__intro { max-width: 680px; margin-bottom: 28px; }
 .code-demo__eyebrow { color: var(--muted-foreground); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 10px; }
 .code-demo__intro h1 { font-size: clamp(26px, 3vw, 36px); line-height: 1.2; font-weight: 600; letter-spacing: -.035em; margin: 0 0 12px; }

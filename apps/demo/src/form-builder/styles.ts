@@ -4,18 +4,6 @@ export const className = (...values: ReadonlyArray<stylex.StyleXStyles>) =>
   stylex.props(...values).className ?? "";
 
 export const formStyles = stylex.create({
-  workspace: {
-    backgroundColor: "var(--foldworks-ui-canvas)",
-    display: "grid",
-    gridTemplateColumns: {
-      default: "260px minmax(420px, 1fr) 280px",
-      "@media (max-width: 1120px)": "230px minmax(380px, 1fr)",
-    },
-    minHeight: 0,
-    minWidth: 0,
-    overflowX: "auto",
-    overflowY: "hidden",
-  },
   outline: {
     backgroundColor: "var(--foldworks-ui-surface)",
     borderRightColor: "var(--foldworks-ui-border)",
@@ -398,12 +386,6 @@ export const formStyles = stylex.create({
     minHeight: 0,
     overflowY: "auto",
     padding: "18px",
-  },
-  settingsHidden: {
-    display: {
-      default: "block",
-      "@media (max-width: 1120px)": "none",
-    },
   },
   settingsEmpty: { color: "var(--foldworks-ui-foreground-muted)", fontSize: "11px", lineHeight: 1.6, marginTop: "36px" },
   field: { display: "flex", flexDirection: "column", gap: "6px", marginBottom: "14px" },

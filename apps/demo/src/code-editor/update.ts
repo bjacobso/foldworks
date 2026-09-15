@@ -1,11 +1,18 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
 import { CodeEditor } from "@foldworks/code-editor";
+import { Workspace } from "@foldworks/ui";
 import { Message } from "./message";
 import { jsonSample, typescriptSample, type Model } from "./model";
 import { ConfigurationEditor, yamlSample } from "./configuration";
 
 type Result = Update.Return<Model, Message>;
+const foldWorkspace = Update.foldChild({
+  update: Workspace.update,
+  read: (model: Model) => Option.some(model.workspace),
+  write: (model, workspace) => ({ ...model, workspace }),
+  toParentMessage: (message) => Message.Workspace({ message }),
+});
 const foldEditor = Update.foldChild({
   update: ConfigurationEditor.update,
   read: (model: Model) => Option.some(model.editor),
@@ -23,6 +30,14 @@ const foldReference = Update.foldChild({
   foldOutMessage: () => (model: Model): Result => ({ model }),
 });
 export const update = (model: Model, message: Message): Result => Message.match<Result>(message, {
+  Workspace: ({ message }) => foldWorkspace(model, message),
+  ArrangeDocuments: () => {
+    const stacked = model.workspace.orientation === "Horizontal";
+    return { model: { ...model, workspace: Workspace.init({
+      ...model.workspace, orientation: stacked ? "Vertical" : "Horizontal",
+      size: stacked ? 260 : 400, minSize: stacked ? 180 : 280, secondaryMinSize: stacked ? 240 : 400,
+    }) } };
+  },
   Editor: ({ message }) => foldEditor(model, message),
   Reference: ({ message }) => foldReference(model, message),
   LoadSample: ({ languageId }) => {

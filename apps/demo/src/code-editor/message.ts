@@ -1,8 +1,11 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 import { CodeEditor } from "@foldworks/code-editor";
+import { Workspace } from "@foldworks/ui";
 
 export const Message = defineMessageUnion({
+  Workspace: { message: Workspace.Message },
+  ArrangeDocuments: {},
   Editor: { message: CodeEditor.Message },
   Reference: { message: CodeEditor.Message },
   LoadSample: { languageId: S.String },

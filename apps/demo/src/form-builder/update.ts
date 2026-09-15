@@ -23,6 +23,7 @@ import {
   updateSection,
 } from "@foldworks/form-builder";
 import { History } from "@foldworks/history";
+import { Workspace } from "@foldworks/ui";
 
 import {
   downloadJson,
@@ -218,8 +219,23 @@ const coalescingKey = (model: Model, message: Message): string | undefined => {
   }
 };
 
+const foldOutlinePane = Update.foldChild({
+  update: Workspace.update,
+  read: (model: Model) => Option.some(model.outlinePane),
+  write: (model, outlinePane) => ({ ...model, outlinePane }),
+  toParentMessage: (message) => Message.OutlinePane({ message }),
+});
+const foldSettingsPane = Update.foldChild({
+  update: Workspace.update,
+  read: (model: Model) => Option.some(model.settingsPane),
+  write: (model, settingsPane) => ({ ...model, settingsPane }),
+  toParentMessage: (message) => Message.SettingsPane({ message }),
+});
+
 const updateCore = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    OutlinePane: ({ message }) => foldOutlinePane(model, message),
+    SettingsPane: ({ message }) => foldSettingsPane(model, message),
     CompletedExportDocument: () => ({
       model: evo(model, { announcement: () => "Form JSON exported." }),
     }),
