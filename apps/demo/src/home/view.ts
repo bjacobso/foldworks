@@ -13,6 +13,7 @@ import {
   PanelLeft,
   Table2,
   Workflow,
+  FolderGit2,
 } from "@lucide/icons";
 import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -21,6 +22,7 @@ import {
   editorRouter,
   agentRouter,
   codeEditorRouter,
+  codebaseRouter,
   dataTablePath,
   dataGridRouter,
   formBuilderPath,
@@ -69,6 +71,13 @@ const packages: ReadonlyArray<Package> = [
     description: "Code editing, syntax highlighting, and live diagnostics in a versioned document.",
     href: codeEditorRouter(),
     icon: Braces,
+  },
+  {
+    name: "@foldworks/codebase",
+    category: "Application primitive",
+    description: "A live repository workbench for documentation, source, history, and Git diffs.",
+    href: codebaseRouter(),
+    icon: FolderGit2,
   },
   {
     name: "@foldworks/data-table",

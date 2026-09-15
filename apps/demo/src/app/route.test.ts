@@ -8,6 +8,7 @@ import {
   editorRouter,
   dataGridRouter,
   codeEditorRouter,
+  codebaseRouter,
   workbenchRouter,
   demoFromRoute,
   formBuilderPath,
@@ -41,6 +42,8 @@ describe("demo routes", () => {
     expect(dataGridRouter()).toBe("/data-grid");
     expect(codeEditorRouter()).toBe("/code-editor");
     expect(demoFromRoute(parseUrl("https://demo.test/code-editor"))).toBe("CodeEditor");
+    expect(codebaseRouter()).toBe("/codebase");
+    expect(demoFromRoute(parseUrl("https://demo.test/codebase"))).toBe("Codebase");
     expect(formBuilderPath("Complex", "Preview"))
       .toBe("/form-builder?example=Complex&mode=Preview");
     expect(uiKitRouter()).toBe("/ui-kit");
