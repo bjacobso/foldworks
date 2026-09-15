@@ -96,7 +96,14 @@ export const styles = stylex.create({
     fontWeight: 700,
     gap: "8px",
   },
-  tableFrame: { minHeight: 0, overflow: "hidden" },
+  tableFrame: {
+    display: "grid",
+    gridTemplateRows: "minmax(0, 1fr)",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    minHeight: 0,
+    minWidth: 0,
+    overflow: "hidden",
+  },
   person: { alignItems: "center", display: "flex", gap: "9px", minWidth: 0 },
   avatar: {
     alignItems: "center",
@@ -143,6 +150,7 @@ export const styles = stylex.create({
     padding: "5px",
   },
   detail: {
+    overflowY: "auto",
     backgroundColor: "var(--foldworks-ui-surface)",
     borderLeftColor: "var(--foldworks-ui-border-strong)",
     borderLeftStyle: "solid",

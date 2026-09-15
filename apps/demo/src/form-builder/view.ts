@@ -124,7 +124,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
       h.button(
         [
           h.Type("button"),
-          h.Class(className(formStyles.addIconButton)),
+          h.Class(className(formStyles.addButton, formStyles.addIconButton)),
           h.AriaLabel("Add section"),
           h.OnClick(Message.ClickedAddSection()),
         ],
@@ -243,7 +243,7 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
               h.button(
                 [
                   h.Type("button"),
-                  h.Class(className(formStyles.addPageButton)),
+                  h.Class(className(formStyles.addButton, formStyles.addPageButton)),
                   h.OnClick(Message.ClickedAddPage({ sectionId: section.id })),
                 ],
                 [
@@ -708,7 +708,7 @@ export const formPaletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
           h.button(
             [
               h.Type("button"),
-              h.Class(className(formStyles.paletteAdd)),
+              h.Class(className(formStyles.addButton, formStyles.addIconButton)),
               h.DataAttribute("form-palette-field", kind),
               h.AriaLabel(`Add ${definition.palette.label}`),
               h.OnClick(Message.ClickedAddField({ pageId: model.activePageId, fieldType: kind })),

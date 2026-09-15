@@ -688,6 +688,21 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => tableRoot.getAttribute("data-density")).toBe("Compact");
     await expect.poll(() => table.getAttribute("role")).toBeNull();
 
+    const scroller = tableRoot.locator(".fk-data-table__scroller");
+    await scroller.hover();
+    await page.mouse.wheel(300, 500);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    const header = table.locator("thead th").first();
+    await expect.poll(async () => {
+      const viewport = await scroller.boundingBox();
+      const cell = await header.boundingBox();
+      return Math.abs((cell?.y ?? -100) - (viewport?.y ?? 0));
+    }).toBeLessThan(2);
+    await scroller.hover();
+    await page.mouse.wheel(-10000, -10000);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBe(0);
+
     const personCell = table.locator('[data-row-id="contact-1"] [data-cell-column-id="person"]');
     const actionCell = table.locator('[data-row-id="contact-1"] [data-cell-column-id="actions"]');
     await expect.poll(() => personCell.getAttribute("data-pinned")).toBe("start");
