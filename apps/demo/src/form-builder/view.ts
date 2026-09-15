@@ -1,7 +1,8 @@
 import { Option } from "effect";
 import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
-import { Workspace } from "@foldworks/ui";
+import { Tree, Workspace } from "@foldworks/ui";
+import { outlineConfig } from "./tree";
 
 import {
   CheckCircle2,
@@ -117,7 +118,7 @@ const dropTarget = (
   );
 };
 
-const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
+const cardOutlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
   const dragged = draggedItem(model);
   return h.aside([h.Class(className(formStyles.outline)), h.AriaLabel("Form structure")], [
     h.div([h.Class(className(formStyles.panelHeader))], [
@@ -262,6 +263,23 @@ const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
       "Move section to the end",
       h,
     ),
+  ]);
+};
+
+const outlineView = (model: Model, h: HtmlBuilder<Message>): Html => {
+  const active = model.outlineTree.activeId;
+  const section = model.document.sections.find(section => `section:${section.id}` === active
+    || section.pages.some(page => `page:${page.id}` === active)) ?? model.document.sections[0];
+  return h.div([h.Class(className(formStyles.treeOutline))], [
+    UiButton.view({ label: model.structureCards ? "Tree view" : "Card view", variant: "ghost", size: "sm", onClick: Message.ToggledStructureView() }, h),
+    model.structureCards ? cardOutlineView(model, h) : h.aside([h.Class(className(formStyles.outline)), h.AriaLabel("Form structure")], [
+      Tree.view({ ...outlineConfig(model.document), model: model.outlineTree, label: "Form outline",
+        toParentMessage: message => Message.OutlineTree({ message }) }, h),
+      h.div([h.Class(className(formStyles.panelHeader))], [
+        UiButton.view({ label: "Add section", variant: "outline", size: "sm", onClick: Message.ClickedAddSection() }, h),
+        ...(section ? [UiButton.view({ label: "Add page", variant: "outline", size: "sm", onClick: Message.ClickedAddPage({ sectionId: section.id }) }, h)] : []),
+      ]),
+    ]),
   ]);
 };
 

@@ -2,11 +2,13 @@ import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
 import { FormBuilder } from "@foldworks/form-builder";
-import { Workspace } from "@foldworks/ui";
+import { Tree, Workspace } from "@foldworks/ui";
 
 import { FormExampleId, FormMode } from "./model";
 
 export const Message = defineMessageUnion({
+  OutlineTree: { message: Tree.Message },
+  ToggledStructureView: {},
   OutlinePane: { message: Workspace.Message },
   SettingsPane: { message: Workspace.Message },
   CompletedExportDocument: {},

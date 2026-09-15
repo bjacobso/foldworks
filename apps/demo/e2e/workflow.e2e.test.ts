@@ -10,6 +10,7 @@ import { dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
 import { workspaceScenarios } from "./workspace.scenarios";
+import { treeScenarios } from "./tree.scenarios";
 import { agentScenarios } from "./agent.scenarios";
 import { packageDemoScreenshotScenarios } from "./package-demo.scenarios";
 
@@ -747,6 +748,7 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
       waitUntil: "networkidle",
     });
+    await page.getByRole("button", { name: "Card view", exact: true }).click();
 
     const source = page.locator('[data-form-field-id="handoff-name"]');
     const sourceBox = await source.boundingBox();
@@ -792,6 +794,7 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
       waitUntil: "networkidle",
     });
+    await page.getByRole("button", { name: "Card view", exact: true }).click();
 
     const structureRectangles = () => page
       .locator("[data-form-section-id], [data-form-page-id]")
@@ -863,6 +866,7 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
       waitUntil: "networkidle",
     });
+    await page.getByRole("button", { name: "Card view", exact: true }).click();
     const field = page.locator('[data-form-field-id="handoff-name"]');
     await field.click();
     await page.getByLabel("Label").fill("Display name");
@@ -903,6 +907,7 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
       waitUntil: "networkidle",
     });
+    await page.getByRole("button", { name: "Card view", exact: true }).click();
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Export" }).click();
@@ -965,6 +970,7 @@ describe.sequential("structured workflow builder", () => {
   it("builds and previews section-first multi-actor forms", async () => {
     await page.goto(appUrl, { waitUntil: "networkidle" });
     await page.getByRole("link", { name: "Form builder" }).click();
+    await page.getByRole("button", { name: "Card view", exact: true }).click();
 
     await expect.poll(() => page.locator("[data-form-section-id]").count()).toBe(3);
     await expect.poll(() => page.locator("[data-form-page-id]").count()).toBe(4);
@@ -1309,6 +1315,7 @@ describe.sequential("structured workflow builder", () => {
     await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
       waitUntil: "networkidle",
     });
+    await page.getByRole("button", { name: "Card view", exact: true }).click();
     await expect.poll(() => page.locator('[data-form-editor-canvas="true"]').isVisible())
       .toBe(true);
     await screenshot("16-form-builder-dark");
@@ -1361,6 +1368,7 @@ describe.sequential("structured workflow builder", () => {
   statefulUiScenarios(() => page, appUrl, screenshot);
   nativeEditorScenarios(() => page, appUrl, screenshot);
   workspaceScenarios(() => page, appUrl);
+  treeScenarios(() => page, appUrl);
   agentScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

@@ -1,5 +1,5 @@
 import { CodeEditor } from "@foldworks/code-editor";
-import { Badge, Button, Select, Workspace } from "@foldworks/ui";
+import { Badge, Button, Select, Tree, Workspace } from "@foldworks/ui";
 import { defineView } from "foldkit/submodel";
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -30,6 +30,13 @@ export const view = defineView<Model, Message, { isDark: boolean }>((model, { is
       h.p([], ["Configuration schema: a nonempty name, development or production environment, boolean feature flags, and 0–10 retry attempts. Try an invalid value or remove a required field to see its validation error."]),
     ] : []),
     h.div([h.Class("code-demo__workspace")], [Workspace.view({
+      model: model.navigator,
+      toParentMessage: message => Message.Navigator({ message }),
+      primary: { label: "Files", children: [Tree.view({
+        model: model.fileTree, nodes: model.files, label: "Workspace files",
+        toParentMessage: message => Message.FileTree({ message }),
+      }, h)] },
+      secondary: { label: "Documents", showHeader: false, scroll: "Contained", children: [Workspace.view({
       model: model.workspace,
       toParentMessage: (message) => Message.Workspace({ message }),
       secondary: { label: "Working document", children: [
@@ -42,6 +49,7 @@ export const view = defineView<Model, Message, { isDark: boolean }>((model, { is
     ]),
     CodeEditor.view({ model: { ...model.reference, options: { ...model.reference.options, theme } }, label: "TypeScript reference", toParentMessage: (message) => Message.Reference({ message }) }, h),
       ] },
+    }, h)] },
     }, h)]),
     h.p([], ["JSON and YAML share one Effect Schema, with syntax and field errors shown as squiggles. Highlighting uses a small lexer and suggestions use document words. Multi-cursor editing, semantic language services, and full international text layout remain future work."]),
     h.p([h.Class("code-demo__announcement"), h.AriaLive("polite")], [model.announcement]),

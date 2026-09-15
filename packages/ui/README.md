@@ -241,6 +241,12 @@ theme variables and allow custom card and overlay palettes to differ from the ca
 
 Start with existing primitives. Add a new primitive only after the same visual or composition pattern appears in multiple real views.
 
+## Tree explorer
+
+`Tree` provides expansion, keyboard navigation, typeahead, single selection,
+inline rename, and controlled move requests for application-owned hierarchies.
+See the [tree integration guide](docs/tree.md) for data contracts and host policies.
+
 ## Workspace panes
 
 `Workspace` provides nestable horizontal and vertical splits, pointer and keyboard

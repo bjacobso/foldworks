@@ -23,7 +23,8 @@ import {
   updateSection,
 } from "@foldworks/form-builder";
 import { History } from "@foldworks/history";
-import { Workspace } from "@foldworks/ui";
+import { Tree, Workspace } from "@foldworks/ui";
+import { initOutline, outlineConfig, outlineNodes } from "./tree";
 
 import {
   downloadJson,
@@ -107,6 +108,7 @@ export const loadExample = (model: Model, exampleId: Model["exampleId"]): Model 
   const document = model.documents[exampleId];
   return evo(model, {
     exampleId: () => exampleId,
+    outlineTree: () => initOutline(document),
     document: () => document,
     interaction: () => FormBuilder.init(),
     history: () => History.init<FormDocument>(),
@@ -128,6 +130,7 @@ export const setMode = (model: Model, mode: Model["mode"]): Model => {
     : pages[0]?.id ?? "";
   const next = evo(model, {
     mode: () => mode,
+    outlineTree: tree => ({ ...tree, editingId: null }),
     history: (history) => History.breakCoalescing(history),
     activePageId: () => activePageId,
     revision: (value) => value + 1,
@@ -234,6 +237,31 @@ const foldSettingsPane = Update.foldChild({
 
 const updateCore = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    ToggledStructureView: () => ({ model: { ...model, structureCards: !model.structureCards, outlineTree: { ...model.outlineTree, editingId: null } } }),
+    OutlineTree: ({ message }) => Update.foldChild({
+      update: (tree: Tree.Model, event: Tree.Message) => Tree.update(tree, event, outlineConfig(model.document)),
+      read: (parent: Model) => Option.some(parent.outlineTree),
+      write: (parent, outlineTree) => ({ ...parent, outlineTree }),
+      toParentMessage: event => Message.OutlineTree({ message: event }),
+      foldOutMessage: (event: Tree.OutMessage) => (parent: Model): UpdateReturn => {
+        const nodes = outlineNodes(parent.document);
+        const node = nodes.find(node => node.id === event.id);
+        if (!node) return { model: parent };
+        if (event._tag === "Selected") return updateCore(parent, Message.SelectedItem({ kind: node.kind, id: node.sourceId }));
+        if (event._tag === "Renamed") return { model: { ...parent, document: node.kind === "Section"
+          ? updateSection(parent.document, node.sourceId, section => ({ ...section, title: event.label }))
+          : updatePage(parent.document, node.sourceId, page => ({ ...page, title: event.label })) } };
+        const siblings = nodes.filter(item => item.parentId === node.parentId);
+        const sourceIndex = siblings.findIndex(item => item.id === node.id);
+        // FormBuilder locations refer to the original list; Tree indices refer to the list after removal.
+        const index = event.index + (node.parentId === event.parentId && sourceIndex < event.index ? 1 : 0);
+        const destination = nodes.find(item => item.id === event.parentId);
+        const document = node.kind === "Section"
+          ? moveItem(parent.document, "Section", node.sourceId, { kind: "Section", index })
+          : destination ? moveItem(parent.document, "Page", node.sourceId, { kind: "Page", sectionId: destination.sourceId, index }) : undefined;
+        return { model: document ? { ...parent, document } : parent };
+      },
+    })(model, message),
     OutlinePane: ({ message }) => foldOutlinePane(model, message),
     SettingsPane: ({ message }) => foldSettingsPane(model, message),
     CompletedExportDocument: () => ({
@@ -262,8 +290,9 @@ const updateCore = (model: Model, message: Message): UpdateReturn =>
             }),
           }
         : {
-            model: evo(model, {
+          model: evo(model, {
               document: () => document,
+              outlineTree: () => initOutline(document),
               interaction: () => FormBuilder.init(),
               selectedItem: () => Option.none(),
               activePageId: () => document.sections[0]?.pages[0]?.id ?? "",
@@ -508,7 +537,21 @@ export const update = (model: Model, message: Message): ChildUpdateReturn => {
     };
   }
 
-  const result = updateCore(model, message);
+  let result = updateCore(model, message);
+  if (result.model.selectedItem !== model.selectedItem && Option.isSome(result.model.selectedItem)) {
+    const selection = result.model.selectedItem.value;
+    const section = result.model.document.sections.find(section => selection.kind === "Section" ? section.id === selection.id
+      : section.pages.some(page => selection.kind === "Page" ? page.id === selection.id : page.fields.some(field => field.id === selection.id)));
+    const page = section?.pages.find(page => selection.kind === "Page" ? page.id === selection.id : page.fields.some(field => field.id === selection.id));
+    const id = selection.kind === "Section" && section ? `section:${section.id}` : page ? `page:${page.id}` : null;
+    if (id && section) result = { ...result, model: { ...result.model, outlineTree: {
+      ...result.model.outlineTree, selectedId: id, activeId: id, editingId: null,
+      expandedIds: [...new Set([...result.model.outlineTree.expandedIds, `section:${section.id}`])],
+    } } };
+  }
+  if (result.model.document !== model.document) result = { ...result, model: { ...result.model,
+    outlineTree: Tree.reconcile(result.model.outlineTree, outlineNodes(result.model.document)),
+  } };
   if (result.model.document === model.document) return result;
   const traversedHistory = message._tag === "ClickedUndo" || message._tag === "ClickedRedo";
   const key = coalescingKey(model, message);

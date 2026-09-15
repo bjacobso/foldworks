@@ -2,7 +2,8 @@ import { Option, Schema as S } from "effect";
 
 import { FormBuilder } from "@foldworks/form-builder";
 import { History } from "@foldworks/history";
-import { Workspace } from "@foldworks/ui";
+import { Tree, Workspace } from "@foldworks/ui";
+import { initOutline } from "./tree";
 
 import { nextFormId } from "../document-ids";
 import {
@@ -19,6 +20,8 @@ import {
 export const FormHistory = History.Schema(FormDocument);
 
 export const Model = S.Struct({
+  outlineTree: Tree.Model,
+  structureCards: S.Boolean,
   outlinePane: Workspace.Model,
   settingsPane: Workspace.Model,
   document: FormDocument,
@@ -45,6 +48,8 @@ export const init = (
 ): Model => {
   const document = documents[exampleId];
   return {
+    outlineTree: initOutline(document),
+    structureCards: false,
     outlinePane: Workspace.init({ id: "form-outline", size: 250, minSize: 200, maxSize: 400, secondaryMinSize: 420 }),
     settingsPane: Workspace.init({ id: "form-settings", side: "End", size: 260, minSize: 220, maxSize: 440, secondaryMinSize: 380 }),
     document,

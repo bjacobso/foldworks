@@ -1,12 +1,17 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
 import { CodeEditor } from "@foldworks/code-editor";
-import { Workspace } from "@foldworks/ui";
+import { Tree, Workspace } from "@foldworks/ui";
 import { Message } from "./message";
 import { jsonSample, typescriptSample, type Model } from "./model";
 import { ConfigurationEditor, yamlSample } from "./configuration";
 
 type Result = Update.Return<Model, Message>;
+const foldNavigator = Update.foldChild({
+  update: Workspace.update, read: (model: Model) => Option.some(model.navigator),
+  write: (model, navigator) => ({ ...model, navigator }),
+  toParentMessage: message => Message.Navigator({ message }),
+});
 const foldWorkspace = Update.foldChild({
   update: Workspace.update,
   read: (model: Model) => Option.some(model.workspace),
@@ -30,6 +35,21 @@ const foldReference = Update.foldChild({
   foldOutMessage: () => (model: Model): Result => ({ model }),
 });
 export const update = (model: Model, message: Message): Result => Message.match<Result>(message, {
+  Navigator: ({ message }) => foldNavigator(model, message),
+  FileTree: ({ message }) => Update.foldChild({
+    update: (tree: Tree.Model, event: Tree.Message) => Tree.update(tree, event, { nodes: model.files }),
+    read: (parent: Model) => Option.some(parent.fileTree),
+    write: (parent, fileTree) => ({ ...parent, fileTree }),
+    toParentMessage: event => Message.FileTree({ message: event }),
+    foldOutMessage: (event: Tree.OutMessage) => (parent: Model): Result => {
+      if (event._tag === "Renamed") return { model: { ...parent, files: parent.files.map(file => file.id === event.id ? { ...file, label: event.label } : file) } };
+      if (event._tag === "Moved") return { model: { ...parent, files: Tree.moveNodes(parent.files, event) } };
+      return { model: { ...parent,
+        workspace: event.id === "reference" ? { ...parent.workspace, collapsed: false } : parent.workspace,
+        announcement: `Selected ${parent.files.find(file => file.id === event.id)?.label ?? "document"}.`,
+      } };
+    },
+  })(model, message),
   Workspace: ({ message }) => foldWorkspace(model, message),
   ArrangeDocuments: () => {
     const stacked = model.workspace.orientation === "Horizontal";
@@ -44,7 +64,9 @@ export const update = (model: Model, message: Message): Result => Message.match<
     const text = languageId === "json" ? jsonSample : languageId === "yaml" ? yamlSample : languageId === "typescript" ? typescriptSample
       : languageId === "large" ? Array.from({ length: 2000 }, (_, i) => `export const item${i + 1} = { name: "Line ${i + 1}", enabled: true };`).join("\n")
       : "A document built from Foldkit state.\n\nTry selecting lines, indentation, search, and undo.\n";
-    return foldEditor({ ...model, savedText: text, savedSession: model.editor.document.session + 1 }, CodeEditor.execute(CodeEditor.Operation.ReplaceDocument({
+    return foldEditor({ ...model, savedText: text, savedSession: model.editor.document.session + 1,
+      files: model.files.map(file => file.id === "working" ? { ...file, label: `configuration.${languageId}` } : file),
+    }, CodeEditor.execute(CodeEditor.Operation.ReplaceDocument({
       uri: `file:///configuration.${languageId}`, languageId: languageId === "large" ? "typescript" : languageId, text,
     })));
   },

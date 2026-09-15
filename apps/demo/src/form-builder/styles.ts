@@ -4,6 +4,7 @@ export const className = (...values: ReadonlyArray<stylex.StyleXStyles>) =>
   stylex.props(...values).className ?? "";
 
 export const formStyles = stylex.create({
+  treeOutline: { minHeight: "100%", backgroundColor: "var(--foldworks-ui-surface)" },
   outline: {
     backgroundColor: "var(--foldworks-ui-surface)",
     borderRightColor: "var(--foldworks-ui-border)",
