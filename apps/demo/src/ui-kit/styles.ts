@@ -48,7 +48,7 @@ export const uiKitStyles = stylex.create({
   groupLabel: {
     color: "var(--foldworks-ui-foreground-muted)",
     fontSize: "11px",
-    fontWeight: 550,
+    fontWeight: 500,
     letterSpacing: "0.04em",
     margin: 0,
     textTransform: "uppercase",
@@ -167,7 +167,7 @@ export const uiKitStyles = stylex.create({
   catalogHeading: {
     color: "var(--foldworks-ui-foreground)",
     fontSize: "13px",
-    fontWeight: 650,
+    fontWeight: 600,
     margin: 0,
   },
   catalogRow: {

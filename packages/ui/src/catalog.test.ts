@@ -14,7 +14,8 @@ const officialComponentNames = [
   "Marker", "Menubar", "Message", "MessageScroller", "NativeSelect", "NavigationMenu",
   "Pagination", "Popover", "Progress", "RadioGroup", "Resizable", "ScrollArea", "Select",
   "Separator", "Sheet", "Sidebar", "Skeleton", "Slider", "Sonner", "Spinner", "Switch",
-  "Table", "Tabs", "Textarea", "Toggle", "ToggleGroup", "Tooltip",
+  "Table", "Tabs", "Textarea", "Toggle", "ToggleGroup", "Tooltip", "Heading", "Link",
+  "Text", "VisuallyHidden", "NumberField", "Stepper", "Tag",
 ] as const;
 
 const find = (html: Html, selector: string) => {
@@ -27,8 +28,8 @@ const find = (html: Html, selector: string) => {
 const attr = (html: Html, selector: string, name: string) =>
   Option.getOrUndefined(Scene.attr(find(html, selector), name));
 
-describe("shadcn-equivalent component catalog", () => {
-  it("exports every current shadcn UI component as a Foldworks view", () => {
+describe("supported component catalog", () => {
+  it("exports the catalog and first-principles foundations as Foldworks views", () => {
     const exports = UI as unknown as Record<string, Readonly<{ view?: unknown }>>;
 
     for (const name of officialComponentNames) {

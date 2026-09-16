@@ -81,8 +81,8 @@ export const typography = stylex.defineConsts({
   sizeMd: "13px",
   sizeLg: "14px",
   sizeXl: "16px",
-  weightMedium: 550,
-  weightSemibold: 650,
+  weightMedium: 500,
+  weightSemibold: 600,
   weightBold: 700,
   lineHeightTight: 1.25,
   lineHeightNormal: 1.5,
@@ -119,4 +119,24 @@ export const motion = stylex.defineConsts({
   slow: "var(--duration-slow)",
   easeOut: "var(--ease-out)",
   spring: "var(--spring)",
+});
+
+/** Shared responsive thresholds used by Layout's mobile-first primitives. */
+export const breakpoints = stylex.defineConsts({
+  sm: "640px",
+  md: "768px",
+  lg: "1024px",
+  xl: "1280px",
+});
+
+/** Shared inline-size thresholds for components that opt into container queries. */
+export const containerBreakpoints = breakpoints;
+
+/** Readable content constraints for application and document surfaces. */
+export const contentWidths = stylex.defineConsts({
+  sm: "640px",
+  md: "768px",
+  lg: "1024px",
+  xl: "1280px",
+  full: "100%",
 });

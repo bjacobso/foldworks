@@ -1,5 +1,8 @@
+export * as Anchor from "@foldkit/ui/anchor";
+export * as Animation from "@foldkit/ui/animation";
 export * as Calendar from "@foldkit/ui/calendar";
 export * as Combobox from "@foldkit/ui/combobox";
+export * as DatePicker from "@foldkit/ui/datePicker";
 export * as Dialog from "@foldkit/ui/dialog";
 export * as Disclosure from "@foldkit/ui/disclosure";
 export * as HoverIntent from "@foldkit/ui/hoverIntent";

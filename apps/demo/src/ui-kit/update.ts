@@ -5,7 +5,7 @@ import { evo } from "foldkit/struct";
 
 import { Message } from "./message";
 import type { Model } from "./model";
-import { AccountTabs, DepartmentSelect } from "./components";
+import { AccountTabs, ActionMenu, DepartmentCombobox, DepartmentSelect, ToolCombobox } from "./components";
 
 const foldTabs = Update.foldChild({
   update: AccountTabs.update,
@@ -49,12 +49,104 @@ const foldCommand = Update.foldChild({
   }),
 });
 
+const foldActionMenu = Update.foldChild({
+  update: ActionMenu.update,
+  read: (model: Model) => Option.some(model.actionMenu),
+  write: (model, actionMenu) => ({ ...model, actionMenu }),
+  toParentMessage: (message) => Message.GotActionMenuMessage({ message }),
+  foldOutMessage: (outMessage) => (model: Model) => ({
+    model: { ...model, announcement: `${outMessage.value} selected from the stateful menu.` },
+  }),
+});
+
+const foldPopover = Update.foldChild({
+  update: Stateful.Popover.update,
+  read: (model: Model) => Option.some(model.popover),
+  write: (model, popover) => ({ ...model, popover }),
+  toParentMessage: (message) => Message.GotPopoverMessage({ message }),
+  foldOutMessage: (outMessage: Stateful.Popover.OutMessage) => (model: Model) => ({
+    model: { ...model, announcement: `Stateful popover ${outMessage._tag === "Opened" ? "opened" : "closed"}.` },
+  }),
+});
+
+const foldTooltip = Update.foldChild({
+  update: Stateful.Tooltip.update,
+  read: (model: Model) => Option.some(model.tooltip),
+  write: (model, tooltip) => ({ ...model, tooltip }),
+  toParentMessage: (message) => Message.GotTooltipMessage({ message }),
+  foldOutMessage: (outMessage: Stateful.Tooltip.OutMessage) => (model: Model) => ({
+    model: { ...model, announcement: `Stateful tooltip ${outMessage._tag === "Shown" ? "shown" : "hidden"}.` },
+  }),
+});
+
+const foldCombobox = Update.foldChild({
+  update: DepartmentCombobox.update,
+  read: (model: Model) => Option.some(model.departmentCombobox),
+  write: (model, departmentCombobox) => ({ ...model, departmentCombobox }),
+  toParentMessage: (message) => Message.GotComboboxMessage({ message }),
+  foldOutMessage: (outMessage) => (model: Model) => ({
+    model: outMessage._tag === "Selected"
+      ? { ...model, department: outMessage.value, announcement: `${outMessage.value} selected from the combobox.` }
+      : { ...model, announcement: "Combobox selection cleared." },
+  }),
+});
+
+const foldMultiCombobox = Update.foldChild({
+  update: ToolCombobox.update,
+  read: (model: Model) => Option.some(model.toolCombobox),
+  write: (model, toolCombobox) => ({ ...model, toolCombobox }),
+  toParentMessage: (message) => Message.GotMultiComboboxMessage({ message }),
+  foldOutMessage: (outMessage) => (model: Model) => {
+    if (outMessage._tag !== "Selected") return { model };
+    const isSelected = model.selectedTools.includes(outMessage.value);
+    return {
+      model: {
+        ...model,
+        selectedTools: isSelected
+          ? model.selectedTools.filter((value) => value !== outMessage.value)
+          : [...model.selectedTools, outMessage.value],
+        announcement: `${outMessage.value} ${isSelected ? "removed from" : "added to"} the selected tools.`,
+      },
+    };
+  },
+});
+
+const foldToast = Update.foldChild({
+  update: Stateful.Toast.update,
+  read: (model: Model) => Option.some(model.toasts),
+  write: (model, toasts) => ({ ...model, toasts }),
+  toParentMessage: (message) => Message.GotToastMessage({ message }),
+  foldOutMessage: (outMessage: Stateful.Toast.OutMessage) => (model: Model) => ({
+    model: { ...model, announcement: `${outMessage.payload.title} toast dismissed.` },
+  }),
+});
+
+const showToast = (variant: Stateful.Toast.Variant) => Update.foldChildStep({
+  update: (toasts: Stateful.Toast.Model) => Stateful.Toast.show(toasts, {
+    payload: {
+      title: `${variant} notification`,
+      description: "Hover to pause the timer or use Dismiss to remove it.",
+    },
+    variant,
+  }),
+  read: (model: Model) => Option.some(model.toasts),
+  write: (model, toasts) => ({ ...model, toasts, announcement: `${variant} toast shown.` }),
+  toParentMessage: (message) => Message.GotToastMessage({ message }),
+  foldOutMessage: (_outMessage: Stateful.Toast.OutMessage) => (model: Model) => ({ model }),
+});
+
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match(message, {
     GotTabsMessage: ({ message }) => foldTabs(model, message),
     GotDialogMessage: ({ message }) => foldDialog(model, message),
     GotSelectMessage: ({ message }) => foldSelect(model, message),
     GotCommandMessage: ({ message }) => foldCommand(model, message),
+    GotActionMenuMessage: ({ message }) => foldActionMenu(model, message),
+    GotPopoverMessage: ({ message }) => foldPopover(model, message),
+    GotTooltipMessage: ({ message }) => foldTooltip(model, message),
+    GotComboboxMessage: ({ message }) => foldCombobox(model, message),
+    GotMultiComboboxMessage: ({ message }) => foldMultiCombobox(model, message),
+    GotToastMessage: ({ message }) => foldToast(model, message),
     ChangedName: ({ value }) => ({ model: evo(model, { name: () => value }) }),
     ChangedEmail: ({ value }) => ({ model: evo(model, { email: () => value }) }),
     ChangedNotes: ({ value }) => ({ model: evo(model, { notes: () => value }) }),
@@ -65,6 +157,19 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
         announcement: () => `${value} department selected.`,
       }),
     }),
+    SelectedFoundationStep: ({ value }) => ({
+      model: evo(model, {
+        foundationStep: () => value,
+        announcement: () => `${value} step selected.`,
+      }),
+    }),
+    RemovedTool: ({ value }) => ({
+      model: evo(model, {
+        selectedTools: (values) => values.filter((selected) => selected !== value),
+        announcement: () => `${value} removed from the selected tools.`,
+      }),
+    }),
+    RequestedToast: ({ variant }) => showToast(variant)(model),
     SelectedView: ({ value }) => ({
       model: evo(model, {
         selectedView: () => value,
