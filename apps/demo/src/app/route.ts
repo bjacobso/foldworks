@@ -4,7 +4,7 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Home" | "Editor" | "Agent" | "CodeEditor" | "Codebase" | "Workbench" | "Workflow" | "DataTable" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
+export type Demo = "Home" | "Editor" | "Agent" | "CodeEditor" | "Codebase" | "DiffViewer" | "Workbench" | "Workflow" | "DataTable" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
@@ -15,6 +15,7 @@ export const AppRoute = defineRouteUnion({
   Agent: {},
   CodeEditor: {},
   Codebase: {},
+  DiffViewer: {},
   Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
   DataTable: { person: S.Option(S.String) },
@@ -46,6 +47,8 @@ export const homeRouter = pipe(
 export const codeEditorRouter = pipe(Route.literal("code-editor"), Route.mapTo(AppRoute.CodeEditor));
 
 export const codebaseRouter = pipe(Route.literal("codebase"), Route.mapTo(AppRoute.Codebase));
+
+export const diffViewerRouter = pipe(Route.literal("diff-viewer"), Route.mapTo(AppRoute.DiffViewer));
 
 export const agentRouter = pipe(Route.literal("agent"), Route.mapTo(AppRoute.Agent));
 
@@ -94,6 +97,7 @@ const routeParser = Route.oneOf(
   agentRouter,
   workbenchRouter,
   codebaseRouter,
+  diffViewerRouter,
   codeEditorRouter,
   dataTableRouter,
   dataGridRouter,
@@ -116,6 +120,7 @@ export const demoFromRoute = (route: AppRoute): Demo => {
     case "Agent": return "Agent";
     case "CodeEditor": return "CodeEditor";
     case "Codebase": return "Codebase";
+    case "DiffViewer": return "DiffViewer";
     case "Workbench": return "Workbench";
     case "DataTable": return "DataTable";
     case "DataGrid": return "DataGrid";

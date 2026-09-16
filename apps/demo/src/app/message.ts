@@ -11,6 +11,7 @@ import { Message as CodeEditorMessage } from "../code-editor/message";
 import { Message as WorkbenchMessage } from "../workbench/message";
 import { Message as DataGridMessage } from "../data-grid/message";
 import { Message as DataTableMessage } from "../data-table/message";
+import { Message as DiffViewerMessage } from "../diff-viewer/message";
 import { Message as FormEditorMessage } from "../form-builder/message";
 import { Message as QueryBuilderDemoMessage } from "../query-builder/message";
 import { ThemeName, ThemePreference } from "../theme";
@@ -34,6 +35,7 @@ export const Message = defineMessageUnion({
   GotWorkbenchMessage: { message: WorkbenchMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },
   GotDataTableDemoMessage: { message: DataTableMessage },
+  GotDiffViewerDemoMessage: { message: DiffViewerMessage },
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
   GotPdfAnnotatorMessage: { message: PdfAnnotator.Message },
   GotEditorMessage: { message: EditorMessage },
