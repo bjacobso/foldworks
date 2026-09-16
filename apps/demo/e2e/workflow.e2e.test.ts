@@ -228,7 +228,7 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => canvas.isVisible()).toBe(true);
     await expect.poll(() => page.getByText("Page 1 of 2", { exact: true }).isVisible()).toBe(true);
 
-    const source = page.locator('[data-draggable-id="palette:Text"]');
+    const source = page.locator('[data-draggable-id="palette:text"]');
     const sourceBox = await source.boundingBox();
     const canvasBox = await canvas.boundingBox();
     expect(sourceBox).not.toBeNull();
@@ -255,18 +255,25 @@ describe.sequential("structured workflow builder", () => {
     await valueInput.fill("Reviewed by Foldworks");
     await expect.poll(() => annotation.textContent()).toContain("Reviewed by Foldworks");
 
+    const resizeHandle = page.getByRole("separator", { name: "Resize Text annotation from south-east" });
+    await resizeHandle.scrollIntoViewIfNeeded();
     const beforeResize = await annotation.boundingBox();
-    const resizeHandle = page.getByRole("separator", { name: "Resize Text annotation" });
     const resizeBox = await resizeHandle.boundingBox();
     expect(beforeResize).not.toBeNull();
     expect(resizeBox).not.toBeNull();
     if (beforeResize === null || resizeBox === null) return;
     await page.mouse.move(resizeBox.x + 4, resizeBox.y + 4);
     await page.mouse.down();
+    await page.waitForTimeout(50);
     await page.mouse.move(resizeBox.x + 74, resizeBox.y + 34, { steps: 8 });
     await page.mouse.up();
     const afterResize = await annotation.boundingBox();
     expect(afterResize?.width ?? 0).toBeGreaterThan(beforeResize.width);
+
+    await page.getByRole("button", { name: "Zoom in" }).click();
+    await expect.poll(() => page.getByRole("button", { name: "Reset zoom to 100 percent" }).textContent()).toBe("125%");
+    const afterZoom = await annotation.boundingBox();
+    expect(afterZoom?.width ?? 0).toBeGreaterThan(afterResize?.width ?? 0);
 
     await page.getByRole("button", { name: "Next page" }).click();
     await expect.poll(() => page.getByText("Page 2 of 2", { exact: true }).isVisible()).toBe(true);
