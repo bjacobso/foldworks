@@ -23,6 +23,7 @@ import {
   DropdownMenu,
   Empty,
   Form,
+  Heading,
   HoverCard,
   Input,
   InputGroup,
@@ -30,12 +31,15 @@ import {
   Item,
   Kbd,
   Label,
+  Layout,
+  Link,
   Marker,
   Menubar,
   Message as ChatMessage,
   MessageScroller,
   NativeSelect,
   NavigationMenu,
+  NumberField,
   Pagination,
   Popover,
   Progress,
@@ -50,18 +54,22 @@ import {
   Sonner,
   Spinner,
   Stateful,
+  Stepper,
   Table,
+  Tag,
+  Text,
   Textarea,
   Toggle,
   ToggleGroup,
   Tooltip,
+  VisuallyHidden,
 } from "@foldworks/ui";
 import { FileText, Folder, Inbox, Paperclip, Search, Settings, User } from "@lucide/icons";
 import { Icon } from "@foldworks/ui";
 
 import { Message } from "./message";
 import type { Model } from "./model";
-import { AccountTabs, DepartmentSelect } from "./components";
+import { AccountTabs, ActionMenu, DepartmentCombobox, DepartmentSelect, ToolCombobox } from "./components";
 import { className, uiKitStyles as styles } from "./styles";
 
 const action = (label: string) => Message.ClickedAction({ action: label });
@@ -79,6 +87,181 @@ const section = (
   h.h3([h.Class(className(styles.catalogHeading))], [title]),
   ...children,
 ]);
+
+const departmentOptions = [
+  { value: "Engineering", label: "Engineering", group: "Product" },
+  { value: "Operations", label: "Operations", group: "Business", isDisabled: true },
+  { value: "People", label: "People", keywords: ["team", "hr"], group: "Business" },
+] as const;
+
+const toolOptions = [
+  { value: "Menu", label: "Menu", group: "Floating layers" },
+  { value: "Popover", label: "Popover", group: "Floating layers" },
+  { value: "Combobox", label: "Combobox", group: "Inputs" },
+  { value: "Toast", label: "Toast", group: "Feedback" },
+] as const;
+
+const foundations = (model: Model, h: HtmlBuilder<Message>): Html => section("First-principles foundations", [
+  Layout.Container.view({
+    size: "full",
+    query: true,
+    padding: "none",
+    children: [Layout.Stack.view({
+      gap: { base: "sm", lg: "lg" },
+      responsiveTo: "container",
+      children: [
+        Heading.view({ level: 4, size: "lg", children: ["Semantic content and local layout"] }, h),
+        Text.view({ tone: "muted", children: [
+          "Resize the page: this grid follows its container, while heading level and visual size remain independent.",
+        ] }, h),
+        Link.view({ href: "/docs/ui/primitives.md", target: "_blank", children: ["Read the primitives guide"] }, h),
+        Layout.Grid.view({
+          columns: { base: 1, sm: 2, lg: 3 },
+          gap: { base: "sm", lg: "lg" },
+          responsiveTo: "container",
+          children: ["Container query", "Responsive gap", "One-to-twelve columns"].map((label) =>
+            h.div([h.Class(className(styles.catalogTile))], [label])),
+        }, h),
+        Layout.Row.view({
+          direction: { base: "column", sm: "row" },
+          responsiveTo: "container",
+          gap: "sm",
+          align: "start",
+          wrap: true,
+          children: [
+            Tag.view({ label: "Static" }, h),
+            Tag.view({ label: "Selectable", isSelected: true, onSelect: action("Selectable tag") }, h),
+            Tag.view({ label: "Removable", tone: "success", onRemove: action("Remove tag") }, h),
+          ],
+        }, h),
+        VisuallyHidden.view({ children: ["The layout examples above adapt without changing reading order."] }, h),
+      ],
+    }, h)],
+  }, h),
+  NumberField.view({
+    id: "catalog-number", label: "Completion", value: model.sliderValue,
+    min: 0, max: 100, step: 5, description: "Native number input with clamped step controls.",
+    onChange: (value) => Message.ChangedSlider({ value: value ?? 0 }),
+  }, h),
+  Stepper.view({
+    currentStepId: model.foundationStep,
+    steps: [
+      { id: "Compose", label: "Compose", description: "Prepare the change" },
+      { id: "Validate", label: "Validate", description: "Run checks" },
+      { id: "Ship", label: "Ship", description: "Publish safely" },
+    ],
+    onSelect: (value) => Message.SelectedFoundationStep({ value: value as "Compose" | "Validate" | "Ship" }),
+  }, h),
+], h, true);
+
+const statefulFoundations = (model: Model, h: HtmlBuilder<Message>): Html => section("Stateful floating primitives", [
+  Text.view({ tone: "muted", children: [
+    "These examples run Foldkit state machines for keyboard navigation, focus return, dismissal, collision-aware anchoring, and timed lifecycle behavior.",
+  ] }, h),
+  h.div([h.Class(className(styles.catalogOverlayButtons))], [
+    h.submodel({
+      slotId: model.actionMenu.id,
+      model: model.actionMenu,
+      view: ActionMenu.view,
+      viewInputs: Stateful.Menu.styledViewInputs({
+        trigger: ["Stateful menu"],
+        ariaLabel: "Document actions",
+        items: [
+          { value: "Edit", label: "Edit document", group: "Document", shortcut: "⌘E", media: [Icon.view({ icon: FileText, size: 15 }, h)] },
+          { value: "Duplicate", label: "Duplicate", group: "Document", shortcut: "⌘D" },
+          { value: "Delete", label: "Delete", group: "Danger zone", isDestructive: true },
+        ],
+      }, h),
+      toParentMessage: (message) => Message.GotActionMenuMessage({ message }),
+    }),
+    h.submodel({
+      slotId: model.popover.id,
+      model: model.popover,
+      view: Stateful.Popover.view,
+      viewInputs: Stateful.Popover.styledViewInputs({
+        trigger: ["Stateful popover"],
+        ariaLabel: "Deployment details",
+        showArrow: true,
+        anchor: { placement: "bottom-start" },
+        content: [Layout.Stack.view({ gap: "sm", children: [
+          Heading.view({ level: 5, size: "sm", children: ["Deployment details"] }, h),
+          Text.view({ size: "sm", tone: "muted", children: ["Anchored, portaled, focus-managed content."] }, h),
+          Tag.view({ label: "Ready", tone: "success" }, h),
+        ] }, h)],
+      }, h),
+      toParentMessage: (message) => Message.GotPopoverMessage({ message }),
+    }),
+    h.submodel({
+      slotId: model.tooltip.id,
+      model: model.tooltip,
+      view: Stateful.Tooltip.view,
+      viewInputs: Stateful.Tooltip.styledViewInputs({
+        trigger: ["Hover or focus"],
+        label: "Escape dismisses this collision-aware tooltip",
+      }, h),
+      toParentMessage: (message) => Message.GotTooltipMessage({ message }),
+    }),
+  ]),
+  Layout.Grid.view({
+    columns: { base: 1, md: 2 },
+    gap: "lg",
+    children: [
+      Layout.Stack.view({ gap: "sm", children: [
+        Label.view({ for: Stateful.Combobox.inputId(model.departmentCombobox.id), children: ["Single-select combobox"] }, h),
+        h.submodel({
+          slotId: model.departmentCombobox.id,
+          model: model.departmentCombobox,
+          view: DepartmentCombobox.view,
+          viewInputs: Stateful.Combobox.styledViewInputs({
+            options: departmentOptions,
+            query: model.departmentCombobox.inputValue,
+            value: model.department,
+            ariaLabel: "Department combobox",
+            name: "stateful-department",
+            openOnFocus: true,
+          }, h),
+          toParentMessage: (message) => Message.GotComboboxMessage({ message }),
+        }),
+        Text.view({ size: "sm", tone: "muted", children: [`Selected: ${model.department}`] }, h),
+      ] }, h),
+      Layout.Stack.view({ gap: "sm", children: [
+        Label.view({ for: Stateful.Combobox.inputId(model.toolCombobox.id), children: ["Multi-select combobox"] }, h),
+        h.submodel({
+          slotId: model.toolCombobox.id,
+          model: model.toolCombobox,
+          view: ToolCombobox.view,
+          viewInputs: Stateful.Combobox.Multi.styledViewInputs({
+            options: toolOptions,
+            query: model.toolCombobox.inputValue,
+            values: model.selectedTools,
+            ariaLabel: "UI tools combobox",
+            name: "stateful-tools",
+            openOnFocus: true,
+          }, h),
+          toParentMessage: (message) => Message.GotMultiComboboxMessage({ message }),
+        }),
+        Layout.Row.view({ gap: "xs", wrap: true, children: model.selectedTools.map((value) =>
+          Tag.view({ label: value, isSelected: true, onRemove: Message.RemovedTool({ value }) }, h)),
+        }, h),
+      ] }, h),
+    ],
+  }, h),
+  Layout.Row.view({ gap: "sm", wrap: true, children: (["Info", "Success", "Warning", "Error"] as const).map((variant) =>
+    Button.view({
+      label: `${variant} toast`,
+      size: "sm",
+      variant: variant === "Error" ? "danger" : variant === "Success" ? "primary" : "outline",
+      onClick: Message.RequestedToast({ variant }),
+    }, h)),
+  }, h),
+  h.submodel({
+    slotId: model.toasts.id,
+    model: model.toasts,
+    view: Stateful.Toast.view,
+    viewInputs: Stateful.Toast.styledViewInputs({ position: "BottomRight", ariaLabel: "Demo notifications" }, h),
+    toParentMessage: (message) => Message.GotToastMessage({ message }),
+  }),
+], h, true);
 
 const dataDisplay = (model: Model, h: HtmlBuilder<Message>): Html => section("Data display and feedback", [
   Alert.view({ title: "Deployment ready", description: "All checks completed successfully." }, h),
@@ -455,6 +638,8 @@ export const catalogView = (model: Model, h: HtmlBuilder<Message>): Html => h.di
   h.Class(className(styles.catalogGrid)),
   h.DataAttribute("component-catalog", "true"),
 ], [
+  foundations(model, h),
+  statefulFoundations(model, h),
   dataDisplay(model, h),
   forms(model, h),
   navigation(model, h),

@@ -6,6 +6,7 @@ const documents = new Map([
   ["/docs/ui/setup.md", resolve(import.meta.dirname, "../../packages/ui/README.md")],
   ["/docs/ui/stateful.md", resolve(import.meta.dirname, "../../packages/ui/docs/stateful.md")],
   ["/docs/ui/capabilities.md", resolve(import.meta.dirname, "../../packages/ui/docs/capabilities.md")],
+  ["/docs/ui/primitives.md", resolve(import.meta.dirname, "../../packages/ui/docs/primitives.md")],
 ]);
 const index = `# Foldworks UI
 
@@ -14,8 +15,9 @@ const index = `# Foldworks UI
 - [Setup and themes](/docs/ui/setup.md)
 - [Stateful integration and examples](/docs/ui/stateful.md)
 - [Component capabilities and limitations](/docs/ui/capabilities.md)
+- [Layout and foundational primitives](/docs/ui/primitives.md)
 
-Use Stateful.Tabs, Stateful.Dialog, Stateful.Select, and Stateful.Command for managed interactions.
+Use Stateful components for managed interactions and root primitives for controlled presentation.
 Forward child updates and commands with Update.foldChild. Check capabilities before assuming behavioral parity.
 `;
 

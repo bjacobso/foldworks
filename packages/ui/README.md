@@ -12,7 +12,12 @@ headless behavior remains the foundation for buttons, inputs, checkboxes,
 switches, fieldsets, and disclosures; other controls use native browser
 semantics and parent-owned state.
 
-For interactive tabs, modal dialogs, custom selects, and command palettes, use
+Foldworks also includes first-principles application foundations beyond that
+catalog: responsive Container/Grid/Stack/Row layout, semantic Text/Heading/Link,
+actionable Tag, NumberField, Stepper, and a shared anchored-layer policy.
+
+For interactive tabs, modal dialogs, custom selects, command palettes, menus,
+popovers, tooltips, comboboxes, and managed toast stacks, use
 the `Stateful` namespace. These styled submodels integrate models, messages,
 commands, and focus behavior. The existing view-only APIs remain available for
 compatibility. Catalog coverage does not imply behavioral parity: see the
@@ -198,8 +203,27 @@ const update = Headless.Dialog.update;
 const view = Headless.Dialog.view;
 ```
 
+Responsive layout uses mobile-first values. A scalar applies at every width;
+an object changes the value at named breakpoints:
+
+```ts
+Layout.Grid.view({
+  columns: { base: 1, md: 2, lg: 4 },
+  gap: { base: "sm", lg: "lg" },
+  children: cards,
+}, h)
+```
+
+For component-local responsiveness, establish containment with
+`Layout.Container.view({ query: true, ... }, h)` and set `responsiveTo:
+"container"` on a nested grid, stack, or row.
+
+See the [foundational primitives guide](docs/primitives.md) for layout,
+typography, tags, numeric fields, and steppers.
+
 Documentation is also published on the demo site at `/llms.txt`,
-`/docs/ui/setup.md`, `/docs/ui/stateful.md`, and `/docs/ui/capabilities.md`.
+`/docs/ui/setup.md`, `/docs/ui/stateful.md`, `/docs/ui/capabilities.md`, and
+`/docs/ui/primitives.md`.
 
 `Icon.view` converts Lucide's framework-neutral icon data into Foldkit SVG
 nodes. Static icon imports remain tree-shakeable, decorative icons are hidden

@@ -470,16 +470,18 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
             "Every Foldworks UI primitive, state, and composition remains available below the application examples.",
           ]),
         ]),
-        Badge.view({ label: "61 primitives", tone: "info" }, h),
+        Badge.view({ label: "Foundations + catalog", tone: "info" }, h),
       ]),
       Panel.view({
         title: "Interaction support",
-        description: "Tabs, Dialog, Custom department select, and Workspace commands below use styled Foldkit submodels.",
+        description: "The stateful menu, popover, tooltip, comboboxes, toasts, tabs, dialog, select, and command palette below use styled Foldkit submodels.",
         children: [
           h.p([], ["Other catalog examples have different behavior limits. Check the capability guide when choosing a component."]),
           h.a([h.Href("/docs/ui/capabilities.md"), h.Attribute("target", "_blank"), h.Attribute("rel", "noopener")], ["Component capabilities"]),
           " · ",
           h.a([h.Href("/docs/ui/stateful.md"), h.Attribute("target", "_blank"), h.Attribute("rel", "noopener")], ["Stateful integration examples"]),
+          " · ",
+          h.a([h.Href("/docs/ui/primitives.md"), h.Attribute("target", "_blank"), h.Attribute("rel", "noopener")], ["Foundational primitives"]),
         ],
       }, h),
       h.div([h.Class(className(styles.sectionGrid))], [

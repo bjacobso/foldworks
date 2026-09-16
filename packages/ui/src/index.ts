@@ -16,6 +16,7 @@ export * as Toolbar from "./toolbar";
 export { ChangeSetPreview, ExplanationTree, TransactionTimeline, ValueInspector } from "./operational";
 export type { Consequence, ExplanationNode, TimelineEntry, ValueChange } from "./operational";
 export { Accordion, Collapsible } from "./collections";
+export { Heading, Link, Text, VisuallyHidden } from "./content";
 export {
   Alert,
   AspectRatio,
@@ -44,6 +45,9 @@ export {
   ToggleGroup,
 } from "./forms";
 export { Progress, Skeleton, Sonner, Spinner, StatusMessage } from "./feedback";
+export { NumberField } from "./number-field";
+export { Stepper } from "./stepper";
+export { Tag } from "./tag";
 export { Breadcrumb, NavigationMenu, Pagination, Sidebar, Tabs } from "./navigation";
 export { AlertDialog, Dialog, Drawer, HoverCard, Popover, Sheet, Tooltip } from "./overlays";
 export { Combobox, Command, ContextMenu, DropdownMenu, Menubar } from "./menus";
@@ -54,6 +58,9 @@ export * as Headless from "./headless";
 export * as Stateful from "./stateful";
 export {
   colors,
+  breakpoints,
+  containerBreakpoints,
+  contentWidths,
   metrics,
   motion,
   radii,

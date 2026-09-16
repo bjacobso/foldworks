@@ -158,7 +158,7 @@ const styles = stylex.create({
   track: { display: "grid", minWidth: 0, minHeight: 0 },
   pane: { display: "grid", gridTemplateRows: "auto minmax(0, 1fr)", minWidth: 0, minHeight: 0, overflow: "hidden", backgroundColor: "var(--foldworks-ui-canvas)" },
   header: { alignItems: "center", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", padding: "8px 12px", minWidth: 0, backgroundColor: "var(--foldworks-ui-surface)", borderBottom: "1px solid var(--foldworks-ui-border)" },
-  label: { fontSize: "11px", fontWeight: 650, margin: 0, overflowWrap: "anywhere" },
+  label: { fontSize: "11px", fontWeight: 600, margin: 0, overflowWrap: "anywhere" },
   body: { minHeight: 0, minWidth: 0, overflow: "auto", overscrollBehavior: "contain" },
   contained: { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gridTemplateRows: "minmax(0, 1fr)", overflow: "hidden" },
   handle: { backgroundColor: { default: "var(--foldworks-ui-border)", ":hover": "var(--foldworks-ui-focus)", ":focus-visible": "var(--foldworks-ui-focus)" }, touchAction: "none", userSelect: "none", outline: { default: "none", ":focus-visible": "2px solid var(--foldworks-ui-focus)" }, outlineOffset: "-2px", cursor: "col-resize", zIndex: 1 },

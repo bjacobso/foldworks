@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors, motion, space } from "./tokens.stylex.js";
+import { colors, metrics, motion, space } from "./tokens.stylex.js";
 
 export const statefulStyles = stylex.create({
   verticalTabs: { alignItems: "stretch", flexDirection: "column" },
@@ -30,6 +30,33 @@ export const statefulStyles = stylex.create({
   },
   selectItem: { color: "inherit", cursor: "default" },
   activeItem: { backgroundColor: colors.surfaceHover, color: colors.accentForeground },
-  selectedItem: { fontWeight: 650 },
+  selectedItem: { fontWeight: 600 },
   selectBackdrop: { inset: 0, position: "fixed" },
+  layerRoot: { display: "inline-block", position: "relative" },
+  layerBackdrop: { backgroundColor: "transparent", inset: 0, position: "fixed", zIndex: 49 },
+  layerPanel: {
+    backgroundColor: colors.popover, borderColor: colors.border, borderRadius: metrics.radiusMd,
+    borderStyle: "solid", borderWidth: "1px", boxShadow: metrics.shadowFloat,
+    color: colors.popoverForeground, maxHeight: "min(360px, var(--available-height, 360px))",
+    maxWidth: "min(420px, var(--available-width, 420px))", overflowY: "auto", padding: space.sm, zIndex: 50,
+  },
+  layerArrow: { backgroundColor: colors.popover, borderColor: colors.border, borderStyle: "solid", borderWidth: "1px", height: "8px", position: "absolute", transform: "rotate(45deg)", width: "8px" },
+  menuContent: { minWidth: "max(180px, var(--button-width, 180px))" },
+  menuGroup: { display: "grid", gap: "2px" },
+  menuSeparator: { backgroundColor: colors.border, height: "1px", marginBlock: space.xs },
+  menuShortcut: { color: colors.foregroundMuted, marginInlineStart: "auto" },
+  destructiveItem: { color: colors.danger },
+  tooltipPanel: { maxWidth: "280px", zIndex: 60 },
+  comboboxRoot: { display: "grid", minWidth: 0, position: "relative" },
+  comboboxInputWrapper: { alignItems: "stretch", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 32px" },
+  comboboxInput: { borderBottomRightRadius: 0, borderTopRightRadius: 0, minWidth: 0 },
+  comboboxButton: { backgroundColor: colors.surface, borderColor: colors.borderStrong, borderBottomRightRadius: metrics.radiusMd, borderStyle: "solid", borderTopRightRadius: metrics.radiusMd, borderWidth: "1px", borderInlineStartWidth: 0, color: colors.foregroundMuted, cursor: "pointer" },
+  comboboxContent: { minWidth: "var(--button-width, 220px)" },
+  comboboxScroll: { display: "grid", gap: "2px", maxHeight: "min(320px, var(--available-height, 320px))", overflowY: "auto" },
+  toastTopLeft: { alignItems: "flex-start", flexDirection: "column", insetBlockStart: space.lg, insetInlineStart: space.lg },
+  toastTopCenter: { alignItems: "center", flexDirection: "column", insetBlockStart: space.lg, insetInlineStart: "50%", transform: "translateX(-50%)" },
+  toastTopRight: { alignItems: "flex-end", flexDirection: "column", insetBlockStart: space.lg, insetInlineEnd: space.lg },
+  toastBottomLeft: { alignItems: "flex-start", flexDirection: "column-reverse", insetBlockEnd: space.lg, insetInlineStart: space.lg },
+  toastBottomCenter: { alignItems: "center", flexDirection: "column-reverse", insetBlockEnd: space.lg, insetInlineStart: "50%", transform: "translateX(-50%)" },
+  toastBottomRight: { alignItems: "flex-end", flexDirection: "column-reverse", insetBlockEnd: space.lg, insetInlineEnd: space.lg },
 });

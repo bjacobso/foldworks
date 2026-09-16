@@ -7,15 +7,32 @@ export type Department = typeof Department.Type;
 export const View = S.Literals(["Overview", "Details", "Activity"]);
 export type View = typeof View.Type;
 
+export const DemoAction = S.Literals(["Edit", "Duplicate", "Delete"]);
+export type DemoAction = typeof DemoAction.Type;
+
+export const Tool = S.Literals(["Menu", "Popover", "Combobox", "Toast"]);
+export type Tool = typeof Tool.Type;
+
+export const FoundationStep = S.Literals(["Compose", "Validate", "Ship"]);
+export type FoundationStep = typeof FoundationStep.Type;
+
 export const Model = S.Struct({
   tabs: Stateful.Tabs.Model,
   dialog: Stateful.Dialog.Model,
   departmentSelect: Stateful.Select.Model,
   command: Stateful.Command.Model,
+  actionMenu: Stateful.Menu.Model,
+  popover: Stateful.Popover.Model,
+  tooltip: Stateful.Tooltip.Model,
+  departmentCombobox: Stateful.Combobox.Model,
+  toolCombobox: Stateful.Combobox.Multi.Model,
+  toasts: Stateful.Toast.Model,
   name: S.String,
   email: S.String,
   notes: S.String,
   department: Department,
+  selectedTools: S.Array(Tool),
+  foundationStep: FoundationStep,
   selectedView: View,
   receivesUpdates: S.Boolean,
   securityAlerts: S.Boolean,
@@ -37,10 +54,18 @@ export const initialModel: Model = {
   dialog: Stateful.Dialog.init({ id: "catalog-dialog", isAnimated: true }),
   departmentSelect: Stateful.Select.init({ id: "catalog-select", isAnimated: true }),
   command: Stateful.Command.init({ id: "catalog-command" }),
+  actionMenu: Stateful.Menu.init({ id: "catalog-action-menu", isAnimated: true }),
+  popover: Stateful.Popover.init({ id: "catalog-stateful-popover", isAnimated: true }),
+  tooltip: Stateful.Tooltip.init({ id: "catalog-stateful-tooltip", showDelay: 250 }),
+  departmentCombobox: Stateful.Combobox.init({ id: "catalog-department-combobox", isAnimated: true }),
+  toolCombobox: Stateful.Combobox.Multi.init({ id: "catalog-tool-combobox", isAnimated: true }),
+  toasts: Stateful.Toast.init({ id: "catalog-toasts", defaultDuration: 4000 }),
   name: "Maya Chen",
   email: "maya@",
   notes: "Keep the experience concise and welcoming.",
   department: "People",
+  selectedTools: ["Combobox", "Toast"],
+  foundationStep: "Validate",
   selectedView: "Overview",
   receivesUpdates: true,
   securityAlerts: false,

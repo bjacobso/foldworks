@@ -1,14 +1,14 @@
 # Stateful UI integration
 
-Import `Stateful` from `@foldworks/ui` for styled Tabs, Dialog, Select, and Command
-submodels. Import the base CSS and a theme and configure the StyleX transform as
+Import `Stateful` from `@foldworks/ui` for styled Tabs, Dialog, Select, Command,
+Menu, Popover, Tooltip, Combobox, and Toast submodels. Import the base CSS and a theme and configure the StyleX transform as
 described in the package README. The adapters use the existing theme; their
 appearance is shared with the root primitives.
 
 The application owns selected values and business actions. Foldkit models own
 temporary interaction state. Render through `h.submodel`, forward messages with
 `Update.foldChild`, and let the application runtime execute the returned commands.
-These four components require no application subscriptions. Keep slot IDs stable
+These components require no application subscriptions. Keep slot IDs stable
 and unique. Call `create` once at module scope, never during rendering.
 
 ## Complete tabs module
@@ -153,9 +153,81 @@ scores for custom ranking. For remote results, use `shouldFilter: false`, handle
 must discard stale responses. Removed active results fall back to the first
 enabled match.
 
+## Anchored Menu, Popover, and Tooltip
+
+Create typed menus once with `const Actions = Stateful.Menu.create<Action>()`.
+Store `Stateful.Menu.Model`, fold messages through `Actions.update`, and handle
+its typed `Selected` OutMessage. `Stateful.Menu.styledViewInputs` accepts a flat
+list with optional groups, shortcuts, media, disabled state, and destructive
+styling. The engine supplies arrow/Home/End navigation, typeahead, focus return,
+outside dismissal, pointer intent, anchoring, and portaling.
+
+Popover and Tooltip use their exported `init`, `update`, and `view` directly.
+Their adapters accept trigger/content and trigger/label respectively:
+
+```ts
+Stateful.Popover.styledViewInputs({
+  trigger: ["Filters"],
+  content: [filterForm],
+  ariaLabel: "Filters",
+  anchor: { placement: "bottom-end" },
+}, h)
+```
+
+Popover emits `Opened` and `Closed`. Tooltip owns hover delay, focus, Escape,
+pointer modality, and anchored non-interactive content. Initialize animated
+menus and popovers with `isAnimated: true`; reduced-motion styling remains in
+effect. `Stateful.Layer.anchor` exposes the common portal-first positioning
+policy when an application needs consistent overrides.
+
+## Combobox
+
+Create `Stateful.Combobox.create<Value>()` for single selection or
+`Stateful.Combobox.Multi.create<Value>()` for multiple selection. Both support
+editable search, keyboard navigation, anchored results, groups, disabled and
+read-only states, hidden form inputs, and controlled selections.
+
+Pass the engine model's `inputValue` as `query` when client filtering is wanted:
+
+```ts
+Stateful.Combobox.styledViewInputs({
+  options: departments,
+  query: model.departmentCombobox.inputValue,
+  value: model.department,
+  ariaLabel: "Department",
+  name: "department",
+  openOnFocus: true,
+}, h)
+```
+
+Set `shouldFilter: false` for server-filtered results. The parent updates the
+selection from `Selected` and clears it from `ClearedSelection`. Multi-selection
+toggles membership in response to `Selected`; render selected values as `Tag`
+primitives when visible tokens are desired.
+
+## Toast
+
+`Stateful.Toast` is a ready-bound toast engine with `{ title, description? }`
+payloads. Store `Stateful.Toast.Model`, fold `Stateful.Toast.Message`, and show a
+notification from any update:
+
+```ts
+const result = Stateful.Toast.show(model.toasts, {
+  payload: { title: "Saved", description: "Workspace updated." },
+  variant: "Success",
+})
+```
+
+Write `result.model` and forward `result.commands`; those commands implement
+auto-dismiss. Pass `sticky: true` to opt out or a `duration` to override the
+container default. The engine pauses and versions its timer on hover, animates
+entry removal, supports six viewport positions, and emits `DismissedToast`
+after dismissal. Render through `Stateful.Toast.view` with
+`Stateful.Toast.styledViewInputs({ position: "BottomRight" }, h)`.
+
 ## Working application and migration
 
-The demo wires all four components end to end:
+The demo wires the original Tabs, Dialog, Select, and Command adapters end to end:
 
 - [Model and initialization](https://github.com/bjacobso/foldworks/blob/main/apps/demo/src/ui-kit/model.ts)
 - [Messages](https://github.com/bjacobso/foldworks/blob/main/apps/demo/src/ui-kit/message.ts)
