@@ -3,7 +3,8 @@
 A browser-only demo app built with Foldkit, StyleX, and Vite. The homepage
 introduces the Foldworks package family, shows a live component composition,
 and explains the boundary between UI components and application primitives.
-Use the sidebar to move between every package showcase.
+Use the sidebar to move between every package showcase, including the interactive
+diff review prototype at `/diff-viewer`.
 
 Foldkit's bidirectional router owns navigational state. The project overview
 lives at `/`; demos live at `/ui-kit`, `/editor`, `/codebase`, `/data-table`, `/data-grid`, `/query-builder`,

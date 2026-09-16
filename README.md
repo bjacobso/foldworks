@@ -7,6 +7,8 @@ accessible application interfaces with Foldkit:
 
 - [`@foldworks/codebase`](./packages/codebase) — a live, read-only web workbench
   for repository documentation, source, history, and staged or unstaged Git diffs.
+- [`@foldworks/diff-viewer`](./packages/diff-viewer) — a controlled unified and
+  split diff renderer with line selection for code review workflows.
 - [`@foldworks/editor`](./packages/editor) — a native rich-text editor with
   Markdown import/export, draggable blocks, and application-defined Foldkit views.
 - [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic

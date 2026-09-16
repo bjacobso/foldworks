@@ -7,6 +7,7 @@ import {
   Braces,
   FileText,
   FolderGit2,
+  FileDiff,
   House,
   ListFilter,
   ListChecks,
@@ -25,6 +26,7 @@ import { Sidebar } from "@foldworks/sidebar";
 import { view as agentView } from "../agent/view";
 import { view as codeEditorView } from "../code-editor/view";
 import { view as codebaseView } from "../codebase/view";
+import { view as diffViewerView } from "../diff-viewer/view";
 import { view as workbenchView } from "../workbench/view";
 import { contacts } from "../data-table/contacts";
 import { view as dataTableView } from "../data-table/view";
@@ -42,6 +44,7 @@ import {
   dataGridRouter,
   codeEditorRouter,
   codebaseRouter,
+  diffViewerRouter,
   workbenchRouter,
   demoFromRoute,
   formBuilderPath,
@@ -96,6 +99,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
       items: [
         { id: "agent", label: "Agent playground", href: agentRouter(), icon: Bot, isActive: demo === "Agent" },
         { id: "codebase", label: "Codebase workbench", href: codebaseRouter(), icon: FolderGit2, isActive: demo === "Codebase" },
+        { id: "diff-viewer", label: "Diff review", href: diffViewerRouter(), icon: FileDiff, isActive: demo === "DiffViewer" },
         { id: "workbench", label: "Workers workbench", href: workbenchRouter(), icon: Table2, isActive: demo === "Workbench" },
       ],
     },
@@ -163,7 +167,7 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
-  const title = demo === "Editor" ? "Document editor" : demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Codebase" ? "Codebase workbench" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
+  const title = demo === "Editor" ? "Document editor" : demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Codebase" ? "Codebase workbench" : demo === "DiffViewer" ? "Code review" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
     ? "Candidate workflow"
     : demo === "DataTable"
       ? "People"
@@ -178,7 +182,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
         : demo === "Home"
           ? "Foldworks"
           : "@foldworks/ui";
-  const description = demo === "Editor" ? "Native Foldkit editing · Markdown · Custom blocks" : demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Codebase" ? "Living documentation · source · history · Git diffs" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
+  const description = demo === "Editor" ? "Native Foldkit editing · Markdown · Custom blocks" : demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Codebase" ? "Living documentation · source · history · Git diffs" : demo === "DiffViewer" ? "Split and unified diffs · line comments · review progress" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
     ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
     : demo === "DataTable"
       ? `${contacts.length} people · resource-first CRUD table`
@@ -207,6 +211,8 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
         : demo === "Codebase"
           ? [Badge.view({ label: "Read-only fixture", tone: "info", dot: true }, h)]
+        : demo === "DiffViewer"
+          ? [Badge.view({ label: "Interactive prototype", tone: "info", dot: true }, h)]
         : demo === "Workbench"
           ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
         : demo === "DataTable"
@@ -219,7 +225,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
           : demo === "Home"
             ? [
-                Badge.view({ label: "13 packages", tone: "info", dot: true }, h),
+                Badge.view({ label: "14 packages", tone: "info", dot: true }, h),
                 Badge.view({ label: "Open source" }, h),
               ]
             : [
@@ -273,6 +279,12 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
     toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
   });
   if (demo === "Codebase") return codebaseView(h);
+  if (demo === "DiffViewer") return h.submodel({
+    slotId: "diff-viewer-content",
+    model: model.diffViewerDemo,
+    view: diffViewerView,
+    toParentMessage: (message) => Message.GotDiffViewerDemoMessage({ message }),
+  });
   if (demo === "Workbench") return h.submodel({
     slotId: "workbench-content",
     model: model.workbench,
@@ -336,6 +348,7 @@ const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
   Match.when("Agent", () => "Interactive agent · Foldworks"),
   Match.when("CodeEditor", () => "Code editor · Foldworks"),
   Match.when("Codebase", () => "Codebase workbench · Foldworks"),
+  Match.when("DiffViewer", () => "Code review · Foldworks"),
   Match.when("Workbench", () => "Workers workbench · Foldworks"),
   Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),
   Match.when("DataTable", () => "Data table · Foldworks"),
@@ -372,7 +385,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
               content: content(model, h),
               footer: {
                 title: "Application primitives",
-                description: "Thirteen Foldworks packages",
+                description: "Fourteen Foldworks packages",
                 icon: Blocks,
               },
               ariaLabel: "Foldworks navigation",

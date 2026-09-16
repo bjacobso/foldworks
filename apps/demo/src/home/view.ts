@@ -14,6 +14,7 @@ import {
   Table2,
   Workflow,
   FolderGit2,
+  FileDiff,
 } from "@lucide/icons";
 import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -23,6 +24,7 @@ import {
   agentRouter,
   codeEditorRouter,
   codebaseRouter,
+  diffViewerRouter,
   dataTablePath,
   dataGridRouter,
   formBuilderPath,
@@ -78,6 +80,13 @@ const packages: ReadonlyArray<Package> = [
     description: "A live repository workbench for documentation, source, history, and Git diffs.",
     href: codebaseRouter(),
     icon: FolderGit2,
+  },
+  {
+    name: "@foldworks/diff-viewer",
+    category: "Application primitive",
+    description: "Review-grade unified and split diffs with line selection, threads, and progress.",
+    href: diffViewerRouter(),
+    icon: FileDiff,
   },
   {
     name: "@foldworks/data-table",

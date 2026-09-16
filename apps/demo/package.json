@@ -18,6 +18,7 @@
     "@foldworks/agent": "workspace:*",
     "@foldworks/data-grid": "workspace:*",
     "@foldworks/data-table": "workspace:*",
+    "@foldworks/diff-viewer": "workspace:*",
     "@foldworks/form-builder": "workspace:*",
     "@foldworks/history": "workspace:*",
     "@foldworks/pdf-annotator": "workspace:*",

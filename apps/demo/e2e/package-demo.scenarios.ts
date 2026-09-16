@@ -8,6 +8,7 @@ const expectedPackages = [
   "@foldworks/agent",
   "@foldworks/code-editor",
   "@foldworks/codebase",
+  "@foldworks/diff-viewer",
   "@foldworks/data-table",
   "@foldworks/data-grid",
   "@foldworks/query-builder",

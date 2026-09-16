@@ -8,7 +8,9 @@
 @import "./code-editor/styles.css";
 @import "@foldworks/data-grid/styles.css";
 @import "@foldworks/data-table/styles.css";
+@import "@foldworks/diff-viewer/styles.css";
 @import "@foldworks/pdf-annotator/styles.css";
+@import "./diff-viewer/styles.css";
 
 *,
 *::before,

@@ -13,6 +13,7 @@ import { workspaceScenarios } from "./workspace.scenarios";
 import { treeScenarios } from "./tree.scenarios";
 import { agentScenarios } from "./agent.scenarios";
 import { packageDemoScreenshotScenarios } from "./package-demo.scenarios";
+import { diffViewerScenarios } from "./diff-viewer.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "test-results/demo");
@@ -130,6 +131,7 @@ describe.sequential("structured workflow builder", () => {
       "Home",
       "Agent playground",
       "Codebase workbench",
+      "Diff review",
       "Workers workbench",
       "@foldworks/ui",
       "Document editor",
@@ -1371,5 +1373,6 @@ describe.sequential("structured workflow builder", () => {
   workspaceScenarios(() => page, appUrl);
   treeScenarios(() => page, appUrl);
   agentScenarios(() => page, appUrl, screenshot);
+  diffViewerScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

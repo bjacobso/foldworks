@@ -13,6 +13,8 @@ import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
 import { setActiveContact, type Model as DataTableModel } from "../data-table/model";
 import { update as updateDataTable } from "../data-table/update";
+import { update as updateDiffViewer } from "../diff-viewer/update";
+import type { Model as DiffViewerModel } from "../diff-viewer/model";
 import { serializeWorkspace, writePersistedWorkspace } from "../document-storage";
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
@@ -150,6 +152,13 @@ const foldDataTable = Update.foldChild({
   toParentMessage: (message) => Message.GotDataTableDemoMessage({ message }),
 });
 
+const foldDiffViewer = Update.foldChild({
+  update: updateDiffViewer,
+  read: (model: Model) => Option.some(model.diffViewerDemo),
+  write: (model, diffViewerDemo: DiffViewerModel) => ({ ...model, diffViewerDemo }),
+  toParentMessage: (message) => Message.GotDiffViewerDemoMessage({ message }),
+});
+
 const foldUiKit = Update.foldChild({
   update: updateUiKit,
   read: (model: Model) => Option.some(model.uiKit),
@@ -282,6 +291,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       foldDataGrid(model, childMessage),
     GotDataTableDemoMessage: ({ message: childMessage }) =>
       foldDataTable(model, childMessage),
+    GotDiffViewerDemoMessage: ({ message: childMessage }) =>
+      foldDiffViewer(model, childMessage),
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) =>
