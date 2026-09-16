@@ -1,7 +1,15 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles as styles } from "./catalog.styles";
-import { clamp, styledAttrs, type Children, type StyledConfig } from "./catalog.shared";
+import {
+  clamp,
+  rootAttrs,
+  slotAttrs,
+  styledAttrs,
+  type Children,
+  type StyledConfig,
+  type WithSlotProps,
+} from "./catalog.shared";
 import { sxAttrs } from "./sx";
 
 type Tone = "default" | "danger";
@@ -59,27 +67,47 @@ const avatar = <Message>(
     : [h.img([...sxAttrs(h, styles.avatarImage), h.Src(config.src), h.Alt(config.alt)])],
 );
 
-const card = <Message>(
-  config: StyledConfig<Message> & Readonly<{
+export type CardSlot =
+  | "root"
+  | "header"
+  | "heading"
+  | "title"
+  | "description"
+  | "action"
+  | "content"
+  | "footer";
+
+export type CardConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, CardSlot> & Readonly<{
     title?: string;
     description?: string;
     action?: Children;
     children: Children;
     footer?: Children;
-  }>,
+}>;
+
+const card = <Message>(
+  config: CardConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => h.section(styledAttrs(config, h, styles.surface, styles.card), [
+): Html => h.section(rootAttrs(config, h, styles.surface, styles.card), [
   ...(config.title === undefined && config.description === undefined && config.action === undefined
     ? []
-    : [h.header(sxAttrs(h, styles.cardHeader), [
-        h.div(sxAttrs(h, styles.cardHeading), [
-          ...(config.title === undefined ? [] : [h.h3(sxAttrs(h, styles.title), [config.title])]),
-          ...(config.description === undefined ? [] : [h.p(sxAttrs(h, styles.description), [config.description])]),
+    : [h.header(slotAttrs(config.slotProps?.header, h, styles.cardHeader), [
+        h.div(slotAttrs(config.slotProps?.heading, h, styles.cardHeading), [
+          ...(config.title === undefined
+            ? []
+            : [h.h3(slotAttrs(config.slotProps?.title, h, styles.title), [config.title])]),
+          ...(config.description === undefined
+            ? []
+            : [h.p(slotAttrs(config.slotProps?.description, h, styles.description), [config.description])]),
         ]),
-        ...(config.action === undefined ? [] : [h.div(sxAttrs(h, styles.cardAction), config.action)]),
+        ...(config.action === undefined
+          ? []
+          : [h.div(slotAttrs(config.slotProps?.action, h, styles.cardAction), config.action)]),
       ])]),
-  h.div(sxAttrs(h, styles.cardContent), config.children),
-  ...(config.footer === undefined ? [] : [h.footer(sxAttrs(h, styles.cardFooter), config.footer)]),
+  h.div(slotAttrs(config.slotProps?.content, h, styles.cardContent), config.children),
+  ...(config.footer === undefined
+    ? []
+    : [h.footer(slotAttrs(config.slotProps?.footer, h, styles.cardFooter), config.footer)]),
 ]);
 
 const empty = <Message>(

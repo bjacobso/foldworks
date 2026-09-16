@@ -1,21 +1,23 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles } from "./catalog.styles";
+import { rootAttrs, slotAttrs, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { fieldStyles } from "./styles";
-import { sxAttrs } from "./sx";
+
+export type ControlConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, "root"> & Readonly<{
+  value: string;
+  options: ReadonlyArray<Readonly<{ value: string; label: string }>>;
+  onChange: (value: string) => Message;
+  ariaLabel: string;
+  isDisabled?: boolean;
+}>;
 
 export const control = <Message>(
-  config: Readonly<{
-    value: string;
-    options: ReadonlyArray<Readonly<{ value: string; label: string }>>;
-    onChange: (value: string) => Message;
-    ariaLabel: string;
-    isDisabled?: boolean;
-  }>,
+  config: ControlConfig<Message>,
   h: HtmlBuilder<Message>,
 ): Html => h.select(
   [
-    ...sxAttrs(h, fieldStyles.control, fieldStyles.selectControl),
+    ...rootAttrs(config, h, fieldStyles.control, fieldStyles.selectControl),
     h.Value(config.value),
     h.AriaLabel(config.ariaLabel),
     h.OnChange(config.onChange),
@@ -27,24 +29,27 @@ export const control = <Message>(
   )),
 );
 
+export type Slot = "root" | "trigger" | "list" | "option";
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
+  id: string;
+  value: string;
+  options: ReadonlyArray<Readonly<{ value: string; label: string; isDisabled?: boolean }>>;
+  onChange: (value: string) => Message;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => Message;
+  ariaLabel: string;
+  isDisabled?: boolean;
+}>;
+
 /** @deprecated Use Stateful.Select for custom dropdowns, or control for a native select. */
 export const view = <Message>(
-  config: Readonly<{
-    id: string;
-    value: string;
-    options: ReadonlyArray<Readonly<{ value: string; label: string; isDisabled?: boolean }>>;
-    onChange: (value: string) => Message;
-    isOpen: boolean;
-    onOpenChange: (isOpen: boolean) => Message;
-    ariaLabel: string;
-    isDisabled?: boolean;
-  }>,
+  config: ViewConfig<Message>,
   h: HtmlBuilder<Message>,
 ): Html => {
   const selected = config.options.find((option) => option.value === config.value);
-  return h.div([], [
+  return h.div(rootAttrs(config, h), [
     h.button([
-      ...sxAttrs(h, fieldStyles.control, catalogStyles.focusable),
+      ...slotAttrs(config.slotProps?.trigger, h, fieldStyles.control, catalogStyles.focusable),
       h.Type("button"),
       h.AriaLabel(config.ariaLabel),
       h.AriaHasPopup("listbox"),
@@ -55,12 +60,12 @@ export const view = <Message>(
     ], [selected?.label ?? "Select an option"]),
     ...(config.isOpen
       ? [h.div([
-          ...sxAttrs(h, catalogStyles.floating, catalogStyles.menu),
+          ...slotAttrs(config.slotProps?.list, h, catalogStyles.floating, catalogStyles.menu),
           h.Id(`${config.id}-listbox`),
           h.Role("listbox"),
           h.AriaLabel(config.ariaLabel),
         ], config.options.map((option) => h.button([
-          ...sxAttrs(h, catalogStyles.menuItem, catalogStyles.focusable),
+          ...slotAttrs(config.slotProps?.option, h, catalogStyles.menuItem, catalogStyles.focusable),
           h.Type("button"),
           h.Role("option"),
           h.AriaSelected(option.value === config.value),

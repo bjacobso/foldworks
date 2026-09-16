@@ -4,10 +4,12 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 
 import * as Description from "./description";
 import * as Icon from "./icon";
+import { rootAttrs, slotAttrs, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { choiceStyles } from "./styles";
-import { sxAttrs } from "./sx";
 
-export type ViewConfig<Message> = Readonly<{
+export type Slot = "root" | "control" | "content" | "label" | "description" | "hiddenInput";
+
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
   id: string;
   label: string;
   description?: string;
@@ -34,12 +36,13 @@ export const view = <Message>(
     ...(config.name === undefined ? {} : { name: config.name }),
     ...(config.value === undefined ? {} : { value: config.value }),
     toView: (attributes) => h.div(
-      sxAttrs(h, choiceStyles.root, config.isDisabled === true && choiceStyles.disabled),
+      rootAttrs(config, h, choiceStyles.root, config.isDisabled === true && choiceStyles.disabled),
       [
         h.button(
           [
             ...attributes.checkbox,
-            ...sxAttrs(
+            ...slotAttrs(
+              config.slotProps?.control,
               h,
               choiceStyles.control,
               config.isChecked && choiceStyles.checked,
@@ -50,13 +53,15 @@ export const view = <Message>(
             ? [Icon.view({ icon: config.isIndeterminate === true ? Minus : Check, size: 13, strokeWidth: 2.5 }, h)]
             : [],
         ),
-        h.div(sxAttrs(h, choiceStyles.content), [
-          h.span([...attributes.label, ...sxAttrs(h, choiceStyles.label)], [config.label]),
-          Description.view(config.description, attributes.description, sxAttrs(h, choiceStyles.description), h),
+        h.div(slotAttrs(config.slotProps?.content, h, choiceStyles.content), [
+          h.span([...attributes.label, ...slotAttrs(config.slotProps?.label, h, choiceStyles.label)], [config.label]),
+          Description.view(config.description, attributes.description,
+            slotAttrs(config.slotProps?.description, h, choiceStyles.description), h),
         ]),
         ...(attributes.hiddenInput.length === 0
           ? []
-          : [h.input([...attributes.hiddenInput, ...sxAttrs(h, choiceStyles.hiddenInput)])]),
+          : [h.input([...attributes.hiddenInput,
+              ...slotAttrs(config.slotProps?.hiddenInput, h, choiceStyles.hiddenInput)])]),
       ],
     ),
   },

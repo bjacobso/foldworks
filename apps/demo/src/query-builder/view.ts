@@ -84,13 +84,13 @@ export const view = defineView<Model, Message>((model, h) => {
             ? "All conditions are valid and ready to evaluate."
             : `${validation.issues.length} conditions need attention.`,
           children: [editor(model, h)],
-          style: styles.editorPanel,
+          sx: styles.editorPanel,
         }, h),
         Panel.view({
           title: "Serializable model",
           description: "Every interaction produces a validated, portable query document.",
           children: [h.pre(sxAttrs(h, styles.code), [JSON.stringify(model.builder.query, null, 2)])],
-          style: styles.codePanel,
+          sx: styles.codePanel,
         }, h),
       ]),
     ]),

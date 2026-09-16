@@ -167,7 +167,7 @@ const ruleView = (
         ariaLabel: "Remove condition",
         variant: "ghost",
         size: "icon",
-        style: [styles.removeButton, styles.ruleRemoveButton],
+        sx: [styles.removeButton, styles.ruleRemoveButton],
         onClick: Message.RemovedNode({ nodeId: rule.id }),
       }, h),
     ]);
@@ -222,7 +222,7 @@ const ruleView = (
         ariaLabel: `Remove ${attribute.label} condition`,
         variant: "ghost",
         size: "icon",
-        style: [styles.removeButton, styles.ruleRemoveButton],
+        sx: [styles.removeButton, styles.ruleRemoveButton],
         onClick: Message.RemovedNode({ nodeId: rule.id }),
       }, h),
       ...(issues[0] === undefined
@@ -291,7 +291,7 @@ const groupView = (
                 ariaLabel: "Remove group",
                 variant: "ghost",
                 size: "icon",
-                style: styles.removeButton,
+                sx: styles.removeButton,
                 onClick: Message.RemovedNode({ nodeId: group.id }),
               }, h)]),
         ]),

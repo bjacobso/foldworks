@@ -250,6 +250,38 @@ const styles = stylex.create({
 });
 ```
 
+### Composition and slot styling
+
+Composition-enabled components accept `sx` for StyleX styles on their root
+element. Components with internal structure expose typed `slotProps`; every
+slot uses the same `{ attributes?, sx? }` contract. Top-level `attributes` and
+`sx` are shorthand for the root slot. When both forms are present, the explicit
+`slotProps.root` styles are applied last:
+
+This contract is available on Button, Badge, Card, Checkbox, Disclosure, Field,
+Fieldset, Icon, Layout, NumberField, Panel, SegmentedControl, Select, Switch,
+Tag, Toolbar, and the stateful Dialog, Popover, Tabs, and Tooltip adapters.
+
+```ts
+Card.view({
+  title: "Review",
+  children: [review],
+  sx: styles.reviewCard,
+  slotProps: {
+    header: { sx: styles.compactHeader },
+    content: {
+      attributes: [h.DataAttribute("review-region", "content")],
+      sx: styles.reviewContent,
+    },
+  },
+}, h);
+```
+
+Slot attributes augment the attributes required by Foldkit's behavior and
+accessibility engines. A repeated slot such as a tab `trigger` applies to every
+instance. `sx` is the only StyleX override property; the former `style` alias is
+no longer accepted.
+
 Use matching foreground roles when choosing a surface: `surfaceForeground` for
 `surface`, `popoverForeground` for `popover`, `secondaryForeground` for
 `surfaceSubtle`, and `accentForeground` for `surfaceHover`. These use the existing

@@ -1,23 +1,27 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
+import { rootAttrs, slotAttrs, type Children, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { toolbarStyles } from "./styles";
-import { sxAttrs } from "./sx";
+
+export type Slot = "root" | "copy" | "title" | "description" | "actions";
+
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
+  title: string;
+  description?: string;
+  leading?: Children;
+  actions?: Children;
+}>;
 
 export const view = <Message>(
-  config: Readonly<{
-    title: string;
-    description?: string;
-    leading?: ReadonlyArray<Html | string>;
-    actions?: ReadonlyArray<Html | string>;
-  }>,
+  config: ViewConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => h.header(sxAttrs(h, toolbarStyles.root), [
-  h.div(sxAttrs(h, toolbarStyles.copy), [
+): Html => h.header(rootAttrs(config, h, toolbarStyles.root), [
+  h.div(slotAttrs(config.slotProps?.copy, h, toolbarStyles.copy), [
     ...(config.leading ?? []),
-    h.h1(sxAttrs(h, toolbarStyles.title), [config.title]),
+    h.h1(slotAttrs(config.slotProps?.title, h, toolbarStyles.title), [config.title]),
     ...(config.description === undefined
       ? []
-      : [h.p(sxAttrs(h, toolbarStyles.description), [config.description])]),
+      : [h.p(slotAttrs(config.slotProps?.description, h, toolbarStyles.description), [config.description])]),
   ]),
-  h.div(sxAttrs(h, toolbarStyles.actions), config.actions ?? []),
+  h.div(slotAttrs(config.slotProps?.actions, h, toolbarStyles.actions), config.actions ?? []),
 ]);

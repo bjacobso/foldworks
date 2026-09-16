@@ -165,7 +165,7 @@ const componentPreview = <Message>(h: HtmlBuilder<Message>): Html =>
       Card.view({
         title: "Launch readiness",
         description: "Across product, legal, and operations",
-        style: styles.previewCard,
+        sx: styles.previewCard,
         children: [
           h.div([h.Class(className(styles.metric))], ["82%"]),
           Progress.view({ value: 82, ariaLabel: "Launch readiness" }, h),
@@ -178,7 +178,7 @@ const componentPreview = <Message>(h: HtmlBuilder<Message>): Html =>
       Card.view({
         title: "Owners",
         description: "Current handoff",
-        style: styles.previewCard,
+        sx: styles.previewCard,
         children: [h.div([h.Class(className(styles.teamList))], [
           person("Maya Chen", "Product", "MC", "Ready", h),
           person("Alex Morgan", "Legal", "AM", "Review", h),
@@ -188,7 +188,7 @@ const componentPreview = <Message>(h: HtmlBuilder<Message>): Html =>
       Card.view({
         title: "Workflow volume",
         description: "Runs completed over the last seven days",
-        style: styles.chartCard,
+        sx: styles.chartCard,
         action: [Badge.view({ label: "+18%", tone: "success" }, h)],
         children: [Chart.view({
           ariaLabel: "Workflow volume for the last seven days",

@@ -1,9 +1,9 @@
-import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, ChildAttribute, Html, HtmlBuilder } from "foldkit/html";
 
 export const view = <Message>(
   description: string | undefined,
   attributes: ReadonlyArray<Attribute<Message>>,
-  visibleAttributes: ReadonlyArray<Attribute<Message>>,
+  visibleAttributes: ReadonlyArray<Attribute<Message> | ChildAttribute>,
   h: HtmlBuilder<Message>,
 ): Html => description === undefined
   ? h.span([

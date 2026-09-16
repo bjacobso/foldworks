@@ -2,14 +2,15 @@ import type * as Tooltip from "@foldkit/ui/tooltip";
 import type { HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles } from "../catalog.styles";
-import type { Children, StyledConfig } from "../catalog.shared";
-import { sxAttrs } from "../sx";
+import { rootAttrs, slotAttrs, type Children, type StyledConfig, type WithSlotProps } from "../catalog.shared";
 import { statefulStyles as styles } from "../stateful.styles";
 import * as Layer from "./layer";
 
 export * from "@foldkit/ui/tooltip";
 
-export type StyledViewInputs<Message> = StyledConfig<Message> & Readonly<{
+export type Slot = "root" | "trigger" | "panel";
+
+export type StyledViewInputs<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
   trigger: Children; label: string; ariaLabel?: string; isDisabled?: boolean; anchor?: Tooltip.AnchorConfig;
 }>;
 
@@ -17,10 +18,10 @@ export const styledViewInputs = <Message>(config: StyledViewInputs<Message>, h: 
   anchor: Layer.anchor({ placement: "top", gap: 6, ...config.anchor }),
   ...(config.ariaLabel === undefined ? {} : { ariaLabel: config.ariaLabel }),
   ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),
-  toView: ({ trigger, panel, isVisible }) => h.span([
-    ...(config.attributes ?? []), ...sxAttrs(h, styles.layerRoot, config.style),
-  ], [
-    h.button([...trigger, ...sxAttrs(h, catalogStyles.toggle, catalogStyles.focusable)], config.trigger),
-    ...(isVisible ? [h.span([...panel, ...sxAttrs(h, catalogStyles.tooltip, styles.tooltipPanel)], [config.label])] : []),
+  toView: ({ trigger, panel, isVisible }) => h.span(rootAttrs(config, h, styles.layerRoot), [
+    h.button([...trigger, ...slotAttrs(config.slotProps?.trigger, h,
+      catalogStyles.toggle, catalogStyles.focusable)], config.trigger),
+    ...(isVisible ? [h.span([...panel, ...slotAttrs(config.slotProps?.panel, h,
+      catalogStyles.tooltip, styles.tooltipPanel)], [config.label])] : []),
   ]),
 });

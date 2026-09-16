@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
-import type { Attribute, ChildAttribute, Html, HtmlBuilder } from "foldkit/html";
+import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { sxAttrs } from "./sx";
+import { rootAttrs, type Children, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { contentWidths, space } from "./tokens.stylex.js";
 
 export type Breakpoint = "base" | "sm" | "md" | "lg" | "xl";
@@ -111,16 +111,15 @@ const styles = stylex.create({
   autoGrid: { gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, var(--foldworks-column-min)), 1fr))" },
 });
 
-type Common<Message> = Readonly<{
-  children: ReadonlyArray<Html | string>;
-  attributes?: ReadonlyArray<Attribute<Message> | ChildAttribute>;
-  style?: stylex.StyleXStyles;
+type Common<Message> = StyledConfig<Message> & WithSlotProps<Message, "root"> & Readonly<{
+  children: Children;
 }>;
 
 const flex = <Message>(config: Common<Message> & Readonly<{
   direction: Responsive<"row" | "column">; gap?: Responsive<Gap>; align?: Align; justify?: Justify; wrap?: boolean; responsiveTo?: ResponsiveTo;
 }>, h: HtmlBuilder<Message>): Html => h.div([
-  ...(config.attributes ?? []), ...sxAttrs(h, config.responsiveTo === "container" ? styles.responsiveFlexContainer : styles.responsiveFlex, config.wrap === true && styles.wrap, config.style),
+  ...rootAttrs(config, h, config.responsiveTo === "container" ? styles.responsiveFlexContainer : styles.responsiveFlex,
+    config.wrap === true && styles.wrap),
   h.Style({
     ...variables<"row" | "column">("direction", config.direction, "column", String), ...variables<Gap>("gap", config.gap, "md", (gap) => gapValues[gap]),
     alignItems: alignValues[config.align ?? "stretch"], justifyContent: justifyValues[config.justify ?? "start"],
@@ -138,7 +137,7 @@ export const row = <Message>(config: Common<Message> & Readonly<{
 export const container = <Message>(config: Common<Message> & Readonly<{
   size?: "sm" | "md" | "lg" | "xl" | "full"; padding?: Responsive<Gap>; query?: boolean;
 }>, h: HtmlBuilder<Message>): Html => h.div([
-  ...(config.attributes ?? []), ...sxAttrs(h, styles.container, config.query === true && styles.queryContainer, config.style),
+  ...rootAttrs(config, h, styles.container, config.query === true && styles.queryContainer),
   h.Style({ "--foldworks-container-width": contentWidths[config.size ?? "xl"], ...variables<Gap>("padding", config.padding, "lg", (gap) => gapValues[gap]) }),
 ], config.children);
 
@@ -150,7 +149,8 @@ export const grid = <Message>(config: Common<Message> & Readonly<{
     if (!Number.isInteger(count) || count < 1 || count > 12) throw new Error("Layout.grid columns must be integers from 1 through 12.");
   }
   return h.div([
-    ...(config.attributes ?? []), ...sxAttrs(h, config.responsiveTo === "container" ? styles.gridContainer : styles.grid, config.minColumnWidth !== undefined && styles.autoGrid, config.style),
+    ...rootAttrs(config, h, config.responsiveTo === "container" ? styles.gridContainer : styles.grid,
+      config.minColumnWidth !== undefined && styles.autoGrid),
     h.Style({
       ...variables<number>("columns", config.columns, 1, String), ...variables<Gap>("gap", config.gap, "md", (gap) => gapValues[gap]),
       ...(config.minColumnWidth === undefined ? {} : { "--foldworks-column-min": config.minColumnWidth }), alignItems: config.align ?? "stretch",

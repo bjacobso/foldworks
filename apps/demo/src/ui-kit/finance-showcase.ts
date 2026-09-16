@@ -40,7 +40,7 @@ const button = (label: string, h: HtmlBuilder<Message>, variant: "primary" | "ou
   Button.view({
     label,
     variant,
-    style: styles.pillButton,
+    sx: styles.pillButton,
     onClick: Message.ClickedAction({ action: label }),
   }, h);
 
@@ -49,7 +49,7 @@ const cardAction = (label: string, h: HtmlBuilder<Message>) =>
     label,
     variant: "outline",
     size: "sm",
-    style: styles.pillButton,
+    sx: styles.pillButton,
     onClick: Message.ClickedAction({ action: label }),
   }, h);
 
@@ -59,21 +59,21 @@ const iconAction = (label: string, icon: LucideIconData, h: HtmlBuilder<Message>
     ariaLabel: label,
     variant: "ghost",
     size: "icon",
-    style: styles.pillButton,
+    sx: styles.pillButton,
     onClick: Message.ClickedAction({ action: label }),
   }, h);
 
 const contributionHistory = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Contribution History",
   description: "Last 6 months of activity",
-  style: [styles.card, styles.tallCard],
+  sx: [styles.card, styles.tallCard],
   children: [h.div([h.Class(className(styles.cardStack))], [
     h.div([h.Class(className(styles.chartWrap))], [
       Chart.view({
         ariaLabel: "Monthly contribution history",
         values: [48, 66, 54, 78, 45, 84],
         max: 90,
-        style: styles.chart,
+        sx: styles.chart,
       }, h),
       h.div([h.Class(className(styles.chartLabels))], ["Dec", "Jan", "Feb", "Mar", "Apr", "May"].map((month) => h.span([], [month]))),
     ]),
@@ -97,7 +97,7 @@ const payoutThreshold = (model: Model, h: HtmlBuilder<Message>): Html => Card.vi
   title: "Payout Threshold",
   description: "Set the minimum balance required before a payout is triggered.",
   action: [iconAction("Close payout settings", X, h)],
-  style: [styles.card, styles.tallCard],
+  sx: [styles.card, styles.tallCard],
   children: [h.div([h.Class(className(styles.formStack))], [
     Field.select({
       id: "showcase-currency",
@@ -150,7 +150,7 @@ const savingsTargets = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Savings Targets",
   description: "Active milestones for 2024",
   action: [cardAction("New Goal", h)],
-  style: [styles.card, styles.tallCard],
+  sx: [styles.card, styles.tallCard],
   children: [h.div([h.Class(className(styles.cardStack))], [
     target("Retirement", "$420,000", 65, "$273,000", h),
     target("Real Estate", "$85,000", 32, "$27,200", h),
@@ -160,7 +160,7 @@ const savingsTargets = (h: HtmlBuilder<Message>): Html => Card.view({
 
 const buyInvestment = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Buy Investment",
-  style: [styles.card, styles.tallCard],
+  sx: [styles.card, styles.tallCard],
   children: [h.div([h.Class(className(styles.formStack))], [
     h.div([h.Class(className(styles.formGroup))], [
       Label.view({ for: "showcase-investment", children: ["Amount to Invest"] }, h),
@@ -190,15 +190,15 @@ const buyInvestment = (h: HtmlBuilder<Message>): Html => Card.view({
 }, h);
 
 const distributeTrack = (h: HtmlBuilder<Message>): Html => Card.view({
-  style: styles.card,
+  sx: styles.card,
   children: [Empty.view({
     title: "Distribute Track",
     description: "Upload your first master to start reaching listeners on Spotify, Apple Music, and more.",
-    style: styles.empty,
+    sx: styles.empty,
     media: h.div([h.Class(className(styles.emptyMedia))], [Icon.view({ icon: Plus, size: 20 }, h)]),
     actions: [Button.view({
       label: "Create Release",
-      style: styles.pillButton,
+      sx: styles.pillButton,
       onClick: Message.ClickedAction({ action: "Create Release" }),
     }, h)],
   }, h)],
@@ -206,7 +206,7 @@ const distributeTrack = (h: HtmlBuilder<Message>): Html => Card.view({
 
 const claimableBalance = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Claimable Balance",
-  style: styles.card,
+  sx: styles.card,
   children: [h.div([h.Class(className(styles.cardStack))], [
     h.div([h.Class(className(styles.compactStack))], [
       h.strong([h.Class(className(styles.metric))], ["$0.00"]),
@@ -234,7 +234,7 @@ const recentTransactions = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Recent Transactions",
   description: "Your latest account activity.",
   action: [cardAction("View All", h)],
-  style: [styles.card, styles.spanTwo],
+  sx: [styles.card, styles.spanTwo],
   children: [h.div([h.Class(className(styles.transactionList))], transactions.map(([name, category, date, amount, icon, isPositive], index) =>
     h.div([h.Class(className(styles.transaction, ...(index === transactions.length - 1 ? [styles.transactionLast] : [])))], [
       h.div([h.Class(className(styles.transactionIcon))], [Icon.view({ icon, size: 15 }, h)]),
@@ -258,7 +258,7 @@ const qrRows = [
 const qrCard = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Quick Pay",
   description: "Scan to send or request funds.",
-  style: styles.card,
+  sx: styles.card,
   children: [h.div([h.Class(className(styles.cardStack))], [
     h.div([h.Class(className(styles.qrFrame))], [
       h.div([h.Class(className(styles.qr)), h.Role("img"), h.AriaLabel("Quick Pay code")], qrRows.flatMap((row) => [...row].map((cell) =>
@@ -273,7 +273,7 @@ const preferences = (model: Model, h: HtmlBuilder<Message>): Html => Card.view({
   title: "Preferences",
   description: "Manage your account settings and notifications.",
   action: [iconAction("Close preferences", X, h)],
-  style: styles.card,
+  sx: styles.card,
   children: [h.div([h.Class(className(styles.formStack))], [
     Switch.view({
       id: "showcase-product-updates",
@@ -295,12 +295,12 @@ const preferences = (model: Model, h: HtmlBuilder<Message>): Html => Card.view({
 const navigationSamples = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Navigation",
   description: "Compact application wayfinding.",
-  style: [styles.card, styles.spanTwo],
+  sx: [styles.card, styles.spanTwo],
   children: [h.div([h.Class(className(styles.cardStack))], [
     h.div([h.Class(className(styles.navPair))], [
       Sidebar.view({
         ariaLabel: "Overview navigation",
-        style: styles.miniSidebar,
+        sx: styles.miniSidebar,
         groups: [{
           label: "Overview",
           items: [
@@ -312,7 +312,7 @@ const navigationSamples = (h: HtmlBuilder<Message>): Html => Card.view({
       }, h),
       Sidebar.view({
         ariaLabel: "Account navigation",
-        style: styles.miniSidebar,
+        sx: styles.miniSidebar,
         groups: [{
           label: "Account",
           items: [
@@ -340,7 +340,7 @@ const portfolioSummary = (h: HtmlBuilder<Message>): Html =>
   h.div([h.Class(className(styles.spanTwo, styles.miniCards))], [
     Card.view({
       title: "Card Balance",
-      style: styles.card,
+      sx: styles.card,
       children: [h.div([h.Class(className(styles.compactStack))], [
         h.strong([h.Class(className(styles.miniMetric))], ["US$12.94"]),
         h.span([h.Class(className(styles.muted))], ["US$11,337.06 Available"]),
@@ -348,13 +348,13 @@ const portfolioSummary = (h: HtmlBuilder<Message>): Html =>
     }, h),
     Card.view({
       title: "Yearly Activity",
-      style: styles.card,
+      sx: styles.card,
       children: [h.div([h.Class(className(styles.chartWrap))], [
         Chart.view({
           ariaLabel: "Yearly account activity",
           values: [28, 40, 31, 44, 35, 38, 50],
           max: 55,
-          style: styles.miniChart,
+          sx: styles.miniChart,
         }, h),
         h.div([h.Class(className(styles.miniChartLabels))], ["J", "F", "M", "A", "M", "J", "J"].map((month) => h.span([], [month]))),
       ])],
@@ -364,14 +364,14 @@ const portfolioSummary = (h: HtmlBuilder<Message>): Html =>
 const accountAccess = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Account Access",
   description: "Update your credentials or review account status.",
-  style: styles.card,
+  sx: styles.card,
   children: [h.div([h.Class(className(styles.formStack))], [
     Field.input({ id: "showcase-account-email", label: "Email Address", value: "artist@studio.inc", type: "email" }, h),
     Field.input({ id: "showcase-password", label: "Current Password", value: "••••••••••••", type: "password" }, h),
     Button.view({
       label: "Update Security",
       icon: Check,
-      style: styles.pillButton,
+      sx: styles.pillButton,
       onClick: Message.ClickedAction({ action: "Update Security" }),
     }, h),
     h.div([h.Class(className(styles.dangerZone))], [
@@ -387,7 +387,7 @@ const accountAccess = (h: HtmlBuilder<Message>): Html => Card.view({
 const transferFunds = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Transfer Funds",
   description: "Move money between your connected accounts.",
-  style: styles.card,
+  sx: styles.card,
   children: [h.div([h.Class(className(styles.formStack))], [
     h.div([h.Class(className(styles.formGroup))], [
       Label.view({ for: "showcase-transfer", children: ["Amount to Transfer"] }, h),
