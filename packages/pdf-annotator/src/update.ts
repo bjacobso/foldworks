@@ -4,6 +4,14 @@ import * as BrowserFile from "foldkit/file";
 
 import { DragAndDrop, FileDrop } from "@foldkit/ui";
 import {
+  annotationValueText,
+  makeAnnotationDocument,
+  nextAnnotationId,
+  parseAnnotationDocument,
+  serializeAnnotationDocument,
+  validateAnnotationDocument,
+} from "./document";
+import {
   CANVAS_WIDTH,
   annotationIdFromItemId,
   annotationKindFromItemId,
@@ -16,7 +24,7 @@ import {
 import { Message } from "./message";
 import {
   Annotation,
-  AnnotationKind,
+  BuiltInAnnotationKind,
   DocumentState,
   MoveState,
   ResizeState,
@@ -26,6 +34,7 @@ import {
   base64ToBytes,
   bytesToBase64,
   exportAnnotatedPdf,
+  extractPdfAnnotations,
   renderPdfPage,
 } from "./pdf";
 
@@ -39,10 +48,14 @@ const loadBytes = (
   bytes: Uint8Array,
 ) => Effect.tryPromise({
   try: async () => {
-    const rendered = await renderPdfPage(bytes, 1);
+    const [rendered, extracted] = await Promise.all([
+      renderPdfPage(bytes, 1),
+      extractPdfAnnotations(bytes),
+    ]);
     return Message.CompletedLoadPdf({
       name,
       bytesBase64: bytesToBase64(bytes),
+      annotations: [...extracted.annotations],
       ...rendered,
     });
   },
@@ -102,23 +115,25 @@ const RenderPage = Command.define("RenderPdfPage", {
 const ResolveCanvasDrop = Command.define("ResolvePdfCanvasDrop", {
   args: {
     canvasId: S.String,
-    kind: AnnotationKind,
+    kind: BuiltInAnnotationKind,
     clientX: S.Number,
     clientY: S.Number,
+    pageWidth: S.Number,
+    pageHeight: S.Number,
   },
   messages: [Message.CompletedCanvasDrop],
-  execute: ({ canvasId, kind, clientX, clientY }) => Effect.sync(() => {
+  execute: ({ canvasId, kind, clientX, clientY, pageWidth, pageHeight }) => Effect.sync(() => {
     const canvas = document.querySelector<HTMLElement>(
       `[data-pdf-canvas-id="${CSS.escape(canvasId)}"]`,
     );
     if (canvas === null) {
-      return Message.CompletedCanvasDrop({ kind, x: 0.5, y: 0.5 });
+      return Message.CompletedCanvasDrop({ kind, x: pageWidth / 2, y: pageHeight / 2 });
     }
     const rect = canvas.getBoundingClientRect();
     return Message.CompletedCanvasDrop({
       kind,
-      x: clamp((clientX - rect.left) / rect.width, 0, 1),
-      y: clamp((clientY - rect.top) / rect.height, 0, 1),
+      x: clamp((clientX - rect.left) / rect.width, 0, 1) * pageWidth,
+      y: clamp((clientY - rect.top) / rect.height, 0, 1) * pageHeight,
     });
   }),
 });
@@ -127,13 +142,22 @@ const ExportPdf = Command.define("ExportAnnotatedPdf", {
   args: {
     bytesBase64: S.String,
     annotations: S.Array(Annotation),
+    deletedFieldNames: S.Array(S.String),
     sourceName: S.String,
   },
   messages: [Message.CompletedExport],
-  execute: ({ bytesBase64, annotations, sourceName }) => Effect.tryPromise({
+  execute: ({ bytesBase64, annotations, deletedFieldNames, sourceName }) => Effect.tryPromise({
     try: async () => {
-      await exportAnnotatedPdf(base64ToBytes(bytesBase64), annotations, sourceName);
-      return Message.CompletedExport({ succeeded: true, reason: "" });
+      const warnings = await exportAnnotatedPdf(
+        base64ToBytes(bytesBase64),
+        annotations,
+        sourceName,
+        { deletedFieldNames },
+      );
+      return Message.CompletedExport({
+        succeeded: true,
+        reason: warnings.length === 0 ? "" : `${warnings.length} PDF warning${warnings.length === 1 ? "" : "s"}.`,
+      });
     },
     catch: (error) => error,
   }).pipe(
@@ -144,8 +168,19 @@ const ExportPdf = Command.define("ExportAnnotatedPdf", {
   ),
 });
 
-const currentPage = (model: Model): number =>
-  model.document._tag === "Ready" ? model.document.currentPage : 1;
+const DownloadJson = Command.define("DownloadPdfAnnotationsJson", {
+  args: { sourceName: S.String, json: S.String },
+  messages: [Message.CompletedJsonDownload],
+  execute: ({ sourceName, json }) => Effect.sync(() => {
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${sourceName.replace(/\.pdf$/i, "") || "document"}-annotations.json`;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    return Message.CompletedJsonDownload();
+  }),
+});
 
 const updateAnnotation = (
   model: Model,
@@ -162,24 +197,35 @@ const restoreMovingAnnotation = (model: Model): Model =>
   model.moveState._tag === "Moving"
     ? updateAnnotation(model, model.moveState.annotationId, (annotation) => ({
         ...annotation,
-        x: model.moveState._tag === "Moving" ? model.moveState.originX : annotation.x,
-        y: model.moveState._tag === "Moving" ? model.moveState.originY : annotation.y,
+        rect: {
+          ...annotation.rect,
+          x: model.moveState._tag === "Moving" ? model.moveState.originX : annotation.rect.x,
+          y: model.moveState._tag === "Moving" ? model.moveState.originY : annotation.rect.y,
+        },
       }))
     : model;
 
 const addAnnotation = (
   model: Model,
-  kind: AnnotationKind,
+  kind: BuiltInAnnotationKind,
   x: number,
   y: number,
 ): Model => {
   if (model.document._tag !== "Ready") return model;
-  const id = `annotation-${model.nextId}`;
+  const id = nextAnnotationId(model.annotations);
   return {
     ...model,
     annotations: [
       ...model.annotations,
-      defaultAnnotation(id, kind, model.document.currentPage, x, y),
+      defaultAnnotation(
+        id,
+        kind,
+        model.document.currentPage - 1,
+        model.document.pageWidth,
+        model.document.pageHeight,
+        x,
+        y,
+      ),
     ],
     selectedAnnotationId: Option.some(id),
     nextId: model.nextId + 1,
@@ -197,14 +243,14 @@ const updateDrag = (model: Model, childMessage: DragAndDrop.Message): UpdateRetu
     const annotation = annotationId === undefined
       ? undefined
       : model.annotations.find((item) => item.id === annotationId);
-    if (annotation !== undefined) {
+    if (annotation !== undefined && annotation.locked !== true) {
       next = {
         ...next,
         selectedAnnotationId: Option.some(annotation.id),
         moveState: MoveState.Moving({
           annotationId: annotation.id,
-          originX: annotation.x,
-          originY: annotation.y,
+          originX: annotation.rect.x,
+          originY: annotation.rect.y,
         }),
       };
     }
@@ -224,14 +270,18 @@ const updateDrag = (model: Model, childMessage: DragAndDrop.Message): UpdateRetu
       model.document._tag === "Ready"
     ) {
       const origin = previousDrag.origin;
-      const height = canvasHeight(model.document.pageWidth, model.document.pageHeight);
+      const readyDocument = model.document;
+      const displayWidth = CANVAS_WIDTH * model.zoom;
+      const displayHeight = canvasHeight(readyDocument.pageWidth, readyDocument.pageHeight) * model.zoom;
       next = updateAnnotation(next, next.moveState.annotationId, (annotation) =>
         moveAnnotation(
           annotation,
-          next.moveState._tag === "Moving" ? next.moveState.originX : annotation.x,
-          next.moveState._tag === "Moving" ? next.moveState.originY : annotation.y,
-          (childMessage.screenX - origin.screenX) / CANVAS_WIDTH,
-          (childMessage.screenY - origin.screenY) / height,
+          next.moveState._tag === "Moving" ? next.moveState.originX : annotation.rect.x,
+          next.moveState._tag === "Moving" ? next.moveState.originY : annotation.rect.y,
+          (childMessage.screenX - origin.screenX) * readyDocument.pageWidth / displayWidth,
+          (childMessage.screenY - origin.screenY) * readyDocument.pageHeight / displayHeight,
+          readyDocument.pageWidth,
+          readyDocument.pageHeight,
         )
       );
     }
@@ -247,9 +297,16 @@ const updateDrag = (model: Model, childMessage: DragAndDrop.Message): UpdateRetu
   }
   if (outMessage?._tag === "Reordered") {
     const kind = annotationKindFromItemId(outMessage.itemId);
-    if (kind !== undefined && outMessage.toContainerId === `${model.id}-canvas`) {
+    if (kind !== undefined && outMessage.toContainerId === `${model.id}-canvas` && model.document._tag === "Ready") {
       if (previousDrag._tag === "KeyboardDragging") {
-        return { model: addAnnotation(next, kind, 0.5, 0.5) };
+        return {
+          model: addAnnotation(
+            next,
+            kind,
+            model.document.pageWidth / 2,
+            model.document.pageHeight / 2,
+          ),
+        };
       }
       return {
         model: { ...next, moveState: MoveState.Idle() },
@@ -258,6 +315,8 @@ const updateDrag = (model: Model, childMessage: DragAndDrop.Message): UpdateRetu
           kind,
           clientX: model.lastPointerClientX,
           clientY: model.lastPointerClientY,
+          pageWidth: model.document.pageWidth,
+          pageHeight: model.document.pageHeight,
         })],
       };
     }
@@ -286,10 +345,7 @@ const updateFileDrop = (model: Model, childMessage: FileDrop.Message): UpdateRet
     return {
       model: {
         ...next,
-        document: DocumentState.Failed({
-          name: file.name,
-          reason: "Choose a PDF file.",
-        }),
+        document: DocumentState.Failed({ name: file.name, reason: "Choose a PDF file." }),
         announcement: "The selected file is not a PDF.",
       },
     };
@@ -310,13 +366,33 @@ const updateFileDrop = (model: Model, childMessage: FileDrop.Message): UpdateRet
     model: {
       ...next,
       document: DocumentState.Loading({ name: file.name }),
-      annotations: [],
+      annotations: model.useInitialAnnotationsOnLoad ? model.annotations : [],
+      deletedPdfFieldNames: [],
       selectedAnnotationId: Option.none(),
       announcement: `Loading ${file.name}.`,
     },
     commands: [LoadPdfFile({ file })],
   };
 };
+
+const importedFieldNames = (annotations: ReadonlyArray<Annotation>): ReadonlyArray<string> =>
+  annotations.flatMap((annotation) =>
+    annotation.pdf?.source === "imported" && annotation.name !== undefined ? [annotation.name] : []
+  );
+
+const metadataValue = (value: string): S.Json => {
+  const trimmed = value.trim();
+  if (trimmed === "") return "";
+  try {
+    return S.decodeUnknownSync(S.Json)(JSON.parse(trimmed));
+  } catch {
+    return value;
+  }
+};
+
+const documentJson = (model: Model): string => serializeAnnotationDocument(
+  makeAnnotationDocument(model.annotations, model.documentMetadata),
+);
 
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
@@ -328,15 +404,17 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         model: {
           ...model,
           document: DocumentState.Loading({ name: "foldworks-sample.pdf" }),
-          annotations: [],
+          annotations: model.useInitialAnnotationsOnLoad ? model.annotations : [],
+          deletedPdfFieldNames: [],
           selectedAnnotationId: Option.none(),
           announcement: "Loading the sample PDF.",
         },
         commands: [LoadPdfUrl({ url, name: "foldworks-sample.pdf" })],
       }),
     }),
-    CompletedLoadPdf: (loaded) => ({
-      model: {
+    CompletedLoadPdf: (loaded) => {
+      const annotations = model.useInitialAnnotationsOnLoad ? model.annotations : loaded.annotations;
+      return { model: {
         ...model,
         document: DocumentState.Ready({
           name: loaded.name,
@@ -347,14 +425,19 @@ export const update = (model: Model, message: Message): UpdateReturn =>
           pageHeight: loaded.pageHeight,
           previewDataUrl: loaded.previewDataUrl,
         }),
-        annotations: [],
+        annotations,
+        useInitialAnnotationsOnLoad: false,
+        deletedPdfFieldNames: [],
         selectedAnnotationId: Option.none(),
-        nextId: 1,
+        nextId: annotations.length + 1,
         isRenderingPage: false,
         exportStatus: "Idle",
-        announcement: `${loaded.name} loaded with ${loaded.pageCount} pages.`,
+        jsonDraft: "",
+        jsonError: "",
+        announcement: `${loaded.name} loaded with ${loaded.pageCount} pages and ${annotations.length} annotation${annotations.length === 1 ? "" : "s"}.`,
       },
-    }),
+    };
+    },
     FailedLoadPdf: ({ name, reason }) => ({
       model: {
         ...model,
@@ -374,10 +457,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
           selectedAnnotationId: Option.none(),
           announcement: `Loading page ${target}.`,
         },
-        commands: [RenderPage({
-          bytesBase64: model.document.bytesBase64,
-          page: target,
-        })],
+        commands: [RenderPage({ bytesBase64: model.document.bytesBase64, page: target })],
       };
     },
     CompletedRenderPage: ({ page, pageWidth, pageHeight, previewDataUrl }) =>
@@ -404,9 +484,14 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         announcement: `Could not render that page. ${reason}`,
       },
     }),
-    CompletedCanvasDrop: ({ kind, x, y }) => ({
-      model: addAnnotation(model, kind, x, y),
+    ChangedZoom: ({ zoom }) => ({
+      model: {
+        ...model,
+        zoom: clamp(zoom, 0.25, 4),
+        announcement: `Zoom ${Math.round(clamp(zoom, 0.25, 4) * 100)} percent.`,
+      },
     }),
+    CompletedCanvasDrop: ({ kind, x, y }) => ({ model: addAnnotation(model, kind, x, y) }),
     SelectedAnnotation: ({ annotationId }) => ({
       model: {
         ...model,
@@ -414,9 +499,9 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         announcement: `${model.annotations.find((item) => item.id === annotationId)?.kind ?? "Annotation"} selected.`,
       },
     }),
-    StartedResize: ({ annotationId, screenX, screenY }) => {
+    StartedResize: ({ annotationId, handle, screenX, screenY }) => {
       const annotation = model.annotations.find((item) => item.id === annotationId);
-      return annotation === undefined
+      return annotation === undefined || annotation.locked === true
         ? { model }
         : ({
             model: {
@@ -424,87 +509,257 @@ export const update = (model: Model, message: Message): UpdateReturn =>
               selectedAnnotationId: Option.some(annotationId),
               resizeState: ResizeState.Resizing({
                 annotationId,
+                handle,
                 originScreenX: screenX,
                 originScreenY: screenY,
-                originWidth: annotation.width,
-                originHeight: annotation.height,
+                originX: annotation.rect.x,
+                originY: annotation.rect.y,
+                originWidth: annotation.rect.width,
+                originHeight: annotation.rect.height,
               }),
             },
           });
     },
     MovedResize: ({ screenX, screenY }) => {
-      if (model.resizeState._tag !== "Resizing" || model.document._tag !== "Ready") {
-        return { model };
-      }
-      const height = canvasHeight(model.document.pageWidth, model.document.pageHeight);
+      if (model.resizeState._tag !== "Resizing" || model.document._tag !== "Ready") return { model };
+      const state = model.resizeState;
+      const readyDocument = model.document;
+      const displayWidth = CANVAS_WIDTH * model.zoom;
+      const displayHeight = canvasHeight(readyDocument.pageWidth, readyDocument.pageHeight) * model.zoom;
       return {
-        model: updateAnnotation(model, model.resizeState.annotationId, (annotation) =>
+        model: updateAnnotation(model, state.annotationId, (annotation) =>
           resizeAnnotation(
             annotation,
-            model.resizeState._tag === "Resizing"
-              ? model.resizeState.originWidth + (screenX - model.resizeState.originScreenX) / CANVAS_WIDTH
-              : annotation.width,
-            model.resizeState._tag === "Resizing"
-              ? model.resizeState.originHeight + (screenY - model.resizeState.originScreenY) / height
-              : annotation.height,
+            state.handle,
+            {
+              x: state.originX,
+              y: state.originY,
+              width: state.originWidth,
+              height: state.originHeight,
+            },
+            (screenX - state.originScreenX) * readyDocument.pageWidth / displayWidth,
+            (screenY - state.originScreenY) * readyDocument.pageHeight / displayHeight,
+            readyDocument.pageWidth,
+            readyDocument.pageHeight,
           )
         ),
       };
     },
     FinishedResize: () => ({
-      model: {
-        ...model,
-        resizeState: ResizeState.Idle(),
-        announcement: "Annotation resized.",
-      },
+      model: { ...model, resizeState: ResizeState.Idle(), announcement: "Annotation resized." },
     }),
     ChangedAnnotationValue: ({ annotationId, value }) => ({
-      model: updateAnnotation(model, annotationId, (annotation) => ({ ...annotation, value })),
+      model: updateAnnotation(model, annotationId, (annotation) => ({
+        ...annotation,
+        value: annotation.kind === "checkbox" ? value === "true" : value,
+      })),
     }),
-    NudgedAnnotation: ({ annotationId, direction, large }) => {
-      const step = large ? 10 : 1;
-      const pageHeight = model.document._tag === "Ready"
-        ? canvasHeight(model.document.pageWidth, model.document.pageHeight)
-        : CANVAS_WIDTH;
-      const delta = {
-        Up: [0, -step / pageHeight],
-        Down: [0, step / pageHeight],
-        Left: [-step / CANVAS_WIDTH, 0],
-        Right: [step / CANVAS_WIDTH, 0],
-      }[direction] ?? [0, 0];
+    ChangedAnnotationName: ({ annotationId, name }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => ({ ...annotation, name })),
+    }),
+    ChangedAnnotationFlag: ({ annotationId, property, value }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => ({
+        ...annotation,
+        [property]: value,
+      })),
+    }),
+    ChangedAnnotationGeometry: ({ annotationId, property, value }) => {
+      const numeric = Number.isFinite(value) ? value : 0;
       return {
-        model: updateAnnotation(model, annotationId, (annotation) =>
-          moveAnnotation(annotation, annotation.x, annotation.y, delta[0] ?? 0, delta[1] ?? 0)
-        ),
+        model: updateAnnotation(model, annotationId, (annotation) => {
+          const rect = { ...annotation.rect, [property]: numeric };
+          if (rect.width <= 0 || rect.height <= 0) return annotation;
+          if (model.document._tag === "Ready" && annotation.pageIndex === model.document.currentPage - 1) {
+            rect.width = Math.min(rect.width, model.document.pageWidth);
+            rect.height = Math.min(rect.height, model.document.pageHeight);
+            rect.x = clamp(rect.x, 0, model.document.pageWidth - rect.width);
+            rect.y = clamp(rect.y, 0, model.document.pageHeight - rect.height);
+          }
+          return { ...annotation, rect };
+        }),
       };
     },
-    DeletedAnnotation: ({ annotationId }) => ({
-      model: {
-        ...model,
-        annotations: model.annotations.filter((annotation) => annotation.id !== annotationId),
-        selectedAnnotationId: Option.none(),
-        announcement: "Annotation deleted.",
-      },
+    ChangedAnnotationPage: ({ annotationId, pageIndex }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => ({
+        ...annotation,
+        pageIndex: model.document._tag === "Ready"
+          ? clamp(Math.round(pageIndex), 0, model.document.pageCount - 1)
+          : Math.max(0, Math.round(pageIndex)),
+      })),
     }),
+    AddedAnnotationMetadata: ({ annotationId }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => {
+        const metadata = { ...(annotation.metadata ?? {}) };
+        let index = 1;
+        while (`attribute${index}` in metadata) index += 1;
+        metadata[`attribute${index}`] = "";
+        return { ...annotation, metadata };
+      }),
+    }),
+    RenamedAnnotationMetadata: ({ annotationId, key, nextKey }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => {
+        if (nextKey.trim() === "" || (nextKey !== key && nextKey in (annotation.metadata ?? {}))) {
+          return annotation;
+        }
+        const metadata: Record<string, S.Json> = {};
+        for (const [metadataKey, metadataValue] of Object.entries(annotation.metadata ?? {})) {
+          metadata[metadataKey === key ? nextKey : metadataKey] = metadataValue;
+        }
+        return { ...annotation, metadata };
+      }),
+    }),
+    ChangedAnnotationMetadata: ({ annotationId, key, value }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => ({
+        ...annotation,
+        metadata: { ...(annotation.metadata ?? {}), [key]: metadataValue(value) },
+      })),
+    }),
+    DeletedAnnotationMetadata: ({ annotationId, key }) => ({
+      model: updateAnnotation(model, annotationId, (annotation) => {
+        const metadata = { ...(annotation.metadata ?? {}) };
+        delete metadata[key];
+        return { ...annotation, metadata };
+      }),
+    }),
+    NudgedAnnotation: ({ annotationId, direction, large }) => {
+      if (model.document._tag !== "Ready") return { model };
+      const step = large ? 10 : 1;
+      const [deltaX, deltaY] = ({
+        Up: [0, -step],
+        Down: [0, step],
+        Left: [-step, 0],
+        Right: [step, 0],
+      } as const)[direction];
+      return {
+        model: updateAnnotation(model, annotationId, (annotation) => annotation.locked === true
+          ? annotation
+          : moveAnnotation(
+              annotation,
+              annotation.rect.x,
+              annotation.rect.y,
+              deltaX,
+              deltaY,
+              model.document._tag === "Ready" ? model.document.pageWidth : annotation.rect.x + annotation.rect.width,
+              model.document._tag === "Ready" ? model.document.pageHeight : annotation.rect.y + annotation.rect.height,
+            )),
+      };
+    },
+    DuplicatedAnnotation: ({ annotationId }) => {
+      const source = model.annotations.find(({ id }) => id === annotationId);
+      if (source === undefined) return { model };
+      const id = nextAnnotationId(model.annotations);
+      const pageWidth = model.document._tag === "Ready" ? model.document.pageWidth : source.rect.x + source.rect.width + 10;
+      const pageHeight = model.document._tag === "Ready" ? model.document.pageHeight : source.rect.y + source.rect.height + 10;
+      const duplicateSource: Annotation = {
+        ...source,
+        id,
+        ...(source.name === undefined ? {} : { name: `${source.name}_copy` }),
+        pdf: { source: "authored" },
+      };
+      const duplicate = moveAnnotation(
+        duplicateSource,
+        source.rect.x,
+        source.rect.y,
+        10,
+        10,
+        pageWidth,
+        pageHeight,
+      );
+      return {
+        model: {
+          ...model,
+          annotations: [...model.annotations, duplicate],
+          selectedAnnotationId: Option.some(id),
+          announcement: "Annotation duplicated.",
+        },
+      };
+    },
+    DeletedAnnotation: ({ annotationId }) => {
+      const removed = model.annotations.find(({ id }) => id === annotationId);
+      const deletedName = removed?.pdf?.source === "imported" ? removed.name : undefined;
+      return {
+        model: {
+          ...model,
+          annotations: model.annotations.filter((annotation) => annotation.id !== annotationId),
+          deletedPdfFieldNames: deletedName === undefined || model.deletedPdfFieldNames.includes(deletedName)
+            ? model.deletedPdfFieldNames
+            : [...model.deletedPdfFieldNames, deletedName],
+          selectedAnnotationId: Option.none(),
+          announcement: "Annotation deleted.",
+        },
+      };
+    },
     ClickedClearAnnotations: () => ({
       model: {
         ...model,
         annotations: [],
+        deletedPdfFieldNames: [...new Set([
+          ...model.deletedPdfFieldNames,
+          ...importedFieldNames(model.annotations),
+        ])],
         selectedAnnotationId: Option.none(),
         announcement: "All annotations cleared.",
       },
     }),
+    ToggledJsonInspector: () => ({
+      model: {
+        ...model,
+        isJsonInspectorOpen: !model.isJsonInspectorOpen,
+        jsonDraft: model.isJsonInspectorOpen ? model.jsonDraft : documentJson(model),
+        jsonError: "",
+        announcement: model.isJsonInspectorOpen ? "JSON inspector closed." : "Annotation JSON ready to edit.",
+      },
+    }),
+    ChangedJsonDraft: ({ value }) => ({ model: { ...model, jsonDraft: value, jsonError: "" } }),
+    AppliedJsonDraft: () => {
+      try {
+        const document = parseAnnotationDocument(model.jsonDraft);
+        const issues = validateAnnotationDocument(document).filter(({ severity }) => severity === "error");
+        const pageCount = model.document._tag === "Ready" ? model.document.pageCount : undefined;
+        const missingPages = pageCount !== undefined
+          ? document.annotations.filter(({ pageIndex }) => pageIndex >= pageCount)
+          : [];
+        if (issues.length > 0) throw new Error(issues[0]?.message ?? "The annotation JSON is invalid.");
+        if (missingPages.length > 0) throw new Error(`Page ${missingPages[0]!.pageIndex + 1} does not exist.`);
+        const nextNames = new Set(importedFieldNames(document.annotations));
+        const removedNames = importedFieldNames(model.annotations).filter((name) => !nextNames.has(name));
+        return {
+          model: {
+            ...model,
+            annotations: document.annotations,
+            documentMetadata: document.metadata ?? {},
+            deletedPdfFieldNames: [...new Set([...model.deletedPdfFieldNames, ...removedNames])],
+            selectedAnnotationId: Option.none(),
+            nextId: document.annotations.length + 1,
+            jsonDraft: serializeAnnotationDocument(document),
+            jsonError: "",
+            announcement: "Annotation JSON applied.",
+          },
+        };
+      } catch (error) {
+        const reason = failureReason(error);
+        return { model: { ...model, jsonError: reason, announcement: `JSON not applied. ${reason}` } };
+      }
+    },
+    ResetJsonDraft: () => ({
+      model: { ...model, jsonDraft: documentJson(model), jsonError: "", announcement: "JSON reset." },
+    }),
+    ClickedDownloadJson: () => ({
+      model: { ...model, announcement: "Annotation JSON downloaded." },
+      commands: [DownloadJson({
+        sourceName: model.document._tag === "Ready" ? model.document.name : "document",
+        json: documentJson(model),
+      })],
+    }),
+    CompletedJsonDownload: () => ({ model }),
     ClickedDownload: () => model.document._tag !== "Ready"
       ? { model }
       : ({
-          model: {
-            ...model,
-            exportStatus: "Exporting",
-            announcement: "Creating the annotated PDF.",
-          },
+          model: { ...model, exportStatus: "Exporting", announcement: "Creating the annotated PDF." },
           commands: [ExportPdf({
             bytesBase64: model.document.bytesBase64,
             annotations: model.annotations,
+            deletedFieldNames: model.deletedPdfFieldNames,
             sourceName: model.document.name,
           })],
         }),
@@ -513,7 +768,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         ...model,
         exportStatus: succeeded ? "Complete" : "Failed",
         announcement: succeeded
-          ? "Annotated PDF downloaded."
+          ? `Annotated PDF downloaded.${reason === "" ? "" : ` ${reason}`}`
           : `The PDF could not be created. ${reason}`,
       },
     }),

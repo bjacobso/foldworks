@@ -15,14 +15,15 @@ const ready = () => update(
     pageWidth: 612,
     pageHeight: 792,
     previewDataUrl: "data:image/png;base64,AA==",
+    annotations: [],
   }),
 ).model;
 
 describe("PDF annotator update", () => {
-  it("adds, edits, nudges, and deletes an annotation", () => {
+  it("adds, edits, nudges, duplicates, and deletes an annotation", () => {
     const added = update(
       ready(),
-      Message.CompletedCanvasDrop({ kind: "Text", x: 0.5, y: 0.5 }),
+      Message.CompletedCanvasDrop({ kind: "text", x: 306, y: 396 }),
     ).model;
     const annotation = added.annotations[0];
     expect(annotation).toBeDefined();
@@ -40,21 +41,26 @@ describe("PDF annotator update", () => {
         large: true,
       }),
     ).model;
-    const deleted = update(
+    const duplicated = update(
       nudged,
+      Message.DuplicatedAnnotation({ annotationId: annotation.id }),
+    ).model;
+    const deleted = update(
+      duplicated,
       Message.DeletedAnnotation({ annotationId: annotation.id }),
     ).model;
 
     expect(edited.annotations[0]?.value).toBe("Accepted");
-    expect(nudged.annotations[0]?.x).toBeGreaterThan(annotation.x);
-    expect(deleted.annotations).toEqual([]);
+    expect(nudged.annotations[0]?.rect.x).toBeGreaterThan(annotation.rect.x);
+    expect(duplicated.annotations).toHaveLength(2);
+    expect(deleted.annotations).toHaveLength(1);
     expect(Option.isNone(deleted.selectedAnnotationId)).toBe(true);
   });
 
-  it("resizes the selected annotation using normalized page geometry", () => {
+  it("resizes from any selected edge using zoom-corrected PDF points", () => {
     const added = update(
-      ready(),
-      Message.CompletedCanvasDrop({ kind: "Stamp", x: 0.4, y: 0.4 }),
+      { ...ready(), zoom: 2 },
+      Message.CompletedCanvasDrop({ kind: "stamp", x: 244, y: 316 }),
     ).model;
     const annotation = added.annotations[0];
     expect(annotation).toBeDefined();
@@ -62,22 +68,23 @@ describe("PDF annotator update", () => {
 
     const started = update(added, Message.StartedResize({
       annotationId: annotation.id,
+      handle: "south-east",
       screenX: 100,
       screenY: 100,
     })).model;
     const resized = update(started, Message.MovedResize({
-      screenX: 172,
-      screenY: 172,
+      screenX: 244,
+      screenY: 244,
     })).model;
 
-    expect(resized.annotations[0]?.width).toBeCloseTo(annotation.width + 0.1);
-    expect(resized.annotations[0]?.height).toBeGreaterThan(annotation.height);
+    expect(resized.annotations[0]?.rect.width).toBeCloseTo(annotation.rect.width + 61.2);
+    expect(resized.annotations[0]?.rect.height).toBeCloseTo(annotation.rect.height + 61.2, 0);
   });
 
-  it("keeps annotations on their original pages", () => {
+  it("keeps annotations on their zero-based original pages", () => {
     const firstPage = update(
       ready(),
-      Message.CompletedCanvasDrop({ kind: "Checkmark", x: 0.2, y: 0.2 }),
+      Message.CompletedCanvasDrop({ kind: "checkbox", x: 120, y: 120 }),
     ).model;
     const secondPage = update(firstPage, Message.CompletedRenderPage({
       page: 2,
@@ -87,9 +94,32 @@ describe("PDF annotator update", () => {
     })).model;
     const annotated = update(
       secondPage,
-      Message.CompletedCanvasDrop({ kind: "Highlight", x: 0.4, y: 0.4 }),
+      Message.CompletedCanvasDrop({ kind: "highlight", x: 240, y: 240 }),
     ).model;
 
-    expect(annotated.annotations.map((annotation) => annotation.page)).toEqual([1, 2]);
+    expect(annotated.annotations.map((annotation) => annotation.pageIndex)).toEqual([0, 1]);
+  });
+
+  it("applies versioned JSON and custom metadata", () => {
+    const added = update(
+      ready(),
+      Message.CompletedCanvasDrop({ kind: "date", x: 200, y: 200 }),
+    ).model;
+    const annotation = added.annotations[0]!;
+    const withMetadata = update(
+      added,
+      Message.ChangedAnnotationMetadata({ annotationId: annotation.id, key: "owner", value: "employee" }),
+    ).model;
+    const opened = update(withMetadata, Message.ToggledJsonInspector()).model;
+    const parsed = JSON.parse(opened.jsonDraft) as { schemaVersion: number; annotations: Array<{ metadata: { owner: string } }> };
+    parsed.annotations[0]!.metadata.owner = "manager";
+    const applied = update(
+      { ...opened, jsonDraft: JSON.stringify(parsed) },
+      Message.AppliedJsonDraft(),
+    ).model;
+
+    expect(parsed.schemaVersion).toBe(1);
+    expect(applied.annotations[0]?.metadata?.owner).toBe("manager");
+    expect(applied.jsonError).toBe("");
   });
 });
