@@ -9,6 +9,7 @@ const packageJson = (await import(resolve(packageRoot, "package.json"), {
   with: { type: "json" },
 })).default;
 
+const isCodebase = packageJson.name === "@foldworks/codebase";
 const entries = packageJson.name === "@foldworks/ui"
   ? {
       icon: "src/icon.ts",
@@ -19,7 +20,9 @@ const entries = packageJson.name === "@foldworks/ui"
     ? { index: "src/index.ts", contracts: "src/contracts.ts", structured: "src/structured.ts" }
     : packageJson.name === "@foldworks/agent"
       ? { index: "src/index.ts", testing: "src/testing.ts" }
-    : { index: "src/index.ts" };
+      : isCodebase
+        ? { index: "src/index.ts", server: "src/server.ts", cli: "src/cli.ts" }
+        : { index: "src/index.ts" };
 await build({
   bundle: true,
   clean: true,
@@ -29,10 +32,10 @@ await build({
   format: ["esm"],
   minify: false,
   outDir: "dist",
-  platform: "browser",
+  platform: isCodebase ? "node" : "browser",
   silent: false,
   sourcemap: true,
-  splitting: packageJson.name === "@foldworks/code-editor" || packageJson.name === "@foldworks/agent",
+  splitting: packageJson.name === "@foldworks/code-editor" || packageJson.name === "@foldworks/agent" || isCodebase,
   target: "es2022",
   treeshake: true,
 });

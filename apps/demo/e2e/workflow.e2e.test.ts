@@ -129,6 +129,7 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => demoNavigation.getByRole("link").allTextContents()).toEqual([
       "Home",
       "Agent playground",
+      "Codebase workbench",
       "Workers workbench",
       "@foldworks/ui",
       "Document editor",

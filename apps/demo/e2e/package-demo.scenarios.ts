@@ -7,6 +7,7 @@ const expectedPackages = [
   "@foldworks/sidebar",
   "@foldworks/agent",
   "@foldworks/code-editor",
+  "@foldworks/codebase",
   "@foldworks/data-table",
   "@foldworks/data-grid",
   "@foldworks/query-builder",

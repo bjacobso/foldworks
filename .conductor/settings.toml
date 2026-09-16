@@ -1,0 +1,9 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+[scripts]
+setup = "pnpm install --frozen-lockfile"
+run_mode = "concurrent"
+
+[scripts.run.codebase]
+command = "pnpm --filter @foldworks/codebase build && node packages/codebase/dist/cli.js --host 0.0.0.0 --port ${CONDUCTOR_PORT:-4310}"
+icon = "book-open-code"
