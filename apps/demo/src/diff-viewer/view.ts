@@ -1,5 +1,5 @@
 import { Check, ChevronRight, CircleCheck, FileCode2, GitPullRequest, MessageSquare, SplitSquareHorizontal, Rows3 } from "@lucide/icons";
-import { DiffViewer, diffTotals, type DiffFile, type DiffSelection, type DiffThreadMarker } from "@foldworks/diff-viewer";
+import { DiffViewer, diffTotals, selectionLabel, type DiffFile, type DiffSelectionRange, type DiffThreadMarker } from "@foldworks/diff-viewer";
 import { Button, Icon } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
@@ -75,7 +75,7 @@ const thread = (comment: ReviewComment, h: HtmlBuilder<Message>): Html => h.arti
 ], [
   h.div([h.Class("review-demo__thread-heading")], [
     h.span([h.Class("review-demo__avatar")], [comment.author === "You" ? "YO" : comment.author.split(" ").map((part) => part[0]).join("")]),
-    h.div([], [h.strong([], [comment.author]), h.span([], [`${comment.side === "old" ? "Old" : "New"} line ${comment.line}`])]),
+    h.div([], [h.strong([], [comment.author]), h.span([], [selectionLabel(comment)])]),
     h.span([h.Class("review-demo__thread-status")], [comment.resolved ? "Resolved" : "Open"]),
   ]),
   h.p([], [comment.body]),
@@ -87,11 +87,11 @@ const thread = (comment: ReviewComment, h: HtmlBuilder<Message>): Html => h.arti
 ]);
 
 const composer = (model: Model, h: HtmlBuilder<Message>): Html => {
-  if (model.selectionPath === "" || model.selectionLine < 1) {
+  if (model.selectionPath === "" || model.selectionStartLine < 1) {
     return h.div([h.Class("review-demo__comment-empty")], [
       Icon.view({ icon: MessageSquare, size: 18 }, h),
       h.strong([], ["Comment on a line"]),
-      h.p([], ["Select any old or new line number in the diff to start a review thread."]),
+      h.p([], ["Click a line for one comment, or drag across line numbers to select a range."]),
     ]);
   }
   return h.form([
@@ -99,7 +99,12 @@ const composer = (model: Model, h: HtmlBuilder<Message>): Html => {
     h.OnSubmit(Message.SubmittedComment()),
   ], [
     h.div([h.Class("review-demo__composer-heading")], [
-      h.strong([], [`${model.selectionSide === "old" ? "Old" : "New"} line ${model.selectionLine}`]),
+      h.strong([], [selectionLabel({
+        path: model.selectionPath,
+        side: model.selectionSide,
+        startLine: model.selectionStartLine,
+        endLine: model.selectionEndLine,
+      })]),
       h.span([], [model.selectionPath.split("/").pop() ?? model.selectionPath]),
     ]),
     h.textarea([
@@ -144,15 +149,17 @@ const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
 const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
   const activeFile = reviewFiles.find((file) => file.path === model.activePath) ?? reviewFiles[0];
   if (activeFile === undefined) return h.div([h.Class("review-demo")], ["No diff fixture loaded."]);
-  const selectedLine: DiffSelection | undefined = model.selectionPath === "" ? undefined : {
+  const selectedRange: DiffSelectionRange | undefined = model.selectionPath === "" ? undefined : {
     path: model.selectionPath,
     side: model.selectionSide,
-    line: model.selectionLine,
+    startLine: model.selectionStartLine,
+    endLine: model.selectionEndLine,
   };
   const markers: DiffThreadMarker[] = model.comments.map((comment) => ({
     path: comment.path,
     side: comment.side,
-    line: comment.line,
+    startLine: comment.startLine,
+    endLine: comment.endLine,
     count: 1,
     resolved: comment.resolved,
   }));
@@ -177,10 +184,14 @@ const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
           DiffViewer.view({
             file: activeFile,
             mode: model.mode,
-            ...(selectedLine === undefined ? {} : { selectedLine }),
+            ...(selectedRange === undefined ? {} : { selectedRange }),
             threads: markers,
             reviewed: model.viewedPaths.includes(activeFile.path),
             onSelectLine: (selection) => Message.SelectedLine(selection),
+            onStartSelection: (selection) => Message.StartedSelection(selection),
+            onExtendSelection: (selection, method) => Message.ExtendedSelection({ ...selection, method }),
+            onEndSelection: () => Message.EndedSelection(),
+            onCancelSelection: () => Message.CancelledComment(),
             onReviewedChange: (viewed) => Message.ToggledViewed({ path: activeFile.path, viewed }),
           }, h),
         ]),

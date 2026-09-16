@@ -37,7 +37,14 @@ export interface DiffSelection {
   readonly line: number;
 }
 
-export interface DiffThreadMarker extends DiffSelection {
+export interface DiffSelectionRange {
+  readonly path: string;
+  readonly side: DiffSide;
+  readonly startLine: number;
+  readonly endLine: number;
+}
+
+export interface DiffThreadMarker extends DiffSelectionRange {
   readonly count: number;
   readonly resolved?: boolean;
 }
@@ -46,6 +53,51 @@ export interface SplitRow {
   readonly left?: DiffLine;
   readonly right?: DiffLine;
 }
+
+export const normalizeSelection = (selection: DiffSelectionRange): DiffSelectionRange => ({
+  ...selection,
+  startLine: Math.min(selection.startLine, selection.endLine),
+  endLine: Math.max(selection.startLine, selection.endLine),
+});
+
+export const selectionContains = (
+  selection: DiffSelectionRange | undefined,
+  path: string,
+  side: DiffSide,
+  line: number,
+): boolean => {
+  if (selection === undefined || selection.path !== path || selection.side !== side) return false;
+  const normalized = normalizeSelection(selection);
+  return line >= normalized.startLine && line <= normalized.endLine;
+};
+
+export const selectionLabel = (selection: DiffSelectionRange): string => {
+  const normalized = normalizeSelection(selection);
+  const prefix = normalized.side === "old" ? "Old" : "New";
+  return normalized.startLine === normalized.endLine
+    ? `${prefix} line ${normalized.startLine}`
+    : `${prefix} lines ${normalized.startLine}–${normalized.endLine}`;
+};
+
+export const selectableLines = (
+  file: DiffFile,
+  side: DiffSide,
+): readonly number[] => [...new Set(file.hunks.flatMap((hunk) => hunk.lines.flatMap((line) => {
+  const number = side === "old" ? line.oldLine : line.newLine;
+  return number === null ? [] : [number];
+})))].sort((left, right) => left - right);
+
+export const adjacentSelectableLine = (
+  file: DiffFile,
+  side: DiffSide,
+  line: number,
+  direction: "Previous" | "Next",
+): number | undefined => {
+  const lines = selectableLines(file, side);
+  const index = lines.indexOf(line);
+  if (index < 0) return undefined;
+  return lines[index + (direction === "Previous" ? -1 : 1)];
+};
 
 const cleanPath = (path: string): string => {
   const value = path.trim().replace(/^"|"$/g, "");

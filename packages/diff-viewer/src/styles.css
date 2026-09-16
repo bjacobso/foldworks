@@ -127,6 +127,11 @@
 }
 .fk-diff-viewer__line--addition { background: var(--diff-add); }
 .fk-diff-viewer__line--deletion { background: var(--diff-delete); }
+.fk-diff-viewer__line[data-selected="true"],
+.fk-diff-viewer__split-cell[data-selected="true"] {
+  background: color-mix(in srgb, #4f7bef 15%, var(--diff-surface));
+  box-shadow: inset 3px 0 #4f7bef;
+}
 .fk-diff-viewer__line--addition .fk-diff-viewer__prefix { background: var(--diff-add-strong); color: #207b4e; }
 .fk-diff-viewer__line--deletion .fk-diff-viewer__prefix { background: var(--diff-delete-strong); color: #b6424b; }
 

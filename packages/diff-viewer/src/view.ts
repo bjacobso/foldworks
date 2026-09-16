@@ -1,14 +1,19 @@
+import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { splitRows, type DiffFile, type DiffLine, type DiffSelection, type DiffSide, type DiffThreadMarker, type DiffViewMode } from "./core";
+import { adjacentSelectableLine, normalizeSelection, selectionContains, splitRows, type DiffFile, type DiffLine, type DiffSelection, type DiffSelectionRange, type DiffSide, type DiffThreadMarker, type DiffViewMode } from "./core";
 
 export type ViewConfig<Message> = Readonly<{
   file: DiffFile;
   mode?: DiffViewMode;
-  selectedLine?: DiffSelection;
+  selectedRange?: DiffSelectionRange;
   threads?: readonly DiffThreadMarker[];
   reviewed?: boolean;
   onSelectLine?: (selection: DiffSelection) => Message;
+  onStartSelection?: (selection: DiffSelection) => Message;
+  onExtendSelection?: (selection: DiffSelection, method: "Pointer" | "Keyboard") => Message;
+  onEndSelection?: () => Message;
+  onCancelSelection?: () => Message;
   onReviewedChange?: (reviewed: boolean) => Message;
 }>;
 
@@ -34,7 +39,10 @@ const highlighted = <Message>(content: string, h: HtmlBuilder<Message>): readonl
 };
 
 const markerCount = (markers: readonly DiffThreadMarker[], path: string, side: DiffSide, line: number): number =>
-  markers.filter((marker) => marker.path === path && marker.side === side && marker.line === line && marker.resolved !== true)
+  markers.filter((marker) => {
+    const range = normalizeSelection(marker);
+    return range.path === path && range.side === side && range.endLine === line && marker.resolved !== true;
+  })
     .reduce((sum, marker) => sum + marker.count, 0);
 
 const gutter = <Message>(
@@ -45,14 +53,40 @@ const gutter = <Message>(
 ): Html => {
   if (line === null) return h.span([h.Class("fk-diff-viewer__gutter fk-diff-viewer__gutter--empty")], []);
   const selection = { path: config.file.path, side, line } as const;
-  const selected = config.selectedLine?.path === selection.path && config.selectedLine.side === side && config.selectedLine.line === line;
+  const selected = selectionContains(config.selectedRange, selection.path, side, line);
   const count = markerCount(config.threads ?? [], config.file.path, side, line);
+  const selectionEnd = config.selectedRange?.path === selection.path && config.selectedRange.side === side
+    ? config.selectedRange.endLine
+    : line;
   return h.button([
     h.Type("button"),
     h.Class("fk-diff-viewer__gutter"),
     h.DataAttribute("selected", selected ? "true" : "false"),
     h.AriaLabel(`${selected ? "Selected" : "Comment on"} ${side === "old" ? "old" : "new"} line ${line}`),
-    ...(config.onSelectLine === undefined ? [h.Disabled(true)] : [h.OnClick(config.onSelectLine(selection))]),
+    ...(config.onSelectLine === undefined && config.onStartSelection === undefined
+      ? [h.Disabled(true)]
+      : [
+          ...(config.onSelectLine === undefined ? [] : [h.OnClick(config.onSelectLine(selection))]),
+          ...(config.onStartSelection === undefined ? [] : [h.OnMouseDown(config.onStartSelection(selection))]),
+          ...(config.onExtendSelection === undefined ? [] : [
+            h.OnMouseMove(config.onExtendSelection(selection, "Pointer")),
+            h.OnKeyDownPreventDefault((key, modifiers) => {
+              if (key === "Escape" && config.onCancelSelection !== undefined) {
+                return Option.some(config.onCancelSelection());
+              }
+              if (!modifiers.shiftKey || (key !== "ArrowUp" && key !== "ArrowDown")) return Option.none();
+              const target = adjacentSelectableLine(
+                config.file,
+                side,
+                selectionEnd,
+                key === "ArrowUp" ? "Previous" : "Next",
+              );
+              return target === undefined
+                ? Option.none()
+                : Option.some(config.onExtendSelection!({ ...selection, line: target }, "Keyboard"));
+            }),
+          ]),
+        ]),
   ], [
     h.span([h.Class("fk-diff-viewer__add-comment"), h.AriaHidden(true)], ["+"]),
     h.span([h.Class("fk-diff-viewer__line-number")], [String(line)]),
@@ -66,6 +100,7 @@ const unifiedLine = <Message>(config: ViewConfig<Message>, line: DiffLine, h: Ht
   return h.div([
     h.Class(`fk-diff-viewer__line fk-diff-viewer__line--${line.kind}`),
     h.DataAttribute("line-kind", line.kind),
+    h.DataAttribute("selected", number !== null && selectionContains(config.selectedRange, config.file.path, side, number) ? "true" : "false"),
   ], [
     gutter(config, "old", line.oldLine, h),
     gutter(config, "new", line.newLine, h),
@@ -80,6 +115,7 @@ const splitCell = <Message>(config: ViewConfig<Message>, line: DiffLine | undefi
   const number = side === "old" ? line.oldLine : line.newLine;
   return h.div([
     h.Class(`fk-diff-viewer__split-cell fk-diff-viewer__split-cell--${line.kind}`),
+    h.DataAttribute("selected", number !== null && selectionContains(config.selectedRange, config.file.path, side, number) ? "true" : "false"),
   ], [
     gutter(config, side, number, h),
     h.span([h.Class("fk-diff-viewer__prefix"), h.AriaHidden(true)], [line.kind === "addition" ? "+" : line.kind === "deletion" ? "−" : " "]),
@@ -105,6 +141,10 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
     h.Class("fk-diff-viewer"),
     h.DataAttribute("mode", mode.toLowerCase()),
     h.AriaLabel(`Changes in ${config.file.path}`),
+    ...(config.onEndSelection === undefined ? [] : [
+      h.OnMouseUp(config.onEndSelection()),
+      h.OnMouseLeave(config.onEndSelection()),
+    ]),
   ], [
     h.header([h.Class("fk-diff-viewer__header")], [
       h.div([h.Class("fk-diff-viewer__file")], [

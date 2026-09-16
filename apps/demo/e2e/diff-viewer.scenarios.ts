@@ -16,10 +16,22 @@ export const diffViewerScenarios = (
       await page.getByRole("button", { name: "Unified diff" }).click();
       await expect.poll(() => page.locator(".fk-diff-viewer").getAttribute("data-mode")).toBe("unified");
 
-      await page.getByRole("button", { name: "Comment on new line 20" }).click();
+      const rangeStart = page.getByRole("button", { name: "Comment on new line 20" });
+      const rangeEnd = page.getByRole("button", { name: "Comment on new line 24" });
+      const startBox = await rangeStart.boundingBox();
+      const endBox = await rangeEnd.boundingBox();
+      expect(startBox).not.toBeNull();
+      expect(endBox).not.toBeNull();
+      if (startBox === null || endBox === null) return;
+      await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 8 });
+      await page.mouse.up();
+      await expect.poll(() => page.getByText("New lines 20–24", { exact: true }).isVisible()).toBe(true);
       await page.getByRole("textbox", { name: "Review comment" }).fill("Please add a regression test for the empty review path.");
       await page.getByRole("button", { name: "Add comment" }).click();
       await expect.poll(() => page.getByText("Please add a regression test for the empty review path.", { exact: true }).isVisible()).toBe(true);
+      await expect.poll(() => page.getByText("New lines 20–24", { exact: true }).isVisible()).toBe(true);
 
       await page.getByRole("button", { name: /Mark .*commands.ts as viewed/ }).click();
       await expect.poll(() => page.locator(".review-demo__nav-footer").textContent()).toContain("2 of 5 viewed");

@@ -271,6 +271,9 @@ importers:
 
   packages/diff-viewer:
     dependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)

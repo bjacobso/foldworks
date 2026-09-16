@@ -33,6 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "effect": "catalog:",
     "foldkit": "catalog:"
   },
   "devDependencies": {

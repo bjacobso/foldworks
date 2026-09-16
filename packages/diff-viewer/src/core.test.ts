@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { diffTotals, parseUnifiedDiff, splitRows } from "./core";
+import { adjacentSelectableLine, diffTotals, normalizeSelection, parseUnifiedDiff, selectionContains, selectionLabel, splitRows } from "./core";
 
 const patch = `diff --git a/src/old.ts b/src/new.ts
 similarity index 70%
@@ -58,5 +58,16 @@ describe("parseUnifiedDiff", () => {
     });
     expect(rows[2]).toMatchObject({ right: { kind: "addition", newLine: 4 } });
     expect(rows[2]!.left).toBeUndefined();
+  });
+
+  it("normalizes ranges and follows selectable lines on either side", () => {
+    const file = parseUnifiedDiff(patch)[0]!;
+    const selection = { path: file.path, side: "new" as const, startLine: 5, endLine: 3 };
+    expect(normalizeSelection(selection)).toMatchObject({ startLine: 3, endLine: 5 });
+    expect(selectionContains(selection, file.path, "new", 4)).toBe(true);
+    expect(selectionContains(selection, file.path, "old", 4)).toBe(false);
+    expect(selectionLabel(selection)).toBe("New lines 3–5");
+    expect(adjacentSelectableLine(file, "new", 3, "Next")).toBe(4);
+    expect(adjacentSelectableLine(file, "old", 3, "Next")).toBe(4);
   });
 });

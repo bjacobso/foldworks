@@ -10,7 +10,9 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
         ...model,
         activePath: path,
         selectionPath: "",
-        selectionLine: 0,
+        selectionStartLine: 0,
+        selectionEndLine: 0,
+        selectionDragging: false,
         draft: "",
         announcement: `Opened ${path}.`,
       },
@@ -21,15 +23,47 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
         ...model,
         selectionPath: path,
         selectionSide: side,
-        selectionLine: line,
+        selectionStartLine: line,
+        selectionEndLine: line,
+        selectionDragging: false,
         draft: "",
         announcement: `Selected ${side} line ${line} in ${path}.`,
       },
     }),
+    StartedSelection: ({ path, side, line }) => ({
+      model: {
+        ...model,
+        selectionPath: path,
+        selectionSide: side,
+        selectionStartLine: line,
+        selectionEndLine: line,
+        selectionDragging: true,
+        draft: "",
+        announcement: `Started selection at ${side} line ${line}.`,
+      },
+    }),
+    ExtendedSelection: ({ path, side, line, method }) => {
+      const sameAnchor = model.selectionPath === path && model.selectionSide === side;
+      if (!sameAnchor || (method === "Pointer" && !model.selectionDragging)) return { model };
+      const start = Math.min(model.selectionStartLine, line);
+      const end = Math.max(model.selectionStartLine, line);
+      return {
+        model: {
+          ...model,
+          selectionEndLine: line,
+          announcement: `Selected ${side} lines ${start} through ${end}.`,
+        },
+      };
+    },
+    EndedSelection: () => !model.selectionDragging
+      ? ({ model })
+      : ({ model: { ...model, selectionDragging: false } }),
     ChangedDraft: ({ value }) => ({ model: { ...model, draft: value } }),
     SubmittedComment: () => {
       const body = model.draft.trim();
-      if (body === "" || model.selectionPath === "" || model.selectionLine < 1) return { model };
+      if (body === "" || model.selectionPath === "" || model.selectionStartLine < 1) return { model };
+      const startLine = Math.min(model.selectionStartLine, model.selectionEndLine);
+      const endLine = Math.max(model.selectionStartLine, model.selectionEndLine);
       return {
         model: {
           ...model,
@@ -37,20 +71,31 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
             id: `comment-${model.comments.length + 1}`,
             path: model.selectionPath,
             side: model.selectionSide,
-            line: model.selectionLine,
+            startLine,
+            endLine,
             author: "You",
             body,
             resolved: false,
           }],
           selectionPath: "",
-          selectionLine: 0,
+          selectionStartLine: 0,
+          selectionEndLine: 0,
+          selectionDragging: false,
           draft: "",
           announcement: "Review comment added.",
         },
       };
     },
     CancelledComment: () => ({
-      model: { ...model, selectionPath: "", selectionLine: 0, draft: "", announcement: "Comment cancelled." },
+      model: {
+        ...model,
+        selectionPath: "",
+        selectionStartLine: 0,
+        selectionEndLine: 0,
+        selectionDragging: false,
+        draft: "",
+        announcement: "Comment cancelled.",
+      },
     }),
     ToggledViewed: ({ path, viewed }) => ({
       model: {
