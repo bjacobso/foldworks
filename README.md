@@ -30,7 +30,8 @@ accessible application interfaces with Foldkit:
 - [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
   branch-aware operations, layout, and drag-and-drop primitives.
 - [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
-  previews with draggable, resizable annotations and flattened PDF export.
+  annotation authoring with AcroForm inspection, versioned JSON, custom data,
+  zoom-aware editing, and interactive PDF export.
 - [`@foldworks/sidebar`](./packages/sidebar) — collapsible application chrome,
   grouped navigation, inset content, and responsive mobile drawer behavior.
 - [`@foldworks/history`](./packages/history) — immutable undo/redo history for
