@@ -1,7 +1,15 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles as styles } from "./catalog.styles";
-import { styledAttrs, type Children, type StyledConfig } from "./catalog.shared";
+import {
+  rootAttrs,
+  slotAttrs,
+  styledAttrs,
+  type Children,
+  type SlotProps,
+  type StyledConfig,
+  type WithSlotProps,
+} from "./catalog.shared";
 import { sxAttrs } from "./sx";
 
 export type MenuItem<Message> = Readonly<{
@@ -19,13 +27,17 @@ export type MenuGroup<Message> = Readonly<{
   items: ReadonlyArray<MenuItem<Message>>;
 }>;
 
+type MenuContentSlot = "menu" | "group" | "groupLabel" | "item" | "shortcut";
+type MenuContentSlotProps<Message> = Readonly<Partial<Record<MenuContentSlot, SlotProps<Message>>>>;
+
 const menuContent = <Message>(
   groups: ReadonlyArray<MenuGroup<Message>>,
   h: HtmlBuilder<Message>,
-): Html => h.div([...sxAttrs(h, styles.floating), h.Role("menu")], groups.flatMap((group) => [
-  ...(group.label === undefined ? [] : [h.div([...sxAttrs(h, styles.menuLabel), h.Role("presentation")], [group.label])]),
-  h.div([h.Role("group")], group.items.map((item) => h.button([
-    ...sxAttrs(h, styles.menuItem, styles.focusable),
+  slotProps: MenuContentSlotProps<Message> | undefined,
+): Html => h.div([...slotAttrs(slotProps?.menu, h, styles.floating), h.Role("menu")], groups.flatMap((group) => [
+  ...(group.label === undefined ? [] : [h.div([...slotAttrs(slotProps?.groupLabel, h, styles.menuLabel), h.Role("presentation")], [group.label])]),
+  h.div([...slotAttrs(slotProps?.group, h), h.Role("group")], group.items.map((item) => h.button([
+    ...slotAttrs(slotProps?.item, h, styles.menuItem, styles.focusable),
     h.Type("button"),
     h.Role("menuitem"),
     h.Disabled(item.isDisabled === true),
@@ -35,11 +47,15 @@ const menuContent = <Message>(
   ], [
     ...(item.media === undefined ? [] : [item.media]),
     item.label,
-    ...(item.shortcut === undefined ? [] : [h.span([h.Style({ marginLeft: "auto", opacity: "0.65" })], [item.shortcut])]),
+    ...(item.shortcut === undefined ? [] : [h.span([
+      ...slotAttrs(slotProps?.shortcut, h),
+      h.Style({ marginLeft: "auto", opacity: "0.65" }),
+    ], [item.shortcut])]),
   ]))),
 ]));
 
-type MenuConfig<Message> = StyledConfig<Message> & Readonly<{
+export type DropdownMenuSlot = "root" | "trigger" | MenuContentSlot;
+export type DropdownMenuConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, DropdownMenuSlot> & Readonly<{
   id: string;
   trigger: Children;
   groups: ReadonlyArray<MenuGroup<Message>>;
@@ -49,11 +65,11 @@ type MenuConfig<Message> = StyledConfig<Message> & Readonly<{
 }>;
 
 const dropdownMenu = <Message>(
-  config: MenuConfig<Message>,
+  config: DropdownMenuConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => h.div(styledAttrs(config, h), [
+): Html => h.div(rootAttrs(config, h), [
   h.button([
-    ...sxAttrs(h, styles.toggle, styles.focusable),
+    ...slotAttrs(config.slotProps?.trigger, h, styles.toggle, styles.focusable),
     h.Type("button"),
     h.AriaHasPopup("menu"),
     h.AriaExpanded(config.isOpen),
@@ -61,51 +77,58 @@ const dropdownMenu = <Message>(
     h.OnClick(config.onOpenChange(!config.isOpen)),
   ], config.trigger),
   ...(config.isOpen
-    ? [h.div([h.Id(`${config.id}-menu`), ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)])], [menuContent(config.groups, h)])]
+    ? [h.div([h.Id(`${config.id}-menu`), ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)])],
+        [menuContent(config.groups, h, config.slotProps)])]
     : []),
 ]);
 
+export type ContextMenuSlot = "root" | MenuContentSlot;
+export type ContextMenuConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, ContextMenuSlot> & Readonly<{
+  id: string;
+  children: Children;
+  groups: ReadonlyArray<MenuGroup<Message>>;
+  isOpen: boolean;
+  onOpen: Message;
+}>;
+
 const contextMenu = <Message>(
-  config: StyledConfig<Message> & Readonly<{
-    id: string;
-    children: Children;
-    groups: ReadonlyArray<MenuGroup<Message>>;
-    isOpen: boolean;
-    onOpen: Message;
-  }>,
+  config: ContextMenuConfig<Message>,
   h: HtmlBuilder<Message>,
 ): Html => h.div(
-  [...styledAttrs(config, h), h.OnContextMenu(config.onOpen), h.AriaHasPopup("menu")],
+  [...rootAttrs(config, h), h.OnContextMenu(config.onOpen), h.AriaHasPopup("menu")],
   [
     ...config.children,
-    ...(config.isOpen ? [menuContent(config.groups, h)] : []),
+    ...(config.isOpen ? [menuContent(config.groups, h, config.slotProps)] : []),
   ],
 );
 
+export type MenubarSlot = "root" | "menuRoot" | "trigger" | MenuContentSlot;
+export type MenubarConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, MenubarSlot> & Readonly<{
+  menus: ReadonlyArray<Readonly<{
+    id: string;
+    label: string;
+    groups: ReadonlyArray<MenuGroup<Message>>;
+    isOpen: boolean;
+    onToggle: Message;
+  }>>;
+  ariaLabel?: string;
+}>;
+
 const menubar = <Message>(
-  config: StyledConfig<Message> & Readonly<{
-    menus: ReadonlyArray<Readonly<{
-      id: string;
-      label: string;
-      groups: ReadonlyArray<MenuGroup<Message>>;
-      isOpen: boolean;
-      onToggle: Message;
-    }>>;
-    ariaLabel?: string;
-  }>,
+  config: MenubarConfig<Message>,
   h: HtmlBuilder<Message>,
 ): Html => h.div(
-  [...styledAttrs(config, h, styles.inset, styles.group), h.Role("menubar"), h.AriaLabel(config.ariaLabel ?? "Application menu")],
-  config.menus.map((menu) => h.div([], [
+  [...rootAttrs(config, h, styles.inset, styles.group), h.Role("menubar"), h.AriaLabel(config.ariaLabel ?? "Application menu")],
+  config.menus.map((menu) => h.div(slotAttrs(config.slotProps?.menuRoot, h), [
     h.button([
-      ...sxAttrs(h, styles.menuItem, styles.focusable),
+      ...slotAttrs(config.slotProps?.trigger, h, styles.menuItem, styles.focusable),
       h.Type("button"),
       h.Role("menuitem"),
       h.AriaHasPopup("menu"),
       h.AriaExpanded(menu.isOpen),
       h.OnClick(menu.onToggle),
     ], [menu.label]),
-    ...(menu.isOpen ? [menuContent(menu.groups, h)] : []),
+    ...(menu.isOpen ? [menuContent(menu.groups, h, config.slotProps)] : []),
   ])),
 );
 

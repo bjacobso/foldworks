@@ -67,7 +67,8 @@ const contributionHistory = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Contribution History",
   description: "Last 6 months of activity",
   sx: [styles.card, styles.tallCard],
-  children: [h.div([h.Class(className(styles.cardStack))], [
+  slotProps: { content: { sx: styles.cardStack } },
+  children: [
     h.div([h.Class(className(styles.chartWrap))], [
       Chart.view({
         ariaLabel: "Monthly contribution history",
@@ -90,7 +91,7 @@ const contributionHistory = (h: HtmlBuilder<Message>): Html => Card.view({
       ]),
     ]),
     button("View Full Report", h),
-  ])],
+  ],
 }, h);
 
 const payoutThreshold = (model: Model, h: HtmlBuilder<Message>): Html => Card.view({
@@ -98,7 +99,8 @@ const payoutThreshold = (model: Model, h: HtmlBuilder<Message>): Html => Card.vi
   description: "Set the minimum balance required before a payout is triggered.",
   action: [iconAction("Close payout settings", X, h)],
   sx: [styles.card, styles.tallCard],
-  children: [h.div([h.Class(className(styles.formStack))], [
+  slotProps: { content: { sx: styles.formStack } },
+  children: [
     Field.select({
       id: "showcase-currency",
       label: "Preferred Currency",
@@ -132,7 +134,7 @@ const payoutThreshold = (model: Model, h: HtmlBuilder<Message>): Html => Card.vi
       }, h),
     ]),
     button("Save Threshold", h),
-  ])],
+  ],
 }, h);
 
 const target = (label: string, amount: string, achieved: number, balance: string, h: HtmlBuilder<Message>) =>
@@ -151,17 +153,19 @@ const savingsTargets = (h: HtmlBuilder<Message>): Html => Card.view({
   description: "Active milestones for 2024",
   action: [cardAction("New Goal", h)],
   sx: [styles.card, styles.tallCard],
-  children: [h.div([h.Class(className(styles.cardStack))], [
+  slotProps: { content: { sx: styles.cardStack } },
+  children: [
     target("Retirement", "$420,000", 65, "$273,000", h),
     target("Real Estate", "$85,000", 32, "$27,200", h),
     h.p([h.Class(className(styles.muted))], ["You have not met your targets for this year."]),
-  ])],
+  ],
 }, h);
 
 const buyInvestment = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Buy Investment",
   sx: [styles.card, styles.tallCard],
-  children: [h.div([h.Class(className(styles.formStack))], [
+  slotProps: { content: { sx: styles.formStack } },
+  children: [
     h.div([h.Class(className(styles.formGroup))], [
       Label.view({ for: "showcase-investment", children: ["Amount to Invest"] }, h),
       InputGroup.view({
@@ -186,7 +190,7 @@ const buyInvestment = (h: HtmlBuilder<Message>): Html => Card.view({
     ]),
     button("Review Order", h),
     h.p([h.Class(className(styles.muted, styles.center))], ["Trades are typically executed within minutes during market hours."]),
-  ])],
+  ],
 }, h);
 
 const distributeTrack = (h: HtmlBuilder<Message>): Html => Card.view({
@@ -195,7 +199,8 @@ const distributeTrack = (h: HtmlBuilder<Message>): Html => Card.view({
     title: "Distribute Track",
     description: "Upload your first master to start reaching listeners on Spotify, Apple Music, and more.",
     sx: styles.empty,
-    media: h.div([h.Class(className(styles.emptyMedia))], [Icon.view({ icon: Plus, size: 20 }, h)]),
+    media: Icon.view({ icon: Plus, size: 20 }, h),
+    slotProps: { media: { sx: styles.emptyMedia } },
     actions: [Button.view({
       label: "Create Release",
       sx: styles.pillButton,
@@ -207,7 +212,8 @@ const distributeTrack = (h: HtmlBuilder<Message>): Html => Card.view({
 const claimableBalance = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Claimable Balance",
   sx: styles.card,
-  children: [h.div([h.Class(className(styles.cardStack))], [
+  slotProps: { content: { sx: styles.cardStack } },
+  children: [
     h.div([h.Class(className(styles.compactStack))], [
       h.strong([h.Class(className(styles.metric))], ["$0.00"]),
       h.div([], [Badge.view({ label: "Pending Setup", tone: "warning", dot: true }, h)]),
@@ -219,7 +225,7 @@ const claimableBalance = (h: HtmlBuilder<Message>): Html => Card.view({
       h.div([h.Class(className(styles.split))], [h.span([h.Class(className(styles.muted))], ["Total Ready to Claim"]), h.span([h.Class(className(styles.value))], ["$0.00 USD"])]),
     ]),
     h.p([h.Class(className(styles.muted))], ["Once your bank is connected, balances over $10.00 are automatically eligible for monthly distribution."]),
-  ])],
+  ],
 }, h);
 
 const transactions = [
@@ -235,7 +241,8 @@ const recentTransactions = (h: HtmlBuilder<Message>): Html => Card.view({
   description: "Your latest account activity.",
   action: [cardAction("View All", h)],
   sx: [styles.card, styles.spanTwo],
-  children: [h.div([h.Class(className(styles.transactionList))], transactions.map(([name, category, date, amount, icon, isPositive], index) =>
+  slotProps: { content: { sx: styles.transactionList } },
+  children: transactions.map(([name, category, date, amount, icon, isPositive], index) =>
     h.div([h.Class(className(styles.transaction, ...(index === transactions.length - 1 ? [styles.transactionLast] : [])))], [
       h.div([h.Class(className(styles.transactionIcon))], [Icon.view({ icon, size: 15 }, h)]),
       h.div([h.Class(className(styles.compactStack))], [
@@ -246,7 +253,7 @@ const recentTransactions = (h: HtmlBuilder<Message>): Html => Card.view({
       h.span([h.Class(className(styles.transactionAmount, ...(isPositive ? [styles.transactionPositive] : [])))], [amount]),
       iconAction(`More actions for ${name}`, Settings, h),
     ]),
-  ))],
+  ),
 }, h);
 
 const qrRows = [
@@ -259,14 +266,15 @@ const qrCard = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Quick Pay",
   description: "Scan to send or request funds.",
   sx: styles.card,
-  children: [h.div([h.Class(className(styles.cardStack))], [
+  slotProps: { content: { sx: styles.cardStack } },
+  children: [
     h.div([h.Class(className(styles.qrFrame))], [
       h.div([h.Class(className(styles.qr)), h.Role("img"), h.AriaLabel("Quick Pay code")], qrRows.flatMap((row) => [...row].map((cell) =>
         h.span([h.Class(className(styles.qrCell, ...(cell === "1" ? [styles.qrCellOn] : [])))]),
       ))),
     ]),
     h.p([h.Class(className(styles.muted, styles.center))], ["@northstar-studio"]),
-  ])],
+  ],
 }, h);
 
 const preferences = (model: Model, h: HtmlBuilder<Message>): Html => Card.view({
@@ -274,7 +282,8 @@ const preferences = (model: Model, h: HtmlBuilder<Message>): Html => Card.view({
   description: "Manage your account settings and notifications.",
   action: [iconAction("Close preferences", X, h)],
   sx: styles.card,
-  children: [h.div([h.Class(className(styles.formStack))], [
+  slotProps: { content: { sx: styles.formStack } },
+  children: [
     Switch.view({
       id: "showcase-product-updates",
       label: "Product updates",
@@ -289,14 +298,15 @@ const preferences = (model: Model, h: HtmlBuilder<Message>): Html => Card.view({
       isChecked: model.securityAlerts,
       onToggle: (isChecked) => Message.ToggledSecurityAlerts({ isChecked }),
     }, h),
-  ])],
+  ],
 }, h);
 
 const navigationSamples = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Navigation",
   description: "Compact application wayfinding.",
   sx: [styles.card, styles.spanTwo],
-  children: [h.div([h.Class(className(styles.cardStack))], [
+  slotProps: { content: { sx: styles.cardStack } },
+  children: [
     h.div([h.Class(className(styles.navPair))], [
       Sidebar.view({
         ariaLabel: "Overview navigation",
@@ -333,7 +343,7 @@ const navigationSamples = (h: HtmlBuilder<Message>): Html => Card.view({
         iconAction("Open transfer limits", Settings, h),
       ]),
     ]),
-  ])],
+  ],
 }, h);
 
 const portfolioSummary = (h: HtmlBuilder<Message>): Html =>
@@ -341,10 +351,11 @@ const portfolioSummary = (h: HtmlBuilder<Message>): Html =>
     Card.view({
       title: "Card Balance",
       sx: styles.card,
-      children: [h.div([h.Class(className(styles.compactStack))], [
+      slotProps: { content: { sx: styles.compactStack } },
+      children: [
         h.strong([h.Class(className(styles.miniMetric))], ["US$12.94"]),
         h.span([h.Class(className(styles.muted))], ["US$11,337.06 Available"]),
-      ])],
+      ],
     }, h),
     Card.view({
       title: "Yearly Activity",
@@ -365,7 +376,8 @@ const accountAccess = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Account Access",
   description: "Update your credentials or review account status.",
   sx: styles.card,
-  children: [h.div([h.Class(className(styles.formStack))], [
+  slotProps: { content: { sx: styles.formStack } },
+  children: [
     Field.input({ id: "showcase-account-email", label: "Email Address", value: "artist@studio.inc", type: "email" }, h),
     Field.input({ id: "showcase-password", label: "Current Password", value: "••••••••••••", type: "password" }, h),
     Button.view({
@@ -381,14 +393,15 @@ const accountAccess = (h: HtmlBuilder<Message>): Html => Card.view({
         h.span([h.Class(className(styles.muted))], ["Archive account and remove access."]),
       ]),
     ]),
-  ])],
+  ],
 }, h);
 
 const transferFunds = (h: HtmlBuilder<Message>): Html => Card.view({
   title: "Transfer Funds",
   description: "Move money between your connected accounts.",
   sx: styles.card,
-  children: [h.div([h.Class(className(styles.formStack))], [
+  slotProps: { content: { sx: styles.formStack } },
+  children: [
     h.div([h.Class(className(styles.formGroup))], [
       Label.view({ for: "showcase-transfer", children: ["Amount to Transfer"] }, h),
       InputGroup.view({
@@ -399,7 +412,7 @@ const transferFunds = (h: HtmlBuilder<Message>): Html => Card.view({
     Field.select({ id: "showcase-from-account", label: "From Account", value: "checking", options: [{ value: "checking", label: "Main Checking (••8402) — $8,410" }] }, h),
     Field.select({ id: "showcase-to-account", label: "To Account", value: "savings", options: [{ value: "savings", label: "High Yield Savings (••2198)" }] }, h),
     button("Continue Transfer", h),
-  ])],
+  ],
 }, h);
 
 export const financeShowcase = (model: Model, h: HtmlBuilder<Message>): Html =>

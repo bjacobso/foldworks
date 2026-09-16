@@ -42,16 +42,16 @@ export const styledViewInputs = <Message>(
       ...dialog,
       h.AriaModal(true),
     ], isVisible ? [
-      h.div([...backdrop, ...slotAttrs(config.slotProps?.backdrop, h, statefulStyles.backdrop, statefulStyles.transition)]),
+      h.div([...slotAttrs(config.slotProps?.backdrop, h, statefulStyles.backdrop, statefulStyles.transition), ...backdrop]),
       h.div(slotAttrs(config.slotProps?.layout, h, statefulStyles.dialogLayout), [
         h.section([
-          ...panel,
           ...slotAttrs(config.slotProps?.panel, h, styles.dialogPanel, statefulStyles.panel, statefulStyles.transition),
+          ...panel,
         ], [
           h.header(slotAttrs(config.slotProps?.header, h, styles.dialogHeader), [
-            h.h2([...title, ...slotAttrs(config.slotProps?.title, h, styles.title)], [config.title]),
+            h.h2([...slotAttrs(config.slotProps?.title, h, styles.title), ...title], [config.title]),
             // Foldkit always references this description id; keep the target even when empty.
-            h.p([...description, ...slotAttrs(config.slotProps?.description, h, styles.description), h.Hidden(config.description === undefined)],
+            h.p([...slotAttrs(config.slotProps?.description, h, styles.description), ...description, h.Hidden(config.description === undefined)],
               config.description === undefined ? [] : [config.description]),
           ]),
           ...config.content({ closeButton, initialFocus }, h),

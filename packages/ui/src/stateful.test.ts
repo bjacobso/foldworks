@@ -30,7 +30,13 @@ describe("styled Foldkit tabs", () => {
       ],
       slotProps: {
         list: { attributes: [h.DataAttribute("composition-slot", "list")] },
-        trigger: { attributes: [h.DataAttribute("composition-slot", "trigger")] },
+        trigger: {
+          attributes: [
+            h.DataAttribute("composition-slot", "trigger"),
+            h.Role("button"),
+            h.Tabindex(99),
+          ],
+        },
         panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
       },
     }, h);
@@ -38,7 +44,8 @@ describe("styled Foldkit tabs", () => {
       { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, inputs)() },
       Scene.given(Tabs.init({ id: "composable-tabs" })),
       Scene.expect(Scene.selector('[data-composition-slot="list"]')).toExist(),
-      Scene.expect(Scene.selector('[data-composition-slot="trigger"]')).toExist(),
+      Scene.expect(Scene.selector('[data-composition-slot="trigger"]')).toHaveAttr("role", "tab"),
+      Scene.expect(Scene.role("tab", { name: "Overview" })).toHaveAttr("tabIndex", "0"),
       Scene.expect(Scene.selector('[data-composition-slot="panel"]')).toExist(),
     );
   });

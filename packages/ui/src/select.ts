@@ -1,10 +1,10 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles } from "./catalog.styles";
-import { rootAttrs, slotAttrs, type StyledConfig, type WithSlotProps } from "./catalog.shared";
+import { rootAttrs, slotAttrs, styledAttrs, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { fieldStyles } from "./styles";
 
-export type ControlConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, "root"> & Readonly<{
+export type ControlConfig<Message> = StyledConfig<Message> & Readonly<{
   value: string;
   options: ReadonlyArray<Readonly<{ value: string; label: string }>>;
   onChange: (value: string) => Message;
@@ -17,7 +17,7 @@ export const control = <Message>(
   h: HtmlBuilder<Message>,
 ): Html => h.select(
   [
-    ...rootAttrs(config, h, fieldStyles.control, fieldStyles.selectControl),
+    ...styledAttrs(config, h, fieldStyles.control, fieldStyles.selectControl),
     h.Value(config.value),
     h.AriaLabel(config.ariaLabel),
     h.OnChange(config.onChange),

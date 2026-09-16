@@ -11,6 +11,24 @@ temporary interaction state. Render through `h.submodel`, forward messages with
 These components require no application subscriptions. Keep slot IDs stable
 and unique. Call `create` once at module scope, never during rendering.
 
+## Composition boundary
+
+The stateful Dialog, Popover, Tabs, and Tooltip adapters expose typed
+`slotProps` because their Foldkit render hooks let Foldworks compose StyleX and
+consumer attributes while applying engine-owned lifecycle and accessibility
+attributes last. This prevents a slot override from replacing managed IDs,
+roles, focus state, or event handlers.
+
+Stateful Select, Menu, and Combobox remain recipe-configured adapters. Their
+current Foldkit inputs expose attribute arrays for some containers, but repeated
+items and group headings accept only class names. Adding partial `slotProps`
+would make the same public type behave differently by slot and would not support
+attribute composition on the places consumers most often repeat. The concrete
+follow-up is to add item/group attribute callbacks (or an equivalent typed
+render hook) to Foldkit, with engine-owned attributes merged last; Foldworks can
+then expose the same `{ attributes?, sx? }` contract without casting or dropping
+accessibility guarantees.
+
 ## Complete tabs module
 
 This module can be embedded as a child of a Foldkit application. Its model stores

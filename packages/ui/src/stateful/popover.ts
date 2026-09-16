@@ -22,15 +22,15 @@ export const styledViewInputs = <Message>(config: StyledViewInputs<Message>, h: 
   ...(config.focusSelector === undefined ? {} : { focusSelector: config.focusSelector }),
   ...(config.showArrow === true ? { arrowPadding: 8 } : {}),
   toView: ({ button, panel, backdrop, arrow, isVisible }) => h.span(rootAttrs(config, h, styles.layerRoot), [
-    h.button([...button, ...slotAttrs(config.slotProps?.trigger, h,
-      catalogStyles.toggle, catalogStyles.focusable)], config.trigger),
+    h.button([...slotAttrs(config.slotProps?.trigger, h,
+      catalogStyles.toggle, catalogStyles.focusable), ...button], config.trigger),
     ...(isVisible ? [
-      h.div([...backdrop, ...slotAttrs(config.slotProps?.backdrop, h, styles.layerBackdrop)]),
-      h.div([...panel, h.Role("dialog"), h.AriaLabel(config.ariaLabel ?? "Popover"),
-        ...slotAttrs(config.slotProps?.panel, h, styles.layerPanel, styles.transition)], [
+      h.div([...slotAttrs(config.slotProps?.backdrop, h, styles.layerBackdrop), ...backdrop]),
+      h.div([...slotAttrs(config.slotProps?.panel, h, styles.layerPanel, styles.transition), ...panel,
+        h.Role("dialog"), h.AriaLabel(config.ariaLabel ?? "Popover")], [
         ...config.content,
         ...(config.showArrow === true
-          ? [h.span([...arrow, ...slotAttrs(config.slotProps?.arrow, h, styles.layerArrow)])]
+          ? [h.span([...slotAttrs(config.slotProps?.arrow, h, styles.layerArrow), ...arrow])]
           : []),
       ]),
     ] : []),
