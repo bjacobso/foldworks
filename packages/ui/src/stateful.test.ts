@@ -19,6 +19,30 @@ const tabInputs = Tabs.styledViewInputs({
 }, h);
 
 describe("styled Foldkit tabs", () => {
+  it("applies attributes to repeated and structural slots", () => {
+    const inputs = Tabs.styledViewInputs({
+      ariaLabel: "Composable views",
+      selectedValue: "overview",
+      tabs: [
+        { value: "overview", label: "Overview", content: ["Overview content"] },
+        { value: "restricted", label: "Restricted", content: ["Restricted content"], isDisabled: true },
+        { value: "activity", label: "Activity", content: ["Activity content"] },
+      ],
+      slotProps: {
+        list: { attributes: [h.DataAttribute("composition-slot", "list")] },
+        trigger: { attributes: [h.DataAttribute("composition-slot", "trigger")] },
+        panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
+      },
+    }, h);
+    Scene.scene(
+      { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, inputs)() },
+      Scene.given(Tabs.init({ id: "composable-tabs" })),
+      Scene.expect(Scene.selector('[data-composition-slot="list"]')).toExist(),
+      Scene.expect(Scene.selector('[data-composition-slot="trigger"]')).toExist(),
+      Scene.expect(Scene.selector('[data-composition-slot="panel"]')).toExist(),
+    );
+  });
+
   it("navigates past disabled tabs and emits the selected value through the real key handler", () => {
     Scene.scene(
       { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, tabInputs)() },
@@ -60,6 +84,25 @@ describe("styled Foldkit tabs", () => {
 });
 
 describe("styled Foldkit dialog", () => {
+  it("applies slot attributes without replacing engine attributes", () => {
+    const inputs = Dialog.styledViewInputs({
+      title: "Composable dialog",
+      content: () => ["Content"],
+      slotProps: {
+        panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
+        title: { attributes: [h.DataAttribute("composition-slot", "title")] },
+      },
+    }, h);
+    const model = { ...Dialog.init({ id: "composable-dialog" }), isOpen: true };
+    Scene.scene(
+      { update: Dialog.update, view: Scene.withViewInputs(Dialog.view, inputs)() },
+      Scene.given(model),
+      Scene.expect(Scene.selector('[data-composition-slot="panel"]')).toExist(),
+      Scene.expect(Scene.selector('[data-composition-slot="title"]'))
+        .toHaveAttr("id", Dialog.titleId(model)),
+    );
+  });
+
   it("retains initial focus, description linkage, and the engine's close command", () => {
     const inputs = Dialog.styledViewInputs({
       title: "Edit profile",

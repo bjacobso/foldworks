@@ -1,15 +1,16 @@
 import type { LucideIconData, LucideIconNode } from "@lucide/icons";
-import type { Attribute, Html, HtmlBuilder, TagName } from "foldkit/html";
+import type { Html, HtmlBuilder, TagName } from "foldkit/html";
+
+import { rootAttrs, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 
 export type { LucideIconData as IconData } from "@lucide/icons";
 
-export type ViewConfig<Message> = Readonly<{
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, "root"> & Readonly<{
   icon: LucideIconData;
   size?: number;
   strokeWidth?: number;
   absoluteStrokeWidth?: boolean;
   label?: string;
-  attributes?: ReadonlyArray<Attribute<Message>>;
 }>;
 
 const nodeView = <Message>(
@@ -65,7 +66,7 @@ export const view = <Message>(
       ...(label === undefined
         ? [h.AriaHidden(true)]
         : [h.Role("img"), h.AriaLabel(label)]),
-      ...(config.attributes ?? []),
+      ...rootAttrs(config, h),
     ],
     config.icon.node.map((node, index) =>
       nodeView(

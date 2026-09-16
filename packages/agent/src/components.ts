@@ -397,7 +397,7 @@ const emptyState = <ParentMessage>(
         label: config.suggestion.label,
         icon: Sparkles,
         size: "lg",
-        style: s.suggestion,
+        sx: s.suggestion,
         onClick: config.suggestion.onSelect,
       }, h)]),
 ]);
@@ -529,7 +529,7 @@ const composer = <ParentMessage>(
         ariaLabel: "Message the agent",
         isDisabled: active,
         onInput: (value) => config.toParentMessage(Message.ChangedDraft({ value })),
-        style: s.textarea,
+        sx: s.textarea,
         attributes: [
           h.AriaDescribedBy(helpId),
           h.OnKeyDownPreventDefault((key, modifiers) =>

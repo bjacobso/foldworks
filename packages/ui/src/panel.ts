@@ -1,25 +1,29 @@
-import type * as stylex from "@stylexjs/stylex";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
+import { rootAttrs, slotAttrs, type Children, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { panelStyles } from "./styles";
-import { sxAttrs } from "./sx";
+
+export type Slot = "root" | "header" | "title" | "description" | "body";
+
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
+  title?: string;
+  description?: string;
+  children: Children;
+}>;
 
 export const view = <Message>(
-  config: Readonly<{
-    title?: string;
-    description?: string;
-    children: ReadonlyArray<Html | string>;
-    style?: stylex.StyleXStyles;
-  }>,
+  config: ViewConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => h.section(sxAttrs(h, panelStyles.root, config.style), [
+): Html => h.section(rootAttrs(config, h, panelStyles.root), [
   ...(config.title === undefined && config.description === undefined
     ? []
-    : [h.header(sxAttrs(h, panelStyles.header), [
-        ...(config.title === undefined ? [] : [h.h2(sxAttrs(h, panelStyles.title), [config.title])]),
+    : [h.header(slotAttrs(config.slotProps?.header, h, panelStyles.header), [
+        ...(config.title === undefined
+          ? []
+          : [h.h2(slotAttrs(config.slotProps?.title, h, panelStyles.title), [config.title])]),
         ...(config.description === undefined
           ? []
-          : [h.p(sxAttrs(h, panelStyles.description), [config.description])]),
+          : [h.p(slotAttrs(config.slotProps?.description, h, panelStyles.description), [config.description])]),
       ])]),
-  h.div(sxAttrs(h, panelStyles.body), config.children),
+  h.div(slotAttrs(config.slotProps?.body, h, panelStyles.body), config.children),
 ]);

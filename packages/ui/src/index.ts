@@ -29,6 +29,7 @@ export {
   Separator,
   Table,
 } from "./display";
+export type { CardConfig, CardSlot } from "./display";
 export { Direction } from "./direction";
 export {
   ButtonGroup,
@@ -56,6 +57,7 @@ export { Carousel, Resizable, ScrollArea } from "./containers";
 export { Attachment, Bubble, Marker, Message, MessageScroller } from "./ai";
 export * as Headless from "./headless";
 export * as Stateful from "./stateful";
+export type { SlotProps, StyledConfig, Sx, WithSlotProps } from "./catalog.shared";
 export {
   colors,
   breakpoints,

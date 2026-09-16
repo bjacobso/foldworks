@@ -2,10 +2,9 @@ import { Minus, Plus } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import * as Icon from "./icon";
-import { styledAttrs, type StyledConfig } from "./catalog.shared";
+import { rootAttrs, slotAttrs, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { catalogStyles } from "./catalog.styles";
 import { primitiveStyles as styles } from "./primitive.styles";
-import { sxAttrs } from "./sx";
 
 const decimalPlaces = (value: number): number => {
   const text = String(value).toLocaleLowerCase();
@@ -29,7 +28,9 @@ export const stepValue = (
   return normalize(origin + direction * step, config);
 };
 
-export type ViewConfig<Message> = StyledConfig<Message> & Readonly<{
+export type Slot = "root" | "label" | "control" | "decrement" | "input" | "increment" | "description";
+
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
   id: string;
   value?: number;
   onChange: (value: number | undefined) => Message;
@@ -54,19 +55,22 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
   const descriptionId = `${config.id}-description`;
   const canDecrease = config.value === undefined || config.min === undefined || config.value > config.min;
   const canIncrease = config.value === undefined || config.max === undefined || config.value < config.max;
-  return h.div(styledAttrs(config, h, styles.numberRoot), [
-    ...(config.label === undefined ? [] : [h.label([h.For(config.id), ...sxAttrs(h, catalogStyles.label)], [
+  return h.div(rootAttrs(config, h, styles.numberRoot), [
+    ...(config.label === undefined ? [] : [h.label([h.For(config.id),
+      ...slotAttrs(config.slotProps?.label, h, catalogStyles.label)], [
       config.label, ...(config.isRequired === true ? [" *"] : []),
     ])]),
-    h.div(sxAttrs(h, styles.numberControl), [
+    h.div(slotAttrs(config.slotProps?.control, h, styles.numberControl), [
       h.button([
-        ...sxAttrs(h, styles.numberButton, styles.numberButtonStart, catalogStyles.focusable), h.Type("button"),
+        ...slotAttrs(config.slotProps?.decrement, h,
+          styles.numberButton, styles.numberButtonStart, catalogStyles.focusable), h.Type("button"),
         h.AriaLabel(`Decrease ${config.label ?? config.ariaLabel}`),
         h.Disabled(config.isDisabled === true || config.isReadOnly === true || !canDecrease),
         h.OnClick(config.onChange(stepValue(config.value, -1, config))),
       ], [Icon.view({ icon: Minus, size: 14 }, h)]),
       h.input([
-        ...sxAttrs(h, catalogStyles.control, catalogStyles.focusable, styles.numberInput),
+        ...slotAttrs(config.slotProps?.input, h,
+          catalogStyles.control, catalogStyles.focusable, styles.numberInput),
         h.Id(config.id), h.Type("number"), h.InputMode("decimal"),
         ...(config.value === undefined ? [] : [h.Value(String(config.value))]),
         ...(config.label === undefined ? [h.AriaLabel(config.ariaLabel ?? "Number")] : []),
@@ -84,13 +88,15 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
         }),
       ]),
       h.button([
-        ...sxAttrs(h, styles.numberButton, styles.numberButtonEnd, catalogStyles.focusable), h.Type("button"),
+        ...slotAttrs(config.slotProps?.increment, h,
+          styles.numberButton, styles.numberButtonEnd, catalogStyles.focusable), h.Type("button"),
         h.AriaLabel(`Increase ${config.label ?? config.ariaLabel}`),
         h.Disabled(config.isDisabled === true || config.isReadOnly === true || !canIncrease),
         h.OnClick(config.onChange(stepValue(config.value, 1, config))),
       ], [Icon.view({ icon: Plus, size: 14 }, h)]),
     ]),
-    ...(config.description === undefined ? [] : [h.p([h.Id(descriptionId), ...sxAttrs(h, catalogStyles.description)], [config.description])]),
+    ...(config.description === undefined ? [] : [h.p([h.Id(descriptionId),
+      ...slotAttrs(config.slotProps?.description, h, catalogStyles.description)], [config.description])]),
   ]);
 };
 

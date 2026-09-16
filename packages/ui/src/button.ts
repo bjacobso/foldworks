@@ -1,17 +1,23 @@
 import type { LucideIconData } from "@lucide/icons";
-import type * as stylex from "@stylexjs/stylex";
-import type { Attribute, ChildAttribute, Html, HtmlBuilder } from "foldkit/html";
+import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { Button } from "@foldkit/ui";
 
 import * as Icon from "./icon";
+import {
+  rootAttrs,
+  slotAttrs,
+  type StyledConfig,
+  type WithSlotProps,
+} from "./catalog.shared";
 import { buttonStyles } from "./styles";
-import { sxAttrs } from "./sx";
 
 export type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 export type Size = "xs" | "sm" | "md" | "lg" | "icon";
 
-export type ViewConfig<Message> = Readonly<{
+export type Slot = "root" | "startIcon" | "label" | "endIcon";
+
+export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
   label?: string;
   icon?: LucideIconData;
   trailingIcon?: LucideIconData;
@@ -21,8 +27,6 @@ export type ViewConfig<Message> = Readonly<{
   isDisabled?: boolean;
   isFullWidth?: boolean;
   ariaLabel?: string;
-  attributes?: ReadonlyArray<Attribute<Message> | ChildAttribute>;
-  style?: stylex.StyleXStyles;
 }>;
 
 const variantStyle = (variant: Variant) => {
@@ -61,13 +65,12 @@ export const view = <Message>(
       toView: ({ button }) => h.button(
         [
           ...button,
-          ...(config.attributes ?? []),
-          ...sxAttrs(
+          ...rootAttrs(
+            config,
             h,
             buttonStyles.base,
             variantStyle(variant),
             sizeStyle(size),
-            config.style,
             config.isFullWidth === true && buttonStyles.fullWidth,
             config.isDisabled === true && buttonStyles.disabled,
           ),
@@ -76,11 +79,17 @@ export const view = <Message>(
         [
           ...(config.icon === undefined
             ? []
-            : [Icon.view({ icon: config.icon, size: iconSize(size) }, h)]),
-          ...(config.label === undefined ? [] : [config.label]),
+            : [h.span(slotAttrs(config.slotProps?.startIcon, h), [
+                Icon.view({ icon: config.icon, size: iconSize(size) }, h),
+              ])]),
+          ...(config.label === undefined
+            ? []
+            : [h.span(slotAttrs(config.slotProps?.label, h), [config.label])]),
           ...(config.trailingIcon === undefined
             ? []
-            : [Icon.view({ icon: config.trailingIcon, size: iconSize(size) }, h)]),
+            : [h.span(slotAttrs(config.slotProps?.endIcon, h), [
+                Icon.view({ icon: config.trailingIcon, size: iconSize(size) }, h),
+              ])]),
         ],
       ),
     },
