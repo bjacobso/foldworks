@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/pdf-annotator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A controlled PDF annotation authoring tool with portable JSON and AcroForm workflows.",
   "license": "MIT",
   "author": "Ben Jacobson",

@@ -1,5 +1,28 @@
 # @foldworks/pdf-annotator
 
+## 0.2.0
+
+### Minor Changes
+
+- cfeffc6: Add versioned annotation-document JSON APIs, canonical PDF-point geometry,
+  existing AcroForm inspection, interactive AcroForm serialization, open custom
+  kinds and metadata, eight-handle resizing, duplication, lock/read-only and
+  required properties, JSON editing and download, and zoom-aware editing from
+  25% to 400%.
+
+### Patch Changes
+
+- Updated dependencies [c7b54c5]
+- Updated dependencies [ff6f731]
+- Updated dependencies [05759a5]
+- Updated dependencies [140b35f]
+- Updated dependencies [398d432]
+- Updated dependencies [de1cbea]
+- Updated dependencies [c42f7c0]
+- Updated dependencies [7c9ef65]
+- Updated dependencies [1a632ef]
+  - @foldworks/ui@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
