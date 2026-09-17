@@ -98,6 +98,8 @@ export const catalogStyles = stylex.create({
   },
   breadcrumbItem: { alignItems: "center", display: "inline-flex", gap: space.sm },
   breadcrumbLink: { color: { default: colors.foregroundMuted, ":hover": colors.foreground }, textDecoration: "none" },
+  breadcrumbButton: { backgroundColor: "transparent", border: 0, cursor: "pointer", font: "inherit", padding: 0 },
+  breadcrumbOverflow: { minWidth: "1.5em", textAlign: "center" },
   breadcrumbCurrent: { color: colors.foreground, fontWeight: typography.weightMedium },
   card: { boxShadow: "var(--shadow-card)", display: "flex", flexDirection: "column", overflow: "hidden" },
   cardHeader: { alignItems: "start", display: "grid", gap: space.md, gridTemplateColumns: "minmax(0, 1fr) auto", padding: "16px 16px 0" },

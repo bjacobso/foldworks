@@ -13,6 +13,11 @@ export const statefulStyles = stylex.create({
     backgroundColor: colors.popover, color: colors.popoverForeground,
     maxHeight: "calc(100dvh - 32px)", overflowY: "auto", pointerEvents: "auto",
   },
+  dialogSm: { maxWidth: "600px", width: "min(100%, 600px)" },
+  dialogMd: { maxWidth: "900px", width: "min(100%, 900px)" },
+  dialogHeading: { alignItems: "start", display: "grid", gap: space.md, gridTemplateColumns: "minmax(0, 1fr) auto" },
+  dialogHeaderActions: { alignItems: "center", display: "flex", gap: space.xs, justifyContent: "flex-end" },
+  dialogDividedContent: { borderBlockColor: colors.border, borderBlockStyle: "solid", borderBlockWidth: "1px", paddingBlock: space.md },
   transition: {
     opacity: { default: 1, ':is([data-closed])': 0 },
     transitionProperty: "opacity",

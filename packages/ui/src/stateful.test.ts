@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import * as Dialog from "./stateful/dialog";
 import * as Tabs from "./stateful/tabs";
 import * as Select from "./stateful/select";
+import * as Tooltip from "./stateful/tooltip";
 
 const TestTabs = Tabs.create<"overview" | "restricted" | "activity">();
 const tabInputs = Tabs.styledViewInputs({
@@ -119,6 +120,46 @@ describe("styled Foldkit dialog", () => {
       Scene.click(Scene.role("button", { name: "Cancel" })),
       Scene.expectOutMessage(Dialog.OutMessage.Closed()),
       Scene.Command.resolve(Dialog.CloseDialog, Dialog.Message.CompletedCloseDialog()),
+    );
+  });
+
+  it("supports rich titles, embedded close actions, dividers, and width presets", () => {
+    const inputs = Dialog.styledViewInputs({
+      title: [h.span([], ["Edit schema"])],
+      size: "md",
+      dividers: true,
+      headerActions: ({ closeButton }, h) => [h.button([...closeButton, h.AriaLabel("Close editor")], ["×"])],
+      content: () => ["Editor"],
+    }, h);
+    const model = { ...Dialog.init({ id: "schema-editor" }), isOpen: true };
+    Scene.scene(
+      { update: Dialog.update, view: Scene.withViewInputs(Dialog.view, inputs)() },
+      Scene.given(model),
+      Scene.expect(Scene.role("heading", { name: "Edit schema" })).toExist(),
+      Scene.expect(Scene.role("button", { name: "Close editor" })).toExist(),
+      Scene.expect(Scene.selector("section")).toHaveAttr("data-size", "md"),
+      Scene.expect(Scene.selector('[data-dividers="true"]')).toExist(),
+    );
+  });
+});
+
+describe("styled Foldkit tooltip", () => {
+  it("opens on focus, dismisses with Escape, and supports a custom trigger element", () => {
+    const inputs = Tooltip.styledViewInputs({
+      trigger: ["Schema help"],
+      label: [h.strong([], ["Choose a valid schema"])],
+      renderTrigger: (attributes, children, h) => h.span([...attributes, h.Tabindex(0)], children),
+    }, h);
+    const trigger = Scene.selector(`#${Tooltip.triggerId("schema-help")}`);
+    Scene.scene(
+      { update: Tooltip.update, view: Scene.withViewInputs(Tooltip.view, inputs)() },
+      Scene.given(Tooltip.init({ id: "schema-help", showDelay: 0 })),
+      Scene.focus(trigger),
+      Scene.Mount.resolve(Tooltip.AnchorTooltip, Tooltip.Message.CompletedAnchorTooltip()),
+      Scene.expect(Scene.role("tooltip", { name: "Choose a valid schema" })).toExist(),
+      Scene.keydown(trigger, "Escape"),
+      Scene.Mount.expectEnded(Tooltip.AnchorTooltip),
+      Scene.expect(Scene.role("tooltip")).not.toExist(),
     );
   });
 });

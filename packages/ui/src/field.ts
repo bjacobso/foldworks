@@ -1,4 +1,4 @@
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, ChildAttribute, Html, HtmlBuilder, KeyboardModifiers } from "foldkit/html";
 
 import { Input, Select, Textarea } from "@foldkit/ui";
 
@@ -12,7 +12,7 @@ import {
 } from "./catalog.shared";
 import { fieldStyles } from "./styles";
 
-export type Slot = "root" | "label" | "control" | "description";
+export type Slot = "root" | "label" | "controlWrapper" | "control" | "startAdornment" | "endAdornment" | "description";
 
 type StyledFieldConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot>;
 
@@ -63,7 +63,14 @@ type CommonFields = Readonly<{
   density?: "default" | "compact";
 }>;
 
+type TextControlFields<Message> = Readonly<{
+  startAdornment?: Children;
+  endAdornment?: Children;
+  onKeyDown?: (key: string, modifiers: KeyboardModifiers) => Message;
+}>;
+
 type CommonConfig<Message> = StyledFieldConfig<Message> & CommonFields;
+type TextControlConfig<Message> = CommonConfig<Message> & TextControlFields<Message>;
 
 const labelContent = (config: CommonFields) => [
   config.label,
@@ -72,7 +79,60 @@ const labelContent = (config: CommonFields) => [
 
 const supportingText = (config: CommonFields) => config.error ?? config.description;
 
-export type InputConfig<Message> = CommonConfig<Message> & Readonly<{
+const keyboardAttributes = <Message>(
+  config: TextControlFields<unknown>,
+  h: HtmlBuilder<Message>,
+): ReadonlyArray<Attribute<Message>> =>
+  config.onKeyDown === undefined
+    ? []
+    : [h.OnKeyDown((key, modifiers) => config.onKeyDown?.(key, modifiers) as Message)];
+
+const hasAdornments = (config: TextControlFields<unknown>) =>
+  config.startAdornment !== undefined || config.endAdornment !== undefined;
+
+const adornment = <Message>(
+  side: "start" | "end",
+  config: TextControlConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html | undefined => {
+  const children = side === "start" ? config.startAdornment : config.endAdornment;
+  if (children === undefined) return undefined;
+  const slot = side === "start" ? config.slotProps?.startAdornment : config.slotProps?.endAdornment;
+  return h.span(slotAttrs(slot, h, fieldStyles.adornment), children);
+};
+
+const adornmentChildren = <Message>(
+  side: "start" | "end",
+  config: TextControlConfig<Message>,
+  h: HtmlBuilder<Message>,
+): ReadonlyArray<Html> => {
+  const child = adornment(side, config, h);
+  return child === undefined ? [] : [child];
+};
+
+const inputControl = <Message>(
+  config: InputConfig<Message>,
+  attributes: ReadonlyArray<Attribute<Message> | ChildAttribute>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const control = h.input([
+    ...attributes,
+    ...keyboardAttributes(config, h),
+    ...slotAttrs(config.slotProps?.control, h, fieldStyles.control,
+      hasAdornments(config) && fieldStyles.controlInWrapper,
+      config.density === "compact" && fieldStyles.compact,
+      !hasAdornments(config) && config.error !== undefined && fieldStyles.invalid),
+  ]);
+  if (!hasAdornments(config)) return control;
+  return h.div(slotAttrs(config.slotProps?.controlWrapper, h,
+    fieldStyles.controlWrapper, config.error !== undefined && fieldStyles.invalid), [
+    ...adornmentChildren("start", config, h),
+    control,
+    ...adornmentChildren("end", config, h),
+  ]);
+};
+
+export type InputConfig<Message> = TextControlConfig<Message> & Readonly<{
   value?: string;
   placeholder?: string;
   type?: string;
@@ -94,8 +154,7 @@ export const input = <Message>(
     isInvalid: config.error !== undefined,
     toView: (attributes) => h.div(rootAttrs(config, h, fieldStyles.root), [
       h.label([...attributes.label, ...slotAttrs(config.slotProps?.label, h, fieldStyles.label)], labelContent(config)),
-      h.input([...attributes.input, ...slotAttrs(config.slotProps?.control, h, fieldStyles.control,
-        config.density === "compact" && fieldStyles.compact, config.error !== undefined && fieldStyles.invalid)]),
+      inputControl(config, attributes.input, h),
       Description.view(supportingText(config), attributes.description,
         slotAttrs(config.slotProps?.description, h, fieldStyles.description,
           config.error !== undefined && fieldStyles.error), h),
@@ -104,17 +163,44 @@ export const input = <Message>(
   h,
 );
 
-export type TextareaConfig<Message> = CommonConfig<Message> & Readonly<{
+export type TextareaConfig<Message> = TextControlConfig<Message> & Readonly<{
   value?: string;
   placeholder?: string;
   rows?: number;
+  minRows?: number;
   onInput?: (value: string) => Message;
 }>;
+
+const textareaControl = <Message>(
+  config: TextareaConfig<Message>,
+  attributes: ReadonlyArray<Attribute<Message> | ChildAttribute>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const control = h.textarea([
+    ...attributes,
+    ...keyboardAttributes(config, h),
+    ...(config.minRows === undefined ? [] : [h.Style({ minHeight: `calc(${config.minRows} * 1.5em + 20px)` })]),
+    ...slotAttrs(config.slotProps?.control, h, fieldStyles.control, fieldStyles.textarea,
+      hasAdornments(config) && fieldStyles.controlInWrapper,
+      !hasAdornments(config) && config.error !== undefined && fieldStyles.invalid),
+  ]);
+  if (!hasAdornments(config)) return control;
+  return h.div(slotAttrs(config.slotProps?.controlWrapper, h,
+    fieldStyles.controlWrapper, fieldStyles.textareaWrapper, config.error !== undefined && fieldStyles.invalid), [
+    ...adornmentChildren("start", config, h),
+    control,
+    ...adornmentChildren("end", config, h),
+  ]);
+};
 
 export const textarea = <Message>(
   config: TextareaConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => Textarea.view(
+): Html => {
+  if (config.minRows !== undefined && (!Number.isInteger(config.minRows) || config.minRows < 1)) {
+    throw new Error("Field textarea minRows must be a positive integer.");
+  }
+  return Textarea.view(
   {
     id: config.id,
     ...(config.value === undefined ? {} : { value: config.value }),
@@ -126,15 +212,15 @@ export const textarea = <Message>(
     isInvalid: config.error !== undefined,
     toView: (attributes) => h.div(rootAttrs(config, h, fieldStyles.root), [
       h.label([...attributes.label, ...slotAttrs(config.slotProps?.label, h, fieldStyles.label)], labelContent(config)),
-      h.textarea([...attributes.textarea, ...slotAttrs(config.slotProps?.control, h,
-        fieldStyles.control, fieldStyles.textarea, config.error !== undefined && fieldStyles.invalid)]),
+      textareaControl(config, attributes.textarea, h),
       Description.view(supportingText(config), attributes.description,
         slotAttrs(config.slotProps?.description, h, fieldStyles.description,
           config.error !== undefined && fieldStyles.error), h),
     ]),
   },
-  h,
-);
+    h,
+  );
+};
 
 export type SelectConfig<Message> = CommonConfig<Message> & Readonly<{
   value?: string;
