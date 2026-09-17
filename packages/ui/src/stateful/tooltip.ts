@@ -19,9 +19,9 @@ export const styledViewInputs = <Message>(config: StyledViewInputs<Message>, h: 
   ...(config.ariaLabel === undefined ? {} : { ariaLabel: config.ariaLabel }),
   ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),
   toView: ({ trigger, panel, isVisible }) => h.span(rootAttrs(config, h, styles.layerRoot), [
-    h.button([...trigger, ...slotAttrs(config.slotProps?.trigger, h,
-      catalogStyles.toggle, catalogStyles.focusable)], config.trigger),
-    ...(isVisible ? [h.span([...panel, ...slotAttrs(config.slotProps?.panel, h,
-      catalogStyles.tooltip, styles.tooltipPanel)], [config.label])] : []),
+    h.button([...slotAttrs(config.slotProps?.trigger, h,
+      catalogStyles.toggle, catalogStyles.focusable), ...trigger], config.trigger),
+    ...(isVisible ? [h.span([...slotAttrs(config.slotProps?.panel, h,
+      catalogStyles.tooltip, styles.tooltipPanel), ...panel], [config.label])] : []),
   ]),
 });

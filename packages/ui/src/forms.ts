@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles as styles } from "./catalog.styles";
-import { styledAttrs, type Children, type StyledConfig } from "./catalog.shared";
+import { rootAttrs, slotAttrs, styledAttrs, type Children, type StyledConfig, type WithSlotProps } from "./catalog.shared";
 import { sxAttrs } from "./sx";
 
 type ControlConfig<Message> = StyledConfig<Message> & Readonly<{
@@ -91,17 +91,20 @@ const nativeSelect = <Message>(
   ], [option.label])),
 );
 
+export type InputGroupSlot = "root" | "prefix" | "control" | "suffix";
+export type InputGroupConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, InputGroupSlot> & Readonly<{
+  control: Html;
+  prefix?: Children;
+  suffix?: Children;
+}>;
+
 const inputGroup = <Message>(
-  config: StyledConfig<Message> & Readonly<{
-    control: Html;
-    prefix?: Children;
-    suffix?: Children;
-  }>,
+  config: InputGroupConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => h.div(styledAttrs(config, h, styles.inset, styles.inputGroup), [
-  ...(config.prefix === undefined ? [] : [h.div(sxAttrs(h, styles.inputGroupAddon), config.prefix)]),
-  h.div(sxAttrs(h, styles.inputGroupControl), [config.control]),
-  ...(config.suffix === undefined ? [] : [h.div(sxAttrs(h, styles.inputGroupAddon), config.suffix)]),
+): Html => h.div(rootAttrs(config, h, styles.inset, styles.inputGroup), [
+  ...(config.prefix === undefined ? [] : [h.div(slotAttrs(config.slotProps?.prefix, h, styles.inputGroupAddon), config.prefix)]),
+  h.div(slotAttrs(config.slotProps?.control, h, styles.inputGroupControl), [config.control]),
+  ...(config.suffix === undefined ? [] : [h.div(slotAttrs(config.slotProps?.suffix, h, styles.inputGroupAddon), config.suffix)]),
 ]);
 
 const inputGroupInput = <Message>(
@@ -153,21 +156,25 @@ type RadioOption<Value extends string> = Readonly<{
   isDisabled?: boolean;
 }>;
 
-const radioGroup = <Message, Value extends string>(
-  config: StyledConfig<Message> & Readonly<{
+export type RadioGroupSlot = "root" | "item" | "control" | "content" | "label" | "description";
+export type RadioGroupConfig<Message, Value extends string> =
+  StyledConfig<Message> & WithSlotProps<Message, RadioGroupSlot> & Readonly<{
     name: string;
     value?: Value;
     options: ReadonlyArray<RadioOption<Value>>;
     ariaLabel: string;
     isDisabled?: boolean;
     onChange: (value: Value) => Message;
-  }>,
+  }>;
+
+const radioGroup = <Message, Value extends string>(
+  config: RadioGroupConfig<Message, Value>,
   h: HtmlBuilder<Message>,
 ): Html => h.fieldset(
-  [...styledAttrs(config, h, styles.radioGroup), h.AriaLabel(config.ariaLabel), ...(config.isDisabled === true ? [h.Disabled(true)] : [])],
-  config.options.map((option) => h.label(sxAttrs(h, styles.radioItem), [
+  [...rootAttrs(config, h, styles.radioGroup), h.AriaLabel(config.ariaLabel), ...(config.isDisabled === true ? [h.Disabled(true)] : [])],
+  config.options.map((option) => h.label(slotAttrs(config.slotProps?.item, h, styles.radioItem), [
     h.input([
-      ...sxAttrs(h, styles.radioControl, styles.focusable),
+      ...slotAttrs(config.slotProps?.control, h, styles.radioControl, styles.focusable),
       h.Type("radio"),
       h.Name(config.name),
       h.Value(option.value),
@@ -175,9 +182,9 @@ const radioGroup = <Message, Value extends string>(
       h.OnChange(() => config.onChange(option.value)),
       ...(option.isDisabled === true ? [h.Disabled(true)] : []),
     ]),
-    h.span([], [
-      option.label,
-      ...(option.description === undefined ? [] : [h.span(sxAttrs(h, styles.description), [option.description])]),
+    h.span(slotAttrs(config.slotProps?.content, h), [
+      h.span(slotAttrs(config.slotProps?.label, h), [option.label]),
+      ...(option.description === undefined ? [] : [h.span(slotAttrs(config.slotProps?.description, h, styles.description), [option.description])]),
     ]),
   ])),
 );
@@ -224,17 +231,21 @@ const toggle = <Message>(
   [config.label],
 );
 
-const toggleGroup = <Message, Value extends string>(
-  config: StyledConfig<Message> & Readonly<{
+export type ToggleGroupSlot = "root" | "item";
+export type ToggleGroupConfig<Message, Value extends string> =
+  StyledConfig<Message> & WithSlotProps<Message, ToggleGroupSlot> & Readonly<{
     values: ReadonlyArray<Value>;
     options: ReadonlyArray<Readonly<{ value: Value; label: string }>>;
     ariaLabel: string;
     multiple?: boolean;
     onChange: (values: ReadonlyArray<Value>) => Message;
-  }>,
+  }>;
+
+const toggleGroup = <Message, Value extends string>(
+  config: ToggleGroupConfig<Message, Value>,
   h: HtmlBuilder<Message>,
 ): Html => h.div(
-  [...styledAttrs(config, h, styles.inset, styles.group), h.Role("group"), h.AriaLabel(config.ariaLabel)],
+  [...rootAttrs(config, h, styles.inset, styles.group), h.Role("group"), h.AriaLabel(config.ariaLabel)],
   config.options.map((option, index) => {
     const isPressed = config.values.includes(option.value);
     const nextValues = config.multiple === true
@@ -243,8 +254,8 @@ const toggleGroup = <Message, Value extends string>(
         : [...config.values, option.value]
       : [option.value];
     return h.button([
-      ...sxAttrs(
-        h,
+      ...slotAttrs(
+        config.slotProps?.item, h,
         styles.toggle,
         styles.groupConnected,
         index === 0 && styles.groupFirst,

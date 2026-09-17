@@ -42,17 +42,17 @@ export const styledViewInputs = <Message, Value extends string>(
   isTabDisabled: (_value, index) => config.tabs[index]?.isDisabled === true,
   toView: ({ tablist, tabs }) => h.div(rootAttrs(config, h, styles.tabs), [
     h.div([
-      ...tablist,
       ...slotAttrs(config.slotProps?.list, h, styles.tabsList,
         config.orientation === "Vertical" && statefulStyles.verticalTabs),
+      ...tablist,
     ], tabs.map((tab) => h.button([
-      ...tab.tab,
       ...slotAttrs(config.slotProps?.trigger, h, styles.tabsTrigger, styles.focusable,
         tab.isActive && styles.tabsTriggerActive, tab.isDisabled && statefulStyles.disabled),
+      ...tab.tab,
     ], [config.tabs[tab.index]?.label ?? tab.value]))),
     ...tabs.map((tab) => h.div([
-      ...tab.panel,
       ...slotAttrs(config.slotProps?.panel, h),
+      ...tab.panel,
       h.Hidden(!tab.isActive),
     ], config.tabs[tab.index]?.content ?? [])),
   ]),

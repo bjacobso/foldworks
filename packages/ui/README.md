@@ -258,9 +258,11 @@ slot uses the same `{ attributes?, sx? }` contract. Top-level `attributes` and
 `sx` are shorthand for the root slot. When both forms are present, the explicit
 `slotProps.root` styles are applied last:
 
-This contract is available on Button, Badge, Card, Checkbox, Disclosure, Field,
-Fieldset, Icon, Layout, NumberField, Panel, SegmentedControl, Select, Switch,
-Tag, Toolbar, and the stateful Dialog, Popover, Tabs, and Tooltip adapters.
+This contract is available on Button, Badge, Alert, Card, Empty, Item, Table,
+Checkbox, Disclosure, Field, Fieldset, InputGroup, RadioGroup, ToggleGroup,
+navigation and classic menu components, NumberField, Panel, SegmentedControl,
+Select, Switch, Tag, Toolbar, and the stateful Dialog, Popover, Tabs, and Tooltip
+adapters. Leaf components retain the smaller root-only `sx` contract.
 
 ```ts
 Card.view({
@@ -281,6 +283,26 @@ Slot attributes augment the attributes required by Foldkit's behavior and
 accessibility engines. A repeated slot such as a tab `trigger` applies to every
 instance. `sx` is the only StyleX override property; the former `style` alias is
 no longer accepted.
+
+Public component types use the predictable `<Component>Config` and
+`<Component>Slot` names, for example `CardConfig`, `TableSlot`, and
+`PaginationConfig`. Shared utilities remain `Sx`, `SlotProps`, `StyledConfig`,
+and `WithSlotProps`.
+
+The main repeated composition points are `Table.headerCell`, `Table.row`,
+`Table.cell`, navigation `item`/`link`/`page` slots, menu `group`/`item` slots,
+`RadioGroup.item`, and `ToggleGroup.item`; one slot configuration applies to
+every rendered instance. Structural names follow the rendered element's job,
+such as `Card.header`, `Empty.media`, `InputGroup.prefix`, and
+`Breadcrumb.separator`. Use the exported slot-name union when a wrapper needs
+to accept or forward a component's slot configuration.
+
+The stateful Select, Menu, and Combobox adapters intentionally do not accept
+`slotProps` yet. Foldkit exposes attributes for some structural nodes but only
+class-name fields for repeated items and group headings, so those adapters
+cannot currently preserve the full `{ attributes, sx }` contract for every
+slot. See [stateful integration](./docs/stateful.md#composition-boundary) for
+the follow-up recommendation.
 
 Use matching foreground roles when choosing a surface: `surfaceForeground` for
 `surface`, `popoverForeground` for `popover`, `secondaryForeground` for
