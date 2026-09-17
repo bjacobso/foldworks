@@ -50,6 +50,7 @@ export { NumberField } from "./number-field";
 export { Stepper } from "./stepper";
 export { Tag } from "./tag";
 export { Breadcrumb, NavigationMenu, Pagination, Sidebar, Tabs } from "./navigation";
+export type { BreadcrumbConfig, BreadcrumbItem, BreadcrumbSlot } from "./navigation";
 export { AlertDialog, Dialog, Drawer, HoverCard, Popover, Sheet, Tooltip } from "./overlays";
 export { Combobox, Command, ContextMenu, DropdownMenu, Menubar } from "./menus";
 export { Calendar } from "./calendar";

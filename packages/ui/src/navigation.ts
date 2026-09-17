@@ -1,29 +1,132 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles as styles } from "./catalog.styles";
-import { styledAttrs, type Children, type StyledConfig } from "./catalog.shared";
+import {
+  rootAttrs,
+  slotAttrs,
+  styledAttrs,
+  type Children,
+  type StyledConfig,
+  type WithSlotProps,
+} from "./catalog.shared";
 import { sxAttrs } from "./sx";
 
 type Link = Readonly<{ label: string; href: string }>;
 
+export type BreadcrumbItem<Message> = Readonly<{
+  label: string;
+  /** Native navigation target. Omit for a message-driven breadcrumb button. */
+  href?: string;
+  /** Message dispatched when the breadcrumb is activated. */
+  onClick?: Message;
+}>;
+
+export type BreadcrumbSlot = "root" | "list" | "item" | "link" | "separator" | "current" | "overflow";
+
+type BreadcrumbEntry<Message> =
+  | Readonly<{ kind: "item"; item: BreadcrumbItem<Message> }>
+  | Readonly<{ kind: "current"; label: string }>
+  | Readonly<{ kind: "overflow"; hiddenCount: number }>;
+
+export type BreadcrumbConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, BreadcrumbSlot> & Readonly<{
+  items: ReadonlyArray<BreadcrumbItem<Message>>;
+  current: string;
+  separator?: string;
+  ariaLabel?: string;
+  /** Collapse the middle once the total number of items, including the current page, exceeds this value. */
+  maxItems?: number;
+  itemsBeforeCollapse?: number;
+  itemsAfterCollapse?: number;
+  overflowLabel?: string;
+  /** When supplied, the overflow indicator is an actionable expansion button. */
+  onExpand?: Message;
+}>;
+
+export const collapseBreadcrumbItems = <Message>(
+  items: ReadonlyArray<BreadcrumbItem<Message>>,
+  current: string,
+  options: Readonly<{ maxItems?: number; itemsBeforeCollapse?: number; itemsAfterCollapse?: number }> = {},
+): ReadonlyArray<BreadcrumbEntry<Message>> => {
+  const entries: ReadonlyArray<BreadcrumbEntry<Message>> = [
+    ...items.map((item): BreadcrumbEntry<Message> => ({ kind: "item", item })),
+    { kind: "current", label: current },
+  ];
+  if (options.maxItems === undefined) return entries;
+  if (!Number.isInteger(options.maxItems) || options.maxItems < 1) {
+    throw new Error("Breadcrumb maxItems must be a positive integer.");
+  }
+  if (entries.length <= options.maxItems) return entries;
+
+  const before = options.itemsBeforeCollapse ?? 1;
+  const after = options.itemsAfterCollapse ?? 1;
+  if (!Number.isInteger(before) || !Number.isInteger(after) || before < 0 || after < 1) {
+    throw new Error("Breadcrumb collapse counts must use non-negative before and positive after values.");
+  }
+  if (before + after + 1 > options.maxItems) {
+    throw new Error("Breadcrumb maxItems must fit itemsBeforeCollapse, itemsAfterCollapse, and the overflow item.");
+  }
+
+  const hiddenCount = entries.length - before - after;
+  return [
+    ...entries.slice(0, before),
+    { kind: "overflow", hiddenCount },
+    ...entries.slice(entries.length - after),
+  ];
+};
+
 const breadcrumb = <Message>(
-  config: StyledConfig<Message> & Readonly<{
-    items: ReadonlyArray<Link>;
-    current: string;
-    separator?: string;
-    ariaLabel?: string;
-  }>,
+  config: BreadcrumbConfig<Message>,
   h: HtmlBuilder<Message>,
-): Html => h.nav(
-  [...styledAttrs(config, h), h.AriaLabel(config.ariaLabel ?? "Breadcrumb")],
-  [h.ol(sxAttrs(h, styles.breadcrumb), [
-    ...config.items.map((item) => h.li(sxAttrs(h, styles.breadcrumbItem), [
-      h.a([...sxAttrs(h, styles.breadcrumbLink, styles.focusable), h.Href(item.href)], [item.label]),
-      h.span([h.AriaHidden(true)], [config.separator ?? "/"]),
-    ])),
-    h.li([...sxAttrs(h, styles.breadcrumbCurrent), h.AriaCurrent("page")], [config.current]),
-  ])],
-);
+): Html => {
+  const entries = collapseBreadcrumbItems(config.items, config.current, config);
+  const separator = () => h.span([
+    ...slotAttrs(config.slotProps?.separator, h),
+    h.AriaHidden(true),
+  ], [config.separator ?? "/"]);
+  const actionable = (item: BreadcrumbItem<Message>) => {
+    const attributes = slotAttrs(config.slotProps?.link, h, styles.breadcrumbLink, styles.focusable);
+    if (item.href !== undefined) return h.a([
+      ...attributes,
+      h.Href(item.href),
+      ...(item.onClick === undefined ? [] : [h.OnClick(item.onClick)]),
+    ], [item.label]);
+    if (item.onClick !== undefined) return h.button([
+      ...attributes,
+      ...sxAttrs(h, styles.breadcrumbButton),
+      h.Type("button"),
+      h.OnClick(item.onClick),
+    ], [item.label]);
+    return h.span(attributes, [item.label]);
+  };
+
+  return h.nav(
+    [...rootAttrs(config, h), h.AriaLabel(config.ariaLabel ?? "Breadcrumb")],
+    [h.ol(slotAttrs(config.slotProps?.list, h, styles.breadcrumb), entries.map((entry, index) => {
+      if (entry.kind === "current") return h.li([
+        ...slotAttrs(config.slotProps?.current, h, styles.breadcrumbCurrent),
+        h.AriaCurrent("page"),
+      ], [entry.label]);
+
+      const content = entry.kind === "item"
+        ? actionable(entry.item)
+        : config.onExpand === undefined
+          ? h.span([
+              ...slotAttrs(config.slotProps?.overflow, h, styles.breadcrumbOverflow),
+              h.AriaLabel(`${entry.hiddenCount} hidden breadcrumb items`),
+            ], [config.overflowLabel ?? "…"])
+          : h.button([
+              ...slotAttrs(config.slotProps?.overflow, h, styles.breadcrumbLink, styles.breadcrumbButton, styles.breadcrumbOverflow),
+              h.Type("button"),
+              h.AriaLabel(`Show ${entry.hiddenCount} hidden breadcrumb items`),
+              h.OnClick(config.onExpand),
+            ], [config.overflowLabel ?? "…"]);
+      return h.li(slotAttrs(config.slotProps?.item, h, styles.breadcrumbItem), [
+        content,
+        ...(index === entries.length - 1 ? [] : [separator()]),
+      ]);
+    }))],
+  );
+};
 
 const pagination = <Message>(
   config: StyledConfig<Message> & Readonly<{
@@ -134,7 +237,7 @@ const sidebar = <Message>(
   ],
 );
 
-export const Breadcrumb = { view: breadcrumb } as const;
+export const Breadcrumb = { view: breadcrumb, collapseItems: collapseBreadcrumbItems } as const;
 export const NavigationMenu = { view: navigationMenu } as const;
 export const Pagination = { view: pagination } as const;
 export const Sidebar = { view: sidebar } as const;

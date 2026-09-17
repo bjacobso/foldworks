@@ -16,6 +16,7 @@ export type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 export type Size = "xs" | "sm" | "md" | "lg" | "icon";
 
 export type Slot = "root" | "startIcon" | "label" | "endIcon";
+export type Element = "button" | "label";
 
 export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
   label?: string;
@@ -27,6 +28,10 @@ export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message,
   isDisabled?: boolean;
   isFullWidth?: boolean;
   ariaLabel?: string;
+  /** Render a label-shaped trigger, for example around a visually hidden file input. */
+  as?: Element;
+  /** Additional children, such as the input owned by a label-shaped trigger. */
+  children?: ReadonlyArray<Html | string>;
 }>;
 
 const variantStyle = (variant: Variant) => {
@@ -62,8 +67,8 @@ export const view = <Message>(
     {
       ...(config.onClick === undefined ? {} : { onClick: config.onClick }),
       ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),
-      toView: ({ button }) => h.button(
-        [
+      toView: ({ button }) => {
+        const attributes = [
           ...button,
           ...rootAttrs(
             config,
@@ -75,8 +80,8 @@ export const view = <Message>(
             config.isDisabled === true && buttonStyles.disabled,
           ),
           ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)]),
-        ],
-        [
+        ];
+        const children = [
           ...(config.icon === undefined
             ? []
             : [h.span(slotAttrs(config.slotProps?.startIcon, h), [
@@ -90,8 +95,10 @@ export const view = <Message>(
             : [h.span(slotAttrs(config.slotProps?.endIcon, h), [
                 Icon.view({ icon: config.trailingIcon, size: iconSize(size) }, h),
               ])]),
-        ],
-      ),
+          ...(config.children ?? []),
+        ];
+        return config.as === "label" ? h.label(attributes, children) : h.button(attributes, children);
+      },
     },
     h,
   );

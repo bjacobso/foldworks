@@ -83,4 +83,15 @@ describe("composition contract", () => {
     expect(attr(button, '[data-composition-slot="label"]', "class")).toContain("internalSlot");
     expect(attr(field, '[data-composition-slot="control"]', "class")).toContain("internalSlot");
   });
+
+  it("renders a button-styled label around file inputs", () => {
+    const upload = Button.view({
+      as: "label",
+      label: "Upload schema",
+      children: [h.input([h.Type("file"), h.AriaLabel("Schema file")])],
+    }, h);
+
+    expect(find(upload, "label")).toBeDefined();
+    expect(attr(upload, "input", "type")).toBe("file");
+  });
 });

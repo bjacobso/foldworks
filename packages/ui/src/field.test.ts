@@ -5,11 +5,15 @@ import { describe, expect, it } from "vitest";
 
 import * as Field from "./field";
 
-const attribute = (html: Html, selector: string, name: string) => {
+const findNode = (html: Html, selector: string) => {
   if (html === null) throw new Error("Expected a rendered field");
   const node = Option.getOrUndefined(Scene.find(html, selector));
   if (node === undefined) throw new Error(`Expected ${selector}`);
-  return Option.getOrUndefined(Scene.attr(node, name));
+  return node;
+};
+
+const attribute = (html: Html, selector: string, name: string) => {
+  return Option.getOrUndefined(Scene.attr(findNode(html, selector), name));
 };
 
 const controls = [
@@ -51,4 +55,27 @@ describe("Field accessibility", () => {
       expect(attribute(html, `[id="${describedBy}"]`, "id")).toBe(describedBy);
     });
   }
+
+  it("supports adornments, minimum multiline rows, and keyboard handlers", () => {
+    const input = Field.input({
+      id: "amount",
+      label: "Amount",
+      startAdornment: ["$"],
+      endAdornment: ["USD"],
+      onKeyDown: () => undefined as never,
+    }, h);
+    const textarea = Field.textarea({
+      id: "query",
+      label: "Query",
+      minRows: 5,
+      onKeyDown: () => undefined as never,
+    }, h);
+
+    expect(attribute(input, "input", "aria-describedby")).toBeDefined();
+    expect(findNode(textarea, "textarea")).toBeDefined();
+  });
+
+  it("rejects invalid minimum row counts", () => {
+    expect(() => Field.textarea({ id: "query", label: "Query", minRows: 0 }, h)).toThrow(/positive integer/);
+  });
 });

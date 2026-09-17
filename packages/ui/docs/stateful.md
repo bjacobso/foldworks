@@ -93,8 +93,13 @@ commands can find the dialog element. Use `Stateful.Dialog.view` with these inpu
 
 ```ts
 Stateful.Dialog.styledViewInputs({
-  title: "Edit profile",
+  title: [profileIcon, "Edit profile"],
   description: "Changes apply to your public profile.",
+  size: "md",
+  dividers: true,
+  headerActions: ({ closeButton }, h) => [
+    h.button([...closeButton, h.AriaLabel("Close profile editor")], ["×"]),
+  ],
   content: ({ initialFocus }, h) => [
     h.input([...initialFocus, h.AriaLabel("Display name")]),
   ],
@@ -171,6 +176,13 @@ Stateful.Popover.styledViewInputs({
   content: [filterForm],
   ariaLabel: "Filters",
   anchor: { placement: "bottom-end" },
+}, h)
+
+Stateful.Tooltip.styledViewInputs({
+  trigger: [helpIcon],
+  label: [h.strong([], ["Schema help"])],
+  renderTrigger: (attributes, children, h) =>
+    h.span([...attributes, h.Tabindex(0)], children),
 }, h)
 ```
 
