@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/query-builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A controlled recursive query builder with validation and structured drag and drop.",
   "license": "MIT",
   "author": "Ben Jacobson",
