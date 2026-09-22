@@ -150,3 +150,6 @@ Give the deployment token only these Cloudflare permissions:
 - Account: Secrets Store Edit
 - Zone `foldworks.dev`: Zone Read
 - Zone `foldworks.dev`: Workers Routes Edit
+
+Desktop command definitions live in `@foldworks/keyboard`; UI compositions and
+package-boundary decisions are documented in [Desktop primitives](packages/ui/docs/desktop.md).

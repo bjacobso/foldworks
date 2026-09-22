@@ -1,3 +1,4 @@
+import * as Desktop from "./desktop";
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 import { Stateful } from "@foldworks/ui";
@@ -5,6 +6,7 @@ import { Stateful } from "@foldworks/ui";
 import { Department, FoundationStep, Tool, View } from "./model";
 
 export const Message = defineMessageUnion({
+  GotDesktop: { message: Desktop.Message },
   GotTabsMessage: { message: Stateful.Tabs.Message },
   GotDialogMessage: { message: Stateful.Dialog.Message },
   GotSelectMessage: { message: Stateful.Select.Message },

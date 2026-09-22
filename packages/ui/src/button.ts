@@ -1,3 +1,4 @@
+import * as Keyboard from "@foldworks/keyboard";
 import type { LucideIconData } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
@@ -20,6 +21,7 @@ export type Element = "button" | "label";
 
 export type ViewConfig<Message> = StyledConfig<Message> & WithSlotProps<Message, Slot> & Readonly<{
   label?: string;
+  command?: Readonly<{ definition: Keyboard.Binding; platform: Keyboard.Platform; toMessage: (id: string) => Message }>;
   icon?: LucideIconData;
   trailingIcon?: LucideIconData;
   onClick?: Message;
@@ -61,6 +63,21 @@ export const view = <Message>(
   config: ViewConfig<Message>,
   h: HtmlBuilder<Message>,
 ): Html => {
+  if (config.command) {
+    const { definition, platform, toMessage } = config.command;
+    const { command: _command, ...rest } = config;
+    return view({
+      ...rest,
+      label: definition.label,
+      isDisabled: definition.isDisabled ?? false,
+      onClick: toMessage(definition.id),
+      attributes: [
+        ...(config.attributes ?? []),
+        h.AriaKeyshortcuts(Keyboard.aria(definition.shortcut, platform)),
+        h.Title(`${definition.label} (${Keyboard.display(definition.shortcut, platform)})`),
+      ],
+    }, h);
+  }
   const variant = config.variant ?? "primary";
   const size = config.size ?? "md";
   return Button.view(

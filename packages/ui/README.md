@@ -133,7 +133,7 @@ and remaining directions to evaluate.
 ## Usage
 
 Button typography follows the shared type scale: `xs` and `sm` use 12px,
-the default `md` uses 13px, and `lg` uses 14px, all at weight 550. Heights
+the default `md` uses 13px, and `lg` uses 14px, all at weight 500. Heights
 remain 24, 28, 32, and 36px respectively. Keep application font resets in a
 low-priority cascade layer so they do not override component typography.
 
@@ -331,3 +331,11 @@ execution. These components render the data supplied to them and do not infer
 business consequences or generate explanations. See the
 [Workers reference](../../docs/workbench/README.md) for a complete composition
 and browser-test screenshots.
+
+## Desktop applications
+
+`Shortcuts`, `Measurement`, `OverflowList`, `EditableText`, `TokenField`,
+`PanelStack`, `DateInput`, and the stateful menu/overlay/date variants provide
+controlled desktop workflows. See the [architecture and integration guide](docs/desktop.md)
+and the **Desktop workspace** example in `/ui-kit`. Command definitions are
+shared through `@foldworks/keyboard`; application actions remain host-owned.

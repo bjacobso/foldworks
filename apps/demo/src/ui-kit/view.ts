@@ -1,3 +1,4 @@
+import * as Desktop from "./desktop";
 import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
@@ -462,6 +463,7 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
     h.div([h.Class(className(styles.content))], [
       h.p([h.Class(className(styles.srOnly)), h.AriaLive("polite")], [model.announcement]),
       financeShowcase(model, h),
+      h.submodel({ slotId: "desktop-primitives", model: model.desktop, view: Desktop.view, toParentMessage: message => Message.GotDesktop({ message }) }),
       h.header([h.Class(className(financeStyles.sectionIntro))], [
         h.div([h.Class(className(financeStyles.sectionCopy))], [
           h.span([h.Class(className(financeStyles.eyebrow))], ["Primitive library"]),

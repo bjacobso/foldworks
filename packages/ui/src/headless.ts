@@ -15,3 +15,5 @@ export * as Slider from "@foldkit/ui/slider";
 export * as Tabs from "@foldkit/ui/tabs";
 export * as Toast from "@foldkit/ui/toast";
 export * as Tooltip from "@foldkit/ui/tooltip";
+
+export * as Measurement from "./measurement";

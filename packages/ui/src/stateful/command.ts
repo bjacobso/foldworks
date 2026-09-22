@@ -1,3 +1,4 @@
+import * as Keyboard from "@foldworks/keyboard";
 import { Effect, Option, Schema as S } from "effect";
 import { Command, Update } from "foldkit";
 import * as Dom from "foldkit/dom";
@@ -59,11 +60,13 @@ export type Item = Readonly<{
   group?: string;
   isDisabled?: boolean;
   media?: Children;
+  command?: Keyboard.Binding;
 }>;
 export type ViewInputs = Readonly<{
   items: ReadonlyArray<Item>;
   ariaLabel: string;
   placeholder?: string;
+  platform?: Keyboard.Platform;
   emptyLabel?: string;
   loop?: boolean;
   /** Positive scores match; larger scores rank first. */
@@ -158,14 +161,17 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
         ...entries.map((item) => h.div([
           h.Id(itemId(model.id, item.value)), h.Role("option"), h.AriaSelected(item.value === active?.value),
           h.AriaDisabled(item.isDisabled === true),
+          ...(item.command ? [h.AriaKeyshortcuts(Keyboard.aria(item.command.shortcut, inputs.platform ?? "other"))] : []),
           ...sxAttrs(h, styles.menuItem, statefulStyles.selectItem,
             item.value === active?.value && statefulStyles.activeItem, item.isDisabled === true && statefulStyles.disabled),
           ...(item.isDisabled === true ? [] : [
             h.OnMouseEnter(Message.Activated({ value: item.value, isKeyboard: false })),
             h.OnClick(Message.Selected({ value: item.value })),
           ]),
-        ], [...(item.media ?? []), item.label])),
+        ], [...(item.media ?? []), item.label, ...(item.command ? [h.kbd(sxAttrs(h, statefulStyles.menuShortcut), [Keyboard.display(item.command.shortcut, inputs.platform ?? "other")])] : [])])),
       ]))),
     ...(items.length === 0 ? [h.p([h.Role("status"), ...sxAttrs(h, styles.description)], [inputs.emptyLabel ?? "No results found."])] : []),
   ]);
 });
+
+export const fromCommand = (command: Keyboard.Binding): Item => ({ value: command.id, label: command.label, command, ...(command.isDisabled === undefined ? {} : { isDisabled: command.isDisabled }) });

@@ -1,3 +1,4 @@
+import * as Desktop from "./desktop";
 import { Schema as S } from "effect";
 import { Stateful } from "@foldworks/ui";
 
@@ -17,6 +18,7 @@ export const FoundationStep = S.Literals(["Compose", "Validate", "Ship"]);
 export type FoundationStep = typeof FoundationStep.Type;
 
 export const Model = S.Struct({
+  desktop: Desktop.Model,
   tabs: Stateful.Tabs.Model,
   dialog: Stateful.Dialog.Model,
   departmentSelect: Stateful.Select.Model,
@@ -50,6 +52,7 @@ export const Model = S.Struct({
 export type Model = typeof Model.Type;
 
 export const initialModel: Model = {
+  desktop: Desktop.initialModel,
   tabs: Stateful.Tabs.init({ id: "catalog-tabs" }),
   dialog: Stateful.Dialog.init({ id: "catalog-dialog", isAnimated: true }),
   departmentSelect: Stateful.Select.init({ id: "catalog-select", isAnimated: true }),

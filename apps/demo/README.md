@@ -128,3 +128,8 @@ apply → history loop. Changes and audit entries are saved in browser storage.
 The adapter uses illustrative local rules; it does not connect to Triplex.
 See [the reference guide and screenshots](../../docs/workbench/README.md) for
 behavior, architecture, and the focused end-to-end test command.
+
+The `/ui-kit` Desktop workspace demonstrates shared keyboard commands, measured
+breadcrumb/action rows, inline editing, token entry, a nested inspector, context
+menus, modal variants and a controlled date input. See
+[the integration guide](../../packages/ui/docs/desktop.md).

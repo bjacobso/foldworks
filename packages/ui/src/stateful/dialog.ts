@@ -36,6 +36,8 @@ export type StyledViewInputs<Message> = StyledConfig<Message> & WithSlotProps<Me
   footer?: (attributes: ContentAttributes, h: HtmlBuilder<Message>) => Children;
   size?: Size;
   dividers?: boolean;
+  placement?: "center" | "left" | "right" | "bottom";
+  role?: "dialog" | "alertdialog";
 }>;
 
 const titleContent = (title: Title): Children => typeof title === "string" ? [title] : title;
@@ -49,13 +51,14 @@ export const styledViewInputs = <Message>(
     h.dialog([
       ...rootAttrs(config, h),
       ...dialog,
-      h.AriaModal(true),
+      h.AriaModal(true), h.Role(config.role ?? "dialog"),
     ], isVisible ? [
       h.div([...backdrop, ...slotAttrs(config.slotProps?.backdrop, h, statefulStyles.backdrop, statefulStyles.transition)]),
-      h.div(slotAttrs(config.slotProps?.layout, h, statefulStyles.dialogLayout), [
+      h.div([...slotAttrs(config.slotProps?.layout, h, statefulStyles.dialogLayout), h.Style({ justifyContent: config.placement === "left" ? "flex-start" : config.placement === "right" ? "flex-end" : "center", alignItems: config.placement === "bottom" ? "flex-end" : "center" })], [
         h.section([
           ...panel,
           h.DataAttribute("size", config.size ?? "default"),
+          ...(config.placement && config.placement !== "center" ? [h.Style({ width: config.placement === "bottom" ? "100%" : "min(420px, 100%)", height: config.placement === "bottom" ? "auto" : "calc(100dvh - 32px)", maxWidth: config.placement === "bottom" ? "100%" : "420px" })] : []),
           ...slotAttrs(config.slotProps?.panel, h, styles.dialogPanel, statefulStyles.panel, statefulStyles.transition,
             config.size === "sm" && statefulStyles.dialogSm,
             config.size === "md" && statefulStyles.dialogMd),

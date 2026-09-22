@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
 const documents = new Map([
+  ["/docs/ui/desktop.md", resolve(import.meta.dirname, "../../packages/ui/docs/desktop.md")],
   ["/docs/ui/setup.md", resolve(import.meta.dirname, "../../packages/ui/README.md")],
   ["/docs/ui/stateful.md", resolve(import.meta.dirname, "../../packages/ui/docs/stateful.md")],
   ["/docs/ui/capabilities.md", resolve(import.meta.dirname, "../../packages/ui/docs/capabilities.md")],
@@ -16,6 +17,7 @@ const index = `# Foldworks UI
 - [Stateful integration and examples](/docs/ui/stateful.md)
 - [Component capabilities and limitations](/docs/ui/capabilities.md)
 - [Layout and foundational primitives](/docs/ui/primitives.md)
+- [Desktop primitives and architecture](/docs/ui/desktop.md)
 
 Use Stateful components for managed interactions and root primitives for controlled presentation.
 Forward child updates and commands with Update.foldChild. Check capabilities before assuming behavioral parity.

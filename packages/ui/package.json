@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@foldkit/ui": "catalog:",
+    "@foldworks/keyboard": "workspace:*",
     "@lucide/icons": "catalog:",
     "@stylexjs/stylex": "catalog:",
     "effect": "catalog:",

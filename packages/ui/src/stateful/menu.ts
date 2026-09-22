@@ -1,3 +1,4 @@
+import * as Keyboard from "@foldworks/keyboard";
 import * as Menu from "@foldkit/ui/menu";
 import * as stylex from "@stylexjs/stylex";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -11,12 +12,12 @@ import * as Layer from "./layer";
 export * from "@foldkit/ui/menu";
 
 export type Item<Value extends string> = Readonly<{
-  value: Value; label: string; media?: Children; shortcut?: string; group?: string;
+  value: Value; label: string; media?: Children; shortcut?: string; command?: Keyboard.Binding<Value>; group?: string;
   isDisabled?: boolean; isDestructive?: boolean;
 }>;
 export type StyledViewInputs<Value extends string> = Readonly<{
   items: ReadonlyArray<Item<Value>>; trigger: Children; ariaLabel?: string;
-  isDisabled?: boolean; anchor?: Menu.AnchorConfig;
+  platform?: Keyboard.Platform; isDisabled?: boolean; anchor?: Menu.AnchorConfig;
 }>;
 export type Bundle<Value extends string = string> = Menu.Bundle<Value>;
 
@@ -46,9 +47,9 @@ export const styledViewInputs = <Message, Value extends string>(
     },
     itemToConfig: (value, context) => {
       const item = byValue.get(value);
-      const content: Html = h.span(sxAttrs(h, styles.selectButton), [
+      const content: Html = h.span([...sxAttrs(h, styles.selectButton), ...(item?.command ? [h.AriaKeyshortcuts(Keyboard.aria(item.command.shortcut, config.platform ?? "other"))] : [])], [
         ...(item?.media ?? []), item?.label ?? value,
-        ...(item?.shortcut === undefined ? [] : [h.span(sxAttrs(h, styles.menuShortcut), [item.shortcut])]),
+        ...(item?.command ? [h.kbd(sxAttrs(h, styles.menuShortcut), [Keyboard.display(item.command.shortcut, config.platform ?? "other")])] : item?.shortcut === undefined ? [] : [h.span(sxAttrs(h, styles.menuShortcut), [item.shortcut])]),
       ]);
       return {
         content,
@@ -59,3 +60,6 @@ export const styledViewInputs = <Message, Value extends string>(
     },
   };
 };
+
+export const fromCommand = <Value extends string>(command: Keyboard.Binding<Value>): Item<Value> => ({ value: command.id, label: command.label, command, ...(command.isDisabled === undefined ? {} : { isDisabled: command.isDisabled }) });
+export * as Nested from "./menu-tree";
