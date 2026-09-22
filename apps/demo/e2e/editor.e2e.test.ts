@@ -250,7 +250,7 @@ describe.sequential("native document editor", () => {
       });
     await page
       .getByRole("combobox", { name: "Theme", exact: true })
-      .selectOption("Blue");
+      .selectOption("Shadcn");
     expect(
       await page
         .locator("[data-text-id]")

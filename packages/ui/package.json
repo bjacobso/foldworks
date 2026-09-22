@@ -34,10 +34,11 @@
     },
     "./theme.css": "./dist/theme.css",
     "./base.css": "./dist/base.css",
-    "./themes/neutral.css": "./dist/themes/neutral.css",
-    "./themes/zinc.css": "./dist/themes/zinc.css",
-    "./themes/blue.css": "./dist/themes/blue.css",
-    "./themes/soft.css": "./dist/themes/soft.css"
+    "./themes/shadcn.css": "./dist/themes/shadcn.css",
+    "./themes/blueprint.css": "./dist/themes/blueprint.css",
+    "./themes/office.css": "./dist/themes/office.css",
+    "./themes/google.css": "./dist/themes/google.css",
+    "./themes/apple.css": "./dist/themes/apple.css"
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",

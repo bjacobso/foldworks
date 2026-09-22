@@ -51,7 +51,7 @@ export type Model = typeof Model.Type;
 
 export const init = (
   route: AppRoute,
-  theme: ThemeState = { name: "Neutral", preference: "System", systemIsDark: false },
+  theme: ThemeState = { name: "Shadcn", preference: "System", systemIsDark: false },
   persisted?: PersistedWorkspace,
   workers?: Readonly<{ snapshot: Snapshot; error: string }>,
 ): Model => {

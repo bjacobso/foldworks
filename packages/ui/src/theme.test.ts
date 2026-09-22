@@ -39,7 +39,13 @@ const requiredThemeTokens = [
 ] as const;
 
 describe("theme contract", () => {
-  for (const theme of ["neutral", "zinc", "blue", "soft"] as const) {
+  for (const theme of [
+    "shadcn",
+    "blueprint",
+    "office",
+    "google",
+    "apple",
+  ] as const) {
     it(`${theme} defines every semantic token in light and dark mode`, async () => {
       const css = await readFile(
         resolve(import.meta.dirname, "themes", `${theme}.css`),
@@ -66,18 +72,18 @@ describe("theme contract", () => {
     expect(css).toContain("--foldworks-ui-drop-target-active-border: var(--primary)");
   });
 
-  it("ships the neutral palette as the default theme", async () => {
-    const css = await readFile(resolve(import.meta.dirname, "themes", "neutral.css"), "utf8");
+  it("ships Shadcn as the default palette", async () => {
+    const css = await readFile(resolve(import.meta.dirname, "themes", "shadcn.css"), "utf8");
 
-    expect(css).toContain("--foreground: oklch(0.145 0 0)");
-    expect(css).toContain("--primary: oklch(0.205 0 0)");
-    expect(css).toContain("--muted: oklch(0.97 0 0)");
-    expect(css).toContain("--chart-5: oklch(0.269 0 0)");
-    expect(css).toContain("--radius: 0.45rem");
-    expect(css).toContain("--background: oklch(0.96 0 0)");
-    expect(css).toContain("--sidebar: oklch(0.935 0 0)");
-    expect(css).toContain("--background: oklch(0.145 0 0)");
-    expect(css).toContain("--primary: oklch(0.922 0 0)");
+    expect(css).toContain(":root:not([data-theme])");
+    expect(css).toContain("--foreground: #09090b");
+    expect(css).toContain("--primary: #18181b");
+    expect(css).toContain("--muted: #f4f4f5");
+    expect(css).toContain("--radius: 0.5rem");
+    expect(css).toContain("--background: #ffffff");
+    expect(css).toContain("--sidebar: #fafafa");
+    expect(css).toContain("--background: #09090b");
+    expect(css).toContain("--primary: #fafafa");
   });
 
   it("includes a low-specificity browser reset", async () => {
