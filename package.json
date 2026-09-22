@@ -14,6 +14,9 @@
     "pnpm": ">=10.20"
   },
   "scripts": {
+    "check": "pnpm run check:types && pnpm run check:tests && pnpm run lint && pnpm run format:check",
+    "check:tests": "pnpm --recursive --if-present test",
+    "check:types": "pnpm run build:packages && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
     "codebase": "pnpm --filter @foldworks/codebase build && node packages/codebase/dist/cli.js",
     "dev": "pnpm run build:packages && pnpm --filter @foldworks/demo dev",
     "build": "pnpm run build:packages && pnpm --filter @foldworks/demo build",
@@ -21,6 +24,10 @@
     "changeset": "changeset",
     "deploy": "alchemy deploy --stage prod",
     "destroy": "alchemy destroy --stage prod",
+    "format": "node scripts/format-changed.mjs --write",
+    "format:all": "oxfmt",
+    "format:check": "node scripts/format-changed.mjs --check",
+    "lint": "oxlint",
     "pack:check": "node scripts/check-packages.mjs",
     "release": "pnpm run release:ready && pnpm run release:check && changeset publish",
     "release:check": "pnpm run build && pnpm --recursive --if-present test && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck && pnpm pack:check",
@@ -39,6 +46,8 @@
     "alchemy": "2.0.0-beta.76",
     "effect": "catalog:",
     "hono": "4.12.14",
+    "oxfmt": "^0.44.0",
+    "oxlint": "^1.59.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3"
   }

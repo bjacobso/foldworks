@@ -51,13 +51,27 @@ This repository requires Node.js 24.13 or newer and pnpm 10.20 or newer.
 
 ```sh
 pnpm install
+pnpm check
 pnpm test
 pnpm typecheck
 pnpm build
 ```
 
+`pnpm check` builds the packages once, then runs type checks, unit tests,
+linting, and a non-mutating format check on files changed from `main`. Use
+`pnpm format` to fix changed files; `pnpm format:all` formats the whole
+repository.
+
 Run `pnpm dev` to start the demo application. Run `pnpm test:e2e` for its
 Playwright interaction suite.
+
+In Conductor, the Run menu provides **Checks**, **Development**, **Codebase**,
+and **Verified Development**. Checks is the default; Development starts the
+home page with hot reload, while Verified Development runs the same checks
+before starting it. Conductor assigns each local workspace its own ports and
+exposes the home page through the terminal panel's Open menu. Each Run action
+first checks pnpm's installed lockfile and installs dependencies only when they
+are missing or stale, including in a synced cloud workspace checkout.
 
 Run `pnpm codebase` to build and start the live codebase workbench on
 `http://127.0.0.1:4310`. Pass `--host` and `--port` to expose it through a
