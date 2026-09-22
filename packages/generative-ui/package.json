@@ -1,0 +1,76 @@
+{
+  "name": "@foldworks/generative-ui",
+  "version": "0.0.0",
+  "description": "Schema-first generative UI contracts and a safe Foldkit renderer.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/generative-ui"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": {
+    "url": "https://github.com/bjacobso/foldworks/issues"
+  },
+  "keywords": [
+    "foldkit",
+    "generative-ui",
+    "effect",
+    "mcp",
+    "agents"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./ai": {
+      "types": "./dist/ai.d.ts",
+      "import": "./dist/ai.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./foldworks": {
+      "types": "./dist/foldworks.d.ts",
+      "import": "./dist/foldworks.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp.d.ts",
+      "import": "./dist/mcp.js"
+    },
+    "./mcp-app": {
+      "types": "./dist/mcp-app.d.ts",
+      "import": "./dist/mcp-app.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@foldworks/ui": "workspace:*",
+    "@modelcontextprotocol/ext-apps": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

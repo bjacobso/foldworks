@@ -1,4 +1,5 @@
 import { Schema as S } from "effect";
+import { ActionIntent } from "@foldworks/generative-ui/core";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Message as EditorMessage } from "@foldworks/editor";
@@ -41,5 +42,6 @@ export const Message = defineMessageUnion({
   GotEditorMessage: { message: EditorMessage },
   GotSidebarMessage: { message: Sidebar.Message },
   GotUiKitMessage: { message: UiKitMessage },
+  GotGenerativeUiAction: { intent: ActionIntent },
 });
 export type Message = typeof Message.Type;

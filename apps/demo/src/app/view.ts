@@ -14,11 +14,7 @@ import {
   Table2,
   Workflow as WorkflowIcon,
 } from "@lucide/icons";
-import {
-  Badge,
-  Select,
-  Toolbar,
-} from "@foldworks/ui";
+import { Badge, Select, Toolbar } from "@foldworks/ui";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
@@ -68,15 +64,15 @@ const activeAnnouncement = (model: Model): string => {
       ? model.formEditor.announcement
       : demo === "QueryBuilder"
         ? model.queryBuilderDemo.announcement
-      : demo === "PdfAnnotator"
-        ? model.pdfAnnotator.announcement
-      : demo === "UiKit"
-        ? model.uiKit.announcement
-      : demo === "Agent"
-        ? ""
-      : demo === "DataTable"
-        ? model.dataTableDemo.announcement
-        : model.announcement;
+        : demo === "PdfAnnotator"
+          ? model.pdfAnnotator.announcement
+          : demo === "UiKit"
+            ? model.uiKit.announcement
+            : demo === "Agent"
+              ? ""
+              : demo === "DataTable"
+                ? model.dataTableDemo.announcement
+                : model.announcement;
 };
 
 const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
@@ -85,47 +81,123 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
     {
       id: "overview",
       label: "Overview",
-      items: [{
-        id: "home",
-        label: "Home",
-        href: homeRouter(),
-        icon: House,
-        isActive: demo === "Home",
-      }],
+      items: [
+        {
+          id: "home",
+          label: "Home",
+          href: homeRouter(),
+          icon: House,
+          isActive: demo === "Home",
+        },
+      ],
     },
     {
       id: "reference-applications",
       label: "Reference applications",
       items: [
-        { id: "agent", label: "Agent playground", href: agentRouter(), icon: Bot, isActive: demo === "Agent" },
-        { id: "codebase", label: "Codebase workbench", href: codebaseRouter(), icon: FolderGit2, isActive: demo === "Codebase" },
-        { id: "diff-viewer", label: "Diff review", href: diffViewerRouter(), icon: FileDiff, isActive: demo === "DiffViewer" },
-        { id: "workbench", label: "Workers workbench", href: workbenchRouter(), icon: Table2, isActive: demo === "Workbench" },
+        {
+          id: "agent",
+          label: "Agent playground",
+          href: agentRouter(),
+          icon: Bot,
+          isActive: demo === "Agent",
+        },
+        {
+          id: "codebase",
+          label: "Codebase workbench",
+          href: codebaseRouter(),
+          icon: FolderGit2,
+          isActive: demo === "Codebase",
+        },
+        {
+          id: "diff-viewer",
+          label: "Diff review",
+          href: diffViewerRouter(),
+          icon: FileDiff,
+          isActive: demo === "DiffViewer",
+        },
+        {
+          id: "workbench",
+          label: "Workers workbench",
+          href: workbenchRouter(),
+          icon: Table2,
+          isActive: demo === "Workbench",
+        },
       ],
     },
     {
       id: "foundation",
       label: "Foundation",
-      items: [{
-        id: "ui",
-        label: "@foldworks/ui",
-        href: uiKitRouter(),
-        icon: Blocks,
-        isActive: demo === "UiKit",
-      }],
+      items: [
+        {
+          id: "ui",
+          label: "@foldworks/ui",
+          href: uiKitRouter(),
+          icon: Blocks,
+          isActive: demo === "UiKit",
+        },
+      ],
     },
     {
       id: "application-primitives",
       label: "Application primitives",
       items: [
-        { id: "editor", label: "Document editor", href: editorRouter(), icon: FileText, isActive: demo === "Editor" },
-        { id: "code-editor", label: "Code editor", href: codeEditorRouter(), icon: Braces, isActive: demo === "CodeEditor" },
-        { id: "data-table", label: "Data table", href: dataTablePath(), icon: Table2, isActive: demo === "DataTable" },
-        { id: "data-grid", label: "Data grid", href: dataGridRouter(), icon: Table2, isActive: demo === "DataGrid" },
-        { id: "query-builder", label: "Query builder", href: queryBuilderRouter(), icon: ListFilter, isActive: demo === "QueryBuilder" },
-        { id: "form-builder", label: "Form builder", href: formBuilderPath(model.formEditor.exampleId, model.formEditor.mode), icon: ListChecks, isActive: demo === "FormBuilder" },
-        { id: "workflow", label: "Workflow builder", href: workflowPath(model.workflowEditor.workflow.orientation), icon: WorkflowIcon, isActive: demo === "Workflow" },
-        { id: "pdf-annotator", label: "PDF annotator", href: pdfAnnotatorRouter(), icon: FileText, isActive: demo === "PdfAnnotator" },
+        {
+          id: "editor",
+          label: "Document editor",
+          href: editorRouter(),
+          icon: FileText,
+          isActive: demo === "Editor",
+        },
+        {
+          id: "code-editor",
+          label: "Code editor",
+          href: codeEditorRouter(),
+          icon: Braces,
+          isActive: demo === "CodeEditor",
+        },
+        {
+          id: "data-table",
+          label: "Data table",
+          href: dataTablePath(),
+          icon: Table2,
+          isActive: demo === "DataTable",
+        },
+        {
+          id: "data-grid",
+          label: "Data grid",
+          href: dataGridRouter(),
+          icon: Table2,
+          isActive: demo === "DataGrid",
+        },
+        {
+          id: "query-builder",
+          label: "Query builder",
+          href: queryBuilderRouter(),
+          icon: ListFilter,
+          isActive: demo === "QueryBuilder",
+        },
+        {
+          id: "form-builder",
+          label: "Form builder",
+          href: formBuilderPath(model.formEditor.exampleId, model.formEditor.mode),
+          icon: ListChecks,
+          isActive: demo === "FormBuilder",
+        },
+        {
+          id: "workflow",
+          label: "Workflow builder",
+          href: workflowPath(model.workflowEditor.workflow.orientation),
+          icon: WorkflowIcon,
+          isActive: demo === "Workflow",
+        },
+        {
+          id: "pdf-annotator",
+          label: "PDF annotator",
+          href: pdfAnnotatorRouter(),
+          icon: FileText,
+          isActive: demo === "PdfAnnotator",
+        },
       ],
     },
   ];
@@ -167,139 +239,219 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
-  const title = demo === "Editor" ? "Document editor" : demo === "Agent" ? "Interactive agent" : demo === "CodeEditor" ? "Code editor" : demo === "Codebase" ? "Codebase workbench" : demo === "DiffViewer" ? "Code review" : demo === "Workbench" ? "Workers workbench" : demo === "Workflow"
-    ? "Candidate workflow"
-    : demo === "DataTable"
-      ? "People"
-    : demo === "DataGrid"
-      ? "Headcount worksheet"
-      : demo === "FormBuilder"
-        ? model.formEditor.document.title
-        : demo === "QueryBuilder"
-          ? "Employee query"
-        : demo === "PdfAnnotator"
-          ? "PDF annotator"
-        : demo === "Home"
-          ? "Foldworks"
-          : "@foldworks/ui";
-  const description = demo === "Editor" ? "Native Foldkit editing · Markdown · Custom blocks" : demo === "Agent" ? "Streaming · tool calls · human approval" : demo === "CodeEditor" ? "Configuration · Scripts · Syntax highlighting" : demo === "Codebase" ? "Living documentation · source · history · Git diffs" : demo === "DiffViewer" ? "Split and unified diffs · line comments · review progress" : demo === "Workbench" ? "Inspect · Explain · Preview · Apply · History" : demo === "Workflow"
-    ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
-    : demo === "DataTable"
-      ? `${contacts.length} people · resource-first CRUD table`
-    : demo === "DataGrid"
-      ? `${people.length} rows · cell editing · spreadsheet controls`
-      : demo === "FormBuilder"
-        ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
-        : demo === "QueryBuilder"
-          ? "Configured attributes · recursive groups · live validation"
-        : demo === "PdfAnnotator"
-          ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-        : demo === "Home"
-          ? "Polished application primitives for Foldkit and StyleX"
-          : "61 application primitives · Foldkit behavior · StyleX";
-  return Toolbar.view({
-    title,
-    description,
-    actions: [
-      ...(demo === "Editor"
-        ? [Badge.view({ label: "Native editor preview", dot: true }, h)]
-        : demo === "Agent"
-        ? [Badge.view({ label: "Simulated", tone: "info", dot: true }, h)]
-        : demo === "Workflow" || demo === "FormBuilder"
-        ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
+  const title =
+    demo === "Editor"
+      ? "Document editor"
+      : demo === "Agent"
+        ? "Interactive agent"
         : demo === "CodeEditor"
-          ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
-        : demo === "Codebase"
-          ? [Badge.view({ label: "Read-only fixture", tone: "info", dot: true }, h)]
-        : demo === "DiffViewer"
-          ? [Badge.view({ label: "Interactive prototype", tone: "info", dot: true }, h)]
-        : demo === "Workbench"
-          ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
-        : demo === "DataTable"
-          ? [Badge.view({ label: "Semantic table + controlled data", tone: "info", dot: true }, h)]
-        : demo === "DataGrid"
-          ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
-          : demo === "QueryBuilder"
-            ? [Badge.view({ label: "Validates as you edit", tone: "success", dot: true }, h)]
-          : demo === "PdfAnnotator"
-            ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
-          : demo === "Home"
-            ? [
-                Badge.view({ label: "15 packages", tone: "info", dot: true }, h),
-                Badge.view({ label: "Open source" }, h),
-              ]
-            : [
-              Badge.view({ label: "61 primitives", tone: "info", dot: true }, h),
-              Badge.view({ label: "StyleX + Foldkit" }, h),
-            ]),
-      Select.control({
-        value: model.themeName,
-        ariaLabel: "Theme",
-        onChange: (name) => Message.SelectedThemeName({
-          name: name as Model["themeName"],
-        }),
-        options: [
-          { value: "Shadcn", label: "shadcn/ui" },
-          { value: "Blueprint", label: "Palantir Blueprint" },
-          { value: "Office", label: "Microsoft Office" },
-          { value: "Google", label: "Google" },
-          { value: "Apple", label: "Apple" },
-        ],
-      }, h),
-      Select.control({
-        value: model.themePreference,
-        ariaLabel: "Appearance",
-        onChange: (preference) => Message.SelectedThemePreference({
-          preference: preference as Model["themePreference"],
-        }),
-        options: [
-          { value: "System", label: "System" },
-          { value: "Light", label: "Light" },
-          { value: "Dark", label: "Dark" },
-        ],
-      }, h),
-    ],
-  }, h);
+          ? "Code editor"
+          : demo === "Codebase"
+            ? "Codebase workbench"
+            : demo === "DiffViewer"
+              ? "Code review"
+              : demo === "Workbench"
+                ? "Workers workbench"
+                : demo === "Workflow"
+                  ? "Candidate workflow"
+                  : demo === "DataTable"
+                    ? "People"
+                    : demo === "DataGrid"
+                      ? "Headcount worksheet"
+                      : demo === "FormBuilder"
+                        ? model.formEditor.document.title
+                        : demo === "QueryBuilder"
+                          ? "Employee query"
+                          : demo === "PdfAnnotator"
+                            ? "PDF annotator"
+                            : demo === "Home"
+                              ? "Foldworks"
+                              : "@foldworks/ui";
+  const description =
+    demo === "Editor"
+      ? "Native Foldkit editing · Markdown · Custom blocks"
+      : demo === "Agent"
+        ? "Streaming · tool calls · human approval"
+        : demo === "CodeEditor"
+          ? "Configuration · Scripts · Syntax highlighting"
+          : demo === "Codebase"
+            ? "Living documentation · source · history · Git diffs"
+            : demo === "DiffViewer"
+              ? "Split and unified diffs · line comments · review progress"
+              : demo === "Workbench"
+                ? "Inspect · Explain · Preview · Apply · History"
+                : demo === "Workflow"
+                  ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
+                  : demo === "DataTable"
+                    ? `${contacts.length} people · resource-first CRUD table`
+                    : demo === "DataGrid"
+                      ? `${people.length} rows · cell editing · spreadsheet controls`
+                      : demo === "FormBuilder"
+                        ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
+                        : demo === "QueryBuilder"
+                          ? "Configured attributes · recursive groups · live validation"
+                          : demo === "PdfAnnotator"
+                            ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
+                            : demo === "Home"
+                              ? "Polished application primitives for Foldkit and StyleX"
+                              : "61 application primitives · Foldkit behavior · StyleX";
+  return Toolbar.view(
+    {
+      title,
+      description,
+      actions: [
+        ...(demo === "Editor"
+          ? [Badge.view({ label: "Native editor preview", dot: true }, h)]
+          : demo === "Agent"
+            ? [Badge.view({ label: "Simulated", tone: "info", dot: true }, h)]
+            : demo === "Workflow" || demo === "FormBuilder"
+              ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
+              : demo === "CodeEditor"
+                ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
+                : demo === "Codebase"
+                  ? [Badge.view({ label: "Read-only fixture", tone: "info", dot: true }, h)]
+                  : demo === "DiffViewer"
+                    ? [Badge.view({ label: "Interactive prototype", tone: "info", dot: true }, h)]
+                    : demo === "Workbench"
+                      ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
+                      : demo === "DataTable"
+                        ? [
+                            Badge.view(
+                              {
+                                label: "Semantic table + controlled data",
+                                tone: "info",
+                                dot: true,
+                              },
+                              h,
+                            ),
+                          ]
+                        : demo === "DataGrid"
+                          ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
+                          : demo === "QueryBuilder"
+                            ? [
+                                Badge.view(
+                                  { label: "Validates as you edit", tone: "success", dot: true },
+                                  h,
+                                ),
+                              ]
+                            : demo === "PdfAnnotator"
+                              ? [
+                                  Badge.view(
+                                    { label: "Foldkit drag + PDF export", tone: "info", dot: true },
+                                    h,
+                                  ),
+                                ]
+                              : demo === "Home"
+                                ? [
+                                    Badge.view(
+                                      { label: "16 packages", tone: "info", dot: true },
+                                      h,
+                                    ),
+                                    Badge.view({ label: "Open source" }, h),
+                                  ]
+                                : [
+                                    Badge.view(
+                                      { label: "61 primitives", tone: "info", dot: true },
+                                      h,
+                                    ),
+                                    Badge.view({ label: "StyleX + Foldkit" }, h),
+                                  ]),
+        Select.control(
+          {
+            value: model.themeName,
+            ariaLabel: "Theme",
+            onChange: (name) =>
+              Message.SelectedThemeName({
+                name: name as Model["themeName"],
+              }),
+            options: [
+              { value: "Shadcn", label: "shadcn/ui" },
+              { value: "Blueprint", label: "Palantir Blueprint" },
+              { value: "Office", label: "Microsoft Office" },
+              { value: "Google", label: "Google" },
+              { value: "Apple", label: "Apple" },
+            ],
+          },
+          h,
+        ),
+        Select.control(
+          {
+            value: model.themePreference,
+            ariaLabel: "Appearance",
+            onChange: (preference) =>
+              Message.SelectedThemePreference({
+                preference: preference as Model["themePreference"],
+              }),
+            options: [
+              { value: "System", label: "System" },
+              { value: "Light", label: "Light" },
+              { value: "Dark", label: "Dark" },
+            ],
+          },
+          h,
+        ),
+      ],
+    },
+    h,
+  );
 };
 
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   if (demo === "Home") return homeView(h);
-  if (demo === "Editor") return h.submodel({ slotId: "document-editor", model: model.editor, view: ArticleEditor.view, toParentMessage: message => Message.GotEditorMessage({ message }) });
-  if (demo === "Agent") return h.submodel({
-    slotId: "agent-content",
-    model: model.agent,
-    view: agentView,
-    toParentMessage: (message) => Message.GotAgentMessage({ message }),
-  });
-  if (demo === "CodeEditor") return h.submodel({
-    slotId: "code-editor-content",
-    model: model.codeEditor,
-    view: codeEditorView,
-    viewInputs: { isDark: model.themePreference === "Dark" || (model.themePreference === "System" && model.systemIsDark) },
-    toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
-  });
+  if (demo === "Editor")
+    return h.submodel({
+      slotId: "document-editor",
+      model: model.editor,
+      view: ArticleEditor.view,
+      toParentMessage: (message) => Message.GotEditorMessage({ message }),
+    });
+  if (demo === "Agent")
+    return h.submodel({
+      slotId: "agent-content",
+      model: model.agent,
+      view: agentView,
+      toParentMessage: (message) => Message.GotAgentMessage({ message }),
+    });
+  if (demo === "CodeEditor")
+    return h.submodel({
+      slotId: "code-editor-content",
+      model: model.codeEditor,
+      view: codeEditorView,
+      viewInputs: {
+        isDark:
+          model.themePreference === "Dark" ||
+          (model.themePreference === "System" && model.systemIsDark),
+      },
+      toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
+    });
   if (demo === "Codebase") return codebaseView(h);
-  if (demo === "DiffViewer") return h.submodel({
-    slotId: "diff-viewer-content",
-    model: model.diffViewerDemo,
-    view: diffViewerView,
-    toParentMessage: (message) => Message.GotDiffViewerDemoMessage({ message }),
-  });
-  if (demo === "Workbench") return h.submodel({
-    slotId: "workbench-content",
-    model: model.workbench,
-    view: workbenchView,
-    toParentMessage: (message) => Message.GotWorkbenchMessage({ message }),
-  });
+  if (demo === "DiffViewer")
+    return h.submodel({
+      slotId: "diff-viewer-content",
+      model: model.diffViewerDemo,
+      view: diffViewerView,
+      toParentMessage: (message) => Message.GotDiffViewerDemoMessage({ message }),
+    });
+  if (demo === "Workbench")
+    return h.submodel({
+      slotId: "workbench-content",
+      model: model.workbench,
+      view: workbenchView,
+      toParentMessage: (message) => Message.GotWorkbenchMessage({ message }),
+    });
   if (demo === "Workflow" || (demo === "FormBuilder" && model.formEditor.mode === "Editor")) {
     const paletteLabel = demo === "Workflow" ? "Workflow nodes" : "Form fields";
-    return h.div([h.Class(className(styles.editorWorkspace))], [
-      h.aside([h.Class(className(styles.editorPalette)), h.AriaLabel(paletteLabel)], [
-        childRegion(model, "Palette", h),
-      ]),
-      childRegion(model, "Content", h),
-    ]);
+    return h.div(
+      [h.Class(className(styles.editorWorkspace))],
+      [
+        h.aside(
+          [h.Class(className(styles.editorPalette)), h.AriaLabel(paletteLabel)],
+          [childRegion(model, "Palette", h)],
+        ),
+        childRegion(model, "Content", h),
+      ],
+    );
   }
   if (demo === "FormBuilder") {
     return childRegion(model, "Content", h);
@@ -344,23 +496,24 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   });
 };
 
-const documentTitle = (demo: Demo): string => Match.value(demo).pipe(
-  Match.when("Editor", () => "Document editor · Foldworks"),
-  Match.when("Agent", () => "Interactive agent · Foldworks"),
-  Match.when("CodeEditor", () => "Code editor · Foldworks"),
-  Match.when("Codebase", () => "Codebase workbench · Foldworks"),
-  Match.when("DiffViewer", () => "Code review · Foldworks"),
-  Match.when("Workbench", () => "Workers workbench · Foldworks"),
-  Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),
-  Match.when("DataTable", () => "Data table · Foldworks"),
-  Match.when("DataGrid", () => "Data grid · Foldworks"),
-  Match.when("FormBuilder", () => "Form builder · Foldworks"),
-  Match.when("QueryBuilder", () => "Query builder · Foldworks"),
-  Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
-  Match.when("UiKit", () => "UI components · Foldworks"),
-  Match.when("Workflow", () => "Workflow · Foldworks"),
-  Match.exhaustive,
-);
+const documentTitle = (demo: Demo): string =>
+  Match.value(demo).pipe(
+    Match.when("Editor", () => "Document editor · Foldworks"),
+    Match.when("Agent", () => "Interactive agent · Foldworks"),
+    Match.when("CodeEditor", () => "Code editor · Foldworks"),
+    Match.when("Codebase", () => "Codebase workbench · Foldworks"),
+    Match.when("DiffViewer", () => "Code review · Foldworks"),
+    Match.when("Workbench", () => "Workers workbench · Foldworks"),
+    Match.when("Home", () => "Foldworks · Application primitives for Foldkit and StyleX"),
+    Match.when("DataTable", () => "Data table · Foldworks"),
+    Match.when("DataGrid", () => "Data grid · Foldworks"),
+    Match.when("FormBuilder", () => "Form builder · Foldworks"),
+    Match.when("QueryBuilder", () => "Query builder · Foldworks"),
+    Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
+    Match.when("UiKit", () => "UI components · Foldworks"),
+    Match.when("Workflow", () => "Workflow · Foldworks"),
+    Match.exhaustive,
+  );
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
   const demo = demoFromRoute(model.route);
@@ -371,34 +524,39 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
       [h.Class(className(styles.app))],
       [
         preview
-          ? h.section([h.Class(className(styles.workspace))], [toolbar(model, h), content(model, h)])
-          : Sidebar.view({
-              model: model.sidebar,
-              toParentMessage: (message) => Message.GotSidebarMessage({ message }),
-              brand: {
-                title: "Foldworks",
-                description: "Foldkit + StyleX",
-                href: homeRouter(),
-                icon: Blocks,
+          ? h.section(
+              [h.Class(className(styles.workspace))],
+              [toolbar(model, h), content(model, h)],
+            )
+          : Sidebar.view(
+              {
+                model: model.sidebar,
+                toParentMessage: (message) => Message.GotSidebarMessage({ message }),
+                brand: {
+                  title: "Foldworks",
+                  description: "Foldkit + StyleX",
+                  href: homeRouter(),
+                  icon: Blocks,
+                },
+                groups: navigationGroups(model),
+                header: toolbar(model, h),
+                content: content(model, h),
+                footer: {
+                  title: "Application primitives",
+                  description: "Sixteen Foldworks packages",
+                  icon: Blocks,
+                },
+                ariaLabel: "Foldworks navigation",
+                variant: "inset",
+                collapsible: "icon",
               },
-              groups: navigationGroups(model),
-              header: toolbar(model, h),
-              content: content(model, h),
-              footer: {
-                title: "Application primitives",
-                description: "Fifteen Foldworks packages",
-                icon: Blocks,
-              },
-              ariaLabel: "Foldworks navigation",
-              variant: "inset",
-              collapsible: "icon",
-            }, h),
-        demo === "Workflow" || demo === "FormBuilder"
-          ? childRegion(model, "Overlay", h)
-          : h.empty,
-        h.div([h.Class(className(styles.srOnly)), h.AriaLive("assertive")], [
-          activeAnnouncement(model),
-        ]),
+              h,
+            ),
+        demo === "Workflow" || demo === "FormBuilder" ? childRegion(model, "Overlay", h) : h.empty,
+        h.div(
+          [h.Class(className(styles.srOnly)), h.AriaLive("assertive")],
+          [activeAnnouncement(model)],
+        ),
       ],
     ),
   };

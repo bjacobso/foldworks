@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.mcp-app.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
@@ -20,6 +20,7 @@
     "@foldworks/data-table": "workspace:*",
     "@foldworks/diff-viewer": "workspace:*",
     "@foldworks/form-builder": "workspace:*",
+    "@foldworks/generative-ui": "workspace:*",
     "@foldworks/history": "workspace:*",
     "@foldworks/pdf-annotator": "workspace:*",
     "@foldworks/query-builder": "workspace:*",
