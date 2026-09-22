@@ -70,8 +70,8 @@ and **Verified Development**. Checks is the default; Development starts the
 home page with hot reload, while Verified Development runs the same checks
 before starting it. Conductor assigns each local workspace its own ports and
 exposes the home page through the terminal panel's Open menu. Each Run action
-first ensures dependencies are installed, including in a synced cloud workspace
-checkout.
+first checks pnpm's installed lockfile and installs dependencies only when they
+are missing or stale, including in a synced cloud workspace checkout.
 
 Run `pnpm codebase` to build and start the live codebase workbench on
 `http://127.0.0.1:4310`. Pass `--host` and `--port` to expose it through a

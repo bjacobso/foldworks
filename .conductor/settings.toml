@@ -13,18 +13,18 @@ setup = "pnpm install --frozen-lockfile"
 run_mode = "concurrent"
 
 [scripts.run.checks]
-command = "pnpm install --frozen-lockfile && pnpm check"
+command = "node scripts/ensure-dependencies.mjs && pnpm check"
 default = true
 icon = "list-checks"
 
 [scripts.run.development]
-command = "pnpm install --frozen-lockfile && pnpm run build:packages && pnpm --filter @foldworks/demo dev --host 0.0.0.0 --port ${CONDUCTOR_PORT:-5173}"
+command = "node scripts/ensure-dependencies.mjs && pnpm run build:packages && pnpm --filter @foldworks/demo dev --host 0.0.0.0 --port ${CONDUCTOR_PORT:-5173}"
 icon = "globe"
 
 [scripts.run.codebase]
-command = "pnpm install --frozen-lockfile && pnpm --filter @foldworks/codebase build && node packages/codebase/dist/cli.js --host 0.0.0.0 --port $((${CONDUCTOR_PORT:-4309} + 1))"
+command = "node scripts/ensure-dependencies.mjs && pnpm --filter @foldworks/codebase build && node packages/codebase/dist/cli.js --host 0.0.0.0 --port $((${CONDUCTOR_PORT:-4309} + 1))"
 icon = "book-open-code"
 
 [scripts.run.verified-development]
-command = "pnpm install --frozen-lockfile && pnpm check && exec pnpm --filter @foldworks/demo dev --host 0.0.0.0 --port ${CONDUCTOR_PORT:-5173}"
+command = "node scripts/ensure-dependencies.mjs && pnpm check && exec pnpm --filter @foldworks/demo dev --host 0.0.0.0 --port ${CONDUCTOR_PORT:-5173}"
 icon = "shield-check"
