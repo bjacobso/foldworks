@@ -4,6 +4,7 @@ import { defineMessageUnion } from "foldkit/message";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import * as stylex from "@stylexjs/stylex";
 import * as Button from "./button";
+import * as EditableText from "./editable-text";
 import * as Icon from "./icon";
 import { ChevronDown, ChevronRight, FileText } from "@lucide/icons";
 import { sxAttrs } from "./sx";
@@ -234,10 +235,10 @@ export const view = <ParentMessage>(config: Config & Readonly<{
           ...(node.branch ? [h.OnClick(toParentMessage(Message.Toggled({ id: node.id })))] : [])], [
             Icon.view({ icon: node.branch ? (model.expandedIds.includes(node.id) ? ChevronDown : ChevronRight) : FileText, size: 14 }, h),
           ]),
-        ...(editing ? [h.form([...sxAttrs(h, styles.label), h.OnSubmit(toParentMessage(Message.CommittedRename()))], [h.input([...sxAttrs(h, styles.input), h.Id(`${model.id}-rename`), h.AriaLabel(`Rename ${node.label}`), h.Value(model.draft),
-          h.OnInput(value => toParentMessage(Message.ChangedDraft({ value }))),
-          h.OnKeyDownPreventDefault(key => key === "Escape" ? Option.some(toParentMessage(Message.CancelledRename())) : Option.none()),
-        ])])] : [h.span([...sxAttrs(h, styles.label), h.Title(node.label),
+        ...(editing ? [EditableText.control({ id: `${model.id}-rename`, label: `Rename ${node.label}`, value: model.draft,
+          onChange: value => toParentMessage(Message.ChangedDraft({ value })),
+          onCommit: toParentMessage(Message.CommittedRename()), onCancel: toParentMessage(Message.CancelledRename()),
+        }, h)] : [h.span([...sxAttrs(h, styles.label), h.Title(node.label),
           h.OnClick(toParentMessage(Message.Selected({ id: node.id })))], [node.label])]),
       ]),
       ...(node.branch && model.expandedIds.includes(node.id) ? [h.div([h.Role("group")], render(node.id, level + 1))] : []),

@@ -1,3 +1,4 @@
+import * as Desktop from "./desktop";
 import { Update } from "foldkit";
 import { Option } from "effect";
 import { Stateful } from "@foldworks/ui";
@@ -137,6 +138,7 @@ const showToast = (variant: Stateful.Toast.Variant) => Update.foldChildStep({
 
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match(message, {
+    GotDesktop: ({ message }) => Update.foldChild({ update: Desktop.update, read: (model: Model) => Option.some(model.desktop), write: (model, desktop) => ({ ...model, desktop }), toParentMessage: message => Message.GotDesktop({ message }) })(model, message),
     GotTabsMessage: ({ message }) => foldTabs(model, message),
     GotDialogMessage: ({ message }) => foldDialog(model, message),
     GotSelectMessage: ({ message }) => foldSelect(model, message),

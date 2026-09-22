@@ -45,6 +45,7 @@ type Package = Readonly<{
 }>;
 
 const packages: ReadonlyArray<Package> = [
+  { name: "@foldworks/keyboard", category: "Foundation", description: "Typed scoped commands and platform-aware shortcuts with Foldkit lifecycles.", href: uiKitRouter(), icon: Blocks },
   { name: "@foldworks/editor", category: "Application primitive", description: "Native rich-text editing, Markdown, and extensible document blocks.", href: editorRouter(), icon: FileText },
   {
     name: "@foldworks/ui",

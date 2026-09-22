@@ -2,6 +2,7 @@ import type { Page } from "playwright";
 import { describe, expect, it } from "vitest";
 
 const expectedPackages = [
+  "@foldworks/keyboard",
   "@foldworks/editor",
   "@foldworks/ui",
   "@foldworks/sidebar",
@@ -50,7 +51,7 @@ export const packageDemoScreenshotScenarios = (
         const url = new URL(demo.href, appUrl);
         await page.goto(url.href, { waitUntil: "networkidle" });
         await expect.poll(() => new URL(page.url()).pathname).toBe(url.pathname);
-        await expect.poll(() => page.locator("main").isVisible()).toBe(true);
+        await expect.poll(() => page.locator("main").first().isVisible()).toBe(true);
 
         if (demo.name === "@foldworks/pdf-annotator") {
           await page.getByRole("button", { name: "Try the sample document" }).click();

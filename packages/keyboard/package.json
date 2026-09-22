@@ -1,0 +1,54 @@
+{
+  "name": "@foldworks/keyboard",
+  "version": "0.1.0",
+  "description": "Typed keyboard command definitions and scoped Foldkit event streams.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/keyboard"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": {
+    "url": "https://github.com/bjacobso/foldworks/issues"
+  },
+  "keywords": [
+    "foldkit",
+    "keyboard",
+    "shortcuts",
+    "commands"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

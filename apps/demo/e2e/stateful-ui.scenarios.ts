@@ -28,7 +28,7 @@ export const statefulUiScenarios = (getPage: () => Page, appUrl: string, screens
 
     it("searches and selects commands entirely from the keyboard", async () => {
       const page = await start();
-      const input = page.getByRole("combobox", { name: "Workspace commands" });
+      const input = page.getByRole("combobox", { name: "Workspace commands", exact: true });
       await input.focus();
       await page.keyboard.press("ArrowDown");
       await expect.poll(() => input.getAttribute("aria-activedescendant")).toBe("catalog-command-item-settings");

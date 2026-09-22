@@ -1,3 +1,4 @@
+import { desktopScenarios } from "./desktop.scenarios";
 import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -16,7 +17,7 @@ import { packageDemoScreenshotScenarios } from "./package-demo.scenarios";
 import { diffViewerScenarios } from "./diff-viewer.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
-const screenshotDirectory = resolve(appRoot, "test-results/demo");
+const screenshotDirectory = resolve(appRoot, "../../.context/demo-screenshots");
 const appUrl = "http://127.0.0.1:4174";
 const thenTargetSelector =
   '[data-droppable-id="flow-target:flow%3Acondition%3Athen:0"]';
@@ -1141,8 +1142,8 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => showcase.getByLabel("Compact department").inputValue())
       .toBe("Operations");
 
-    await showcase.getByRole("button", { name: "Activity" }).click();
-    await expect.poll(() => showcase.getByRole("button", { name: "Activity" }).getAttribute("aria-pressed"))
+    await showcase.getByRole("button", { name: "Activity", exact: true }).click();
+    await expect.poll(() => showcase.getByRole("button", { name: "Activity", exact: true }).getAttribute("aria-pressed"))
       .toBe("true");
     await expect.poll(() => showcase.getByText("Activity view selected.", { exact: true }).count())
       .toBe(1);
@@ -1156,6 +1157,9 @@ describe.sequential("structured workflow builder", () => {
     const catalog = page.locator('[data-component-catalog="true"]');
     await expect.poll(() => catalog.isVisible()).toBe(true);
     await expect.poll(() => catalog.getByRole("heading").allTextContents()).toEqual([
+      "First-principles foundations",
+      "Semantic content and local layout",
+      "Stateful floating primitives",
       "Data display and feedback",
       "Team plan",
       "No messages",
@@ -1208,7 +1212,7 @@ describe.sequential("structured workflow builder", () => {
               return { fontSize: style.fontSize, fontWeight: style.fontWeight, height: style.height };
             });
           expect(actual, `${theme} ${appearance}: ${name}`)
-            .toEqual({ fontSize, fontWeight: "550", height });
+            .toEqual({ fontSize, fontWeight: "500", height });
         }
         // The demo reset must not override other control recipes either.
         for (const control of [
@@ -1376,6 +1380,7 @@ describe.sequential("structured workflow builder", () => {
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
   statefulUiScenarios(() => page, appUrl, screenshot);
+  desktopScenarios(() => page, appUrl);
   nativeEditorScenarios(() => page, appUrl, screenshot);
   workspaceScenarios(() => page, appUrl);
   treeScenarios(() => page, appUrl);

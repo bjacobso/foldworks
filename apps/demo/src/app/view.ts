@@ -225,7 +225,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Foldkit drag + PDF export", tone: "info", dot: true }, h)]
           : demo === "Home"
             ? [
-                Badge.view({ label: "14 packages", tone: "info", dot: true }, h),
+                Badge.view({ label: "15 packages", tone: "info", dot: true }, h),
                 Badge.view({ label: "Open source" }, h),
               ]
             : [
@@ -385,7 +385,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
               content: content(model, h),
               footer: {
                 title: "Application primitives",
-                description: "Fourteen Foldworks packages",
+                description: "Fifteen Foldworks packages",
                 icon: Blocks,
               },
               ariaLabel: "Foldworks navigation",
