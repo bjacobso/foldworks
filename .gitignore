@@ -5,6 +5,7 @@ dist/
 .wrangler/
 .env
 .env.local
+.conductor/settings.local.toml
 coverage/
 test-results/
 playwright-report/
