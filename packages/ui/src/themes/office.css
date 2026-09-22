@@ -1,0 +1,88 @@
+/* Office: Fluent-inspired typography, square controls, and Microsoft blue. */
+[data-theme="office"] {
+  color-scheme: light;
+  --background: #f5f5f5;
+  --foreground: #242424;
+  --card: #ffffff;
+  --card-foreground: #242424;
+  --popover: #ffffff;
+  --popover-foreground: #242424;
+  --primary: #0f6cbd;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0f0;
+  --secondary-foreground: #242424;
+  --muted: #f5f5f5;
+  --muted-foreground: #616161;
+  --accent: #ebf3fc;
+  --accent-foreground: #0f548c;
+  --destructive: #d13438;
+  --destructive-foreground: #ffffff;
+  --border: #e0e0e0;
+  --input: #b3b3b3;
+  --ring: #0f6cbd;
+  --chart-1: #0f6cbd;
+  --chart-2: #107c10;
+  --chart-3: #ca5010;
+  --chart-4: #8764b8;
+  --chart-5: #c239b3;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #242424;
+  --sidebar-primary: #0f6cbd;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebf3fc;
+  --sidebar-accent-foreground: #0f548c;
+  --sidebar-border: #e0e0e0;
+  --sidebar-ring: #0f6cbd;
+
+  --font-sans: "Segoe UI", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius: 4px;
+  --radius-button: 2px;
+  --radius-button-sm: 2px;
+  --radius-badge: 2px;
+  --radius-panel: 4px;
+  --badge-border: color-mix(in srgb, currentColor 14%, transparent);
+  --button-outline-surface: var(--card);
+  --button-outline-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 8%), 0 2px 4px rgb(0 0 0 / 4%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 2px 4px rgb(0 0 0 / 6%);
+  --shadow-float: 0 8px 16px rgb(0 0 0 / 18%);
+}
+
+[data-theme="office"][data-mode="dark"],
+[data-theme="office"].dark {
+  color-scheme: dark;
+  --background: #1f1f1f;
+  --foreground: #ffffff;
+  --card: #292929;
+  --card-foreground: #ffffff;
+  --popover: #333333;
+  --popover-foreground: #ffffff;
+  --primary: #479ef5;
+  --primary-foreground: #0f1419;
+  --secondary: #333333;
+  --secondary-foreground: #ffffff;
+  --muted: #333333;
+  --muted-foreground: #adadad;
+  --accent: #0f548c;
+  --accent-foreground: #ffffff;
+  --destructive: #dc626d;
+  --destructive-foreground: #ffffff;
+  --border: #474747;
+  --input: #666666;
+  --ring: #479ef5;
+  --chart-1: #479ef5;
+  --chart-2: #54b054;
+  --chart-3: #f98845;
+  --chart-4: #b4a0ff;
+  --chart-5: #ed5fc7;
+  --sidebar: #292929;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #479ef5;
+  --sidebar-primary-foreground: #0f1419;
+  --sidebar-accent: #333333;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #474747;
+  --sidebar-ring: #479ef5;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 24%), 0 2px 5px rgb(0 0 0 / 20%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 2px 5px rgb(0 0 0 / 24%);
+}

@@ -1201,7 +1201,13 @@ describe.sequential("structured workflow builder", () => {
       ["Large", "14px", "36px"],
     ] as const;
 
-    for (const theme of ["Neutral", "Zinc", "Blue", "Soft"]) {
+    for (const theme of [
+      "Shadcn",
+      "Blueprint",
+      "Office",
+      "Google",
+      "Apple",
+    ]) {
       await page.getByLabel("Theme", { exact: true }).selectOption(theme);
       for (const appearance of ["Light", "Dark"]) {
         await page.getByLabel("Appearance", { exact: true }).selectOption(appearance);
@@ -1231,12 +1237,12 @@ describe.sequential("structured workflow builder", () => {
     const themeSelect = page.getByLabel("Theme");
     const appearanceSelect = page.getByLabel("Appearance");
 
-    await themeSelect.selectOption("Blue");
+    await themeSelect.selectOption("Shadcn");
     await expect.poll(() => page.locator("html").getAttribute("data-theme"))
-      .toBe("blue");
+      .toBe("shadcn");
     await expect.poll(() => page.evaluate(() =>
       window.localStorage.getItem("foldworks-demo-color-theme"),
-    )).toBe("Blue");
+    )).toBe("Shadcn");
 
     await appearanceSelect.selectOption("Dark");
 
@@ -1259,8 +1265,8 @@ describe.sequential("structured workflow builder", () => {
       };
     });
     expect(darkTokens).toMatchObject({
-      background: "oklch(14.5% 0 0)",
-      primary: "oklch(70.7% .165 254.624)",
+      background: "#09090b",
+      primary: "#fafafa",
     });
     expect(darkTokens.selection).toContain(darkTokens.primary);
     expect(darkTokens.dropTarget).toContain(darkTokens.primary);
@@ -1268,7 +1274,7 @@ describe.sequential("structured workflow builder", () => {
 
     await page.reload({ waitUntil: "networkidle" });
     await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
-    await expect.poll(() => page.locator("html").getAttribute("data-theme")).toBe("blue");
+    await expect.poll(() => page.locator("html").getAttribute("data-theme")).toBe("shadcn");
 
     await page.goto(`${appUrl}/workflow`, { waitUntil: "networkidle" });
     const selectedNode = page.locator('[data-node-id="node-start"]');

@@ -239,10 +239,11 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           name: name as Model["themeName"],
         }),
         options: [
-          { value: "Neutral", label: "Neutral" },
-          { value: "Zinc", label: "Zinc" },
-          { value: "Blue", label: "Blue" },
-          { value: "Soft", label: "Soft" },
+          { value: "Shadcn", label: "shadcn/ui" },
+          { value: "Blueprint", label: "Palantir Blueprint" },
+          { value: "Office", label: "Microsoft Office" },
+          { value: "Google", label: "Google" },
+          { value: "Apple", label: "Apple" },
         ],
       }, h),
       Select.control({

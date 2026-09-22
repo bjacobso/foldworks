@@ -1,6 +1,12 @@
 import { Schema as S } from "effect";
 
-export const ThemeName = S.Literals(["Neutral", "Zinc", "Blue", "Soft"]);
+export const ThemeName = S.Literals([
+  "Shadcn",
+  "Blueprint",
+  "Office",
+  "Google",
+  "Apple",
+]);
 export type ThemeName = typeof ThemeName.Type;
 
 export const ThemePreference = S.Literals(["System", "Light", "Dark"]);
@@ -17,7 +23,8 @@ export const COLOR_THEME_STORAGE_KEY = "foldworks-demo-color-theme";
 export const SYSTEM_DARK_QUERY = "(prefers-color-scheme: dark)";
 
 const isThemeName = (value: string | null): value is ThemeName =>
-  value === "Neutral" || value === "Zinc" || value === "Blue" || value === "Soft";
+  value === "Shadcn" || value === "Blueprint" ||
+  value === "Office" || value === "Google" || value === "Apple";
 
 const isThemePreference = (value: string | null): value is ThemePreference =>
   value === "System" || value === "Light" || value === "Dark";
@@ -32,7 +39,7 @@ export const readThemeState = (): ThemeState => {
     // Storage can be unavailable in privacy-restricted browser contexts.
   }
   return {
-    name: isThemeName(storedName) ? storedName : "Neutral",
+    name: isThemeName(storedName) ? storedName : "Shadcn",
     preference: isThemePreference(storedPreference) ? storedPreference : "System",
     systemIsDark: window.matchMedia(SYSTEM_DARK_QUERY).matches,
   };

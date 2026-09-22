@@ -1,0 +1,87 @@
+/* Blueprint: dense enterprise UI with strong blue actions and compact geometry. */
+[data-theme="blueprint"] {
+  color-scheme: light;
+  --background: #f6f7f9;
+  --foreground: #1c2127;
+  --card: #ffffff;
+  --card-foreground: #1c2127;
+  --popover: #ffffff;
+  --popover-foreground: #1c2127;
+  --primary: #2d72d2;
+  --primary-foreground: #ffffff;
+  --secondary: #e5e8eb;
+  --secondary-foreground: #1c2127;
+  --muted: #edeff2;
+  --muted-foreground: #5f6b7c;
+  --accent: #dce8f7;
+  --accent-foreground: #184a90;
+  --destructive: #cd4246;
+  --destructive-foreground: #ffffff;
+  --border: #d3d8de;
+  --input: #a7b0ba;
+  --ring: #2d72d2;
+  --chart-1: #2d72d2;
+  --chart-2: #238551;
+  --chart-3: #d1980b;
+  --chart-4: #8f398f;
+  --chart-5: #c87619;
+  --sidebar: #e5e8eb;
+  --sidebar-foreground: #1c2127;
+  --sidebar-primary: #2d72d2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d3d8de;
+  --sidebar-accent-foreground: #1c2127;
+  --sidebar-border: #c5cbd3;
+  --sidebar-ring: #2d72d2;
+
+  --font-sans: Arial, Helvetica, sans-serif;
+  --radius: 3px;
+  --radius-button: 3px;
+  --radius-button-sm: 2px;
+  --radius-badge: 3px;
+  --radius-panel: 3px;
+  --badge-border: color-mix(in srgb, currentColor 18%, transparent);
+  --button-outline-surface: var(--card);
+  --shadow-card: 0 1px 1px rgb(17 20 24 / 10%), 0 2px 4px rgb(17 20 24 / 10%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 2px 4px rgb(17 20 24 / 10%);
+  --shadow-float: 0 8px 24px rgb(17 20 24 / 24%);
+}
+
+[data-theme="blueprint"][data-mode="dark"],
+[data-theme="blueprint"].dark {
+  color-scheme: dark;
+  --background: #1c2127;
+  --foreground: #f6f7f9;
+  --card: #252a31;
+  --card-foreground: #f6f7f9;
+  --popover: #2f343c;
+  --popover-foreground: #f6f7f9;
+  --primary: #4c90f0;
+  --primary-foreground: #ffffff;
+  --secondary: #383e47;
+  --secondary-foreground: #f6f7f9;
+  --muted: #2f343c;
+  --muted-foreground: #abb3bf;
+  --accent: #184a90;
+  --accent-foreground: #ffffff;
+  --destructive: #fa999c;
+  --destructive-foreground: #1c2127;
+  --border: #404854;
+  --input: #5f6b7c;
+  --ring: #4c90f0;
+  --chart-1: #4c90f0;
+  --chart-2: #32a467;
+  --chart-3: #fbb360;
+  --chart-4: #bd6bbd;
+  --chart-5: #ec9a3c;
+  --sidebar: #252a31;
+  --sidebar-foreground: #f6f7f9;
+  --sidebar-primary: #4c90f0;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #383e47;
+  --sidebar-accent-foreground: #f6f7f9;
+  --sidebar-border: #404854;
+  --sidebar-ring: #4c90f0;
+  --shadow-card: 0 1px 1px rgb(0 0 0 / 28%), 0 2px 4px rgb(0 0 0 / 24%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 2px 5px rgb(0 0 0 / 28%);
+}

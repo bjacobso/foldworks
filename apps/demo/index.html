@@ -12,14 +12,14 @@
         const storageKey = "foldworks-demo-theme";
         const colorThemeStorageKey = "foldworks-demo-color-theme";
         let preference = "System";
-        let colorTheme = "Neutral";
+        let colorTheme = "Shadcn";
         try {
           const stored = window.localStorage.getItem(storageKey);
           const storedColorTheme = window.localStorage.getItem(colorThemeStorageKey);
           if (stored === "Light" || stored === "Dark" || stored === "System") {
             preference = stored;
           }
-          if (storedColorTheme === "Neutral" || storedColorTheme === "Zinc" || storedColorTheme === "Blue" || storedColorTheme === "Soft") {
+          if (["Shadcn", "Blueprint", "Office", "Google", "Apple"].includes(storedColorTheme)) {
             colorTheme = storedColorTheme;
           }
         } catch {}

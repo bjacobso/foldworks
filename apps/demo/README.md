@@ -14,8 +14,10 @@ can be linked, reloaded, and traversed with browser history. Transient selection
 drag state, column widths, and in-progress document edits remain in the
 application model.
 
-The toolbar separates color theme from appearance. Neutral, Zinc, Blue, and Soft
-palettes can each use System, Light, or Dark appearance. Both choices are
+The toolbar separates theme from appearance. Shadcn, Palantir Blueprint,
+Microsoft Office, Google, and Apple presets can each use
+System, Light, or Dark appearance. The expanded presets exercise palette,
+typography, corner shape, badge treatment, and elevation. Both choices are
 persisted locally and applied to the document root before the stylesheet loads
 to avoid a theme flash; System appearance also responds live when the operating
 system preference changes. Shared surface, text, status, selection, and

@@ -50,14 +50,15 @@ Import the base contract and the themes your application supports:
 
 ```css
 @import "@foldworks/ui/base.css";
-@import "@foldworks/ui/themes/neutral.css";
-@import "@foldworks/ui/themes/zinc.css";
-@import "@foldworks/ui/themes/blue.css";
-@import "@foldworks/ui/themes/soft.css";
+@import "@foldworks/ui/themes/shadcn.css";
+@import "@foldworks/ui/themes/blueprint.css";
+@import "@foldworks/ui/themes/office.css";
+@import "@foldworks/ui/themes/google.css";
+@import "@foldworks/ui/themes/apple.css";
 ```
 
-For a neutral-only application, `@foldworks/ui/theme.css` remains a convenient
-backward-compatible import.
+For a Shadcn-only application, `@foldworks/ui/theme.css` is a convenient
+combined base-and-theme import.
 
 `base.css` also includes a modern browser reset in the low-priority
 `foldworks-reset` cascade layer. StyleX atomic styles and application CSS remain
@@ -75,14 +76,14 @@ white card surfaces to distinguish the workspace from its content.
 Set `data-theme` and the resolved `data-mode` on a root ancestor:
 
 ```html
-<html data-theme="blue" data-mode="dark" class="dark">
+<html data-theme="shadcn" data-mode="dark" class="dark">
 ```
 
-`data-theme` accepts `neutral`, `zinc`, `blue`, or `soft`. `data-mode` accepts `light`
-or `dark`; the optional `.dark` class remains compatible with shadcn theme
-providers. CSS variables cascade, so the same attributes can theme a nested
-subtree. An application can define its own theme by overriding the semantic
-variables after the Foldworks imports:
+`data-theme` accepts `shadcn`, `blueprint`, `office`, `google`, or `apple`.
+`data-mode` accepts `light` or `dark`; the optional `.dark` class remains
+compatible with shadcn theme providers. CSS variables cascade, so the same
+attributes can theme a nested subtree. An application can define its own theme
+by overriding the semantic variables after the Foldworks imports:
 
 ```css
 [data-theme="product"] {
@@ -100,35 +101,27 @@ theme's `--primary`, `--card`, and `--border` tokens, while remaining distinct
 from success, warning, danger, and information status colors. The same roles
 are available through the exported StyleX `colors` constants.
 
-## Soft theme exploration
+## Theme gallery
 
-The opt-in `soft` theme explores the rounded surfaces and quiet application
-chrome in [Beautiful UI](https://www.beautifului.dev/). It pairs a cool gray
-canvas with white cards, subtle layered shadows, pill buttons, and gently
-outlined pastel status badges. Blue is reserved for actions and selection;
-information status uses cyan. Light and dark appearances are included.
+In the demo, select a preset in the **Theme** menu. Shadcn is the neutral
+default with crisp monochrome surfaces; Blueprint is dense and
+enterprise-oriented; Office follows Fluent-like geometry; Google uses tonal
+Material-like surfaces; and Apple uses layered system grays and generous
+corners. Compare the UI kit, Workers workbench, and workflow builder using the
+same controls.
 
-In the demo, select **Soft** in the **Theme** menu. Compare the UI kit,
-Workers workbench, and workflow builder with Neutral using the same controls.
-Existing applications keep their current theme unless they opt in.
+The shared recipes expose shape and elevation variables so presets can alter
+more than color. Their base values preserve component behavior:
 
-The shared recipes expose these additional CSS variables. Their base values
-preserve existing visuals:
-
-| Token | Base | Soft |
-| --- | --- | --- |
-| `--radius-button` / `--radius-button-sm` | Existing large / medium radius | Pill |
-| `--radius-badge` | Pill | 0.55rem |
-| `--radius-panel` | 12px | 1.125rem |
-| `--badge-border` | Transparent | 20% of text color |
-| `--button-outline-surface` | Background | Card |
-| `--button-outline-shadow` | None | Subtle control shadow |
-| `--shadow-card` | None | Layered elevation |
-
-This first pass changes color, shape, and elevation. Typography, table row
-heights, sidebar layout, and workflow geometry retain their existing density.
-See the [design exploration](../../docs/design/soft-theme.md) for the rationale
-and remaining directions to evaluate.
+| Token | Controls |
+| --- | --- |
+| `--font-sans` | Theme typography |
+| `--radius-button` / `--radius-button-sm` | Button geometry |
+| `--radius-badge` | Badge geometry |
+| `--radius-panel` | Panel geometry |
+| `--badge-border` | Badge outline treatment |
+| `--button-outline-surface` / `--button-outline-shadow` | Outlined actions |
+| `--shadow-card` / `--shadow-panel` / `--shadow-float` | Elevation hierarchy |
 
 ## Usage
 

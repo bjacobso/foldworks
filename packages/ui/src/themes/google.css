@@ -1,0 +1,87 @@
+/* Google: Material-inspired tonal surfaces, pill actions, and broad elevation. */
+[data-theme="google"] {
+  color-scheme: light;
+  --background: #f8fafd;
+  --foreground: #1f1f1f;
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --primary: #0b57d0;
+  --primary-foreground: #ffffff;
+  --secondary: #e9eef6;
+  --secondary-foreground: #1f1f1f;
+  --muted: #f0f4f9;
+  --muted-foreground: #5e5e5e;
+  --accent: #c2e7ff;
+  --accent-foreground: #001d35;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --border: #dde3ea;
+  --input: #747775;
+  --ring: #0b57d0;
+  --chart-1: #4285f4;
+  --chart-2: #34a853;
+  --chart-3: #fbbc04;
+  --chart-4: #ea4335;
+  --chart-5: #a142f4;
+  --sidebar: #f0f4f9;
+  --sidebar-foreground: #1f1f1f;
+  --sidebar-primary: #0b57d0;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #c2e7ff;
+  --sidebar-accent-foreground: #001d35;
+  --sidebar-border: #dde3ea;
+  --sidebar-ring: #0b57d0;
+
+  --font-sans: Roboto, "Google Sans", Arial, sans-serif;
+  --radius: 1rem;
+  --radius-button: 999px;
+  --radius-button-sm: 999px;
+  --radius-badge: 999px;
+  --radius-panel: 1.25rem;
+  --button-outline-surface: var(--card);
+  --button-outline-shadow: 0 1px 2px rgb(60 64 67 / 10%);
+  --shadow-card: 0 1px 2px rgb(60 64 67 / 15%), 0 1px 3px 1px rgb(60 64 67 / 8%);
+  --shadow-panel: 0 1px 2px rgb(60 64 67 / 15%), 0 2px 6px 2px rgb(60 64 67 / 8%);
+  --shadow-float: 0 8px 24px rgb(60 64 67 / 24%);
+}
+
+[data-theme="google"][data-mode="dark"],
+[data-theme="google"].dark {
+  color-scheme: dark;
+  --background: #1f1f1f;
+  --foreground: #e3e3e3;
+  --card: #28292a;
+  --card-foreground: #e3e3e3;
+  --popover: #303134;
+  --popover-foreground: #e3e3e3;
+  --primary: #a8c7fa;
+  --primary-foreground: #062e6f;
+  --secondary: #333438;
+  --secondary-foreground: #e3e3e3;
+  --muted: #28292a;
+  --muted-foreground: #c4c7c5;
+  --accent: #004a77;
+  --accent-foreground: #c2e7ff;
+  --destructive: #f2b8b5;
+  --destructive-foreground: #601410;
+  --border: #444746;
+  --input: #8e918f;
+  --ring: #a8c7fa;
+  --chart-1: #8ab4f8;
+  --chart-2: #81c995;
+  --chart-3: #fdd663;
+  --chart-4: #f28b82;
+  --chart-5: #d7aefb;
+  --sidebar: #28292a;
+  --sidebar-foreground: #e3e3e3;
+  --sidebar-primary: #a8c7fa;
+  --sidebar-primary-foreground: #062e6f;
+  --sidebar-accent: #004a77;
+  --sidebar-accent-foreground: #c2e7ff;
+  --sidebar-border: #444746;
+  --sidebar-ring: #a8c7fa;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 30%), 0 2px 5px rgb(0 0 0 / 22%);
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 32%), 0 3px 8px rgb(0 0 0 / 26%);
+}
