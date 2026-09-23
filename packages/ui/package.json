@@ -5,16 +5,31 @@
   "license": "MIT",
   "author": "Ben Jacobson",
   "type": "module",
-  "files": ["dist", "docs", "README.md", "LICENSE"],
-  "sideEffects": ["**/*.css"],
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bjacobso/foldworks.git",
     "directory": "packages/ui"
   },
   "homepage": "https://github.com/bjacobso/foldworks#readme",
-  "bugs": { "url": "https://github.com/bjacobso/foldworks/issues" },
-  "keywords": ["foldkit", "ui", "components", "accessibility", "stylex"],
+  "bugs": {
+    "url": "https://github.com/bjacobso/foldworks/issues"
+  },
+  "keywords": [
+    "foldkit",
+    "ui",
+    "components",
+    "accessibility",
+    "stylex"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -42,6 +57,7 @@
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",
+    "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
     "prepack": "pnpm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

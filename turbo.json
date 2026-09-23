@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": ["scripts/build-package.mjs", "tsconfig.json"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "build:runtime": {
+      "dependsOn": ["^build:runtime"],
+      "outputs": ["dist/**/*.css", "dist/**/*.js", "dist/**/*.js.map"]
+    },
+    "dev": {
+      "dependsOn": ["^build:runtime"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

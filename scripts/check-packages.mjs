@@ -75,7 +75,13 @@ try {
   for (const { directory, manifest } of packageDirectories) {
     const archiveName = `${manifest.name.slice("@foldworks/".length)}-${manifest.version}.tgz`;
     const archivePath = join(tarballDirectory, archiveName);
-    await run("pnpm", ["pack", "--out", archivePath], { cwd: directory });
+    // The caller builds the workspace once through Turbo. Skip package lifecycle
+    // scripts here so each tarball consumes that verified output instead of
+    // rebuilding packages serially through prepack.
+    await run("pnpm", ["pack", "--out", archivePath], {
+      cwd: directory,
+      env: { npm_config_ignore_scripts: "true" },
+    });
 
     const { stdout: listing } = await run("tar", ["-tzf", archivePath], { capture: true });
     const entries = listing.trim().split("\n");

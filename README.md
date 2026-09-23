@@ -65,8 +65,17 @@ linting, and a non-mutating format check on files changed from `main`. Use
 `pnpm format` to fix changed files; `pnpm format:all` formats the whole
 repository.
 
-Run `pnpm dev` to start the demo application. Run `pnpm test:e2e` for its
-Playwright interaction suite.
+Run `pnpm dev` to start the demo application. Turborepo prepares only the
+demo's transitive workspace dependencies with fast runtime builds, then starts
+Vite as an uncached persistent task. Runtime builds emit JavaScript and CSS
+together without waiting for declarations; both runtime and full package builds
+stage their output before replacing `dist`, so stopping a build leaves the last
+usable output in place. Full builds remain available through `pnpm build` (all
+packages and the demo) and `pnpm build:packages` (packages only), with outputs
+cached in `.turbo` according to the workspace dependency graph. CI restores the
+Turbo cache between runs so unchanged package builds can be reused.
+
+Run `pnpm test:e2e` for the demo's Playwright interaction suite.
 
 In Conductor, the Run menu provides **Checks**, **Development**, **Codebase**,
 and **Verified Development**. Checks is the default; Development starts the
@@ -100,8 +109,10 @@ pnpm release:check
 
 `release:check` runs the tests and type checks, builds the demo and every
 package, inspects the package tarballs, and installs those tarballs into a clean
-Vite application. It does not publish. Commit the version and changelog changes,
-then publish the public packages to npm with:
+Vite application. The tarball inspection consumes that completed build without
+rerunning each package's `prepack` script; ordinary `pnpm pack` and publish flows
+still build through `prepack`. It does not publish. Commit the version and
+changelog changes, then publish the public packages to npm with:
 
 ```sh
 pnpm release

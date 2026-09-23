@@ -59,6 +59,7 @@
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",
+    "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
     "prepack": "pnpm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
