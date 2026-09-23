@@ -19,8 +19,12 @@ const run = (command, args, options = {}) =>
     if (options.capture) {
       child.stdout.setEncoding("utf8");
       child.stderr.setEncoding("utf8");
-      child.stdout.on("data", (chunk) => { stdout += chunk; });
-      child.stderr.on("data", (chunk) => { stderr += chunk; });
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk;
+      });
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
     }
 
     child.on("error", rejectRun);
@@ -91,14 +95,17 @@ try {
       }
     }
 
-    const forbidden = entries.filter((entry) =>
-      entry.startsWith("package/src/") ||
-      /(?:^|\/)(?:[^/]+\.)?(?:test|spec)\.[^/]+$/.test(entry) ||
-      entry === "package/tsconfig.json" ||
-      entry.includes("vitest.config"),
+    const forbidden = entries.filter(
+      (entry) =>
+        entry.startsWith("package/src/") ||
+        /(?:^|\/)(?:[^/]+\.)?(?:test|spec)\.[^/]+$/.test(entry) ||
+        entry === "package/tsconfig.json" ||
+        entry.includes("vitest.config"),
     );
     if (forbidden.length > 0) {
-      throw new Error(`${manifest.name} tarball contains development files:\n${forbidden.join("\n")}`);
+      throw new Error(
+        `${manifest.name} tarball contains development files:\n${forbidden.join("\n")}`,
+      );
     }
 
     const { stdout: packedManifestJson } = await run(
@@ -112,11 +119,14 @@ try {
       ...packedManifest.optionalDependencies,
       ...packedManifest.peerDependencies,
     });
-    const unresolvedSpec = packedDependencySpecs.find((spec) =>
-      typeof spec === "string" && (spec.startsWith("workspace:") || spec.startsWith("catalog:")),
+    const unresolvedSpec = packedDependencySpecs.find(
+      (spec) =>
+        typeof spec === "string" && (spec.startsWith("workspace:") || spec.startsWith("catalog:")),
     );
     if (unresolvedSpec !== undefined) {
-      throw new Error(`${manifest.name} contains an unresolved dependency specifier: ${unresolvedSpec}`);
+      throw new Error(
+        `${manifest.name} contains an unresolved dependency specifier: ${unresolvedSpec}`,
+      );
     }
 
     tarballs.set(manifest.name, archivePath);
@@ -125,20 +135,24 @@ try {
   await mkdir(join(consumerDirectory, "src"), { recursive: true });
   await writeFile(
     join(consumerDirectory, "package.json"),
-    `${JSON.stringify({
-      name: "foldworks-package-smoke-test",
-      private: true,
-      type: "module",
-      scripts: { build: "vite build", typecheck: "tsc --noEmit" },
-      dependencies: Object.fromEntries(
-        [...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
-      ),
-      devDependencies: {
-        "@stylexjs/unplugin": "0.19.0",
-        typescript: "6.0.3",
-        vite: "8.2.2",
+    `${JSON.stringify(
+      {
+        name: "foldworks-package-smoke-test",
+        private: true,
+        type: "module",
+        scripts: { build: "vite build", typecheck: "tsc --noEmit" },
+        dependencies: Object.fromEntries(
+          [...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
+        ),
+        devDependencies: {
+          "@stylexjs/unplugin": "0.19.0",
+          typescript: "6.0.3",
+          vite: "8.2.2",
+        },
       },
-    }, null, 2)}\n`,
+      null,
+      2,
+    )}\n`,
   );
   await writeFile(
     join(consumerDirectory, "index.html"),
@@ -166,27 +180,28 @@ export default defineConfig({
   );
   await writeFile(
     join(consumerDirectory, "tsconfig.json"),
-    `${JSON.stringify({
-      compilerOptions: {
-        lib: ["ESNext", "DOM", "DOM.Iterable"],
-        module: "ESNext",
-        moduleResolution: "Bundler",
-        noEmit: true,
-        skipLibCheck: true,
-        strict: true,
-        target: "ES2022",
+    `${JSON.stringify(
+      {
+        compilerOptions: {
+          lib: ["ESNext", "DOM", "DOM.Iterable"],
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          noEmit: true,
+          skipLibCheck: true,
+          strict: true,
+          target: "ES2022",
+        },
+        include: ["src"],
       },
-      include: ["src"],
-    }, null, 2)}\n`,
+      null,
+      2,
+    )}\n`,
   );
-  await writeFile(
-    join(consumerDirectory, "src", "env.d.ts"),
-    'declare module "*.css";\n',
-  );
+  await writeFile(join(consumerDirectory, "src", "env.d.ts"), 'declare module "*.css";\n');
   await writeFile(
     join(consumerDirectory, "src", "main.ts"),
     `import "@foldworks/ui/base.css";
-import "@foldworks/ui/themes/neutral.css";
+import "@foldworks/ui/themes/shadcn.css";
 import "@foldworks/editor/styles.css";
 import "@foldworks/code-editor/styles.css";
 import "@foldworks/data-table/styles.css";
@@ -234,16 +249,33 @@ app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.k
   }
 
   // Check the default editor bundle independently of the other packages.
-  await writeFile(join(consumerDirectory, "src", "main.ts"), `
+  await writeFile(
+    join(consumerDirectory, "src", "main.ts"),
+    `
 import { CodeEditor } from "@foldworks/code-editor";
 import "@foldworks/code-editor/styles.css";
 document.querySelector("#app")!.textContent = Object.keys(CodeEditor).join(", ");
-`);
+`,
+  );
   await run("npm", ["run", "build", "--", "--outDir", "dist-native"], {
-    cwd: consumerDirectory, env: { FOLDWORKS_NATIVE_SMOKE: "1" },
+    cwd: consumerDirectory,
+    env: { FOLDWORKS_NATIVE_SMOKE: "1" },
   });
-  await run("node", ["--input-type=module", "-e", 'import { CodeEditor } from "@foldworks/code-editor"; if (CodeEditor.init({ id: "ssr", text: "ok" }).document.text !== "ok") throw new Error("Editor import failed");'], { cwd: consumerDirectory });
-  await run("node", ["--input-type=module", "-e", `
+  await run(
+    "node",
+    [
+      "--input-type=module",
+      "-e",
+      'import { CodeEditor } from "@foldworks/code-editor"; if (CodeEditor.init({ id: "ssr", text: "ok" }).document.text !== "ok") throw new Error("Editor import failed");',
+    ],
+    { cwd: consumerDirectory },
+  );
+  await run(
+    "node",
+    [
+      "--input-type=module",
+      "-e",
+      `
 import { Schema as S } from "effect";
 import { CodeEditor } from "@foldworks/code-editor";
 import { withSchema } from "@foldworks/code-editor/structured";
@@ -252,9 +284,14 @@ for (const [languageId, text] of [["yaml", "enabled: true"], ["json", '{"enabled
   const model = editor.init({ id: "ssr", languageId, text });
   if (model.diagnostics.some(batch => batch.diagnostics.length)) throw new Error("Schema editor import failed");
 }
-`], { cwd: consumerDirectory });
+`,
+    ],
+    { cwd: consumerDirectory },
+  );
 
-  console.log(`\nValidated ${tarballs.size} package tarballs, a clean Vite consumer, and native-editor bundle isolation.`);
+  console.log(
+    `\nValidated ${tarballs.size} package tarballs, a clean Vite consumer, and native-editor bundle isolation.`,
+  );
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
 }
