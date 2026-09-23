@@ -65,8 +65,16 @@ linting, and a non-mutating format check on files changed from `main`. Use
 `pnpm format` to fix changed files; `pnpm format:all` formats the whole
 repository.
 
-Run `pnpm dev` to start the demo application. Run `pnpm test:e2e` for its
-Playwright interaction suite.
+Run `pnpm dev` to start the demo application. Turborepo prepares only the
+demo's transitive workspace dependencies with fast runtime builds, then starts
+Vite as an uncached persistent task. Runtime builds emit JavaScript and CSS
+together without waiting for declarations; both runtime and full package builds
+stage their output before replacing `dist`, so stopping a build leaves the last
+usable output in place. Full builds remain available through `pnpm build` (all
+packages and the demo) and `pnpm build:packages` (packages only), with outputs
+cached in `.turbo` according to the workspace dependency graph.
+
+Run `pnpm test:e2e` for the demo's Playwright interaction suite.
 
 In Conductor, the Run menu provides **Checks**, **Development**, **Codebase**,
 and **Verified Development**. Checks is the default; Development starts the

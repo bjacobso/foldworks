@@ -17,6 +17,7 @@ const expectedPackages = [
   "@foldworks/workflow",
   "@foldworks/pdf-annotator",
   "@foldworks/history",
+  "@foldworks/generative-ui",
 ] as const;
 
 type PackageDemo = Readonly<{
@@ -37,15 +38,24 @@ export const packageDemoScreenshotScenarios = (
       const page = getPage();
       await page.goto(appUrl, { waitUntil: "networkidle" });
 
-      const demos = await page.locator(
-        '[data-home-page="true"] a[aria-label^="@foldworks/"]',
-      ).evaluateAll((links): ReadonlyArray<PackageDemo> => links.map((link) => ({
-        href: link.getAttribute("href") ?? "",
-        name: (link.getAttribute("aria-label") ?? "").split(":", 1)[0] ?? "",
-      })));
+      const demos = await page
+        .locator('[data-home-page="true"] a[aria-label^="@foldworks/"]')
+        .evaluateAll(
+          (links): ReadonlyArray<PackageDemo> =>
+            links.map((link) => ({
+              href: link.getAttribute("href") ?? "",
+              name: (link.getAttribute("aria-label") ?? "").split(":", 1)[0] ?? "",
+            })),
+        );
 
       expect(demos.map(({ name }) => name)).toEqual(expectedPackages);
-      expect(demos.every(({ href }) => href.startsWith("/"))).toBe(true);
+      expect(
+        demos.every(
+          ({ href, name }) =>
+            href.startsWith("/") ||
+            (name === "@foldworks/generative-ui" && href === "#generative-ui"),
+        ),
+      ).toBe(true);
 
       for (const demo of demos) {
         const url = new URL(demo.href, appUrl);
@@ -55,7 +65,8 @@ export const packageDemoScreenshotScenarios = (
 
         if (demo.name === "@foldworks/pdf-annotator") {
           await page.getByRole("button", { name: "Try the sample document" }).click();
-          await expect.poll(() => page.locator('[data-pdf-canvas-id="foldworks-pdf-annotator"]').isVisible())
+          await expect
+            .poll(() => page.locator('[data-pdf-canvas-id="foldworks-pdf-annotator"]').isVisible())
             .toBe(true);
         }
 
