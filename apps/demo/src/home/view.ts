@@ -15,7 +15,10 @@ import {
   Workflow,
   FolderGit2,
   FileDiff,
+  Sparkles,
 } from "@lucide/icons";
+import { render } from "@foldworks/generative-ui/core";
+import { foldworksRegistry } from "@foldworks/generative-ui/foldworks";
 import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
@@ -34,6 +37,8 @@ import {
   workbenchRouter,
   workflowPath,
 } from "../app/route";
+import { Message } from "../app/message";
+import { releaseSpec, releaseSpecPreview } from "../generative-ui/spec";
 import { className, styles } from "./styles";
 
 type Package = Readonly<{
@@ -45,8 +50,20 @@ type Package = Readonly<{
 }>;
 
 const packages: ReadonlyArray<Package> = [
-  { name: "@foldworks/keyboard", category: "Foundation", description: "Typed scoped commands and platform-aware shortcuts with Foldkit lifecycles.", href: uiKitRouter(), icon: Blocks },
-  { name: "@foldworks/editor", category: "Application primitive", description: "Native rich-text editing, Markdown, and extensible document blocks.", href: editorRouter(), icon: FileText },
+  {
+    name: "@foldworks/keyboard",
+    category: "Foundation",
+    description: "Typed scoped commands and platform-aware shortcuts with Foldkit lifecycles.",
+    href: uiKitRouter(),
+    icon: Blocks,
+  },
+  {
+    name: "@foldworks/editor",
+    category: "Application primitive",
+    description: "Native rich-text editing, Markdown, and extensible document blocks.",
+    href: editorRouter(),
+    icon: FileText,
+  },
   {
     name: "@foldworks/ui",
     category: "Foundation",
@@ -64,7 +81,8 @@ const packages: ReadonlyArray<Package> = [
   {
     name: "@foldworks/agent",
     category: "Application primitive",
-    description: "Composable chat UI with streaming conversations, tool states, approvals, cancellation, and retry.",
+    description:
+      "Composable chat UI with streaming conversations, tool states, approvals, cancellation, and retry.",
     href: agentRouter(),
     icon: Bot,
   },
@@ -92,14 +110,16 @@ const packages: ReadonlyArray<Package> = [
   {
     name: "@foldworks/data-table",
     category: "Application primitive",
-    description: "Resource-first CRUD tables with links, sorting, bulk selection, density, and pinned columns.",
+    description:
+      "Resource-first CRUD tables with links, sorting, bulk selection, density, and pinned columns.",
     href: dataTablePath(),
     icon: Table2,
   },
   {
     name: "@foldworks/data-grid",
     category: "Application primitive",
-    description: "Pinned columns, virtualized rows, ordering, range selection, copy/paste, and editing.",
+    description:
+      "Pinned columns, virtualized rows, ordering, range selection, copy/paste, and editing.",
     href: dataGridRouter(),
     icon: Table2,
   },
@@ -138,6 +158,13 @@ const packages: ReadonlyArray<Package> = [
     href: workflowPath("Vertical"),
     icon: History,
   },
+  {
+    name: "@foldworks/generative-ui",
+    category: "Application primitive",
+    description: "Schema-checked agent interfaces rendered through a closed component catalog.",
+    href: "#generative-ui",
+    icon: Sparkles,
+  },
 ];
 
 const link = <Message>(
@@ -145,10 +172,14 @@ const link = <Message>(
   href: string,
   kind: "primary" | "secondary",
   h: HtmlBuilder<Message>,
-): Html => h.a([
-  h.Class(className(kind === "primary" ? styles.primaryLink : styles.secondaryLink)),
-  h.Href(href),
-], [label, Icon.view({ icon: ArrowRight, size: 15 }, h)]);
+): Html =>
+  h.a(
+    [
+      h.Class(className(kind === "primary" ? styles.primaryLink : styles.secondaryLink)),
+      h.Href(href),
+    ],
+    [label, Icon.view({ icon: ArrowRight, size: 15 }, h)],
+  );
 
 const person = <Message>(
   name: string,
@@ -156,184 +187,425 @@ const person = <Message>(
   fallback: string,
   status: string,
   h: HtmlBuilder<Message>,
-): Html => h.div([h.Class(className(styles.teamRow))], [
-  Avatar.view({ alt: name, fallback, size: "sm" }, h),
-  h.div([h.Class(className(styles.teamCopy))], [
-    h.span([h.Class(className(styles.teamName))], [name]),
-    h.span([h.Class(className(styles.teamRole))], [role]),
-  ]),
-  Badge.view({ label: status, tone: status === "Ready" ? "success" : "neutral", dot: true }, h),
-]);
+): Html =>
+  h.div(
+    [h.Class(className(styles.teamRow))],
+    [
+      Avatar.view({ alt: name, fallback, size: "sm" }, h),
+      h.div(
+        [h.Class(className(styles.teamCopy))],
+        [
+          h.span([h.Class(className(styles.teamName))], [name]),
+          h.span([h.Class(className(styles.teamRole))], [role]),
+        ],
+      ),
+      Badge.view({ label: status, tone: status === "Ready" ? "success" : "neutral", dot: true }, h),
+    ],
+  );
 
 const componentPreview = <Message>(h: HtmlBuilder<Message>): Html =>
-  h.div([h.Class(className(styles.preview))], [
-    h.div([h.Class(className(styles.previewHeader))], [
-      h.span([h.Class(className(styles.previewTitle))], ["Release overview"]),
-      Badge.view({ label: "Live components", tone: "info", dot: true }, h),
-    ]),
-    h.div([h.Class(className(styles.previewGrid))], [
-      Card.view({
-        title: "Launch readiness",
-        description: "Across product, legal, and operations",
-        sx: styles.previewCard,
-        children: [
-          h.div([h.Class(className(styles.metric))], ["82%"]),
-          Progress.view({ value: 82, ariaLabel: "Launch readiness" }, h),
-          h.div([h.Class(className(styles.metricMeta))], [
-            h.span([], ["14 of 17 checks"]),
-            h.span([], ["On track"]),
-          ]),
+  h.div(
+    [h.Class(className(styles.preview))],
+    [
+      h.div(
+        [h.Class(className(styles.previewHeader))],
+        [
+          h.span([h.Class(className(styles.previewTitle))], ["Release overview"]),
+          Badge.view({ label: "Live components", tone: "info", dot: true }, h),
         ],
-      }, h),
-      Card.view({
-        title: "Owners",
-        description: "Current handoff",
-        sx: styles.previewCard,
-        children: [h.div([h.Class(className(styles.teamList))], [
-          person("Maya Chen", "Product", "MC", "Ready", h),
-          person("Alex Morgan", "Legal", "AM", "Review", h),
-          person("Inez Silva", "Operations", "IS", "Ready", h),
-        ])],
-      }, h),
-      Card.view({
-        title: "Workflow volume",
-        description: "Runs completed over the last seven days",
-        sx: styles.chartCard,
-        action: [Badge.view({ label: "+18%", tone: "success" }, h)],
-        children: [Chart.view({
-          ariaLabel: "Workflow volume for the last seven days",
-          values: [42, 65, 52, 79, 68, 83, 91],
-        }, h)],
-      }, h),
-    ]),
-  ]);
+      ),
+      h.div(
+        [h.Class(className(styles.previewGrid))],
+        [
+          Card.view(
+            {
+              title: "Launch readiness",
+              description: "Across product, legal, and operations",
+              sx: styles.previewCard,
+              children: [
+                h.div([h.Class(className(styles.metric))], ["82%"]),
+                Progress.view({ value: 82, ariaLabel: "Launch readiness" }, h),
+                h.div(
+                  [h.Class(className(styles.metricMeta))],
+                  [h.span([], ["14 of 17 checks"]), h.span([], ["On track"])],
+                ),
+              ],
+            },
+            h,
+          ),
+          Card.view(
+            {
+              title: "Owners",
+              description: "Current handoff",
+              sx: styles.previewCard,
+              children: [
+                h.div(
+                  [h.Class(className(styles.teamList))],
+                  [
+                    person("Maya Chen", "Product", "MC", "Ready", h),
+                    person("Alex Morgan", "Legal", "AM", "Review", h),
+                    person("Inez Silva", "Operations", "IS", "Ready", h),
+                  ],
+                ),
+              ],
+            },
+            h,
+          ),
+          Card.view(
+            {
+              title: "Workflow volume",
+              description: "Runs completed over the last seven days",
+              sx: styles.chartCard,
+              action: [Badge.view({ label: "+18%", tone: "success" }, h)],
+              children: [
+                Chart.view(
+                  {
+                    ariaLabel: "Workflow volume for the last seven days",
+                    values: [42, 65, 52, 79, 68, 83, 91],
+                  },
+                  h,
+                ),
+              ],
+            },
+            h,
+          ),
+        ],
+      ),
+    ],
+  );
 
 const sectionIntro = <Message>(
   label: string,
   title: string,
   description: string,
   h: HtmlBuilder<Message>,
-): Html => h.div([h.Class(className(styles.sectionIntro))], [
-  h.div([h.Class(className(styles.sectionLabel))], [label]),
-  h.h2([h.Class(className(styles.sectionTitle))], [title]),
-  h.p([h.Class(className(styles.sectionDescription))], [description]),
-]);
+): Html =>
+  h.div(
+    [h.Class(className(styles.sectionIntro))],
+    [
+      h.div([h.Class(className(styles.sectionLabel))], [label]),
+      h.h2([h.Class(className(styles.sectionTitle))], [title]),
+      h.p([h.Class(className(styles.sectionDescription))], [description]),
+    ],
+  );
 
 const comparison = <Message>(h: HtmlBuilder<Message>): Html =>
-  h.div([h.Class(className(styles.comparison))], [
-    h.article([h.Class(className(styles.comparisonColumn))], [
-      h.h3([h.Class(className(styles.comparisonHeading))], [
-        Icon.view({ icon: Blocks, size: 18 }, h),
-        "UI components",
-      ]),
-      h.p([h.Class(className(styles.comparisonText))], [
-        "Focused building blocks that own presentation and a small interaction contract. Compose them to create a consistent interface.",
-      ]),
-      h.div([h.Class(className(styles.chips))], ["Button", "Dialog", "Select", "Table", "Tooltip"].map((name) =>
-        h.span([h.Class(className(styles.chip))], [name])
-      )),
-    ]),
-    h.article([h.Class(className(styles.comparisonColumn, styles.comparisonApplication))], [
-      h.h3([h.Class(className(styles.comparisonHeading))], [
-        Icon.view({ icon: Layers3, size: 18 }, h),
-        "Application primitives",
-      ]),
-      h.p([h.Class(className(styles.comparisonText))], [
-        "Complete product capabilities with domain models, messages, updates, accessibility, and composition points—not just a styled surface.",
-      ]),
-      h.div([h.Class(className(styles.chips))], ["DataTable", "DataGrid", "QueryBuilder", "FormBuilder", "Workflow", "PdfAnnotator"].map((name) =>
-        h.span([h.Class(className(styles.chip))], [name])
-      )),
-    ]),
-  ]);
+  h.div(
+    [h.Class(className(styles.comparison))],
+    [
+      h.article(
+        [h.Class(className(styles.comparisonColumn))],
+        [
+          h.h3(
+            [h.Class(className(styles.comparisonHeading))],
+            [Icon.view({ icon: Blocks, size: 18 }, h), "UI components"],
+          ),
+          h.p(
+            [h.Class(className(styles.comparisonText))],
+            [
+              "Focused building blocks that own presentation and a small interaction contract. Compose them to create a consistent interface.",
+            ],
+          ),
+          h.div(
+            [h.Class(className(styles.chips))],
+            ["Button", "Dialog", "Select", "Table", "Tooltip"].map((name) =>
+              h.span([h.Class(className(styles.chip))], [name]),
+            ),
+          ),
+        ],
+      ),
+      h.article(
+        [h.Class(className(styles.comparisonColumn, styles.comparisonApplication))],
+        [
+          h.h3(
+            [h.Class(className(styles.comparisonHeading))],
+            [Icon.view({ icon: Layers3, size: 18 }, h), "Application primitives"],
+          ),
+          h.p(
+            [h.Class(className(styles.comparisonText))],
+            [
+              "Complete product capabilities with domain models, messages, updates, accessibility, and composition points—not just a styled surface.",
+            ],
+          ),
+          h.div(
+            [h.Class(className(styles.chips))],
+            [
+              "DataTable",
+              "DataGrid",
+              "QueryBuilder",
+              "FormBuilder",
+              "Workflow",
+              "PdfAnnotator",
+            ].map((name) => h.span([h.Class(className(styles.chip))], [name])),
+          ),
+        ],
+      ),
+    ],
+  );
 
 const packageCard = <Message>(item: Package, h: HtmlBuilder<Message>): Html =>
-  h.a([
-    h.Class(className(styles.packageCard)),
-    h.Href(item.href),
-    h.AriaLabel(`${item.name}: ${item.description}`),
-  ], [
-    h.span([h.Class(className(styles.packageIcon))], [Icon.view({ icon: item.icon, size: 17 }, h)]),
-    h.span([h.Class(className(styles.packageCategory))], [item.category]),
-    h.span([h.Class(className(styles.packageName))], [
-      item.name,
-      Icon.view({ icon: ArrowRight, size: 14 }, h),
-    ]),
-    h.p([h.Class(className(styles.packageDescription))], [item.description]),
-  ]);
+  h.a(
+    [
+      h.Class(className(styles.packageCard)),
+      h.Href(item.href),
+      h.AriaLabel(`${item.name}: ${item.description}`),
+    ],
+    [
+      h.span(
+        [h.Class(className(styles.packageIcon))],
+        [Icon.view({ icon: item.icon, size: 17 }, h)],
+      ),
+      h.span([h.Class(className(styles.packageCategory))], [item.category]),
+      h.span(
+        [h.Class(className(styles.packageName))],
+        [item.name, Icon.view({ icon: ArrowRight, size: 14 }, h)],
+      ),
+      h.p([h.Class(className(styles.packageDescription))], [item.description]),
+    ],
+  );
 
 const principle = <Message>(
   icon: LucideIconData,
   title: string,
   description: string,
   h: HtmlBuilder<Message>,
-): Html => h.article([h.Class(className(styles.principle))], [
-  h.span([h.Class(className(styles.packageIcon))], [Icon.view({ icon, size: 17 }, h)]),
-  h.h3([h.Class(className(styles.principleHeading))], [title]),
-  h.p([h.Class(className(styles.principleText))], [description]),
-]);
+): Html =>
+  h.article(
+    [h.Class(className(styles.principle))],
+    [
+      h.span([h.Class(className(styles.packageIcon))], [Icon.view({ icon, size: 17 }, h)]),
+      h.h3([h.Class(className(styles.principleHeading))], [title]),
+      h.p([h.Class(className(styles.principleText))], [description]),
+    ],
+  );
 
-export const view = <Message>(h: HtmlBuilder<Message>): Html =>
-  h.div([h.Class(className(styles.viewport)), h.DataAttribute("home-page", "true")], [
-    h.div([h.Class(className(styles.content))], [
-      h.section([h.Class(className(styles.hero)), h.AriaLabel("Foldworks overview")], [
-        h.div([h.Class(className(styles.heroCopy))], [
-          h.div([h.Class(className(styles.eyebrow))], [
-            Icon.view({ icon: Blocks, size: 15 }, h),
-            "Foldkit + StyleX",
-          ]),
-          h.h2([h.Class(className(styles.title))], ["Application primitives for product teams."]),
-          h.p([h.Class(className(styles.lead))], [
-            "Foldworks is a collection of polished, controlled building blocks for ambitious web applications—from interface components to complete editors and structured workflows.",
-          ]),
-          h.div([h.Class(className(styles.actions))], [
-            link("Open the Workers workbench", workbenchRouter(), "primary", h),
-            link("Try the agent playground", agentRouter(), "secondary", h),
-            link("Explore the UI system", uiKitRouter(), "secondary", h),
-          ]),
-          h.div([h.Class(className(styles.heroMeta))], [
-            h.span([h.Class(className(styles.metaItem))], [Icon.view({ icon: CheckCircle2, size: 14 }, h), "Accessible by default"]),
-            h.span([h.Class(className(styles.metaItem))], [Icon.view({ icon: Braces, size: 14 }, h), "Controlled state"]),
-            h.span([h.Class(className(styles.metaItem))], [Icon.view({ icon: Layers3, size: 14 }, h), "Themeable CSS variables"]),
-          ]),
-        ]),
-        componentPreview(h),
-      ]),
+const generativeUiDemo = (h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class(className(styles.generativeDemo))],
+    [
+      h.div(
+        [h.Class(className(styles.generativeSource))],
+        [
+          h.div(
+            [h.Class(className(styles.generativePrompt))],
+            [
+              h.span([h.Class(className(styles.generativePromptLabel))], ["Agent request"]),
+              h.p(
+                [h.Class(className(styles.generativePromptText))],
+                ["Show release readiness, the owner checks, and safe next actions."],
+              ),
+            ],
+          ),
+          h.div(
+            [h.Class(className(styles.generativeContract))],
+            [
+              Badge.view({ label: "Effect Schema validated", tone: "success", dot: true }, h),
+              h.span([], ["10 components · 2 actions · no generated code"]),
+            ],
+          ),
+          h.pre(
+            [h.Class(className(styles.generativeCode)), h.Tabindex(0)],
+            [h.code([], [releaseSpecPreview])],
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class(className(styles.generativeResult))],
+        [
+          h.div(
+            [h.Class(className(styles.generativeResultHeader))],
+            [
+              h.span([], ["Rendered result"]),
+              Badge.view({ label: "Same MCP contract", tone: "info" }, h),
+            ],
+          ),
+          h.div(
+            [h.Class(className(styles.generativeCanvas))],
+            [
+              render(
+                {
+                  spec: releaseSpec,
+                  registry: foldworksRegistry<Message>(),
+                  toMessage: (intent) => Message.GotGenerativeUiAction({ intent }),
+                },
+                h,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
 
-      h.section([h.Class(className(styles.section)), h.AriaLabelledBy("primitives-title")], [
-        h.div([h.Class(className(styles.sectionIntro))], [
-          h.div([h.Class(className(styles.sectionLabel))], ["A useful boundary"]),
-          h.h2([h.Class(className(styles.sectionTitle)), h.Id("primitives-title")], ["Components compose the interface. Primitives run the application."]),
-          h.p([h.Class(className(styles.sectionDescription))], [
-            "Foldworks keeps low-level UI flexible while packaging the difficult behavior that every serious product eventually has to build.",
-          ]),
-        ]),
-        comparison(h),
-      ]),
+export const view = (h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class(className(styles.viewport)), h.DataAttribute("home-page", "true")],
+    [
+      h.div(
+        [h.Class(className(styles.content))],
+        [
+          h.section(
+            [h.Class(className(styles.hero)), h.AriaLabel("Foldworks overview")],
+            [
+              h.div(
+                [h.Class(className(styles.heroCopy))],
+                [
+                  h.div(
+                    [h.Class(className(styles.eyebrow))],
+                    [Icon.view({ icon: Blocks, size: 15 }, h), "Foldkit + StyleX"],
+                  ),
+                  h.h2(
+                    [h.Class(className(styles.title))],
+                    ["Application primitives for product teams."],
+                  ),
+                  h.p(
+                    [h.Class(className(styles.lead))],
+                    [
+                      "Foldworks is a collection of polished, controlled building blocks for ambitious web applications—from interface components to complete editors and structured workflows.",
+                    ],
+                  ),
+                  h.div(
+                    [h.Class(className(styles.actions))],
+                    [
+                      link("Open the Workers workbench", workbenchRouter(), "primary", h),
+                      link("Try the agent playground", agentRouter(), "secondary", h),
+                      link("Explore the UI system", uiKitRouter(), "secondary", h),
+                    ],
+                  ),
+                  h.div(
+                    [h.Class(className(styles.heroMeta))],
+                    [
+                      h.span(
+                        [h.Class(className(styles.metaItem))],
+                        [Icon.view({ icon: CheckCircle2, size: 14 }, h), "Accessible by default"],
+                      ),
+                      h.span(
+                        [h.Class(className(styles.metaItem))],
+                        [Icon.view({ icon: Braces, size: 14 }, h), "Controlled state"],
+                      ),
+                      h.span(
+                        [h.Class(className(styles.metaItem))],
+                        [Icon.view({ icon: Layers3, size: 14 }, h), "Themeable CSS variables"],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              componentPreview(h),
+            ],
+          ),
 
-      h.section([h.Class(className(styles.section)), h.AriaLabelledBy("packages-title")], [
-        h.div([h.Class(className(styles.sectionIntro))], [
-          h.div([h.Class(className(styles.sectionLabel))], ["The collection"]),
-          h.h2([h.Class(className(styles.sectionTitle)), h.Id("packages-title")], ["Start small. Compose upward."]),
-          h.p([h.Class(className(styles.sectionDescription))], [
-            "Each package stands on its own and shares the same state, accessibility, styling, and composition philosophy.",
-          ]),
-        ]),
-        h.div([h.Class(className(styles.packageGrid))], packages.map((item) => packageCard(item, h))),
-      ]),
+          h.section(
+            [
+              h.Class(className(styles.section)),
+              h.Id("generative-ui"),
+              h.AriaLabelledBy("generative-ui-title"),
+            ],
+            [
+              h.div(
+                [h.Class(className(styles.sectionIntro))],
+                [
+                  h.div([h.Class(className(styles.sectionLabel))], ["Generative UI"]),
+                  h.h2(
+                    [h.Class(className(styles.sectionTitle)), h.Id("generative-ui-title")],
+                    ["Agents choose from a catalog. Your application keeps control."],
+                  ),
+                  h.p(
+                    [h.Class(className(styles.sectionDescription))],
+                    [
+                      "The model returns JSON—not markup or event code. Effect Schema validates the contract, Foldkit renders registered components, and interactions return typed intents to the host.",
+                    ],
+                  ),
+                ],
+              ),
+              generativeUiDemo(h),
+            ],
+          ),
 
-      h.section([h.Class(className(styles.section)), h.AriaLabel("Built from first principles")], [
-        sectionIntro(
-          "Built from first principles",
-          "Predictable behavior without giving up design control.",
-          "Foldworks separates state, behavior, and styling so the same primitives can fit your product instead of dictating it.",
-          h,
-        ),
-        h.div([h.Class(className(styles.principles))], [
-          principle(Braces, "Foldkit behavior", "Models and messages make every state transition explicit, testable, and controlled by the host application.", h),
-          principle(Layers3, "StyleX styling", "Static styles and semantic CSS variables provide strong defaults with shadcn-like theme portability.", h),
-          principle(CheckCircle2, "Product-ready details", "Keyboard interaction, focus management, validation, history, and responsive behavior ship together.", h),
-        ]),
-      ]),
-    ]),
-  ]);
+          h.section(
+            [h.Class(className(styles.section)), h.AriaLabelledBy("primitives-title")],
+            [
+              h.div(
+                [h.Class(className(styles.sectionIntro))],
+                [
+                  h.div([h.Class(className(styles.sectionLabel))], ["A useful boundary"]),
+                  h.h2(
+                    [h.Class(className(styles.sectionTitle)), h.Id("primitives-title")],
+                    ["Components compose the interface. Primitives run the application."],
+                  ),
+                  h.p(
+                    [h.Class(className(styles.sectionDescription))],
+                    [
+                      "Foldworks keeps low-level UI flexible while packaging the difficult behavior that every serious product eventually has to build.",
+                    ],
+                  ),
+                ],
+              ),
+              comparison(h),
+            ],
+          ),
+
+          h.section(
+            [h.Class(className(styles.section)), h.AriaLabelledBy("packages-title")],
+            [
+              h.div(
+                [h.Class(className(styles.sectionIntro))],
+                [
+                  h.div([h.Class(className(styles.sectionLabel))], ["The collection"]),
+                  h.h2(
+                    [h.Class(className(styles.sectionTitle)), h.Id("packages-title")],
+                    ["Start small. Compose upward."],
+                  ),
+                  h.p(
+                    [h.Class(className(styles.sectionDescription))],
+                    [
+                      "Each package stands on its own and shares the same state, accessibility, styling, and composition philosophy.",
+                    ],
+                  ),
+                ],
+              ),
+              h.div(
+                [h.Class(className(styles.packageGrid))],
+                packages.map((item) => packageCard(item, h)),
+              ),
+            ],
+          ),
+
+          h.section(
+            [h.Class(className(styles.section)), h.AriaLabel("Built from first principles")],
+            [
+              sectionIntro(
+                "Built from first principles",
+                "Predictable behavior without giving up design control.",
+                "Foldworks separates state, behavior, and styling so the same primitives can fit your product instead of dictating it.",
+                h,
+              ),
+              h.div(
+                [h.Class(className(styles.principles))],
+                [
+                  principle(
+                    Braces,
+                    "Foldkit behavior",
+                    "Models and messages make every state transition explicit, testable, and controlled by the host application.",
+                    h,
+                  ),
+                  principle(
+                    Layers3,
+                    "StyleX styling",
+                    "Static styles and semantic CSS variables provide strong defaults with shadcn-like theme portability.",
+                    h,
+                  ),
+                  principle(
+                    CheckCircle2,
+                    "Product-ready details",
+                    "Keyboard interaction, focus management, validation, history, and responsive behavior ship together.",
+                    h,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );

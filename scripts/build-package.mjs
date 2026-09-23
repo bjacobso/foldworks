@@ -5,24 +5,36 @@ import { build } from "tsup";
 import ts from "typescript";
 
 const packageRoot = process.cwd();
-const packageJson = (await import(resolve(packageRoot, "package.json"), {
-  with: { type: "json" },
-})).default;
+const packageJson = (
+  await import(resolve(packageRoot, "package.json"), {
+    with: { type: "json" },
+  })
+).default;
 
 const isCodebase = packageJson.name === "@foldworks/codebase";
-const entries = packageJson.name === "@foldworks/ui"
-  ? {
-      icon: "src/icon.ts",
-      index: "src/index.ts",
-      "tokens.stylex": "src/tokens.stylex.ts",
-    }
-  : packageJson.name === "@foldworks/code-editor"
-    ? { index: "src/index.ts", contracts: "src/contracts.ts", structured: "src/structured.ts" }
-    : packageJson.name === "@foldworks/agent"
-      ? { index: "src/index.ts", testing: "src/testing.ts" }
-      : isCodebase
-        ? { index: "src/index.ts", server: "src/server.ts", cli: "src/cli.ts" }
-        : { index: "src/index.ts" };
+const entries =
+  packageJson.name === "@foldworks/ui"
+    ? {
+        icon: "src/icon.ts",
+        index: "src/index.ts",
+        "tokens.stylex": "src/tokens.stylex.ts",
+      }
+    : packageJson.name === "@foldworks/generative-ui"
+      ? {
+          ai: "src/ai.ts",
+          core: "src/core.ts",
+          foldworks: "src/foldworks.ts",
+          index: "src/index.ts",
+          mcp: "src/mcp.ts",
+          "mcp-app": "src/mcp-app.ts",
+        }
+      : packageJson.name === "@foldworks/code-editor"
+        ? { index: "src/index.ts", contracts: "src/contracts.ts", structured: "src/structured.ts" }
+        : packageJson.name === "@foldworks/agent"
+          ? { index: "src/index.ts", testing: "src/testing.ts" }
+          : isCodebase
+            ? { index: "src/index.ts", server: "src/server.ts", cli: "src/cli.ts" }
+            : { index: "src/index.ts" };
 await build({
   bundle: true,
   clean: true,
@@ -35,7 +47,11 @@ await build({
   platform: isCodebase ? "node" : "browser",
   silent: false,
   sourcemap: true,
-  splitting: packageJson.name === "@foldworks/code-editor" || packageJson.name === "@foldworks/agent" || isCodebase,
+  splitting:
+    packageJson.name === "@foldworks/code-editor" ||
+    packageJson.name === "@foldworks/agent" ||
+    packageJson.name === "@foldworks/generative-ui" ||
+    isCodebase,
   target: "es2022",
   treeshake: true,
 });

@@ -16,6 +16,9 @@ accessible application interfaces with Foldkit:
 - [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation
   runtime and chat UI with streaming text, tool states, permission checkpoints,
   and retry.
+- [`@foldworks/generative-ui`](./packages/generative-ui) — an Effect
+  Schema-first contract for agent-generated component graphs, a safe Foldkit
+  renderer, Effect AI structured generation, and an MCP Apps tool bridge.
 - [`@foldworks/data-table`](./packages/data-table) — a resource-first CRUD
   table with semantic markup, sortable columns, bulk row selection, resource
   links, density controls, and pinned columns.
