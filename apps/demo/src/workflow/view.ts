@@ -3,22 +3,8 @@ import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
 import { Button, Dialog } from "@foldkit/ui";
-import {
-  Download,
-  GripVertical,
-  Plus,
-  Redo2,
-  RotateCcw,
-  Undo2,
-  Upload,
-  X,
-} from "@lucide/icons";
-import {
-  Workflow,
-  flowContainerId,
-  paletteItemId,
-  paletteTypeFromId,
-} from "@foldworks/workflow";
+import { Download, GripVertical, Plus, Redo2, RotateCcw, Undo2, Upload, X } from "@lucide/icons";
+import { Workflow, flowContainerId, paletteItemId, paletteTypeFromId } from "@foldworks/workflow";
 import { History } from "@foldworks/history";
 import {
   Button as UiButton,
@@ -37,38 +23,17 @@ import {
   previewDocumentForDrop,
   type NodeSubtree,
 } from "./graph";
-import {
-  pathForPoints,
-  layoutWorkflow,
-  type StructuredWorkflowLayout,
-} from "./layout";
+import { pathForPoints, layoutWorkflow, type StructuredWorkflowLayout } from "./layout";
 import { Message } from "./message";
-import {
-  type Model,
-  type NodeKind,
-  type WorkflowFlow,
-  type WorkflowNode,
-} from "./model";
-import {
-  insertableNodeKinds,
-  nodeSizes,
-  nodeTypes,
-} from "./node-types";
-import {
-  className,
-  kindStyles,
-  nodeTransitionClass,
-  styles,
-} from "./styles";
+import { type Model, type NodeKind, type WorkflowFlow, type WorkflowNode } from "./model";
+import { insertableNodeKinds, nodeSizes, nodeTypes } from "./node-types";
+import { className, kindStyles, nodeTransitionClass, styles } from "./styles";
 
 const toWorkflowMessage = (message: Workflow.Message): Message =>
   Message.GotWorkflowMessage({ message });
 
 const isDraggedItem = (model: Model, itemId: string) =>
-  Option.exists(
-    Workflow.maybeDraggedItemId(model.workflow),
-    (draggedId) => draggedId === itemId,
-  );
+  Option.exists(Workflow.maybeDraggedItemId(model.workflow), (draggedId) => draggedId === itemId);
 
 const paletteItemView = (
   model: Model,
@@ -84,10 +49,7 @@ const paletteItemView = (
     itemId,
     [
       h.Class(
-        className(
-          styles.paletteItem,
-          isDraggedItem(model, itemId) && styles.paletteItemDragging,
-        ),
+        className(styles.paletteItem, isDraggedItem(model, itemId) && styles.paletteItemDragging),
       ),
       ...Workflow.draggable(
         {
@@ -105,86 +67,112 @@ const paletteItemView = (
         [h.Class(className(styles.paletteIcon, kindStyles[kind]))],
         [UiIcon.view({ icon: definition.icon, size: 16, strokeWidth: 2.1 }, h)],
       ),
-      h.div([], [
-        h.p([h.Class(className(styles.paletteName))], [palette.label]),
-        h.p([h.Class(className(styles.paletteDescription))], [palette.description]),
-      ]),
-      h.span([h.Class(className(styles.paletteHandle)), h.AriaHidden(true)], [
-        UiIcon.view({ icon: GripVertical, size: 14 }, h),
-      ]),
+      h.div(
+        [],
+        [
+          h.p([h.Class(className(styles.paletteName))], [palette.label]),
+          h.p([h.Class(className(styles.paletteDescription))], [palette.description]),
+        ],
+      ),
+      h.span(
+        [h.Class(className(styles.paletteHandle)), h.AriaHidden(true)],
+        [UiIcon.view({ icon: GripVertical, size: 14 }, h)],
+      ),
     ],
   );
 };
 
-const paletteView = (model: Model, h: HtmlBuilder<Message>): Html => h.div([], [
-  h.p([h.Class(className(styles.paletteLabel))], ["Drag to an insertion point"]),
-  h.ul(
-    [h.Class(className(styles.paletteList))],
-    insertableNodeKinds.map((kind, index) => paletteItemView(model, kind, index, h)),
-  ),
-]);
-
-const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html => h.div([], [
-  UiButton.view({
-    icon: Undo2,
-    ariaLabel: "Undo",
-    variant: "ghost",
-    size: "icon",
-    isDisabled: !History.canUndo(model.workflowHistory),
-    onClick: Message.ClickedUndo(),
-    attributes: [h.Title("Undo (⌘Z)"), h.AriaKeyshortcuts("Control+Z Meta+Z")],
-  }, h),
-  UiButton.view({
-    icon: Redo2,
-    ariaLabel: "Redo",
-    variant: "ghost",
-    size: "icon",
-    isDisabled: !History.canRedo(model.workflowHistory),
-    onClick: Message.ClickedRedo(),
-    attributes: [h.Title("Redo (⌘⇧Z)"), h.AriaKeyshortcuts("Control+Shift+Z Meta+Shift+Z")],
-  }, h),
-  UiSegmentedControl.view({
-    value: model.workflow.orientation,
-    ariaLabel: "Workflow orientation",
-    options: [
-      { value: "Vertical", label: "Vertical" },
-      { value: "Horizontal", label: "Horizontal" },
+const paletteView = (model: Model, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [],
+    [
+      h.p([h.Class(className(styles.paletteLabel))], ["Drag to an insertion point"]),
+      h.ul(
+        [h.Class(className(styles.paletteList))],
+        insertableNodeKinds.map((kind, index) => paletteItemView(model, kind, index, h)),
+      ),
     ],
-    onChange: (orientation) => Message.SelectedOrientation({ orientation }),
-  }, h),
-  UiButton.view({
-    label: "Reset",
-    icon: RotateCcw,
-    ariaLabel: "Reset example",
-    onClick: Message.ClickedReset(),
-    variant: "outline",
-    size: "sm",
-  }, h),
-  UiButton.view({
-    label: "Import",
-    icon: Upload,
-    onClick: Message.ClickedImportDocument(),
-    variant: "outline",
-    size: "sm",
-  }, h),
-  UiButton.view({
-    label: "Export",
-    icon: Download,
-    onClick: Message.ClickedExportDocument(),
-    variant: "outline",
-    size: "sm",
-  }, h),
-]);
+  );
+
+const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [],
+    [
+      UiButton.view(
+        {
+          icon: Undo2,
+          ariaLabel: "Undo",
+          variant: "ghost",
+          size: "icon",
+          isDisabled: !History.canUndo(model.workflowHistory),
+          onClick: Message.ClickedUndo(),
+          attributes: [h.Title("Undo (⌘Z)"), h.AriaKeyshortcuts("Control+Z Meta+Z")],
+        },
+        h,
+      ),
+      UiButton.view(
+        {
+          icon: Redo2,
+          ariaLabel: "Redo",
+          variant: "ghost",
+          size: "icon",
+          isDisabled: !History.canRedo(model.workflowHistory),
+          onClick: Message.ClickedRedo(),
+          attributes: [h.Title("Redo (⌘⇧Z)"), h.AriaKeyshortcuts("Control+Shift+Z Meta+Shift+Z")],
+        },
+        h,
+      ),
+      UiSegmentedControl.view(
+        {
+          value: model.workflow.orientation,
+          ariaLabel: "Workflow orientation",
+          options: [
+            { value: "Vertical", label: "Vertical" },
+            { value: "Horizontal", label: "Horizontal" },
+          ],
+          onChange: (orientation) => Message.SelectedOrientation({ orientation }),
+        },
+        h,
+      ),
+      UiButton.view(
+        {
+          label: "Reset",
+          icon: RotateCcw,
+          ariaLabel: "Reset example",
+          onClick: Message.ClickedReset(),
+          variant: "outline",
+          size: "sm",
+        },
+        h,
+      ),
+      UiButton.view(
+        {
+          label: "Import",
+          icon: Upload,
+          onClick: Message.ClickedImportDocument(),
+          variant: "outline",
+          size: "sm",
+        },
+        h,
+      ),
+      UiButton.view(
+        {
+          label: "Export",
+          icon: Download,
+          onClick: Message.ClickedExportDocument(),
+          variant: "outline",
+          size: "sm",
+        },
+        h,
+      ),
+    ],
+  );
 
 const selectedNodeId = (model: Model) => Option.getOrUndefined(model.selectedNodeId);
 
 const draggedSubtree = (model: Model): NodeSubtree | undefined => {
-  const draggedId = Option.getOrUndefined(
-    Workflow.maybeDraggedItemId(model.workflow),
-  );
-  return draggedId === undefined
-    ? undefined
-    : nodeSubtree(model.document, draggedId);
+  const draggedId = Option.getOrUndefined(Workflow.maybeDraggedItemId(model.workflow));
+  return draggedId === undefined ? undefined : nodeSubtree(model.document, draggedId);
 };
 
 const nodeView = (
@@ -202,18 +190,19 @@ const nodeView = (
   const isDraggingDescendant = isDraggingSubtree && !isDragging;
   const isSelected = selectedNodeId(model) === node.id;
   const located = operations.locateElement(model.document, node.id);
-  const draggable = canMoveNode(model.document, node.id) && located !== undefined
-    ? Workflow.draggable(
-        {
-          model: model.workflow,
-          toParentMessage: toWorkflowMessage,
-          itemId: node.id,
-          containerId: flowContainerId(located.flow.id),
-          index: located.index,
-        },
-        h,
-      )
-    : [];
+  const draggable =
+    canMoveNode(model.document, node.id) && located !== undefined
+      ? Workflow.draggable(
+          {
+            model: model.workflow,
+            toParentMessage: toWorkflowMessage,
+            itemId: node.id,
+            containerId: flowContainerId(located.flow.id),
+            index: located.index,
+          },
+          h,
+        )
+      : [];
 
   return h.keyed("button")(
     node.id,
@@ -263,9 +252,7 @@ const connectorLayerView = (
   h: HtmlBuilder<Message>,
 ): Html => {
   const activeLocation = Option.getOrUndefined(Workflow.maybeDropLocation(model.workflow));
-  const activeId = activeLocation === undefined
-    ? undefined
-    : dropTargetId(activeLocation);
+  const activeId = activeLocation === undefined ? undefined : dropTargetId(activeLocation);
 
   return h.svg(
     [
@@ -276,60 +263,48 @@ const connectorLayerView = (
       h.AriaHidden(true),
     ],
     [
-      ...layout.connectors.map((connector) =>
-        h.keyed("path")(
-          connector.id,
-          [
-            h.D(pathForPoints(connector.points)),
-            h.Class(
-              className(
-                styles.edgePath,
-                subtree !== undefined &&
-                  ((connector.ownerElementId !== undefined &&
-                    subtree.nodeIds.has(connector.ownerElementId)) ||
-                    (connector.flowId !== undefined &&
-                      subtree.flowIds.has(connector.flowId))) &&
-                  styles.edgePathDraggingSubtree,
-                activeId !== undefined &&
-                  connector.locationId === activeId &&
-                  styles.edgePathActive,
-              ),
-            ),
-            h.DataAttribute(
-              "drag-subtree-connector",
+      ...layout.edges.map((connector) =>
+        h.keyed("path")(connector.id, [
+          h.D(pathForPoints(connector.points)),
+          h.Class(
+            className(
+              styles.edgePath,
               subtree !== undefined &&
                 ((connector.ownerElementId !== undefined &&
                   subtree.nodeIds.has(connector.ownerElementId)) ||
-                  (connector.flowId !== undefined &&
-                    subtree.flowIds.has(connector.flowId)))
-                ? "true"
-                : "false",
+                  (connector.flowId !== undefined && subtree.flowIds.has(connector.flowId))) &&
+                styles.edgePathDraggingSubtree,
+              activeId !== undefined && connector.locationId === activeId && styles.edgePathActive,
             ),
-            h.DataAttribute(
-              "drop-connector-active",
-              activeId !== undefined && connector.locationId === activeId
-                ? "true"
-                : "false",
-            ),
-          ],
-        ),
+          ),
+          h.DataAttribute(
+            "drag-subtree-connector",
+            subtree !== undefined &&
+              ((connector.ownerElementId !== undefined &&
+                subtree.nodeIds.has(connector.ownerElementId)) ||
+                (connector.flowId !== undefined && subtree.flowIds.has(connector.flowId)))
+              ? "true"
+              : "false",
+          ),
+          h.DataAttribute(
+            "drop-connector-active",
+            activeId !== undefined && connector.locationId === activeId ? "true" : "false",
+          ),
+        ]),
       ),
       ...layout.junctions.map((junction) =>
-        h.keyed("circle")(
-          junction.id,
-          [
-            h.Attribute("cx", `${junction.x}`),
-            h.Attribute("cy", `${junction.y}`),
-            h.Attribute("r", "3"),
-            h.Class(
-              className(
-                styles.junction,
-                subtree?.nodeIds.has(junction.ownerElementId) === true &&
-                  styles.junctionDraggingSubtree,
-              ),
+        h.keyed("circle")(junction.id, [
+          h.Attribute("cx", `${junction.x}`),
+          h.Attribute("cy", `${junction.y}`),
+          h.Attribute("r", "3"),
+          h.Class(
+            className(
+              styles.junction,
+              subtree?.nodeIds.has(junction.ownerElementId) === true &&
+                styles.junctionDraggingSubtree,
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     ],
   );
@@ -368,7 +343,8 @@ const insertionViews = (
   const dragged = Option.getOrUndefined(draggedNode(model));
 
   return layout.insertions.flatMap((insertion) => {
-    const isValid = draggedId === undefined ||
+    const isValid =
+      draggedId === undefined ||
       previewDocumentForDrop(model.document, draggedId, insertion.id) !== undefined;
     if (isDragging && !isValid) return [];
     const isActive = target?.containerId === insertion.id;
@@ -418,9 +394,7 @@ const insertionViews = (
 const draggedNode = (model: Model) =>
   Option.flatMap(Workflow.maybeDraggedItemId(model.workflow), (itemId) => {
     const paletteType = paletteTypeFromId(itemId);
-    const kind = paletteType !== undefined && isNodeKind(paletteType)
-      ? paletteType
-      : undefined;
+    const kind = paletteType !== undefined && isNodeKind(paletteType) ? paletteType : undefined;
     if (kind !== undefined) {
       return Option.some({
         node: nodeTypes[kind].create("drag-preview"),
@@ -448,11 +422,7 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
         onSome: ({ node, kind, nodeCount }) => {
           const definition = nodeTypes[kind];
           return h.div(
-            [
-              h.Style(ghostStyle),
-              h.Class(className(styles.ghost)),
-              h.AriaHidden(true),
-            ],
+            [h.Style(ghostStyle), h.Class(className(styles.ghost)), h.AriaHidden(true)],
             [
               h.span(
                 [h.Class(className(styles.nodeIdentity))],
@@ -465,9 +435,7 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
                 ],
               ),
               nodeCount > 1
-                ? h.span([h.Class(className(styles.ghostCount))], [
-                    `${nodeCount} nodes`,
-                  ])
+                ? h.span([h.Class(className(styles.ghostCount))], [`${nodeCount} nodes`])
                 : h.empty,
             ],
           );
@@ -502,10 +470,13 @@ const canvasView = (model: Model, h: HtmlBuilder<Message>): Html => {
               `flow-container:${flow.id}`,
               [
                 h.Style({ display: "contents" }),
-                ...Workflow.droppable(flowContainerId(flow.id), `Reorder ${flow.label || "workflow"}`),
+                ...Workflow.droppable(
+                  flowContainerId(flow.id),
+                  `Reorder ${flow.label || "workflow"}`,
+                ),
               ],
               flow.elements.map((node) => nodeView(model, node, layout, subtree, h)),
-            )
+            ),
           ),
         ],
       ),
@@ -567,82 +538,97 @@ const inspectorContent = (
           h.section(
             [...render.panel, h.Class(className(styles.sheet))],
             [
-              h.header([h.Class(className(styles.sheetHeader))], [
-                h.div([], [
-                  h.p([h.Class(className(styles.sheetEyebrow))], [`${definition.label} settings`]),
-                  h.h2(
-                    [...render.title, h.Class(className(styles.sheetTitle))],
-                    [node.data.title.length > 0 ? node.data.title : "Untitled node"],
+              h.header(
+                [h.Class(className(styles.sheetHeader))],
+                [
+                  h.div(
+                    [],
+                    [
+                      h.p(
+                        [h.Class(className(styles.sheetEyebrow))],
+                        [`${definition.label} settings`],
+                      ),
+                      h.h2(
+                        [...render.title, h.Class(className(styles.sheetTitle))],
+                        [node.data.title.length > 0 ? node.data.title : "Untitled node"],
+                      ),
+                      h.p(
+                        [...render.description, h.Class(className(styles.sheetDescription))],
+                        ["Changes update the structured workflow immediately."],
+                      ),
+                    ],
+                  ),
+                  h.button(
+                    [
+                      ...render.closeButton,
+                      h.Class(className(styles.closeButton)),
+                      h.AriaLabel("Close node settings"),
+                    ],
+                    [UiIcon.view({ icon: X, size: 16, strokeWidth: 2.25 }, h)],
+                  ),
+                ],
+              ),
+              h.div(
+                [h.Class(className(styles.sheetBody))],
+                [
+                  textField(
+                    "node-title",
+                    "Name",
+                    node.data.title,
+                    (value) => Message.ChangedSelectedNodeTitle({ value }),
+                    h,
+                  ),
+                  UiField.textarea(
+                    {
+                      id: "node-description",
+                      label: "Description",
+                      value: node.data.description,
+                      onInput: (value) => Message.ChangedSelectedNodeDescription({ value }),
+                    },
+                    h,
+                  ),
+                  h.div(
+                    [h.Class(className(styles.fieldGrid))],
+                    [
+                      selectField(
+                        "node-type",
+                        "Registered type",
+                        node.type,
+                        [node.type],
+                        (value) => Message.ChangedSelectedNodeType({ value }),
+                        h,
+                        true,
+                      ),
+                      selectField(
+                        "node-size",
+                        "Size",
+                        node.data.size,
+                        Object.keys(nodeSizes),
+                        (value) => Message.ChangedSelectedNodeSize({ value }),
+                        h,
+                      ),
+                    ],
                   ),
                   h.p(
-                    [...render.description, h.Class(className(styles.sheetDescription))],
-                    ["Changes update the structured workflow immediately."],
+                    [h.Class(className(styles.sheetNote))],
+                    [
+                      node.branches.length > 0
+                        ? `This registered node owns ${node.branches.length} nested flow${node.branches.length === 1 ? "" : "s"}; they move with it.`
+                        : "This is a registered leaf node and can be placed in any valid flow.",
+                    ],
                   ),
-                ]),
-                h.button(
-                  [
-                    ...render.closeButton,
-                    h.Class(className(styles.closeButton)),
-                    h.AriaLabel("Close node settings"),
-                  ],
-                  [UiIcon.view({ icon: X, size: 16, strokeWidth: 2.25 }, h)],
-                ),
-              ]),
-              h.div([h.Class(className(styles.sheetBody))], [
-                textField(
-                  "node-title",
-                  "Name",
-                  node.data.title,
-                  (value) => Message.ChangedSelectedNodeTitle({ value }),
-                  h,
-                ),
-                UiField.textarea(
-                  {
-                    id: "node-description",
-                    label: "Description",
-                    value: node.data.description,
-                    onInput: (value) => Message.ChangedSelectedNodeDescription({ value }),
-                  },
-                  h,
-                ),
-                h.div([h.Class(className(styles.fieldGrid))], [
-                  selectField(
-                    "node-type",
-                    "Registered type",
-                    node.type,
-                    [node.type],
-                    (value) => Message.ChangedSelectedNodeType({ value }),
-                    h,
-                    true,
-                  ),
-                  selectField(
-                    "node-size",
-                    "Size",
-                    node.data.size,
-                    Object.keys(nodeSizes),
-                    (value) => Message.ChangedSelectedNodeSize({ value }),
+                  UiButton.view(
+                    {
+                      label: "Delete node",
+                      onClick: Message.ClickedDeleteSelectedNode(),
+                      isDisabled: !canMoveNode(model.document, node.id),
+                      isFullWidth: true,
+                      variant: "danger",
+                    },
                     h,
                   ),
-                ]),
-                h.p(
-                  [h.Class(className(styles.sheetNote))],
-                  [
-                    node.branches.length > 0
-                      ? `This registered node owns ${node.branches.length} nested flow${node.branches.length === 1 ? "" : "s"}; they move with it.`
-                      : "This is a registered leaf node and can be placed in any valid flow.",
-                  ],
-                ),
-                UiButton.view(
-                  {
-                    label: "Delete node",
-                    onClick: Message.ClickedDeleteSelectedNode(),
-                    isDisabled: !canMoveNode(model.document, node.id),
-                    isFullWidth: true,
-                    variant: "danger",
-                  },
-                  h,
-                ),
-              ]),
+                ],
+              ),
             ],
           ),
         ]
@@ -675,9 +661,13 @@ export type ViewInputs = Readonly<{
 
 export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) => {
   switch (inputs.region) {
-    case "Palette": return paletteView(model, h);
-    case "Toolbar": return toolbarView(model, h);
-    case "Content": return canvasView(model, h);
-    case "Overlay": return inspectorView(model, h);
+    case "Palette":
+      return paletteView(model, h);
+    case "Toolbar":
+      return toolbarView(model, h);
+    case "Content":
+      return canvasView(model, h);
+    case "Overlay":
+      return inspectorView(model, h);
   }
 });

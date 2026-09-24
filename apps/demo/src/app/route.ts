@@ -4,7 +4,22 @@ import { defineRouteUnion } from "foldkit/route";
 
 import { FormExampleId, FormMode } from "../form-builder/model";
 
-export type Demo = "Home" | "Editor" | "Agent" | "CodeEditor" | "Codebase" | "DiffViewer" | "Workbench" | "Workflow" | "DataTable" | "DataGrid" | "FormBuilder" | "QueryBuilder" | "PdfAnnotator" | "UiKit";
+export type Demo =
+  | "Home"
+  | "Editor"
+  | "Agent"
+  | "CodeEditor"
+  | "Codebase"
+  | "DiffViewer"
+  | "Workbench"
+  | "Workflow"
+  | "Statechart"
+  | "DataTable"
+  | "DataGrid"
+  | "FormBuilder"
+  | "QueryBuilder"
+  | "PdfAnnotator"
+  | "UiKit";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
@@ -18,6 +33,7 @@ export const AppRoute = defineRouteUnion({
   DiffViewer: {},
   Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
+  Statechart: {},
   DataTable: { person: S.Option(S.String) },
   DataGrid: {},
   FormBuilder: {
@@ -33,22 +49,29 @@ export type AppRoute = typeof AppRoute.Type;
 
 export const workflowRouter = pipe(
   Route.literal("workflow"),
-  Route.query(S.Struct({
-    orientation: S.OptionFromOptional(WorkflowOrientation),
-  })),
+  Route.query(
+    S.Struct({
+      orientation: S.OptionFromOptional(WorkflowOrientation),
+    }),
+  ),
   Route.mapTo(AppRoute.Workflow),
 );
 
-export const homeRouter = pipe(
-  Route.root,
-  Route.mapTo(AppRoute.Home),
-);
+export const homeRouter = pipe(Route.root, Route.mapTo(AppRoute.Home));
 
-export const codeEditorRouter = pipe(Route.literal("code-editor"), Route.mapTo(AppRoute.CodeEditor));
+export const statechartRouter = pipe(Route.literal("statechart"), Route.mapTo(AppRoute.Statechart));
+
+export const codeEditorRouter = pipe(
+  Route.literal("code-editor"),
+  Route.mapTo(AppRoute.CodeEditor),
+);
 
 export const codebaseRouter = pipe(Route.literal("codebase"), Route.mapTo(AppRoute.Codebase));
 
-export const diffViewerRouter = pipe(Route.literal("diff-viewer"), Route.mapTo(AppRoute.DiffViewer));
+export const diffViewerRouter = pipe(
+  Route.literal("diff-viewer"),
+  Route.mapTo(AppRoute.DiffViewer),
+);
 
 export const agentRouter = pipe(Route.literal("agent"), Route.mapTo(AppRoute.Agent));
 
@@ -60,24 +83,20 @@ export const dataTableRouter = pipe(
   Route.mapTo(AppRoute.DataTable),
 );
 
-export const dataGridRouter = pipe(
-  Route.literal("data-grid"),
-  Route.mapTo(AppRoute.DataGrid),
-);
+export const dataGridRouter = pipe(Route.literal("data-grid"), Route.mapTo(AppRoute.DataGrid));
 
 export const formBuilderRouter = pipe(
   Route.literal("form-builder"),
-  Route.query(S.Struct({
-    example: S.OptionFromOptional(FormExampleId),
-    mode: S.OptionFromOptional(FormMode),
-  })),
+  Route.query(
+    S.Struct({
+      example: S.OptionFromOptional(FormExampleId),
+      mode: S.OptionFromOptional(FormMode),
+    }),
+  ),
   Route.mapTo(AppRoute.FormBuilder),
 );
 
-export const uiKitRouter = pipe(
-  Route.literal("ui-kit"),
-  Route.mapTo(AppRoute.UiKit),
-);
+export const uiKitRouter = pipe(Route.literal("ui-kit"), Route.mapTo(AppRoute.UiKit));
 
 export const queryBuilderRouter = pipe(
   Route.literal("query-builder"),
@@ -94,6 +113,7 @@ export const editorRouter = pipe(Route.literal("editor"), Route.mapTo(AppRoute.E
 const routeParser = Route.oneOf(
   editorRouter,
   workflowRouter,
+  statechartRouter,
   agentRouter,
   workbenchRouter,
   codebaseRouter,
@@ -108,61 +128,76 @@ const routeParser = Route.oneOf(
   homeRouter,
 );
 
-export const urlToAppRoute = Route.parseUrlWithFallback(
-  routeParser,
-  AppRoute.NotFound,
-);
+export const urlToAppRoute = Route.parseUrlWithFallback(routeParser, AppRoute.NotFound);
 
 export const demoFromRoute = (route: AppRoute): Demo => {
   switch (route._tag) {
-    case "Home": return "Home";
-    case "Editor": return "Editor";
-    case "Agent": return "Agent";
-    case "CodeEditor": return "CodeEditor";
-    case "Codebase": return "Codebase";
-    case "DiffViewer": return "DiffViewer";
-    case "Workbench": return "Workbench";
-    case "DataTable": return "DataTable";
-    case "DataGrid": return "DataGrid";
-    case "FormBuilder": return "FormBuilder";
-    case "QueryBuilder": return "QueryBuilder";
-    case "PdfAnnotator": return "PdfAnnotator";
-    case "UiKit": return "UiKit";
-    case "Workflow": return "Workflow";
-    case "NotFound": return "Home";
+    case "Home":
+      return "Home";
+    case "Editor":
+      return "Editor";
+    case "Agent":
+      return "Agent";
+    case "CodeEditor":
+      return "CodeEditor";
+    case "Codebase":
+      return "Codebase";
+    case "DiffViewer":
+      return "DiffViewer";
+    case "Workbench":
+      return "Workbench";
+    case "DataTable":
+      return "DataTable";
+    case "DataGrid":
+      return "DataGrid";
+    case "FormBuilder":
+      return "FormBuilder";
+    case "QueryBuilder":
+      return "QueryBuilder";
+    case "PdfAnnotator":
+      return "PdfAnnotator";
+    case "UiKit":
+      return "UiKit";
+    case "Workflow":
+      return "Workflow";
+    case "Statechart":
+      return "Statechart";
+    case "NotFound":
+      return "Home";
   }
 };
 
-export const formStateFromRoute = (route: AppRoute): Readonly<{
+export const formStateFromRoute = (
+  route: AppRoute,
+): Readonly<{
   exampleId: FormExampleId;
   mode: FormMode;
-}> => route._tag === "FormBuilder"
-  ? {
-      exampleId: Option.getOrElse(route.example, () => "Handoff" as const),
-      mode: Option.getOrElse(route.mode, () => "Editor" as const),
-    }
-  : { exampleId: "Handoff", mode: "Editor" };
+}> =>
+  route._tag === "FormBuilder"
+    ? {
+        exampleId: Option.getOrElse(route.example, () => "Handoff" as const),
+        mode: Option.getOrElse(route.mode, () => "Editor" as const),
+      }
+    : { exampleId: "Handoff", mode: "Editor" };
 
-export const workflowOrientationFromRoute = (
-  route: AppRoute,
-): WorkflowOrientation => route._tag === "Workflow"
-  ? Option.getOrElse(route.orientation, () => "Vertical" as const)
-  : "Vertical";
+export const workflowOrientationFromRoute = (route: AppRoute): WorkflowOrientation =>
+  route._tag === "Workflow"
+    ? Option.getOrElse(route.orientation, () => "Vertical" as const)
+    : "Vertical";
 
 export const workflowPath = (orientation: WorkflowOrientation): string =>
   workflowRouter({ orientation: Option.some(orientation) });
 
-export const dataTablePath = (personId?: string): string => dataTableRouter({
-  person: personId === undefined ? Option.none() : Option.some(personId),
-});
+export const dataTablePath = (personId?: string): string =>
+  dataTableRouter({
+    person: personId === undefined ? Option.none() : Option.some(personId),
+  });
 
 export const dataTablePersonFromRoute = (route: AppRoute): string =>
   route._tag === "DataTable" ? Option.getOrElse(route.person, () => "") : "";
 
-export const formBuilderPath = (
-  exampleId: FormExampleId,
-  mode: FormMode,
-): string => formBuilderRouter({
-  example: Option.some(exampleId),
-  mode: Option.some(mode),
-});
+export const formBuilderPath = (exampleId: FormExampleId, mode: FormMode): string =>
+  formBuilderRouter({
+    example: Option.some(exampleId),
+    mode: Option.some(mode),
+  });

@@ -11,6 +11,14 @@ The package owns:
 - a workflow-specific facade over Foldkit UI drag and drop;
 - a generic node-type registry contract.
 
+Structured workflows are one adapter over
+[`@foldworks/diagram`](../diagram). `createStructuredLayout` is a diagram
+layout strategy: its result is a `DiagramScene` (`nodes`, `edges`, `bounds`)
+with workflow overlays for insertions, branch labels, and junctions.
+`toDiagramDocument` flattens nested flows into a normalized diagram with
+explicit sequence, branch, and merge edges, so graph tooling such as
+validation, cycle checks, or alternative layouts can consume a workflow.
+
 The consuming application registers its node catalogue. Definitions provide a
 factory, dimensions, palette metadata, and an application-specific renderer, so
 the package does not prescribe Action, Condition, Switch, or other business
@@ -29,7 +37,7 @@ const nodeTypes = defineNodeTypes({
     deletable: true,
     render: ActionNode.view,
   },
-})
+});
 ```
 
 Branching definitions create child flows on their node instances. Layout and

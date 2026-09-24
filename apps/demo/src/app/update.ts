@@ -20,6 +20,8 @@ import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
 import { update as updateQueryBuilder } from "../query-builder/update";
 import { applyTheme, ThemeName } from "../theme";
+import { Message as StatechartMessage } from "../statechart/message";
+import { update as updateStatechart } from "../statechart/update";
 import { update as updateUiKit } from "../ui-kit/update";
 import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
@@ -124,6 +126,20 @@ const foldForm = Update.foldChild({
         }),
       }),
 });
+
+const foldStatechart = Update.foldChild({
+  update: updateStatechart,
+  read: (model: Model) => Option.some(model.statechart),
+  write: (model, statechart) => evo(model, { statechart: () => statechart }),
+  toParentMessage: (message) => Message.GotStatechartMessage({ message }),
+});
+
+/** Commands to run when a route is entered, such as fitting the statechart
+ *  canvas once it has a size. */
+export const enterRoute = (model: Model): UpdateReturn =>
+  model.route._tag === "Statechart"
+    ? foldStatechart(model, StatechartMessage.ClickedFit())
+    : { model };
 
 const foldCodeEditor = Update.foldChild({
   update: updateCodeEditor,
@@ -291,10 +307,14 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         }),
         External: ({ href }) => ({ model, commands: [LoadExternal({ href })] }),
       }),
-    ChangedUrl: ({ url }) => ({ model: applyRoute(model, urlToAppRoute(url)) }),
+    ChangedUrl: ({ url }) => {
+      const next = applyRoute(model, urlToAppRoute(url));
+      return next.route._tag === model.route._tag ? { model: next } : enterRoute(next);
+    },
     GotAgentMessage: ({ message }) => foldAgent(model, message),
     GotWorkflowEditorMessage: ({ message: childMessage }) => foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),
+    GotStatechartMessage: ({ message: childMessage }) => foldStatechart(model, childMessage),
     GotCodeEditorMessage: ({ message }) => foldCodeEditor(model, message),
     GotWorkbenchMessage: ({ message }) => foldWorkbench(model, message),
     GotDataGridDemoMessage: ({ message: childMessage }) => foldDataGrid(model, childMessage),

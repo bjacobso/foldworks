@@ -221,6 +221,7 @@ import * as EditorContracts from "@foldworks/code-editor/contracts";
 import * as StructuredEditor from "@foldworks/code-editor/structured";
 import * as DataTable from "@foldworks/data-table";
 import * as DataGrid from "@foldworks/data-grid";
+import * as Diagram from "@foldworks/diagram";
 import * as FormBuilder from "@foldworks/form-builder";
 import * as History from "@foldworks/history";
 import * as Keyboard from "@foldworks/keyboard";
@@ -232,7 +233,7 @@ import * as UiIcon from "@foldworks/ui/icon";
 import * as UiTokens from "@foldworks/ui/tokens.stylex";
 import * as Workflow from "@foldworks/workflow";
 
-const modules = [Agent, Editor, CodeEditor, EditorContracts, StructuredEditor, DataTable, DataGrid, FormBuilder, History, Keyboard, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
+const modules = [Agent, Editor, CodeEditor, EditorContracts, StructuredEditor, DataTable, DataGrid, Diagram, FormBuilder, History, Keyboard, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
 const app = document.querySelector<HTMLElement>("#app");
 if (app === null) throw new Error("Missing smoke-test mount point.");
 app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.keys(module).length, 0) + " Foldworks exports";
