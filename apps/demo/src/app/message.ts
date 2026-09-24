@@ -16,6 +16,7 @@ import { Message as DiffViewerMessage } from "../diff-viewer/message";
 import { Message as FormEditorMessage } from "../form-builder/message";
 import { Message as QueryBuilderDemoMessage } from "../query-builder/message";
 import { ThemeName, ThemePreference } from "../theme";
+import { Message as StatechartMessage } from "../statechart/message";
 import { Message as UiKitMessage } from "../ui-kit/message";
 import { Message as WorkflowEditorMessage } from "../workflow/message";
 
@@ -32,6 +33,7 @@ export const Message = defineMessageUnion({
   GotAgentMessage: { message: Agent.Message },
   GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
   GotFormEditorMessage: { message: FormEditorMessage },
+  GotStatechartMessage: { message: StatechartMessage },
   GotCodeEditorMessage: { message: CodeEditorMessage },
   GotWorkbenchMessage: { message: WorkbenchMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },

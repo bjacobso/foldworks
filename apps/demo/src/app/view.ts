@@ -11,6 +11,7 @@ import {
   House,
   ListFilter,
   ListChecks,
+  Network,
   Table2,
   Workflow as WorkflowIcon,
 } from "@lucide/icons";
@@ -31,6 +32,7 @@ import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
 import { view as homeView } from "../home/view";
 import { view as queryBuilderView } from "../query-builder/view";
+import { statechartSummary, view as statechartView } from "../statechart/view";
 import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
 import {
@@ -47,6 +49,7 @@ import {
   homeRouter,
   pdfAnnotatorRouter,
   queryBuilderRouter,
+  statechartRouter,
   uiKitRouter,
   workflowPath,
   type Demo,
@@ -60,19 +63,21 @@ const activeAnnouncement = (model: Model): string => {
   const demo = demoFromRoute(model.route);
   return demo === "Workflow"
     ? model.workflowEditor.announcement
-    : demo === "FormBuilder"
-      ? model.formEditor.announcement
-      : demo === "QueryBuilder"
-        ? model.queryBuilderDemo.announcement
-        : demo === "PdfAnnotator"
-          ? model.pdfAnnotator.announcement
-          : demo === "UiKit"
-            ? model.uiKit.announcement
-            : demo === "Agent"
-              ? ""
-              : demo === "DataTable"
-                ? model.dataTableDemo.announcement
-                : model.announcement;
+    : demo === "Statechart"
+      ? model.statechart.announcement
+      : demo === "FormBuilder"
+        ? model.formEditor.announcement
+        : demo === "QueryBuilder"
+          ? model.queryBuilderDemo.announcement
+          : demo === "PdfAnnotator"
+            ? model.pdfAnnotator.announcement
+            : demo === "UiKit"
+              ? model.uiKit.announcement
+              : demo === "Agent"
+                ? ""
+                : demo === "DataTable"
+                  ? model.dataTableDemo.announcement
+                  : model.announcement;
 };
 
 const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
@@ -192,6 +197,13 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
           isActive: demo === "Workflow",
         },
         {
+          id: "statechart",
+          label: "Statechart editor",
+          href: statechartRouter(),
+          icon: Network,
+          isActive: demo === "Statechart",
+        },
+        {
           id: "pdf-annotator",
           label: "PDF annotator",
           href: pdfAnnotatorRouter(),
@@ -217,6 +229,17 @@ const childRegion = (
       viewInputs: { region },
       toParentMessage: (message) => Message.GotWorkflowEditorMessage({ message }),
     });
+  }
+  if (demo === "Statechart") {
+    return region === "Overlay"
+      ? h.empty
+      : h.submodel({
+          slotId: `statechart-${region.toLowerCase()}`,
+          model: model.statechart,
+          view: statechartView,
+          viewInputs: { region },
+          toParentMessage: (message) => Message.GotStatechartMessage({ message }),
+        });
   }
   if (demo === "FormBuilder") {
     return h.submodel({
@@ -254,19 +277,21 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                 ? "Workers workbench"
                 : demo === "Workflow"
                   ? "Candidate workflow"
-                  : demo === "DataTable"
-                    ? "People"
-                    : demo === "DataGrid"
-                      ? "Headcount worksheet"
-                      : demo === "FormBuilder"
-                        ? model.formEditor.document.title
-                        : demo === "QueryBuilder"
-                          ? "Employee query"
-                          : demo === "PdfAnnotator"
-                            ? "PDF annotator"
-                            : demo === "Home"
-                              ? "Foldworks"
-                              : "@foldworks/ui";
+                  : demo === "Statechart"
+                    ? "Statechart"
+                    : demo === "DataTable"
+                      ? "People"
+                      : demo === "DataGrid"
+                        ? "Headcount worksheet"
+                        : demo === "FormBuilder"
+                          ? model.formEditor.document.title
+                          : demo === "QueryBuilder"
+                            ? "Employee query"
+                            : demo === "PdfAnnotator"
+                              ? "PDF annotator"
+                              : demo === "Home"
+                                ? "Foldworks"
+                                : "@foldworks/ui";
   const description =
     demo === "Editor"
       ? "Native Foldkit editing · Markdown · Custom blocks"
@@ -282,19 +307,21 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                 ? "Inspect · Explain · Preview · Apply · History"
                 : demo === "Workflow"
                   ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
-                  : demo === "DataTable"
-                    ? `${contacts.length} people · resource-first CRUD table`
-                    : demo === "DataGrid"
-                      ? `${people.length} rows · cell editing · spreadsheet controls`
-                      : demo === "FormBuilder"
-                        ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
-                        : demo === "QueryBuilder"
-                          ? "Configured attributes · recursive groups · live validation"
-                          : demo === "PdfAnnotator"
-                            ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-                            : demo === "Home"
-                              ? "Polished application primitives for Foldkit and StyleX"
-                              : "61 application primitives · Foldkit behavior · StyleX";
+                  : demo === "Statechart"
+                    ? statechartSummary(model.statechart)
+                    : demo === "DataTable"
+                      ? `${contacts.length} people · resource-first CRUD table`
+                      : demo === "DataGrid"
+                        ? `${people.length} rows · cell editing · spreadsheet controls`
+                        : demo === "FormBuilder"
+                          ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
+                          : demo === "QueryBuilder"
+                            ? "Configured attributes · recursive groups · live validation"
+                            : demo === "PdfAnnotator"
+                              ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
+                              : demo === "Home"
+                                ? "Polished application primitives for Foldkit and StyleX"
+                                : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view(
     {
       title,
@@ -306,56 +333,62 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             ? [Badge.view({ label: "Simulated", tone: "info", dot: true }, h)]
             : demo === "Workflow" || demo === "FormBuilder"
               ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
-              : demo === "CodeEditor"
-                ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
-                : demo === "Codebase"
-                  ? [Badge.view({ label: "Read-only fixture", tone: "info", dot: true }, h)]
-                  : demo === "DiffViewer"
-                    ? [Badge.view({ label: "Interactive prototype", tone: "info", dot: true }, h)]
-                    : demo === "Workbench"
-                      ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
-                      : demo === "DataTable"
-                        ? [
-                            Badge.view(
-                              {
-                                label: "Semantic table + controlled data",
-                                tone: "info",
-                                dot: true,
-                              },
-                              h,
-                            ),
-                          ]
-                        : demo === "DataGrid"
-                          ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
-                          : demo === "QueryBuilder"
-                            ? [
-                                Badge.view(
-                                  { label: "Validates as you edit", tone: "success", dot: true },
-                                  h,
-                                ),
-                              ]
-                            : demo === "PdfAnnotator"
+              : demo === "Statechart"
+                ? [childRegion(model, "Toolbar", h)]
+                : demo === "CodeEditor"
+                  ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
+                  : demo === "Codebase"
+                    ? [Badge.view({ label: "Read-only fixture", tone: "info", dot: true }, h)]
+                    : demo === "DiffViewer"
+                      ? [Badge.view({ label: "Interactive prototype", tone: "info", dot: true }, h)]
+                      : demo === "Workbench"
+                        ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
+                        : demo === "DataTable"
+                          ? [
+                              Badge.view(
+                                {
+                                  label: "Semantic table + controlled data",
+                                  tone: "info",
+                                  dot: true,
+                                },
+                                h,
+                              ),
+                            ]
+                          : demo === "DataGrid"
+                            ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
+                            : demo === "QueryBuilder"
                               ? [
                                   Badge.view(
-                                    { label: "Foldkit drag + PDF export", tone: "info", dot: true },
+                                    { label: "Validates as you edit", tone: "success", dot: true },
                                     h,
                                   ),
                                 ]
-                              : demo === "Home"
+                              : demo === "PdfAnnotator"
                                 ? [
                                     Badge.view(
-                                      { label: "16 packages", tone: "info", dot: true },
+                                      {
+                                        label: "Foldkit drag + PDF export",
+                                        tone: "info",
+                                        dot: true,
+                                      },
                                       h,
                                     ),
-                                    Badge.view({ label: "Open source" }, h),
                                   ]
-                                : [
-                                    Badge.view(
-                                      { label: "61 primitives", tone: "info", dot: true },
-                                      h,
-                                    ),
-                                    Badge.view({ label: "StyleX + Foldkit" }, h),
-                                  ]),
+                                : demo === "Home"
+                                  ? [
+                                      Badge.view(
+                                        { label: "17 packages", tone: "info", dot: true },
+                                        h,
+                                      ),
+                                      Badge.view({ label: "Open source" }, h),
+                                    ]
+                                  : [
+                                      Badge.view(
+                                        { label: "61 primitives", tone: "info", dot: true },
+                                        h,
+                                      ),
+                                      Badge.view({ label: "StyleX + Foldkit" }, h),
+                                    ]),
         Select.control(
           {
             value: model.themeName,
@@ -440,8 +473,13 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       view: workbenchView,
       toParentMessage: (message) => Message.GotWorkbenchMessage({ message }),
     });
-  if (demo === "Workflow" || (demo === "FormBuilder" && model.formEditor.mode === "Editor")) {
-    const paletteLabel = demo === "Workflow" ? "Workflow nodes" : "Form fields";
+  if (
+    demo === "Workflow" ||
+    demo === "Statechart" ||
+    (demo === "FormBuilder" && model.formEditor.mode === "Editor")
+  ) {
+    const paletteLabel =
+      demo === "Workflow" ? "Workflow nodes" : demo === "Statechart" ? "States" : "Form fields";
     return h.div(
       [h.Class(className(styles.editorWorkspace))],
       [
@@ -512,6 +550,7 @@ const documentTitle = (demo: Demo): string =>
     Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
     Match.when("UiKit", () => "UI components · Foldworks"),
     Match.when("Workflow", () => "Workflow · Foldworks"),
+    Match.when("Statechart", () => "Statechart · Foldworks"),
     Match.exhaustive,
   );
 
@@ -543,7 +582,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
                 content: content(model, h),
                 footer: {
                   title: "Application primitives",
-                  description: "Sixteen Foldworks packages",
+                  description: "Seventeen Foldworks packages",
                   icon: Blocks,
                 },
                 ariaLabel: "Foldworks navigation",

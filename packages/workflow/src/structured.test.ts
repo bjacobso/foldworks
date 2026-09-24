@@ -9,11 +9,9 @@ import {
 import { OutMessage } from "./interaction";
 import { defineNodeTypes, paletteItemId, paletteTypeFromId } from "./registry";
 import { applyReorder } from "./reorder";
-import {
-  createStructuredWorkflowOperations,
-  type Flow,
-  type WorkflowDocument,
-} from "./structured";
+import { toDiagramDocument } from "./diagram";
+import { topologicalOrder, validateDocument } from "@foldworks/diagram";
+import { createStructuredWorkflowOperations, type Flow, type WorkflowDocument } from "./structured";
 
 interface Node {
   readonly id: string;
@@ -64,12 +62,15 @@ describe("structured workflow primitives", () => {
       { flowId: "condition:then", index: 0 },
       leaf("inserted"),
     );
-    expect(inserted === undefined ? [] : operations.findFlow(inserted, "condition:then")?.elements)
-      .toContainEqual(expect.objectContaining({ id: "inserted" }));
+    expect(
+      inserted === undefined ? [] : operations.findFlow(inserted, "condition:then")?.elements,
+    ).toContainEqual(expect.objectContaining({ id: "inserted" }));
 
-    const deleted = inserted === undefined ? undefined : operations.deleteElement(inserted, "inserted");
-    expect(deleted === undefined ? undefined : operations.findElement(deleted, "inserted"))
-      .toBeUndefined();
+    const deleted =
+      inserted === undefined ? undefined : operations.deleteElement(inserted, "inserted");
+    expect(
+      deleted === undefined ? undefined : operations.findElement(deleted, "inserted"),
+    ).toBeUndefined();
   });
 
   it("moves elements between nested flows and rejects moves into descendants", () => {
@@ -90,8 +91,7 @@ describe("structured workflow primitives", () => {
   });
 
   it("keeps anchored elements in place", () => {
-    expect(operations.moveElement(document, "start", { flowId: "root", index: 2 }))
-      .toBeUndefined();
+    expect(operations.moveElement(document, "start", { flowId: "root", index: 2 })).toBeUndefined();
     expect(operations.deleteElement(document, "end")).toBeUndefined();
   });
 
@@ -107,21 +107,32 @@ describe("structured workflow primitives", () => {
   });
 
   it("returns undefined when updating an unknown element", () => {
-    expect(operations.updateElement(document, "missing", (node) => ({
-      ...node,
-      title: "Updated",
-    }))).toBeUndefined();
+    expect(
+      operations.updateElement(document, "missing", (node) => ({
+        ...node,
+        title: "Updated",
+      })),
+    ).toBeUndefined();
   });
 
   it("draws two-point paths and compacts collinear intermediate points", () => {
-    expect(pathForPoints([{ x: 0, y: 0 }, { x: 0, y: 20 }]))
-      .toBe("M 0 0 L 0 20");
-    expect(pathForPoints([
-      { x: 0, y: 0 },
-      { x: 0, y: 10 },
-      { x: 0, y: 20 },
-      { x: 20, y: 20 },
-    ], 0)).toBe("M 0 0 L 0 20 Q 0 20 0 20 L 20 20");
+    expect(
+      pathForPoints([
+        { x: 0, y: 0 },
+        { x: 0, y: 20 },
+      ]),
+    ).toBe("M 0 0 L 0 20");
+    expect(
+      pathForPoints(
+        [
+          { x: 0, y: 0 },
+          { x: 0, y: 10 },
+          { x: 0, y: 20 },
+          { x: 20, y: 20 },
+        ],
+        0,
+      ),
+    ).toBe("M 0 0 L 0 20 Q 0 20 0 20 L 20 20");
   });
 
   it("round-trips palette ids and applies a palette reorder", () => {
@@ -136,14 +147,15 @@ describe("structured workflow primitives", () => {
         toIndex: 0,
       }),
       operations,
-      createFromPalette: (type) => type === "action" ? leaf("created") : undefined,
+      createFromPalette: (type) => (type === "action" ? leaf("created") : undefined),
     });
 
     expect(inserted?._tag).toBe("Inserted");
-    expect(inserted === undefined
-      ? undefined
-      : operations.findFlow(inserted.document, "condition:then")?.elements[0]?.id)
-      .toBe("created");
+    expect(
+      inserted === undefined
+        ? undefined
+        : operations.findFlow(inserted.document, "condition:then")?.elements[0]?.id,
+    ).toBe("created");
   });
 
   it("defaults registry movement policies to true", () => {
@@ -168,9 +180,10 @@ describe("structured workflow primitives", () => {
     expect(conditionNode).toBeDefined();
     expect(nestedNode?.x).not.toBe(conditionNode?.x);
     expect(layout.branchLabels.map((label) => label.text)).toEqual(["Then", "Else"]);
-    expect(layout.insertions.map((target) => target.location.flowId))
-      .toContain("condition:then");
-    expect(layout.connectors.some((connector) => connector.points.length > 2)).toBe(true);
+    expect(layout.insertions.map((target) => target.location.flowId)).toContain("condition:then");
+    expect(layout.edges.some((connector) => connector.points.length > 2)).toBe(true);
+    expect(layout.bounds).toEqual({ x: 0, y: 0, width: layout.width, height: layout.height });
+    expect(conditionNode).toMatchObject({ depth: 0, isContainer: false, ports: [] });
   });
 
   it("transposes the structured layout for horizontal workflows", () => {
@@ -195,7 +208,28 @@ describe("structured workflow primitives", () => {
     expect(horizontalStart).toMatchObject({ width: 250, height: 64 });
     expect(horizontal.width).toBeGreaterThan(horizontal.height);
     expect(horizontal.insertions).toHaveLength(vertical.insertions.length);
-    expect(horizontal.branchLabels.map((label) => label.text))
-      .toEqual(vertical.branchLabels.map((label) => label.text));
+    expect(horizontal.branchLabels.map((label) => label.text)).toEqual(
+      vertical.branchLabels.map((label) => label.text),
+    );
+  });
+
+  it("normalizes nested flows into a directed acyclic diagram", () => {
+    const diagram = toDiagramDocument(document);
+    expect(diagram.nodes.map((node) => node.id)).toEqual(["start", "condition", "nested", "end"]);
+    expect(
+      diagram.edges.map((edge) => [edge.source.nodeId, edge.target.nodeId, edge.data.kind]),
+    ).toEqual([
+      ["start", "condition", "Sequence"],
+      ["condition", "end", "Branch"],
+      ["nested", "end", "Merge"],
+      ["condition", "nested", "Branch"],
+    ]);
+    expect(validateDocument(diagram)).toEqual([]);
+    expect(
+      topologicalOrder(
+        diagram.nodes.map((node) => node.id),
+        diagram.edges,
+      ),
+    ).toEqual(["start", "condition", "nested", "end"]);
   });
 });

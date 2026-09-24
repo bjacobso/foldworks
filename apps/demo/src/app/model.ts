@@ -14,9 +14,13 @@ import { Model as DataTableModel, init as initDataTable } from "../data-table/mo
 import { Model as DiffViewerModel, initialModel as initialDiffViewer } from "../diff-viewer/model";
 import { Model as FormEditorModel, init as initFormEditor } from "../form-builder/editor-model";
 import { exampleForms } from "../form-builder/model";
-import { Model as QueryBuilderDemoModel, initialModel as initialQueryBuilder } from "../query-builder/model";
+import {
+  Model as QueryBuilderDemoModel,
+  initialModel as initialQueryBuilder,
+} from "../query-builder/model";
 import { ThemeName, ThemePreference, type ThemeState } from "../theme";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
+import { Model as StatechartModel, initialModel as initialStatechart } from "../statechart/model";
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
 import {
   AppRoute,
@@ -31,6 +35,7 @@ export const Model = S.Struct({
   codeEditor: CodeEditorModel,
   workbench: WorkbenchModel,
   workflowEditor: WorkflowEditorModel,
+  statechart: StatechartModel,
   formEditor: FormEditorModel,
   dataGridDemo: DataGridModel,
   dataTableDemo: DataTableModel,
@@ -61,10 +66,8 @@ export const init = (
     agent: Agent.init({ id: "foldworks-agent", selectedModel: "atlas-balanced" }),
     codeEditor: initCodeEditor(),
     workbench: initWorkbench(workers?.snapshot, workers?.error),
-    workflowEditor: initWorkflowEditor(
-      persisted?.workflow,
-      workflowOrientationFromRoute(route),
-    ),
+    workflowEditor: initWorkflowEditor(persisted?.workflow, workflowOrientationFromRoute(route)),
+    statechart: initialStatechart,
     formEditor: initFormEditor(persisted?.forms ?? exampleForms, exampleId, mode),
     dataGridDemo: initialDataGrid,
     dataTableDemo: initDataTable(dataTablePersonFromRoute(route)),

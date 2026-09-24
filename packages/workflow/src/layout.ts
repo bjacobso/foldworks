@@ -1,29 +1,28 @@
-import type {
-  ElementShape,
-  Flow,
-  FlowLocation,
-  WorkflowDocument,
-} from "./structured";
+import {
+  pathForPoints,
+  type DiagramScene,
+  type Dimensions,
+  type Point,
+  type SceneEdge,
+  type SceneNode,
+} from "@foldworks/diagram";
 
-export type Point = Readonly<{ x: number; y: number }>;
-export type Dimensions = Readonly<{ width: number; height: number }>;
+import type { ElementShape, Flow, FlowLocation, WorkflowDocument } from "./structured";
+
+export { pathForPoints, type Dimensions, type Point };
 export type LayoutOrientation = "Vertical" | "Horizontal";
 
-export type LayoutNode = Readonly<{
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}>;
+export type LayoutNode = SceneNode;
 
-export type LayoutConnector = Readonly<{
-  id: string;
-  points: ReadonlyArray<Point>;
-  flowId?: string;
-  ownerElementId?: string;
-  locationId?: string;
-}>;
+/** A structured-workflow connector. Sequence connectors carry the flow
+ *  location they can insert into; fork and merge connectors carry the
+ *  branching element that owns them. */
+export type LayoutConnector = SceneEdge &
+  Readonly<{
+    flowId?: string;
+    ownerElementId?: string;
+    locationId?: string;
+  }>;
 
 export type LayoutInsertion = Readonly<{
   id: string;
@@ -48,15 +47,16 @@ export type LayoutJunction = Readonly<{
   y: number;
 }>;
 
-export type StructuredWorkflowLayout = Readonly<{
-  width: number;
-  height: number;
-  nodes: ReadonlyMap<string, LayoutNode>;
-  connectors: ReadonlyArray<LayoutConnector>;
-  insertions: ReadonlyArray<LayoutInsertion>;
-  branchLabels: ReadonlyArray<LayoutBranchLabel>;
-  junctions: ReadonlyArray<LayoutJunction>;
-}>;
+/** A diagram scene with structured-workflow overlays: insertion targets,
+ *  branch labels, and fork/merge junctions. */
+export type StructuredWorkflowLayout = DiagramScene<LayoutConnector> &
+  Readonly<{
+    width: number;
+    height: number;
+    insertions: ReadonlyArray<LayoutInsertion>;
+    branchLabels: ReadonlyArray<LayoutBranchLabel>;
+    junctions: ReadonlyArray<LayoutJunction>;
+  }>;
 
 export type StructuredLayoutConfig<Node> = Readonly<{
   nodeSize: (node: Node) => Dimensions;
@@ -86,56 +86,6 @@ type MeasuredFlow<Node> = Readonly<{
   height: number;
   elements: ReadonlyArray<MeasuredElement<Node>>;
 }>;
-
-const compactPoints = (points: ReadonlyArray<Point>): ReadonlyArray<Point> => {
-  const unique = points.filter((point, index) => {
-    const previous = points[index - 1];
-    return previous === undefined || previous.x !== point.x || previous.y !== point.y;
-  });
-  return unique.filter((point, index) => {
-    const previous = unique[index - 1];
-    const next = unique[index + 1];
-    return previous === undefined || next === undefined ||
-      !((previous.x === point.x && point.x === next.x) ||
-        (previous.y === point.y && point.y === next.y));
-  });
-};
-
-export const pathForPoints = (
-  requestedPoints: ReadonlyArray<Point>,
-  radius = 9,
-): string => {
-  const points = compactPoints(requestedPoints);
-  const first = points[0];
-  if (first === undefined) return "";
-  if (points.length === 1) return `M ${first.x} ${first.y}`;
-
-  let path = `M ${first.x} ${first.y}`;
-  for (let index = 1; index < points.length; index += 1) {
-    const point = points[index];
-    const previous = points[index - 1];
-    const next = points[index + 1];
-    if (point === undefined || previous === undefined) continue;
-    if (next === undefined) {
-      path += ` L ${point.x} ${point.y}`;
-      continue;
-    }
-
-    const beforeDistance = Math.hypot(point.x - previous.x, point.y - previous.y);
-    const afterDistance = Math.hypot(next.x - point.x, next.y - point.y);
-    const cornerRadius = Math.min(radius, beforeDistance / 2, afterDistance / 2);
-    const before = {
-      x: point.x + ((previous.x - point.x) / beforeDistance) * cornerRadius,
-      y: point.y + ((previous.y - point.y) / beforeDistance) * cornerRadius,
-    };
-    const after = {
-      x: point.x + ((next.x - point.x) / afterDistance) * cornerRadius,
-      y: point.y + ((next.y - point.y) / afterDistance) * cornerRadius,
-    };
-    path += ` L ${before.x} ${before.y} Q ${point.x} ${point.y} ${after.x} ${after.y}`;
-  }
-  return path;
-};
 
 const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
   config: StructuredLayoutConfig<Node>,
@@ -176,7 +126,8 @@ const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
         branches,
       };
     }
-    const branchWidth = branches.reduce((width, branch) => width + branch.width, 0) +
+    const branchWidth =
+      branches.reduce((width, branch) => width + branch.width, 0) +
       branchGap * Math.max(0, branches.length - 1);
     const branchHeight = branches.reduce((height, branch) => Math.max(height, branch.height), 0);
     return {
@@ -200,11 +151,7 @@ const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
     const branchLabels: LayoutBranchLabel[] = [];
     const junctions: LayoutJunction[] = [];
 
-    const addConnection = (
-      id: string,
-      points: ReadonlyArray<Point>,
-      location?: FlowLocation,
-    ) => {
+    const addConnection = (id: string, points: ReadonlyArray<Point>, location?: FlowLocation) => {
       const locationId = location === undefined ? undefined : flowLocationId(location);
       connectors.push({
         id,
@@ -239,6 +186,10 @@ const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
         y: top,
         width: element.nodeSize.width,
         height: element.nodeSize.height,
+        depth: 0,
+        isContainer: false,
+        contentOrigin: { x: nodeX, y: top },
+        ports: [],
       });
       const nodeBottom = top + element.nodeSize.height;
       if (element.branches.length === 0) return { exit: { x: centerX, y: nodeBottom } };
@@ -332,7 +283,10 @@ const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
           const location = { flowId: flow.flow.id, index: 0 };
           addConnection(
             `flow:${flow.flow.id}:0`,
-            [{ x: centerX, y: top }, { x: centerX, y: nodeTop }],
+            [
+              { x: centerX, y: top },
+              { x: centerX, y: nodeTop },
+            ],
             location,
           );
         }
@@ -354,39 +308,52 @@ const createVerticalStructuredLayout = <Node extends ElementShape<Node>>(
       return { exit: previousExit ?? { x: centerX, y: endY } };
     };
 
-    layoutFlow(
-      measured,
-      contentOffsetX + contentWidth / 2,
-      marginY,
-      measured.height,
-      false,
-    );
+    layoutFlow(measured, contentOffsetX + contentWidth / 2, marginY, measured.height, false);
 
     const height = Math.max(measured.height + marginY * 2, config.minimumHeight ?? 620);
-    return { width, height, nodes, connectors, insertions, branchLabels, junctions };
+    return {
+      bounds: { x: 0, y: 0, width, height },
+      width,
+      height,
+      nodes,
+      edges: connectors,
+      annotations: [],
+      insertions,
+      branchLabels,
+      junctions,
+    };
   };
 };
 
 const transposePoint = ({ x, y }: Point): Point => ({ x: y, y: x });
 
-const transposeLayout = (
-  layout: StructuredWorkflowLayout,
-): StructuredWorkflowLayout => ({
+const transposeLayout = (layout: StructuredWorkflowLayout): StructuredWorkflowLayout => ({
+  bounds: {
+    x: layout.bounds.y,
+    y: layout.bounds.x,
+    width: layout.bounds.height,
+    height: layout.bounds.width,
+  },
   width: layout.height,
   height: layout.width,
   nodes: new Map(
-    [...layout.nodes].map(([id, node]) => [id, {
-      ...node,
-      x: node.y,
-      y: node.x,
-      width: node.height,
-      height: node.width,
-    }]),
+    [...layout.nodes].map(([id, node]) => [
+      id,
+      {
+        ...node,
+        x: node.y,
+        y: node.x,
+        width: node.height,
+        height: node.width,
+        contentOrigin: transposePoint(node.contentOrigin),
+      },
+    ]),
   ),
-  connectors: layout.connectors.map((connector) => ({
+  edges: layout.edges.map((connector) => ({
     ...connector,
     points: connector.points.map(transposePoint),
   })),
+  annotations: layout.annotations,
   insertions: layout.insertions.map((insertion) => ({
     ...insertion,
     x: insertion.y,
@@ -431,8 +398,7 @@ export const createStructuredLayout = <Node extends ElementShape<Node>>(
     ...(minimumHeight === undefined ? {} : { minimumWidth: minimumHeight }),
     ...(minimumWidth === undefined ? {} : { minimumHeight: minimumWidth }),
   });
-  return (document: WorkflowDocument<Node>) =>
-    transposeLayout(rotatedLayout(document));
+  return (document: WorkflowDocument<Node>) => transposeLayout(rotatedLayout(document));
 };
 
 export const FLOW_TARGET_PREFIX = "flow-target:";

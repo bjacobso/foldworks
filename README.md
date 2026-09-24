@@ -32,8 +32,13 @@ accessible application interfaces with Foldkit:
   documents, editing, validation, rendering, and rule reordering.
 - [`@foldworks/form-builder`](./packages/form-builder) — section-first form
   documents, immutable operations, registries, and drag-and-drop primitives.
+- [`@foldworks/diagram`](./packages/diagram) — compound directed-graph
+  documents with ports, notes, and cycles; layered and freeform layout
+  strategies; and a canvas interaction model for selection, dragging,
+  connecting, panning, and zoom.
 - [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
-  branch-aware operations, layout, and drag-and-drop primitives.
+  branch-aware operations, layout, and drag-and-drop primitives, built on the
+  `@foldworks/diagram` scene contract.
 - [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
   annotation authoring with AcroForm inspection, versioned JSON, custom data,
   zoom-aware editing, and interactive PDF export.
@@ -45,7 +50,9 @@ accessible application interfaces with Foldkit:
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
 suite. Its `/agent` reference application demonstrates streaming assistant
 text, tool calls and results, an interactive permission checkpoint, a model
-picker, and a prompt composer. The agent flow is a deterministic browser-only
+picker, and a prompt composer. Its `/statechart` editor builds a nested state
+machine with cycles, parallel regions, submachines, notes, and a simulator on
+`@foldworks/diagram`. The agent flow is a deterministic browser-only
 fixture and performs no provider calls or tool side effects.
 
 ## Development

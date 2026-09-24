@@ -1,7 +1,7 @@
 {
-  "name": "@foldworks/workflow",
-  "version": "0.1.0",
-  "description": "Structured workflow models, layout, registries, and drag-and-drop behavior for Foldkit.",
+  "name": "@foldworks/diagram",
+  "version": "0.0.0",
+  "description": "Compound directed-graph documents, layout strategies, scenes, and canvas interaction for Foldkit.",
   "license": "MIT",
   "author": "Ben Jacobson",
   "type": "module",
@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bjacobso/foldworks.git",
-    "directory": "packages/workflow"
+    "directory": "packages/diagram"
   },
   "homepage": "https://github.com/bjacobso/foldworks#readme",
   "bugs": {
@@ -22,10 +22,11 @@
   },
   "keywords": [
     "foldkit",
-    "workflow",
-    "automation",
-    "drag-and-drop",
-    "layout"
+    "diagram",
+    "graph",
+    "statechart",
+    "layout",
+    "canvas"
   ],
   "publishConfig": {
     "access": "public",
@@ -45,9 +46,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@foldkit/ui": "catalog:",
-    "@foldworks/diagram": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "foldkit": "catalog:"
   },
   "devDependencies": {
     "typescript": "catalog:",

@@ -24,17 +24,12 @@ describe("structured workflow example", () => {
       "node-end",
     ]);
     expect(findFlow(initialDocument, "flow:condition:then")?.label).toBe("Then");
-    expect(findFlow(initialDocument, "flow:switch:default")?.elements[0]?.id)
-      .toBe("node-action");
+    expect(findFlow(initialDocument, "flow:switch:default")?.elements[0]?.id).toBe("node-action");
   });
 
   it("identifies every node and flow carried by a branch owner", () => {
     const subtree = nodeSubtree(initialDocument, "node-condition");
-    expect([...(subtree?.nodeIds ?? [])]).toEqual([
-      "node-condition",
-      "node-switch",
-      "node-action",
-    ]);
+    expect([...(subtree?.nodeIds ?? [])]).toEqual(["node-condition", "node-switch", "node-action"]);
     expect([...(subtree?.flowIds ?? [])]).toEqual([
       "flow:condition:then",
       "flow:condition:else",
@@ -52,9 +47,7 @@ describe("structured workflow example", () => {
 
     expect(result?.node).toMatchObject({ id: "node-9", type: "approval" });
     expect(
-      result === undefined
-        ? []
-        : findFlow(result.document, "flow:condition:then")?.elements,
+      result === undefined ? [] : findFlow(result.document, "flow:condition:then")?.elements,
     ).toContainEqual(expect.objectContaining({ id: "node-9" }));
   });
 
@@ -64,10 +57,12 @@ describe("structured workflow example", () => {
       index: 0,
     });
 
-    expect(result === undefined ? [] : findFlow(result, "flow:condition:then")?.elements)
-      .toContainEqual(expect.objectContaining({ id: "node-action" }));
-    expect(result === undefined ? [] : findFlow(result, "flow:switch:default")?.elements)
-      .toHaveLength(0);
+    expect(
+      result === undefined ? [] : findFlow(result, "flow:condition:then")?.elements,
+    ).toContainEqual(expect.objectContaining({ id: "node-action" }));
+    expect(
+      result === undefined ? [] : findFlow(result, "flow:switch:default")?.elements,
+    ).toHaveLength(0);
   });
 
   it("moves a branching node with its subtree but never into itself", () => {
@@ -75,8 +70,7 @@ describe("structured workflow example", () => {
       flowId: "flow:condition:then",
       index: 0,
     });
-    expect(moved === undefined ? undefined : findFlow(moved, "flow:switch:default"))
-      .toBeDefined();
+    expect(moved === undefined ? undefined : findFlow(moved, "flow:switch:default")).toBeDefined();
 
     expect(
       moveNode(initialDocument, "node-switch", {
@@ -90,8 +84,10 @@ describe("structured workflow example", () => {
     expect(canMoveNode(initialDocument, "node-start")).toBe(false);
     expect(deleteNode(initialDocument, "node-end")).toBeUndefined();
     const deleted = deleteNode(initialDocument, "node-condition");
-    expect(deleted === undefined ? [] : allNodes(deleted).map((node) => node.id))
-      .toEqual(["node-start", "node-end"]);
+    expect(deleted === undefined ? [] : allNodes(deleted).map((node) => node.id)).toEqual([
+      "node-start",
+      "node-end",
+    ]);
   });
 
   it("builds a non-mutating drop preview", () => {
@@ -107,26 +103,20 @@ describe("structured workflow example", () => {
 
   it("lays out the reference workflow with branches, labels, and no overlaps", () => {
     const layout = layoutWorkflow(initialDocument);
-    expect(layout.branchLabels.map((label) => label.text)).toEqual([
-      "Then",
-      "Else",
-      "Default",
-    ]);
+    expect(layout.branchLabels.map((label) => label.text)).toEqual(["Then", "Else", "Default"]);
     expect(layout.insertions).toHaveLength(7);
-    expect(layout.connectors.some((connector) => connector.points.length > 2)).toBe(true);
+    expect(layout.edges.some((connector) => connector.points.length > 2)).toBe(true);
 
     const nodes = [...layout.nodes.values()];
     for (const [index, first] of nodes.entries()) {
       for (const second of nodes.slice(index + 1)) {
         const overlapWidth = Math.max(
           0,
-          Math.min(first.x + first.width, second.x + second.width) -
-            Math.max(first.x, second.x),
+          Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x),
         );
         const overlapHeight = Math.max(
           0,
-          Math.min(first.y + first.height, second.y + second.height) -
-            Math.max(first.y, second.y),
+          Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y),
         );
         expect(overlapWidth * overlapHeight).toBe(0);
       }
@@ -141,24 +131,18 @@ describe("structured workflow example", () => {
 
     expect(start?.x).toBeLessThan(condition?.x ?? 0);
     expect(condition?.x).toBeLessThan(end?.x ?? 0);
-    expect(layout.branchLabels.map((label) => label.text)).toEqual([
-      "Then",
-      "Else",
-      "Default",
-    ]);
+    expect(layout.branchLabels.map((label) => label.text)).toEqual(["Then", "Else", "Default"]);
 
     const nodes = [...layout.nodes.values()];
     for (const [index, first] of nodes.entries()) {
       for (const second of nodes.slice(index + 1)) {
         const overlapWidth = Math.max(
           0,
-          Math.min(first.x + first.width, second.x + second.width) -
-            Math.max(first.x, second.x),
+          Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x),
         );
         const overlapHeight = Math.max(
           0,
-          Math.min(first.y + first.height, second.y + second.height) -
-            Math.max(first.y, second.y),
+          Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y),
         );
         expect(overlapWidth * overlapHeight).toBe(0);
       }

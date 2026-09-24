@@ -14,6 +14,7 @@ const expectedPackages = [
   "@foldworks/data-grid",
   "@foldworks/query-builder",
   "@foldworks/form-builder",
+  "@foldworks/diagram",
   "@foldworks/workflow",
   "@foldworks/pdf-annotator",
   "@foldworks/history",
