@@ -1374,7 +1374,7 @@ describe.sequential("structured workflow builder", () => {
       ["Large", "14px", "36px"],
     ] as const;
 
-    for (const theme of ["Shadcn", "Blueprint", "Office", "Google", "Apple"]) {
+    for (const theme of ["Shadcn", "Blueprint", "Office", "Google", "Apple", "Polaris"]) {
       await page.getByLabel("Theme", { exact: true }).selectOption(theme);
       for (const appearance of ["Light", "Dark"]) {
         await page.getByLabel("Appearance", { exact: true }).selectOption(appearance);

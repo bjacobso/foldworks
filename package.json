@@ -36,6 +36,8 @@
     "typecheck": "pnpm run build:packages && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
     "typecheck:infra": "tsc --noEmit",
     "test:e2e": "pnpm run build:packages && pnpm --filter @foldworks/demo test:e2e",
+    "test:visual": "pnpm run build:packages && pnpm --filter @foldworks/demo test:visual",
+    "test:visual:update": "pnpm run build:packages && pnpm --filter @foldworks/demo test:visual:update",
     "version-packages": "changeset version"
   },
   "devDependencies": {

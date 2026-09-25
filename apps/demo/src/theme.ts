@@ -6,6 +6,7 @@ export const ThemeName = S.Literals([
   "Office",
   "Google",
   "Apple",
+  "Polaris",
 ]);
 export type ThemeName = typeof ThemeName.Type;
 
@@ -23,8 +24,12 @@ export const COLOR_THEME_STORAGE_KEY = "foldworks-demo-color-theme";
 export const SYSTEM_DARK_QUERY = "(prefers-color-scheme: dark)";
 
 const isThemeName = (value: string | null): value is ThemeName =>
-  value === "Shadcn" || value === "Blueprint" ||
-  value === "Office" || value === "Google" || value === "Apple";
+  value === "Shadcn" ||
+  value === "Blueprint" ||
+  value === "Office" ||
+  value === "Google" ||
+  value === "Apple" ||
+  value === "Polaris";
 
 const isThemePreference = (value: string | null): value is ThemePreference =>
   value === "System" || value === "Light" || value === "Dark";
@@ -50,8 +55,7 @@ export const applyTheme = (
   preference: ThemePreference,
   systemIsDark: boolean,
 ): void => {
-  const isDark = preference === "Dark" ||
-    (preference === "System" && systemIsDark);
+  const isDark = preference === "Dark" || (preference === "System" && systemIsDark);
   document.documentElement.dataset.theme = name.toLowerCase();
   document.documentElement.dataset.mode = isDark ? "dark" : "light";
   document.documentElement.classList.toggle("dark", isDark);

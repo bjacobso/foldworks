@@ -39,18 +39,9 @@ const requiredThemeTokens = [
 ] as const;
 
 describe("theme contract", () => {
-  for (const theme of [
-    "shadcn",
-    "blueprint",
-    "office",
-    "google",
-    "apple",
-  ] as const) {
+  for (const theme of ["shadcn", "blueprint", "office", "google", "apple", "polaris"] as const) {
     it(`${theme} defines every semantic token in light and dark mode`, async () => {
-      const css = await readFile(
-        resolve(import.meta.dirname, "themes", `${theme}.css`),
-        "utf8",
-      );
+      const css = await readFile(resolve(import.meta.dirname, "themes", `${theme}.css`), "utf8");
 
       for (const token of requiredThemeTokens) {
         const declarations = css.match(new RegExp(`--${token}:`, "g")) ?? [];
@@ -84,6 +75,18 @@ describe("theme contract", () => {
     expect(css).toContain("--sidebar: #fafafa");
     expect(css).toContain("--background: #09090b");
     expect(css).toContain("--primary: #fafafa");
+  });
+
+  it("maps the Polaris 2 admin palette and geometry", async () => {
+    const css = await readFile(resolve(import.meta.dirname, "themes", "polaris.css"), "utf8");
+
+    expect(css).toContain("--foreground: #101010");
+    expect(css).toContain("--primary: #101010");
+    expect(css).toContain("--ring: #5083f0");
+    expect(css).toContain("--radius-button: 999px");
+    expect(css).toContain("--radius-panel: 1.25rem");
+    expect(css).toContain("--background: #0a0a0a");
+    expect(css).toContain("--primary: #fcfcfc");
   });
 
   it("includes a low-specificity browser reset", async () => {

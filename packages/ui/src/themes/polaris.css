@@ -1,0 +1,110 @@
+/* Shopify Polaris 2: neutral admin surfaces, pill actions, and soft elevation. */
+[data-theme="polaris"] {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #101010;
+  --card: #ffffff;
+  --card-foreground: #101010;
+  --popover: #ffffff;
+  --popover-foreground: #101010;
+  --primary: #101010;
+  --primary-hover: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #101010;
+  --muted: #f7f7f7;
+  --muted-foreground: #4a4a4a;
+  --accent: #ebebeb;
+  --accent-foreground: #101010;
+  --destructive: #ce1f18;
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #ffe7e6;
+  --destructive-border: #f89996;
+  --border: #dddddd;
+  --input: #c0c0c0;
+  --ring: #5083f0;
+  --chart-1: #366fec;
+  --chart-2: #5ecb10;
+  --chart-3: #ff771c;
+  --chart-4: #7854f6;
+  --chart-5: #00b0de;
+  --sidebar: #f2f2f2;
+  --sidebar-foreground: #101010;
+  --sidebar-primary: #101010;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dddddd;
+  --sidebar-accent-foreground: #101010;
+  --sidebar-border: #dddddd;
+  --sidebar-ring: #5083f0;
+
+  --foldworks-ui-success: #428e0b;
+  --foldworks-ui-success-surface: #e8fcd9;
+  --foldworks-ui-warning: #e55c00;
+  --foldworks-ui-warning-surface: #ffeddb;
+  --foldworks-ui-info: #008eb2;
+  --foldworks-ui-info-surface: #d2f6fe;
+
+  --font-sans: Inter, "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius: 0.625rem;
+  --radius-button: 999px;
+  --radius-button-sm: 999px;
+  --radius-badge: 0.375rem;
+  --radius-panel: 1.25rem;
+  --button-outline-surface: #f2f2f2;
+  --button-outline-shadow: none;
+  --shadow-card: 0 0 2px rgb(0 0 0 / 24%), 0 2px 12px rgb(0 0 0 / 5%), 0 4px 48px rgb(0 0 0 / 5%);
+  --shadow-panel: 0 0 2px rgb(0 0 0 / 24%), 0 2px 12px rgb(0 0 0 / 5%), 0 4px 48px rgb(0 0 0 / 5%);
+  --shadow-float: 0 2px 3px rgb(0 0 0 / 6%), 0 6px 8px rgb(0 0 0 / 6%), 0 12px 16px rgb(0 0 0 / 6%);
+}
+
+[data-theme="polaris"][data-mode="dark"],
+[data-theme="polaris"].dark {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #eeeeee;
+  --card: #1a1a1a;
+  --card-foreground: #eeeeee;
+  --popover: #282828;
+  --popover-foreground: #eeeeee;
+  --primary: #fcfcfc;
+  --primary-hover: #eeeeee;
+  --primary-foreground: #121212;
+  --secondary: #282828;
+  --secondary-foreground: #eeeeee;
+  --muted: #222222;
+  --muted-foreground: #aaaaaa;
+  --accent: #373737;
+  --accent-foreground: #eeeeee;
+  --destructive: #f78086;
+  --destructive-foreground: #121212;
+  --destructive-surface: #5f0716;
+  --destructive-border: #c70a24;
+  --border: #ffffff17;
+  --input: #ffffff2e;
+  --ring: #97adff;
+  --chart-1: #4188ff;
+  --chart-2: #18bf79;
+  --chart-3: #e5a500;
+  --chart-4: #aa95ff;
+  --chart-5: #51c0ff;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #eeeeee;
+  --sidebar-primary: #fcfcfc;
+  --sidebar-primary-foreground: #121212;
+  --sidebar-accent: #373737;
+  --sidebar-accent-foreground: #eeeeee;
+  --sidebar-border: #ffffff17;
+  --sidebar-ring: #97adff;
+
+  --foldworks-ui-success: #2ced83;
+  --foldworks-ui-success-surface: #073630;
+  --foldworks-ui-warning: #ffc879;
+  --foldworks-ui-warning-surface: #412d00;
+  --foldworks-ui-info: #a8d8ff;
+  --foldworks-ui-info-surface: #003a5a;
+
+  --button-outline-surface: #2f2f2f;
+  --shadow-card: 0 0 2px rgb(0 0 0 / 58%), 0 2px 12px rgb(0 0 0 / 26%), 0 4px 48px rgb(0 0 0 / 22%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 2px 12px rgb(0 0 0 / 28%), 0 4px 48px rgb(0 0 0 / 24%);
+  --shadow-float: 0 4px 8px rgb(0 0 0 / 34%), 0 12px 24px rgb(0 0 0 / 38%);
+}

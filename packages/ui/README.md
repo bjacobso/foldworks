@@ -55,6 +55,7 @@ Import the base contract and the themes your application supports:
 @import "@foldworks/ui/themes/office.css";
 @import "@foldworks/ui/themes/google.css";
 @import "@foldworks/ui/themes/apple.css";
+@import "@foldworks/ui/themes/polaris.css";
 ```
 
 For a Shadcn-only application, `@foldworks/ui/theme.css` is a convenient
@@ -76,10 +77,11 @@ white card surfaces to distinguish the workspace from its content.
 Set `data-theme` and the resolved `data-mode` on a root ancestor:
 
 ```html
-<html data-theme="shadcn" data-mode="dark" class="dark">
+<html data-theme="shadcn" data-mode="dark" class="dark"></html>
 ```
 
-`data-theme` accepts `shadcn`, `blueprint`, `office`, `google`, or `apple`.
+`data-theme` accepts `shadcn`, `blueprint`, `office`, `google`, `apple`, or
+`polaris`.
 `data-mode` accepts `light` or `dark`; the optional `.dark` class remains
 compatible with shadcn theme providers. CSS variables cascade, so the same
 attributes can theme a nested subtree. An application can define its own theme
@@ -106,22 +108,23 @@ are available through the exported StyleX `colors` constants.
 In the demo, select a preset in the **Theme** menu. Shadcn is the neutral
 default with crisp monochrome surfaces; Blueprint is dense and
 enterprise-oriented; Office follows Fluent-like geometry; Google uses tonal
-Material-like surfaces; and Apple uses layered system grays and generous
-corners. Compare the UI kit, Workers workbench, and workflow builder using the
-same controls.
+Material-like surfaces; Apple uses layered system grays and generous corners;
+and Polaris follows Shopify's Polaris 2 admin palette, pill actions, and soft
+elevation. Compare the UI kit, Workers workbench, and workflow builder using
+the same controls.
 
 The shared recipes expose shape and elevation variables so presets can alter
 more than color. Their base values preserve component behavior:
 
-| Token | Controls |
-| --- | --- |
-| `--font-sans` | Theme typography |
-| `--radius-button` / `--radius-button-sm` | Button geometry |
-| `--radius-badge` | Badge geometry |
-| `--radius-panel` | Panel geometry |
-| `--badge-border` | Badge outline treatment |
-| `--button-outline-surface` / `--button-outline-shadow` | Outlined actions |
-| `--shadow-card` / `--shadow-panel` / `--shadow-float` | Elevation hierarchy |
+| Token                                                  | Controls                |
+| ------------------------------------------------------ | ----------------------- |
+| `--font-sans`                                          | Theme typography        |
+| `--radius-button` / `--radius-button-sm`               | Button geometry         |
+| `--radius-badge`                                       | Badge geometry          |
+| `--radius-panel`                                       | Panel geometry          |
+| `--badge-border`                                       | Badge outline treatment |
+| `--button-outline-surface` / `--button-outline-shadow` | Outlined actions        |
+| `--shadow-card` / `--shadow-panel` / `--shadow-float`  | Elevation hierarchy     |
 
 ## Usage
 
@@ -200,11 +203,14 @@ Responsive layout uses mobile-first values. A scalar applies at every width;
 an object changes the value at named breakpoints:
 
 ```ts
-Layout.Grid.view({
-  columns: { base: 1, md: 2, lg: 4 },
-  gap: { base: "sm", lg: "lg" },
-  children: cards,
-}, h)
+Layout.Grid.view(
+  {
+    columns: { base: 1, md: 2, lg: 4 },
+    gap: { base: "sm", lg: "lg" },
+    children: cards,
+  },
+  h,
+);
 ```
 
 For component-local responsiveness, establish containment with
@@ -256,18 +262,21 @@ Fieldset, Icon, Layout, NumberField, Panel, SegmentedControl, Select, Switch,
 Tag, Toolbar, and the stateful Dialog, Popover, Tabs, and Tooltip adapters.
 
 ```ts
-Card.view({
-  title: "Review",
-  children: [review],
-  sx: styles.reviewCard,
-  slotProps: {
-    header: { sx: styles.compactHeader },
-    content: {
-      attributes: [h.DataAttribute("review-region", "content")],
-      sx: styles.reviewContent,
+Card.view(
+  {
+    title: "Review",
+    children: [review],
+    sx: styles.reviewCard,
+    slotProps: {
+      header: { sx: styles.compactHeader },
+      content: {
+        attributes: [h.DataAttribute("review-region", "content")],
+        sx: styles.reviewContent,
+      },
     },
   },
-}, h);
+  h,
+);
 ```
 
 Slot attributes augment the attributes required by Foldkit's behavior and

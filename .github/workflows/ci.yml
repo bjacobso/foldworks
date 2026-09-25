@@ -47,3 +47,19 @@ jobs:
 
       - name: Run release checks
         run: pnpm release:check
+
+      - name: Install visual-test browser
+        run: pnpm --filter @foldworks/demo exec playwright install --with-deps chromium
+
+      - name: Compare component screenshots
+        run: pnpm --filter @foldworks/demo test:visual
+
+      - name: Upload visual-test report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-test-report
+          path: |
+            playwright-report/visual
+            test-results/visual
+          if-no-files-found: ignore
