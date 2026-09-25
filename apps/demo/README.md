@@ -15,7 +15,7 @@ drag state, column widths, and in-progress document edits remain in the
 application model.
 
 The toolbar separates theme from appearance. Shadcn, Palantir Blueprint,
-Microsoft Office, Google, and Apple presets can each use
+Microsoft Office, Google, Apple, and Shopify Polaris 2 presets can each use
 System, Light, or Dark appearance. The expanded presets exercise palette,
 typography, corner shape, badge treatment, and elevation. Both choices are
 persisted locally and applied to the document root before the stylesheet loads
@@ -117,6 +117,13 @@ pnpm dev
 Use `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify the example. Run
 `pnpm test:e2e` for the Vitest + Playwright interaction suite and screenshots in
 `apps/demo/test-results/demo`.
+
+The isolated component visual suite uses Playwright Test to compare every
+catalog fixture in Polaris light and dark mode against reviewed PNG baselines.
+Run `pnpm test:visual` from the repository root to validate them. Intentional
+visual changes must be reviewed and recorded with `pnpm test:visual:update`.
+Playwright writes expected, actual, and diff images to `test-results/visual` on
+failure.
 
 The browser suite discovers the package catalog rendered on the homepage and
 captures every linked showcase as `site-docs-<package>.png`. This provides a

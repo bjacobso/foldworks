@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:visual": "playwright test --config playwright.visual.config.ts",
+    "test:visual:update": "playwright test --config playwright.visual.config.ts --update-snapshots"
   },
   "dependencies": {
     "@foldkit/markdown": "catalog:",
@@ -35,6 +37,7 @@
     "@foldworks/code-editor": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@foldkit/devtools": "catalog:",
     "@foldkit/vite-plugin": "catalog:",
     "@stylexjs/unplugin": "catalog:",

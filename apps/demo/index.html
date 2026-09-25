@@ -19,13 +19,16 @@
           if (stored === "Light" || stored === "Dark" || stored === "System") {
             preference = stored;
           }
-          if (["Shadcn", "Blueprint", "Office", "Google", "Apple"].includes(storedColorTheme)) {
+          if (
+            ["Shadcn", "Blueprint", "Office", "Google", "Apple", "Polaris"].includes(
+              storedColorTheme,
+            )
+          ) {
             colorTheme = storedColorTheme;
           }
         } catch {}
         const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const isDark = preference === "Dark" ||
-          (preference === "System" && systemIsDark);
+        const isDark = preference === "Dark" || (preference === "System" && systemIsDark);
         document.documentElement.dataset.theme = colorTheme.toLowerCase();
         document.documentElement.dataset.mode = isDark ? "dark" : "light";
         document.documentElement.classList.toggle("dark", isDark);
