@@ -45,15 +45,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@foldkit/ui": "catalog:",
     "@lucide/icons": "catalog:",
-    "@foldworks/ui": "workspace:*",
-    "@stylexjs/stylex": "catalog:",
-    "effect": "catalog:",
-    "foldkit": "catalog:"
+    "@foldworks/ui": "workspace:*"
   },
   "devDependencies": {
+    "@foldkit/ui": "catalog:",
+    "@stylexjs/stylex": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "catalog:peers",
+    "@stylexjs/stylex": "catalog:peers",
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers"
   }
 }

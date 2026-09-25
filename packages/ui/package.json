@@ -64,16 +64,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@foldkit/ui": "catalog:",
     "@foldworks/keyboard": "workspace:*",
-    "@lucide/icons": "catalog:",
-    "@stylexjs/stylex": "catalog:",
-    "effect": "catalog:",
-    "foldkit": "catalog:"
+    "@lucide/icons": "catalog:"
   },
   "devDependencies": {
+    "@foldkit/ui": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "@types/node": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "catalog:peers",
+    "@stylexjs/stylex": "catalog:peers",
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers"
   }
 }

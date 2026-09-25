@@ -45,12 +45,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@foldkit/ui": "catalog:",
-    "@foldworks/diagram": "workspace:*",
-    "effect": "catalog:"
+    "@foldworks/diagram": "workspace:*"
   },
   "devDependencies": {
+    "@foldkit/ui": "catalog:",
+    "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "catalog:peers",
+    "effect": "catalog:peers"
   }
 }

@@ -44,12 +44,14 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@foldkit/ui": "catalog:",
-    "foldkit": "catalog:"
-  },
   "devDependencies": {
+    "@foldkit/ui": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "catalog:peers",
+    "foldkit": "catalog:peers"
   }
 }

@@ -1,7 +1,7 @@
 # @foldworks/keyboard
 
 Typed command definitions shared by UI and feature packages without depending on
-StyleX or a UI engine. Effect is its only runtime dependency. The host owns execution: `events(bindings, platform)` emits
+StyleX or a UI engine. Effect is its only runtime peer. The host owns execution: `events(bindings, platform)` emits
 command IDs through a Foldkit subscription (or mount stream). Cancellation removes
 the sole keydown listener. Keep one registry per application and derive bindings
 from host state. Bindings can target stable DOM scope IDs; the nearest ancestor

@@ -204,6 +204,7 @@ importers:
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+    devDependencies:
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -213,7 +214,6 @@ importers:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -223,16 +223,16 @@ importers:
 
   packages/code-editor:
     dependencies:
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-      yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -260,13 +260,13 @@ importers:
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -282,10 +282,10 @@ importers:
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+    devDependencies:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -294,14 +294,13 @@ importers:
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/diagram:
-    dependencies:
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -310,14 +309,13 @@ importers:
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/diff-viewer:
-    dependencies:
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -327,12 +325,6 @@ importers:
 
   packages/editor:
     dependencies:
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.112
-      foldkit:
-        specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
       remark-directive:
         specifier: ^4.0.0
         version: 4.0.0
@@ -352,6 +344,12 @@ importers:
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -360,14 +358,13 @@ importers:
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/form-builder:
-    dependencies:
+    devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -383,13 +380,13 @@ importers:
       '@modelcontextprotocol/ext-apps':
         specifier: 'catalog:'
         version: 2.0.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/core@2.0.0)(react@19.2.8)(zod@4.6.5)
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -398,11 +395,10 @@ importers:
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/history:
-    dependencies:
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -411,14 +407,13 @@ importers:
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/keyboard:
-    dependencies:
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.112
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -428,21 +423,12 @@ importers:
 
   packages/pdf-annotator:
     dependencies:
-      '@foldkit/ui':
-        specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@foldworks/ui':
         specifier: workspace:*
         version: link:../ui
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.112
-      foldkit:
-        specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
       pdf-lib:
         specifier: 'catalog:'
         version: 1.17.1
@@ -450,6 +436,15 @@ importers:
         specifier: 'catalog:'
         version: 6.3.289
     devDependencies:
+      '@foldkit/ui':
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -459,15 +454,16 @@ importers:
 
   packages/query-builder:
     dependencies:
-      '@foldkit/ui':
-        specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@foldworks/ui':
         specifier: workspace:*
         version: link:../ui
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+    devDependencies:
+      '@foldkit/ui':
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -477,7 +473,6 @@ importers:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -493,6 +488,7 @@ importers:
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+    devDependencies:
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -502,7 +498,6 @@ importers:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -512,28 +507,28 @@ importers:
 
   packages/ui:
     dependencies:
-      '@foldkit/ui':
-        specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@foldworks/keyboard':
         specifier: workspace:*
         version: link:../keyboard
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+    devDependencies:
+      '@foldkit/ui':
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.13.3
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -543,16 +538,16 @@ importers:
 
   packages/workflow:
     dependencies:
-      '@foldkit/ui':
-        specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       '@foldworks/diagram':
         specifier: workspace:*
         version: link:../diagram
+    devDependencies:
+      '@foldkit/ui':
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

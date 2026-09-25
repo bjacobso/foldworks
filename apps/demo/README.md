@@ -122,6 +122,9 @@ The isolated component visual suite uses Playwright Test to compare every
 catalog fixture in Polaris light and dark mode against reviewed PNG baselines.
 Run `pnpm test:visual` from the repository root to validate them. Intentional
 visual changes must be reviewed and recorded with `pnpm test:visual:update`.
+Generate approved baselines on Ubuntu 24.04, the CI runner used for screenshot
+comparison. System font fallbacks can render differently on other operating
+systems, so local screenshot results may differ even when the UI is unchanged.
 Playwright writes expected, actual, and diff images to `test-results/visual` on
 failure.
 

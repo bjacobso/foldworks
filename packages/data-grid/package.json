@@ -49,12 +49,16 @@
   },
   "dependencies": {
     "@lucide/icons": "catalog:",
-    "@foldworks/ui": "workspace:*",
-    "effect": "catalog:",
-    "foldkit": "catalog:"
+    "@foldworks/ui": "workspace:*"
   },
   "devDependencies": {
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers"
   }
 }
