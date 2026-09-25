@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/editor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Native Foldkit rich-text editing, Markdown codecs, and extensible document blocks.",
   "license": "MIT",
   "author": "Ben Jacobson",
