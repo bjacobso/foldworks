@@ -58,6 +58,6 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "foldkit": "^0.156.0"
+    "foldkit": "catalog:peers"
   }
 }

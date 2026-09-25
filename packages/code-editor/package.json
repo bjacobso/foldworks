@@ -55,7 +55,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^4.0.0-rc.112",
-    "foldkit": "^0.156.0"
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers"
   }
 }
