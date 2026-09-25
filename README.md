@@ -55,6 +55,17 @@ machine with cycles, parallel regions, submachines, notes, and a simulator on
 `@foldworks/diagram`. The agent flow is a deterministic browser-only
 fixture and performs no provider calls or tool side effects.
 
+## Dependency compatibility
+
+Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
+when they use them. Applications can supply compatible versions of these shared
+runtimes; each package's peer ranges state what it supports. The workspace
+catalog and lockfile keep exact versions for builds and tests. Currently,
+`foldkit@0.156.0` and `@foldkit/ui@0.156.0` themselves require Effect
+`4.0.0-rc.112` exactly, so applications using those releases must use that
+Effect version. Applications consuming StyleX components must also configure
+the StyleX transform; see the [`@foldworks/ui` setup](./packages/ui/README.md#setup).
+
 ## Development
 
 This repository requires Node.js 24.13 or newer and pnpm 10.20 or newer.

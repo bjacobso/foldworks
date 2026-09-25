@@ -48,16 +48,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@foldkit/ui": "catalog:",
     "@foldworks/ui": "workspace:*",
     "@lucide/icons": "catalog:",
-    "effect": "catalog:",
-    "foldkit": "catalog:",
     "pdf-lib": "catalog:",
     "pdfjs-dist": "catalog:"
   },
   "devDependencies": {
+    "@foldkit/ui": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "^0.156.0",
+    "effect": "^4.0.0-rc.112",
+    "foldkit": "^0.156.0"
   }
 }

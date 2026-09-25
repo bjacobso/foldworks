@@ -46,13 +46,18 @@
   },
   "dependencies": {
     "@foldworks/ui": "workspace:*",
-    "@lucide/icons": "catalog:",
-    "@stylexjs/stylex": "catalog:",
-    "effect": "catalog:",
-    "foldkit": "catalog:"
+    "@lucide/icons": "catalog:"
   },
   "devDependencies": {
+    "@stylexjs/stylex": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@stylexjs/stylex": "^0.19.0",
+    "effect": "^4.0.0-rc.112",
+    "foldkit": "^0.156.0"
   }
 }

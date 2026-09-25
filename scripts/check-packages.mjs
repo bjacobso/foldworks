@@ -5,6 +5,12 @@ import { join, resolve } from "node:path";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const packagesRoot = join(repositoryRoot, "packages");
+const sharedRuntimeVersions = {
+  "@foldkit/ui": "0.156.0",
+  "@stylexjs/stylex": "0.19.0",
+  effect: "4.0.0-rc.112",
+  foldkit: "0.156.0",
+};
 
 const run = (command, args, options = {}) =>
   new Promise((resolveRun, rejectRun) => {
@@ -120,6 +126,17 @@ try {
       { capture: true },
     );
     const packedManifest = JSON.parse(packedManifestJson);
+    for (const name of Object.keys(sharedRuntimeVersions)) {
+      if (name in (packedManifest.dependencies ?? {})) {
+        throw new Error(`${manifest.name} must declare ${name} as a peer, not a dependency.`);
+      }
+      if (
+        name in (packedManifest.peerDependencies ?? {}) &&
+        !(name in (packedManifest.devDependencies ?? {}))
+      ) {
+        throw new Error(`${manifest.name} needs ${name} as a dev dependency to build against.`);
+      }
+    }
     const packedDependencySpecs = Object.values({
       ...packedManifest.dependencies,
       ...packedManifest.optionalDependencies,
@@ -147,9 +164,10 @@ try {
         private: true,
         type: "module",
         scripts: { build: "vite build", typecheck: "tsc --noEmit" },
-        dependencies: Object.fromEntries(
-          [...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
-        ),
+        dependencies: Object.fromEntries([
+          ...Object.entries(sharedRuntimeVersions),
+          ...[...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
+        ]),
         devDependencies: {
           "@stylexjs/unplugin": "0.19.0",
           typescript: "6.0.3",

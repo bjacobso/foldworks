@@ -37,8 +37,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "catalog:",
-    "foldkit": "catalog:",
     "unified": "^11.0.5",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
@@ -47,7 +45,13 @@
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0-rc.112",
+    "foldkit": "^0.156.0"
   }
 }

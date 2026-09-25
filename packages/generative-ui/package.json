@@ -66,12 +66,16 @@
   },
   "dependencies": {
     "@foldworks/ui": "workspace:*",
-    "@modelcontextprotocol/ext-apps": "catalog:",
-    "effect": "catalog:",
-    "foldkit": "catalog:"
+    "@modelcontextprotocol/ext-apps": "catalog:"
   },
   "devDependencies": {
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0-rc.112",
+    "foldkit": "^0.156.0"
   }
 }

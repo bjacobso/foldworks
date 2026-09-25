@@ -46,12 +46,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "catalog:",
-    "foldkit": "catalog:",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "effect": "catalog:",
+    "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0-rc.112",
+    "foldkit": "^0.156.0"
   }
 }
