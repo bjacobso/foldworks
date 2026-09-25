@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/generative-ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Schema-first generative UI contracts and a safe Foldkit renderer.",
   "license": "MIT",
   "author": "Ben Jacobson",

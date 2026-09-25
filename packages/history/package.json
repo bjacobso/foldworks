@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/history",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Immutable undo and redo history for application-owned document models.",
   "license": "MIT",
   "author": "Ben Jacobson",

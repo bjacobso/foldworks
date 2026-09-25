@@ -1,6 +1,15 @@
-# @foldworks/query-builder
+# @foldworks/generative-ui
 
-## 0.1.1
+## 0.1.0
+
+### Minor Changes
+
+- 5b66e6d: Add a schema-first generative UI contract with a catalog-constrained Foldkit
+  renderer, Effect AI structured generation, strict graph and resource
+  validation, inert host-owned action intents, and an Effect MCP Apps tool
+  bridge. Include a strict iframe client bridge, an Effect MCP App resource
+  helper, and a self-contained Foldkit iframe bundle demonstrated on the
+  homepage.
 
 ### Patch Changes
 
@@ -20,14 +29,3 @@
 - Updated dependencies [7c9ef65]
 - Updated dependencies [1a632ef]
   - @foldworks/ui@0.2.0
-
-## 0.1.0
-
-### Minor Changes
-
-- Publish the initial Foldworks package suite with controlled Foldkit behavior, StyleX styling, themeable UI components, and application primitives for data grids, forms, queries, workflows, navigation, document history, and PDF annotation.
-
-### Patch Changes
-
-- Updated dependencies
-  - @foldworks/ui@0.1.0

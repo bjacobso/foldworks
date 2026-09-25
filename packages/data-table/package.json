@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/data-table",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A controlled, accessible resource table primitive for Foldkit applications.",
   "license": "MIT",
   "author": "Ben Jacobson",
