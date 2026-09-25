@@ -403,6 +403,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
               { value: "Office", label: "Microsoft Office" },
               { value: "Google", label: "Google" },
               { value: "Apple", label: "Apple" },
+              { value: "Polaris", label: "Shopify Polaris 2" },
             ],
           },
           h,

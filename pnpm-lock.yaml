@@ -24,6 +24,9 @@ catalogs:
     '@modelcontextprotocol/ext-apps':
       specifier: 2.0.0
       version: 2.0.0
+    '@playwright/test':
+      specifier: 1.62.1
+      version: 1.62.1
     '@stylexjs/stylex':
       specifier: 0.19.0
       version: 0.19.0
@@ -171,6 +174,9 @@ importers:
       '@foldkit/vite-plugin':
         specifier: 'catalog:'
         version: 0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.62.1
       '@stylexjs/unplugin':
         specifier: 'catalog:'
         version: 0.19.0(unplugin@2.3.11)
@@ -2085,6 +2091,11 @@ packages:
 
   '@pdf-lib/upng@1.0.1':
     resolution: {integrity: sha512-dQK2FUMQtowVP00mtIksrlZhdFXQZPC+taih1q4CvPZ5vqdxR/LKBaFg0oAfzd1GlHZXXSPdQfzQnt+ViGvEIQ==}
+
+  '@playwright/test@1.62.1':
+    resolution: {integrity: sha512-DTcUc8qii+cpHvtOwggMtBRMjKZHXYWdw8syRYu2vtzuq4Wxphqq4NfCs5Zt44L6mA8rfDfj+PHnxFc/FeK6mQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@pnpm/deps.graph-sequencer@1100.0.1':
     resolution: {integrity: sha512-pOr5+q1fLYKwFN3LAJuGZEnfXDcQ73zqgDHMtGy+K+uIoUqyY+6MeDCWFwfu+4EFuq76I5EPFofoNAI+Bmmq4A==}
@@ -5621,6 +5632,10 @@ snapshots:
   '@pdf-lib/upng@1.0.1':
     dependencies:
       pako: 1.0.11
+
+  '@playwright/test@1.62.1':
+    dependencies:
+      playwright: 1.62.1
 
   '@pnpm/deps.graph-sequencer@1100.0.1': {}
 

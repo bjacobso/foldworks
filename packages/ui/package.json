@@ -53,7 +53,8 @@
     "./themes/blueprint.css": "./dist/themes/blueprint.css",
     "./themes/office.css": "./dist/themes/office.css",
     "./themes/google.css": "./dist/themes/google.css",
-    "./themes/apple.css": "./dist/themes/apple.css"
+    "./themes/apple.css": "./dist/themes/apple.css",
+    "./themes/polaris.css": "./dist/themes/polaris.css"
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",
