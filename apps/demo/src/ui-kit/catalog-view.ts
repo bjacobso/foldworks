@@ -4,10 +4,11 @@ import {
   Accordion,
   Alert,
   AlertDialog,
+  AppHeader,
   AspectRatio,
   Attachment,
-  Badge,
   Avatar,
+  Badge,
   Breadcrumb,
   Bubble,
   Button,
@@ -54,6 +55,7 @@ import {
   Sheet,
   Sidebar,
   Skeleton,
+  SplitView,
   Slider,
   Sonner,
   Spinner,
@@ -507,6 +509,16 @@ const dataDisplay = (model: Model, h: HtmlBuilder<Message>): Html =>
         },
         h,
       ),
+      Item.view(
+        {
+          title: "Review report activity",
+          description: "Open the latest activity",
+          trailing: ["3 new"],
+          onClick: action("Review report activity"),
+          isSelected: true,
+        },
+        h,
+      ),
       AspectRatio.view(
         {
           ratio: 3 / 1,
@@ -518,10 +530,24 @@ const dataDisplay = (model: Model, h: HtmlBuilder<Message>): Html =>
       Table.view(
         {
           caption: "Recent invoices",
-          columns: ["Invoice", "Status", "Amount"],
+          rowHeaders: true,
+          columns: ["Invoice", "Status", { label: "Amount", align: "end" }],
           rows: [
-            ["INV-024", "Paid", "$320"],
-            ["INV-025", "Pending", "$180"],
+            {
+              key: "INV-024",
+              cells: ["INV-024", "Paid", "$320"],
+              onClick: action("Open invoice INV-024"),
+              ariaLabel: "Open invoice INV-024",
+              isSelected: true,
+              tone: "success",
+            },
+            {
+              key: "INV-025",
+              cells: ["INV-025", "Pending", "$180"],
+              onClick: action("Open invoice INV-025"),
+              ariaLabel: "Open invoice INV-025",
+              tone: "warning",
+            },
           ],
         },
         h,
@@ -793,6 +819,59 @@ const disclosureAndLayout = (model: Model, h: HtmlBuilder<Message>): Html =>
   section(
     "Disclosure and layout",
     [
+      Layout.Container.view(
+        {
+          query: true,
+          size: "full",
+          padding: "none",
+          children: [
+            AppHeader.view(
+              {
+                title: "Compliance library",
+                breadcrumb: {
+                  items: [{ label: "Forms", onClick: action("Forms breadcrumb") }],
+                  current: "I-9",
+                },
+                status: [Badge.view({ label: "Staging", tone: "warning" }, h)],
+                actions: [
+                  Button.view(
+                    { label: "Help", size: "sm", variant: "ghost", onClick: action("Help") },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+            SplitView.view(
+              {
+                responsiveTo: "container",
+                collapseBelow: "sm",
+                gap: "sm",
+                ariaLabel: "Form and document",
+                panes: [
+                  {
+                    key: "fields",
+                    label: "Fields",
+                    width: "minmax(12rem, 1fr)",
+                    children: [h.div([h.Class(className(styles.catalogTile))], ["Field list"])],
+                  },
+                  {
+                    key: "preview",
+                    label: "PDF preview",
+                    width: "minmax(12rem, 2fr)",
+                    sticky: true,
+                    children: [
+                      h.div([h.Class(className(styles.catalogTile))], ["Document preview"]),
+                    ],
+                  },
+                ],
+              },
+              h,
+            ),
+          ],
+        },
+        h,
+      ),
       Accordion.view(
         {
           items: [
@@ -872,6 +951,7 @@ const disclosureAndLayout = (model: Model, h: HtmlBuilder<Message>): Html =>
       ),
     ],
     h,
+    true,
   );
 
 const overlayDialog = (
@@ -999,6 +1079,16 @@ const overlaysAndMenus = (model: Model, h: HtmlBuilder<Message>): Html => {
               label: "Helpful context",
               isOpen: model.openComponent === "Tooltip",
               onOpenChange: (isOpen) => toggleComponent("Tooltip", isOpen),
+            },
+            h,
+          ),
+          Tooltip.view(
+            {
+              mode: "stateless",
+              id: "catalog-stateless-tooltip",
+              trigger: ["CSS tooltip"],
+              label: "Shown on hover or focus without model state",
+              placement: "bottom",
             },
             h,
           ),
