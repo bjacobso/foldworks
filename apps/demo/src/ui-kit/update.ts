@@ -6,7 +6,13 @@ import { evo } from "foldkit/struct";
 
 import { Message } from "./message";
 import type { Model } from "./model";
-import { AccountTabs, ActionMenu, DepartmentCombobox, DepartmentSelect, ToolCombobox } from "./components";
+import {
+  AccountTabs,
+  ActionMenu,
+  DepartmentCombobox,
+  DepartmentSelect,
+  ToolCombobox,
+} from "./components";
 
 const foldTabs = Update.foldChild({
   update: AccountTabs.update,
@@ -14,7 +20,11 @@ const foldTabs = Update.foldChild({
   write: (model, tabs) => ({ ...model, tabs }),
   toParentMessage: (message) => Message.GotTabsMessage({ message }),
   foldOutMessage: (outMessage) => (model: Model) => ({
-    model: { ...model, selectedView: outMessage.value, announcement: `${outMessage.value} view selected.` },
+    model: {
+      ...model,
+      selectedView: outMessage.value,
+      announcement: `${outMessage.value} view selected.`,
+    },
   }),
 });
 
@@ -24,7 +34,10 @@ const foldDialog = Update.foldChild({
   write: (model, dialog) => ({ ...model, dialog }),
   toParentMessage: (message) => Message.GotDialogMessage({ message }),
   foldOutMessage: (outMessage: Stateful.Dialog.OutMessage) => (model: Model) => ({
-    model: { ...model, announcement: `Dialog ${outMessage._tag === "Opened" ? "opened" : "closed"}.` },
+    model: {
+      ...model,
+      announcement: `Dialog ${outMessage._tag === "Opened" ? "opened" : "closed"}.`,
+    },
   }),
 });
 
@@ -34,7 +47,11 @@ const foldSelect = Update.foldChild({
   write: (model, departmentSelect) => ({ ...model, departmentSelect }),
   toParentMessage: (message) => Message.GotSelectMessage({ message }),
   foldOutMessage: (outMessage) => (model: Model) => ({
-    model: { ...model, department: outMessage.value, announcement: `${outMessage.value} department selected.` },
+    model: {
+      ...model,
+      department: outMessage.value,
+      announcement: `${outMessage.value} department selected.`,
+    },
   }),
 });
 
@@ -44,9 +61,10 @@ const foldCommand = Update.foldChild({
   write: (model, command) => ({ ...model, command }),
   toParentMessage: (message) => Message.GotCommandMessage({ message }),
   foldOutMessage: (outMessage: Stateful.Command.OutMessage) => (model: Model) => ({
-    model: outMessage._tag === "Selected"
-      ? { ...model, announcement: `${outMessage.value} command selected.` }
-      : model,
+    model:
+      outMessage._tag === "Selected"
+        ? { ...model, announcement: `${outMessage.value} command selected.` }
+        : model,
   }),
 });
 
@@ -66,7 +84,10 @@ const foldPopover = Update.foldChild({
   write: (model, popover) => ({ ...model, popover }),
   toParentMessage: (message) => Message.GotPopoverMessage({ message }),
   foldOutMessage: (outMessage: Stateful.Popover.OutMessage) => (model: Model) => ({
-    model: { ...model, announcement: `Stateful popover ${outMessage._tag === "Opened" ? "opened" : "closed"}.` },
+    model: {
+      ...model,
+      announcement: `Stateful popover ${outMessage._tag === "Opened" ? "opened" : "closed"}.`,
+    },
   }),
 });
 
@@ -76,7 +97,10 @@ const foldTooltip = Update.foldChild({
   write: (model, tooltip) => ({ ...model, tooltip }),
   toParentMessage: (message) => Message.GotTooltipMessage({ message }),
   foldOutMessage: (outMessage: Stateful.Tooltip.OutMessage) => (model: Model) => ({
-    model: { ...model, announcement: `Stateful tooltip ${outMessage._tag === "Shown" ? "shown" : "hidden"}.` },
+    model: {
+      ...model,
+      announcement: `Stateful tooltip ${outMessage._tag === "Shown" ? "shown" : "hidden"}.`,
+    },
   }),
 });
 
@@ -86,9 +110,14 @@ const foldCombobox = Update.foldChild({
   write: (model, departmentCombobox) => ({ ...model, departmentCombobox }),
   toParentMessage: (message) => Message.GotComboboxMessage({ message }),
   foldOutMessage: (outMessage) => (model: Model) => ({
-    model: outMessage._tag === "Selected"
-      ? { ...model, department: outMessage.value, announcement: `${outMessage.value} selected from the combobox.` }
-      : { ...model, announcement: "Combobox selection cleared." },
+    model:
+      outMessage._tag === "Selected"
+        ? {
+            ...model,
+            department: outMessage.value,
+            announcement: `${outMessage.value} selected from the combobox.`,
+          }
+        : { ...model, announcement: "Combobox selection cleared." },
   }),
 });
 
@@ -122,23 +151,31 @@ const foldToast = Update.foldChild({
   }),
 });
 
-const showToast = (variant: Stateful.Toast.Variant) => Update.foldChildStep({
-  update: (toasts: Stateful.Toast.Model) => Stateful.Toast.show(toasts, {
-    payload: {
-      title: `${variant} notification`,
-      description: "Hover to pause the timer or use Dismiss to remove it.",
-    },
-    variant,
-  }),
-  read: (model: Model) => Option.some(model.toasts),
-  write: (model, toasts) => ({ ...model, toasts, announcement: `${variant} toast shown.` }),
-  toParentMessage: (message) => Message.GotToastMessage({ message }),
-  foldOutMessage: (_outMessage: Stateful.Toast.OutMessage) => (model: Model) => ({ model }),
-});
+const showToast = (variant: Stateful.Toast.Variant) =>
+  Update.foldChildStep({
+    update: (toasts: Stateful.Toast.Model) =>
+      Stateful.Toast.show(toasts, {
+        payload: {
+          title: `${variant} notification`,
+          description: "Hover to pause the timer or use Dismiss to remove it.",
+        },
+        variant,
+      }),
+    read: (model: Model) => Option.some(model.toasts),
+    write: (model, toasts) => ({ ...model, toasts, announcement: `${variant} toast shown.` }),
+    toParentMessage: (message) => Message.GotToastMessage({ message }),
+    foldOutMessage: (_outMessage: Stateful.Toast.OutMessage) => (model: Model) => ({ model }),
+  });
 
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match(message, {
-    GotDesktop: ({ message }) => Update.foldChild({ update: Desktop.update, read: (model: Model) => Option.some(model.desktop), write: (model, desktop) => ({ ...model, desktop }), toParentMessage: message => Message.GotDesktop({ message }) })(model, message),
+    GotDesktop: ({ message }) =>
+      Update.foldChild({
+        update: Desktop.update,
+        read: (model: Model) => Option.some(model.desktop),
+        write: (model, desktop) => ({ ...model, desktop }),
+        toParentMessage: (message) => Message.GotDesktop({ message }),
+      })(model, message),
     GotTabsMessage: ({ message }) => foldTabs(model, message),
     GotDialogMessage: ({ message }) => foldDialog(model, message),
     GotSelectMessage: ({ message }) => foldSelect(model, message),
@@ -152,6 +189,25 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     ChangedName: ({ value }) => ({ model: evo(model, { name: () => value }) }),
     ChangedEmail: ({ value }) => ({ model: evo(model, { email: () => value }) }),
     ChangedNotes: ({ value }) => ({ model: evo(model, { notes: () => value }) }),
+    SelectedAnswerPresentation: ({ value }) => ({
+      model: evo(model, {
+        answerPresentation: () => value,
+        announcement: () =>
+          value === "value" ? "Showing read-only answers." : "Showing editable controls.",
+      }),
+    }),
+    CommittedReference: ({ value }) => ({
+      model: evo(model, {
+        committedReference: () => value,
+        announcement: () => `Reference ${value} committed.`,
+      }),
+    }),
+    ChangedZoom: ({ zoom }) => ({
+      model: evo(model, {
+        zoom: () => Math.min(200, Math.max(50, zoom)),
+        announcement: () => `Zoom ${Math.min(200, Math.max(50, zoom))}%.`,
+      }),
+    }),
     SelectedDepartment: ({ value }) => ({
       model: evo(model, {
         department: () => value,
@@ -210,7 +266,7 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     }),
     ToggledComponent: ({ component, isOpen }) => ({
       model: evo(model, {
-        openComponent: () => isOpen ? component : "",
+        openComponent: () => (isOpen ? component : ""),
         announcement: () => `${component} ${isOpen ? "opened" : "closed"}.`,
       }),
     }),

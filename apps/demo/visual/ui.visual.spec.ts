@@ -17,6 +17,7 @@ const fixtures = [
   { name: "badge", heading: "Badge" },
   { name: "icon", heading: "Icon" },
   { name: "field-input-textarea-select", heading: "Field, input, textarea, and select" },
+  { name: "read-only-answers", heading: "Read-only answers" },
   { name: "selection-controls", heading: "Selection controls" },
   { name: "choice-and-disclosure", heading: "Choice and disclosure" },
   { name: "panel-and-layout", heading: "Panel and Layout" },

@@ -4,9 +4,11 @@ import {
   Accordion,
   Alert,
   AlertDialog,
+  AppHeader,
   AspectRatio,
   Attachment,
   Avatar,
+  Badge,
   Breadcrumb,
   Bubble,
   Button,
@@ -50,6 +52,7 @@ import {
   Sheet,
   Sidebar,
   Skeleton,
+  SplitView,
   Slider,
   Sonner,
   Spinner,
@@ -801,6 +804,59 @@ const disclosureAndLayout = (model: Model, h: HtmlBuilder<Message>): Html =>
   section(
     "Disclosure and layout",
     [
+      Layout.Container.view(
+        {
+          query: true,
+          size: "full",
+          padding: "none",
+          children: [
+            AppHeader.view(
+              {
+                title: "Compliance library",
+                breadcrumb: {
+                  items: [{ label: "Forms", onClick: action("Forms breadcrumb") }],
+                  current: "I-9",
+                },
+                status: [Badge.view({ label: "Staging", tone: "warning" }, h)],
+                actions: [
+                  Button.view(
+                    { label: "Help", size: "sm", variant: "ghost", onClick: action("Help") },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+            SplitView.view(
+              {
+                responsiveTo: "container",
+                collapseBelow: "sm",
+                gap: "sm",
+                ariaLabel: "Form and document",
+                panes: [
+                  {
+                    key: "fields",
+                    label: "Fields",
+                    width: "minmax(12rem, 1fr)",
+                    children: [h.div([h.Class(className(styles.catalogTile))], ["Field list"])],
+                  },
+                  {
+                    key: "preview",
+                    label: "PDF preview",
+                    width: "minmax(12rem, 2fr)",
+                    sticky: true,
+                    children: [
+                      h.div([h.Class(className(styles.catalogTile))], ["Document preview"]),
+                    ],
+                  },
+                ],
+              },
+              h,
+            ),
+          ],
+        },
+        h,
+      ),
       Accordion.view(
         {
           items: [
@@ -880,6 +936,7 @@ const disclosureAndLayout = (model: Model, h: HtmlBuilder<Message>): Html =>
       ),
     ],
     h,
+    true,
   );
 
 const overlayDialog = (
