@@ -1,6 +1,8 @@
 export {
   defineColumns,
+  flattenRows,
   isCellInSelection,
+  isRowGroupExpanded,
   moveColumn,
   orderedColumns,
   selectionRange,
@@ -8,6 +10,9 @@ export {
   selectionText,
   type ColumnMoveDirection,
   type ColumnPin,
+  type RowAttributes,
+  type RowContext,
+  type RowTone,
   type SelectionRange,
 } from "./core";
 import { Message as MessageSchema, type Message as MessageValue } from "./message";
@@ -23,11 +28,7 @@ export { update } from "./update";
 export { view, type ViewConfig } from "./view";
 export { OutMessage } from "./message";
 export { Edit, CellIssue, Submission } from "./editing-model";
-export {
-  virtualWindow,
-  type VirtualizationConfig,
-  type VirtualWindow,
-} from "./virtualization";
+export { virtualWindow, type VirtualizationConfig, type VirtualWindow } from "./virtualization";
 export {
   commitMessage,
   editIssues,

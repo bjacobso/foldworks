@@ -20,7 +20,7 @@ catalog:
   playwright: 1.62.1
   pdf-lib: 1.17.1
   pdfjs-dist: 6.3.289
-  typescript: 6.0.3
+  typescript: 7.0.2
   vite: 8.2.2
   vitest: 4.1.11
 
@@ -32,3 +32,6 @@ catalogs:
     foldkit: ^0.156.0
 
 engineStrict: true
+
+patchedDependencies:
+  foldkit@0.156.0: patches/foldkit@0.156.0.patch

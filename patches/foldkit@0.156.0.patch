@@ -1,0 +1,49 @@
+diff --git a/dist/html/index.d.ts b/dist/html/index.d.ts
+index e5c78793c16c03a3f76cd79e95de9fcc8c7e47bc..b12803adea74f5eabe5b7e8f2a1783533bdee8c1 100644
+--- a/dist/html/index.d.ts
++++ b/dist/html/index.d.ts
+@@ -149,7 +149,15 @@ export type FoldkitMountMarker = Readonly<{
+     args?: Record<string, unknown>;
+     messageMappers?: ReadonlyArray<(message: unknown) => unknown>;
+ }>;
+-/** Union of all HTML, SVG, and MathML attributes a virtual DOM element can carry.
++/** Any HTML, SVG, or MathML attribute a virtual DOM element can carry,
++ *  typed by the Message its handlers dispatch.
++ *
++ *  Attributes are built with the `h` constructors (`h.Class`, `h.OnClick`),
++ *  which return the precise variant for their `_tag`. `Attribute<Message>` is
++ *  the one shape every variant is assignable to: it checks the tag, rejects
++ *  unknown fields, and carries `Message` covariantly, so an `Attribute<never>`
++ *  (a static attribute, or anything from {@link inertHtml}) fits any Message
++ *  universe while a handler for another universe does not.
+  *
+  *  When a Submodel publishes attribute groups to a consumer's `toView`
+  *  slot, those attributes are wrapped via {@link childAttributes} into
+@@ -158,7 +166,26 @@ export type FoldkitMountMarker = Readonly<{
+  *  `ReadonlyArray<Attribute<Message> | ChildAttribute>`, so consumers
+  *  can spread published bundles directly into their own attribute
+  *  arrays. */
+-export type Attribute<Message> = Data.TaggedEnum<{
++export interface Attribute<out Message> {
++    readonly _tag: AttributeTag;
++    readonly key?: string;
++    readonly value?: unknown;
++    readonly text?: string;
++    readonly name?: string;
++    readonly message?: Message;
++    readonly options?: ClickOptions;
++    readonly f?: (...args: never) => Message | Option.Option<Message> | Option.Option<Readonly<{
++        focusSelector: string;
++        message: Message;
++    }>>;
++    readonly action?: MountAction<Message, any>;
++}
++/** The `_tag` of every attribute variant. */
++export type AttributeTag = AttributeVariant<unknown>['_tag'];
++/** The precise runtime shape of every attribute, one variant per `_tag`.
++ *  Every variant is assignable to {@link Attribute}; the renderer switches on
++ *  this union. */
++export type AttributeVariant<Message> = Data.TaggedEnum<{
+     Key: {
+         readonly value: string;
+     };

@@ -4,6 +4,7 @@ export const ThemeName = S.Literals([
   "Shadcn",
   "Blueprint",
   "Office",
+  "Fluent2",
   "Google",
   "Apple",
   "Polaris",
@@ -27,6 +28,7 @@ const isThemeName = (value: string | null): value is ThemeName =>
   value === "Shadcn" ||
   value === "Blueprint" ||
   value === "Office" ||
+  value === "Fluent2" ||
   value === "Google" ||
   value === "Apple" ||
   value === "Polaris";

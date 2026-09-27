@@ -3,6 +3,8 @@ import * as stylex from "@stylexjs/stylex";
 export const dataGridStyles = stylex.create({
   viewport: {
     backgroundColor: "var(--foldworks-ui-canvas)",
+    display: "flex",
+    flexDirection: "column",
     minHeight: 0,
     overflow: "hidden",
     padding: {
@@ -18,8 +20,8 @@ export const dataGridStyles = stylex.create({
     borderWidth: "1px",
     boxShadow: "var(--foldworks-ui-shadow-sm)",
     display: "grid",
+    flexGrow: 1,
     gridTemplateRows: "auto auto minmax(0, 1fr) auto",
-    height: "100%",
     minHeight: 0,
     overflow: "hidden",
   },

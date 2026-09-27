@@ -52,6 +52,6 @@
     "oxlint": "^1.59.0",
     "tsup": "^8.5.1",
     "turbo": "^2.11.3",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   }
 }

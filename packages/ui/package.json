@@ -47,11 +47,21 @@
       "types": "./dist/tokens.stylex.d.ts",
       "import": "./dist/tokens.stylex.js"
     },
+    "./testing/stylex": {
+      "types": "./dist/testing/stylex.d.ts",
+      "import": "./dist/testing/stylex.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
+    },
     "./theme.css": "./dist/theme.css",
     "./base.css": "./dist/base.css",
+    "./layers.css": "./dist/layers.css",
     "./themes/shadcn.css": "./dist/themes/shadcn.css",
     "./themes/blueprint.css": "./dist/themes/blueprint.css",
     "./themes/office.css": "./dist/themes/office.css",
+    "./themes/fluent2.css": "./dist/themes/fluent2.css",
     "./themes/google.css": "./dist/themes/google.css",
     "./themes/apple.css": "./dist/themes/apple.css",
     "./themes/polaris.css": "./dist/themes/polaris.css"
@@ -61,7 +71,7 @@
     "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
     "prepack": "pnpm run build",
     "test": "vitest run",
-    "typecheck": "node ../../scripts/typecheck-ui.mjs"
+    "typecheck": "tsc --noEmit --checkers 1"
   },
   "dependencies": {
     "@foldworks/keyboard": "workspace:*",

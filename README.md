@@ -39,6 +39,8 @@ accessible application interfaces with Foldkit:
 - [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
   branch-aware operations, layout, and drag-and-drop primitives, built on the
   `@foldworks/diagram` scene contract.
+- [`@foldworks/pdf`](./packages/pdf) — PDF page rendering, geometry, and composable surfaces.
+- [`@foldworks/pdf-viewer`](./packages/pdf-viewer) — read-only PDF viewing with overlay hotspots.
 - [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
   annotation authoring with AcroForm inspection, versioned JSON, custom data,
   zoom-aware editing, and interactive PDF export.
@@ -55,6 +57,9 @@ machine with cycles, parallel regions, submachines, notes, and a simulator on
 `@foldworks/diagram`. The agent flow is a deterministic browser-only
 fixture and performs no provider calls or tool side effects.
 
+See [planned work-surface primitives](./docs/planned-primitives.md) for the
+next areas to explore beyond the current package suite.
+
 ## Dependency compatibility
 
 Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
@@ -65,7 +70,11 @@ versions for builds and tests. Currently,
 `foldkit@0.156.0` and `@foldkit/ui@0.156.0` themselves require Effect
 `4.0.0-rc.112` exactly, so applications using those releases must use that
 Effect version. Applications consuming StyleX components must also configure
-the StyleX transform; see the [`@foldworks/ui` setup](./packages/ui/README.md#setup).
+the StyleX transform and its cascade layers; see the
+[`@foldworks/ui` setup](./packages/ui/README.md#setup). To test views without
+the StyleX compiler, use `foldworksStylexTest()` from `@foldworks/ui/vite`; see
+[Testing views](./packages/ui/README.md#testing-views). The packages in this
+repository use the same plugin in their Vitest configurations.
 
 ## Development
 
