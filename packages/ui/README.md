@@ -254,6 +254,12 @@ import { Badge, Button, Icon, Toolbar } from "@foldworks/ui";
 
 Icon.view({ icon: Send, size: 20, label: "Send" }, h);
 
+// Icon-only tools have a required accessible name and square hit area.
+Button.icon({ icon: Send, label: "Send message", onClick: Message.ClickedSend() }, h);
+
+// A link-looking action retains button semantics.
+Button.view({ label: "Edit answer", variant: "link", onClick: Message.ClickedEdit() }, h);
+
 Toolbar.view(
   {
     title: "Candidate workflow",
@@ -298,6 +304,41 @@ The [integration guide](docs/stateful.md) includes complete tabs wiring and
 Dialog, Select, and Command usage. Dialog and Select support optional transitions
 that respect reduced motion. Select uses Foldkit's custom Listbox engine;
 `Select.control` and `NativeSelect.view` remain native browser controls.
+
+### Read-only answers
+
+Set `presentation: "value"` on `Input`, `Textarea`, `NativeSelect`,
+`RadioGroup`, `Checkbox`, `Field.input`, `Field.textarea`, or `Field.select` to
+show a legible answer in a review form. `Select.control`, `NumberField`, and
+`DateInput` support the same presentation. The default is `"control"`.
+Text answers render as focusable, selectable read-only text. Selects and radio
+groups show their option label. When a control has a `name`, its answer is
+submitted through a hidden input. This is distinct from `isDisabled`, which
+removes a control from form submission. Password answers are masked.
+
+```ts
+import { Field, Input, ReadOnlyValue } from "@foldworks/ui";
+
+Field.input(
+  {
+    id: "legal-name",
+    label: "Legal name",
+    name: "legalName",
+    value: model.legalName,
+    presentation: "value",
+  },
+  h,
+);
+
+// For answers without an existing control, use the same presentation directly.
+ReadOnlyValue.view({ ariaLabel: "Address", value: model.address }, h);
+
+// onInput reports typing; onChange reports a committed edit.
+Input.view({ value: model.name, onInput: Message.TypedName, onChange: Message.CommittedName }, h);
+```
+
+`ReadOnlyValue` is exported separately for composite answers while the
+`presentation` prop keeps existing control APIs and form layouts intact.
 
 Unstyled Foldkit engines are available under `Headless`. Use that
 surface when an application needs the complete state machine, including focus

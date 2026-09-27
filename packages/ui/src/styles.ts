@@ -63,6 +63,13 @@ export const buttonStyles = stylex.create({
     borderColor: "transparent",
     color: colors.danger,
   },
+  link: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    color: colors.primary,
+    textDecorationLine: { default: "none", ":hover": "underline" },
+    textUnderlineOffset: "3px",
+  },
   xs: {
     borderRadius: "var(--radius-button-sm)",
     fontSize: typography.sizeSm,
@@ -74,6 +81,20 @@ export const buttonStyles = stylex.create({
   md: { height: "32px", paddingLeft: "10px", paddingRight: "10px" },
   lg: { fontSize: typography.sizeLg, height: "36px", paddingLeft: "12px", paddingRight: "12px" },
   icon: { height: "32px", padding: 0, width: "32px" },
+  // Square shapes for Button.icon. They follow a text-size recipe, so they reset
+  // its padding with longhands: StyleX ranks longhands above the `padding` shorthand.
+  iconXs: {
+    borderRadius: "var(--radius-button-sm)",
+    height: "24px",
+    paddingLeft: 0,
+    paddingRight: 0,
+    width: "24px",
+  },
+  iconSm: { height: "28px", paddingLeft: 0, paddingRight: 0, width: "28px" },
+  iconMd: { height: "32px", paddingLeft: 0, paddingRight: 0, width: "32px" },
+  iconLg: { height: "36px", paddingLeft: 0, paddingRight: 0, width: "36px" },
+  /** Applied after the size recipe so link actions flow inline with text. */
+  linkShape: { height: "auto", paddingLeft: 0, paddingRight: 0, transform: "none" },
   fullWidth: { width: "100%" },
   disabled: { cursor: "not-allowed", opacity: 0.5, pointerEvents: "none", transform: "none" },
 });
@@ -292,6 +313,7 @@ export const choiceStyles = stylex.create({
     gap: space.sm,
   },
   disabled: { cursor: "not-allowed", opacity: 0.5 },
+  readOnly: { cursor: "default" },
   control: {
     alignItems: "center",
     backgroundColor: colors.surface,
@@ -339,6 +361,36 @@ export const choiceStyles = stylex.create({
     whiteSpace: "nowrap",
     width: "1px",
   },
+});
+
+export const readOnlyValueStyles = stylex.create({
+  root: {
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: "transparent",
+    borderRadius: radii.md,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    color: colors.foreground,
+    cursor: "text",
+    display: "block",
+    fontFamily: typography.fontFamily,
+    fontSize: "14px",
+    lineHeight: "20px",
+    minHeight: "32px",
+    minWidth: 0,
+    outline: { default: "none", ":focus-visible": `3px solid ${colors.focusGlow}` },
+    outlineOffset: "0px",
+    overflowWrap: "anywhere",
+    paddingBottom: "5px",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    paddingTop: "5px",
+    whiteSpace: "pre-wrap",
+    width: "100%",
+  },
+  compact: { minHeight: "28px", paddingBottom: "3px", paddingTop: "3px" },
+  empty: { color: colors.foregroundMuted },
+  invalid: { borderColor: colors.danger },
 });
 
 export const switchStyles = stylex.create({

@@ -17,6 +17,9 @@ export type Tool = typeof Tool.Type;
 export const FoundationStep = S.Literals(["Compose", "Validate", "Ship"]);
 export type FoundationStep = typeof FoundationStep.Type;
 
+export const AnswerPresentation = S.Literals(["control", "value"]);
+export type AnswerPresentation = typeof AnswerPresentation.Type;
+
 export const Model = S.Struct({
   desktop: Desktop.Model,
   tabs: Stateful.Tabs.Model,
@@ -49,6 +52,9 @@ export const Model = S.Struct({
   selectedCalendarDay: S.Int,
   isSnippetCopied: S.Boolean,
   announcement: S.String,
+  answerPresentation: AnswerPresentation,
+  committedReference: S.String,
+  zoom: S.Int,
 });
 export type Model = typeof Model.Type;
 
@@ -93,4 +99,7 @@ export const initialModel: Model = {
   selectedCalendarDay: 4,
   isSnippetCopied: false,
   announcement: "UI component demo ready.",
+  answerPresentation: "value",
+  committedReference: "EMP-2041",
+  zoom: 100,
 };

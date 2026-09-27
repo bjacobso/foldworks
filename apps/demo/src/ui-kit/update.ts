@@ -203,6 +203,25 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     ChangedName: ({ value }) => ({ model: evo(model, { name: () => value }) }),
     ChangedEmail: ({ value }) => ({ model: evo(model, { email: () => value }) }),
     ChangedNotes: ({ value }) => ({ model: evo(model, { notes: () => value }) }),
+    SelectedAnswerPresentation: ({ value }) => ({
+      model: evo(model, {
+        answerPresentation: () => value,
+        announcement: () =>
+          value === "value" ? "Showing read-only answers." : "Showing editable controls.",
+      }),
+    }),
+    CommittedReference: ({ value }) => ({
+      model: evo(model, {
+        committedReference: () => value,
+        announcement: () => `Reference ${value} committed.`,
+      }),
+    }),
+    ChangedZoom: ({ zoom }) => ({
+      model: evo(model, {
+        zoom: () => Math.min(200, Math.max(50, zoom)),
+        announcement: () => `Zoom ${Math.min(200, Math.max(50, zoom))}%.`,
+      }),
+    }),
     SelectedDepartment: ({ value }) => ({
       model: evo(model, {
         department: () => value,
