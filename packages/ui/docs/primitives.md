@@ -13,17 +13,25 @@ smaller value. Scalars apply from `base` onward. Values respond to the viewport
 by default; a query container can make them respond to local inline size.
 
 ```ts
-Layout.Container.view({
-  size: "lg",
-  query: true,
-  padding: { base: "sm", md: "lg" },
-  children: [Layout.Grid.view({
-    columns: { base: 1, sm: 2, lg: 3 },
-    responsiveTo: "container",
-    gap: { base: "sm", lg: "xl" },
-    children: cards,
-  }, h)],
-}, h)
+Layout.Container.view(
+  {
+    size: "lg",
+    query: true,
+    padding: { base: "sm", md: "lg" },
+    children: [
+      Layout.Grid.view(
+        {
+          columns: { base: 1, sm: 2, lg: 3 },
+          responsiveTo: "container",
+          gap: { base: "sm", lg: "xl" },
+          children: cards,
+        },
+        h,
+      ),
+    ],
+  },
+  h,
+);
 ```
 
 Grid supports one through twelve explicit columns. Use `minColumnWidth` for an
@@ -52,6 +60,28 @@ avoid ordinary decimal stepping drift. The parent owns the numeric value.
 `Stepper` renders an ordered journey with current, complete, upcoming, and error
 states. It derives statuses from `currentStepId` unless a step overrides its
 status. Provide `onSelect` for nonlinear journeys; omit it for read-only progress.
+
+## Metrics and technical details
+
+`Badge` and `Tag` share neutral, muted, accent, success, warning, danger, and
+info tones. Badge adds outline and monospace options; Tag keeps selection and
+removal actions. `Progress` supports compact bars, tones, and a visible caption
+that is also announced as its value text. `Card` can use `flush: true` for edge
+to edge tables and lists.
+
+`DescriptionList` renders semantic term and value pairs in horizontal or stacked
+rows. Values can be plain text, code, muted text, or a group of chips. Omitted
+values show an em dash by default. `Stat` pairs a label and value with an
+optional description, trend, and extra content such as a progress bar. A trend's
+tone can be overridden when a downward change is good.
+
+`Legend` renders an accessible list with decorative swatches, icons, or symbols.
+Its markers accept a shared tone or a CSS color. `CodeBlock` renders read-only
+source with optional line numbers, scrolling, copy state, and a pure syntax
+highlighter. The `highlight` export from `@foldworks/code-editor` implements
+its highlighter contract for supported languages; other languages stay plain.
+The application handles `copy.onCopy` and can use `CodeBlock.writeClipboard`
+inside a Foldkit command.
 
 ## Floating layers
 

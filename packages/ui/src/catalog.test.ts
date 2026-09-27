@@ -6,16 +6,78 @@ import { describe, expect, it } from "vitest";
 import * as UI from "./index";
 
 const officialComponentNames = [
-  "Accordion", "Alert", "AlertDialog", "AspectRatio", "Attachment", "Avatar",
-  "Badge", "Breadcrumb", "Bubble", "Button", "ButtonGroup", "Calendar", "Card",
-  "Carousel", "Chart", "Checkbox", "Collapsible", "Combobox", "Command",
-  "ContextMenu", "Dialog", "Direction", "Drawer", "DropdownMenu", "Empty", "Field",
-  "Form", "HoverCard", "Input", "InputGroup", "InputOtp", "Item", "Kbd", "Label",
-  "Marker", "Menubar", "Message", "MessageScroller", "NativeSelect", "NavigationMenu",
-  "Pagination", "Popover", "Progress", "RadioGroup", "Resizable", "ScrollArea", "Select",
-  "Separator", "Sheet", "Sidebar", "Skeleton", "Slider", "Sonner", "Spinner", "Switch",
-  "Table", "Tabs", "Textarea", "Toggle", "ToggleGroup", "Tooltip", "Heading", "Link",
-  "Text", "VisuallyHidden", "NumberField", "Stepper", "Tag",
+  "Accordion",
+  "Alert",
+  "AlertDialog",
+  "AspectRatio",
+  "Attachment",
+  "Avatar",
+  "Badge",
+  "Breadcrumb",
+  "Bubble",
+  "Button",
+  "ButtonGroup",
+  "Calendar",
+  "Card",
+  "Carousel",
+  "Chart",
+  "Checkbox",
+  "CodeBlock",
+  "Collapsible",
+  "Combobox",
+  "Command",
+  "ContextMenu",
+  "DescriptionList",
+  "Dialog",
+  "Direction",
+  "Drawer",
+  "DropdownMenu",
+  "Empty",
+  "Field",
+  "Form",
+  "HoverCard",
+  "Input",
+  "InputGroup",
+  "InputOtp",
+  "Item",
+  "Kbd",
+  "Label",
+  "Legend",
+  "Marker",
+  "Menubar",
+  "Message",
+  "MessageScroller",
+  "NativeSelect",
+  "NavigationMenu",
+  "Pagination",
+  "Popover",
+  "Progress",
+  "RadioGroup",
+  "Resizable",
+  "ScrollArea",
+  "Select",
+  "Separator",
+  "Sheet",
+  "Sidebar",
+  "Skeleton",
+  "Slider",
+  "Sonner",
+  "Spinner",
+  "Stat",
+  "Switch",
+  "Table",
+  "Tabs",
+  "Textarea",
+  "Toggle",
+  "ToggleGroup",
+  "Tooltip",
+  "Heading",
+  "Link",
+  "Text",
+  "VisuallyHidden",
+  "NumberField",
+  "Stepper",
+  "Tag",
 ] as const;
 
 const find = (html: Html, selector: string) => {
@@ -67,23 +129,29 @@ describe("supported component catalog", () => {
   });
 
   it("renders labelled tabs and dialog surfaces", () => {
-    const tabs = UI.Tabs.view({
-      id: "settings",
-      value: "profile",
-      onChange: () => undefined as never,
-      tabs: [
-        { value: "profile", label: "Profile", content: ["Profile content"] },
-        { value: "billing", label: "Billing", content: ["Billing content"] },
-      ],
-    }, h);
-    const dialog = UI.Dialog.view({
-      id: "edit-profile",
-      title: "Edit profile",
-      description: "Change your public details.",
-      children: ["Form"],
-      isOpen: true,
-      onOpenChange: () => undefined as never,
-    }, h);
+    const tabs = UI.Tabs.view(
+      {
+        id: "settings",
+        value: "profile",
+        onChange: () => undefined as never,
+        tabs: [
+          { value: "profile", label: "Profile", content: ["Profile content"] },
+          { value: "billing", label: "Billing", content: ["Billing content"] },
+        ],
+      },
+      h,
+    );
+    const dialog = UI.Dialog.view(
+      {
+        id: "edit-profile",
+        title: "Edit profile",
+        description: "Change your public details.",
+        children: ["Form"],
+        isOpen: true,
+        onOpenChange: () => undefined as never,
+      },
+      h,
+    );
 
     expect(attr(tabs, '[role="tablist"]', "aria-label")).toBe("Tabs");
     expect(attr(tabs, '[role="tab"]', "aria-selected")).toBe("true");
@@ -92,19 +160,25 @@ describe("supported component catalog", () => {
   });
 
   it("renders grouped menu and calendar semantics", () => {
-    const menu = UI.DropdownMenu.view({
-      id: "actions",
-      trigger: ["Actions"],
-      isOpen: true,
-      onOpenChange: () => undefined as never,
-      groups: [{ items: [{ id: "edit", label: "Edit", onSelect: undefined as never }] }],
-    }, h);
-    const calendar = UI.Calendar.view({
-      year: 2026,
-      month: 9,
-      selected: { year: 2026, month: 9, day: 4 },
-      onSelect: () => undefined as never,
-    }, h);
+    const menu = UI.DropdownMenu.view(
+      {
+        id: "actions",
+        trigger: ["Actions"],
+        isOpen: true,
+        onOpenChange: () => undefined as never,
+        groups: [{ items: [{ id: "edit", label: "Edit", onSelect: undefined as never }] }],
+      },
+      h,
+    );
+    const calendar = UI.Calendar.view(
+      {
+        year: 2026,
+        month: 9,
+        selected: { year: 2026, month: 9, day: 4 },
+        onSelect: () => undefined as never,
+      },
+      h,
+    );
 
     expect(attr(menu, '[role="menu"]', "role")).toBe("menu");
     expect(attr(menu, '[role="menuitem"]', "data-menu-item-id")).toBe("edit");

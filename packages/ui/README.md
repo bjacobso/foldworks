@@ -15,6 +15,8 @@ semantics and parent-owned state.
 Foldworks also includes first-principles application foundations beyond that
 catalog: responsive Container/Grid/Stack/Row layout, semantic Text/Heading/Link,
 actionable Tag, NumberField, Stepper, and a shared anchored-layer policy.
+DescriptionList, Stat, Legend, and CodeBlock cover structured details, metrics,
+chart keys, and read-only source.
 
 For interactive tabs, modal dialogs, custom selects, command palettes, menus,
 popovers, tooltips, comboboxes, and managed toast stacks, use

@@ -13,6 +13,7 @@ const fixtures = [
   { name: "disclosure-and-layout", heading: "Disclosure and layout", catalog: true },
   { name: "overlays-menus-and-command", heading: "Overlays, menus, and command", catalog: true },
   { name: "calendar-and-messages", heading: "Calendar and messages", catalog: true },
+  { name: "metrics-and-details", heading: "Metrics and details", catalog: true },
   { name: "button", heading: "Button" },
   { name: "badge", heading: "Badge" },
   { name: "icon", heading: "Icon" },
@@ -62,6 +63,16 @@ for (const mode of ["Light", "Dark"] as const) {
         ]);
       });
     }
+
+    test("code snippet copy confirms and resets", async ({ page }) => {
+      await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+      const codeBlock = page.locator('[data-component-catalog="true"] [data-language="liquid"]');
+      const copy = codeBlock.getByRole("button");
+
+      await copy.click();
+      await expect(copy).toHaveText("Copied");
+      await expect(copy).toHaveText("Copy", { timeout: 5_000 });
+    });
 
     test("open dialog matches its approved image", async ({ page }) => {
       await page.getByRole("button", { name: "Dialog", exact: true }).click();

@@ -63,7 +63,13 @@ export const buttonStyles = stylex.create({
     borderColor: "transparent",
     color: colors.danger,
   },
-  xs: { borderRadius: "var(--radius-button-sm)", fontSize: typography.sizeSm, height: "24px", paddingLeft: "8px", paddingRight: "8px" },
+  xs: {
+    borderRadius: "var(--radius-button-sm)",
+    fontSize: typography.sizeSm,
+    height: "24px",
+    paddingLeft: "8px",
+    paddingRight: "8px",
+  },
   sm: { fontSize: typography.sizeSm, height: "28px", paddingLeft: "10px", paddingRight: "10px" },
   md: { height: "32px", paddingLeft: "10px", paddingRight: "10px" },
   lg: { fontSize: typography.sizeLg, height: "36px", paddingLeft: "12px", paddingRight: "12px" },
@@ -89,10 +95,26 @@ export const badgeStyles = stylex.create({
     whiteSpace: "nowrap",
   },
   neutral: { backgroundColor: colors.surfaceSubtle, color: colors.foregroundMuted },
+  muted: {
+    backgroundColor: "transparent",
+    borderColor: colors.border,
+    color: colors.foregroundMuted,
+  },
+  accent: {
+    backgroundColor: `color-mix(in oklch, ${colors.primary} 10%, transparent)`,
+    color: colors.primary,
+  },
   success: { backgroundColor: colors.successSurface, color: colors.success },
   warning: { backgroundColor: colors.warningSurface, color: colors.warning },
   danger: { backgroundColor: colors.dangerSurface, color: colors.danger },
   info: { backgroundColor: colors.infoSurface, color: colors.info },
+  outline: {
+    backgroundColor: "transparent",
+    borderColor: "color-mix(in oklch, currentColor 40%, transparent)",
+  },
+  outlineNeutral: { borderColor: colors.borderStrong, color: colors.foreground },
+  outlineMuted: { borderColor: colors.border, borderStyle: "dashed" },
+  mono: { fontFamily: typography.fontMono, fontSize: typography.sizeXs, letterSpacing: 0 },
   dot: { backgroundColor: "currentColor", borderRadius: "999px", height: "6px", width: "6px" },
 });
 
@@ -129,8 +151,19 @@ export const toolbarStyles = stylex.create({
     letterSpacing: "-0.015em",
     margin: 0,
   },
-  description: { color: colors.foregroundMuted, fontSize: "12px", marginBottom: 0, marginTop: "2px" },
-  actions: { alignItems: "center", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "flex-end" },
+  description: {
+    color: colors.foregroundMuted,
+    fontSize: "12px",
+    marginBottom: 0,
+    marginTop: "2px",
+  },
+  actions: {
+    alignItems: "center",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    justifyContent: "flex-end",
+  },
 });
 
 export const segmentedStyles = stylex.create({
@@ -170,7 +203,12 @@ export const segmentedStyles = stylex.create({
 
 export const fieldStyles = stylex.create({
   root: { display: "flex", flexDirection: "column", gap: "8px", minWidth: 0 },
-  label: { color: colors.foreground, fontSize: "14px", fontWeight: typography.weightMedium, lineHeight: 1 },
+  label: {
+    color: colors.foreground,
+    fontSize: "14px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1,
+  },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   control: {
     backgroundColor: "color-mix(in oklch, var(--input) 12%, transparent)",
@@ -212,10 +250,31 @@ export const fieldStyles = stylex.create({
     width: "100%",
   },
   textareaWrapper: { alignItems: "flex-start" },
-  controlInWrapper: { backgroundColor: "transparent", border: 0, borderRadius: 0, boxShadow: "none", minWidth: 0, outline: "none" },
-  adornment: { alignItems: "center", color: colors.foregroundMuted, display: "inline-flex", flexShrink: 0, minHeight: "32px", paddingLeft: "10px", paddingRight: "10px" },
+  controlInWrapper: {
+    backgroundColor: "transparent",
+    border: 0,
+    borderRadius: 0,
+    boxShadow: "none",
+    minWidth: 0,
+    outline: "none",
+  },
+  adornment: {
+    alignItems: "center",
+    color: colors.foregroundMuted,
+    display: "inline-flex",
+    flexShrink: 0,
+    minHeight: "32px",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+  },
   selectControl: { minHeight: "32px", paddingRight: "28px", width: "auto" },
-  textarea: { lineHeight: 1.5, minHeight: "84px", paddingBottom: "9px", paddingTop: "9px", resize: "vertical" },
+  textarea: {
+    lineHeight: 1.5,
+    minHeight: "84px",
+    paddingBottom: "9px",
+    paddingTop: "9px",
+    resize: "vertical",
+  },
   invalid: {
     borderColor: colors.danger,
     boxShadow: `0 0 0 3px color-mix(in oklch, ${colors.danger} 20%, transparent)`,
@@ -264,7 +323,12 @@ export const choiceStyles = stylex.create({
     borderColor: colors.primary,
   },
   content: { display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 },
-  label: { cursor: "pointer", fontSize: "14px", fontWeight: typography.weightMedium, lineHeight: 1.35 },
+  label: {
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1.35,
+  },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   hiddenInput: {
     clip: "rect(0 0 0 0)",
@@ -288,7 +352,12 @@ export const switchStyles = stylex.create({
   },
   disabled: { cursor: "not-allowed", opacity: 0.5 },
   copy: { display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 },
-  label: { cursor: "pointer", fontSize: "14px", fontWeight: typography.weightMedium, lineHeight: 1.35 },
+  label: {
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1.35,
+  },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   control: {
     alignItems: "center",
@@ -411,8 +480,25 @@ export const panelStyles = stylex.create({
     boxShadow: metrics.shadowPanel,
     overflow: "hidden",
   },
-  header: { borderBottomColor: colors.border, borderBottomStyle: "solid", borderBottomWidth: "1px", padding: "16px" },
-  title: { color: "inherit", fontSize: "16px", fontWeight: typography.weightMedium, lineHeight: 1.35, margin: 0 },
-  description: { color: colors.foregroundMuted, fontSize: "14px", lineHeight: 1.45, marginBottom: 0, marginTop: "4px" },
+  header: {
+    borderBottomColor: colors.border,
+    borderBottomStyle: "solid",
+    borderBottomWidth: "1px",
+    padding: "16px",
+  },
+  title: {
+    color: "inherit",
+    fontSize: "16px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1.35,
+    margin: 0,
+  },
+  description: {
+    color: colors.foregroundMuted,
+    fontSize: "14px",
+    lineHeight: 1.45,
+    marginBottom: 0,
+    marginTop: "4px",
+  },
   body: { padding: "16px" },
 });

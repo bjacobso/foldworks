@@ -1,19 +1,28 @@
 export * as Badge from "./badge";
 export * as Button from "./button";
 export * as Checkbox from "./checkbox";
+export * as CodeBlock from "./code-block";
+export * as DescriptionList from "./description-list";
 export * as Disclosure from "./disclosure";
 export * as Field from "./field";
 export * as Fieldset from "./fieldset";
 export * as Icon from "./icon";
 export * as Layout from "./layout";
+export * as Legend from "./legend";
 export * as Workspace from "./workspace";
 export * as Tree from "./tree";
 export * as Panel from "./panel";
 export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";
+export * as Stat from "./stat";
 export * as Switch from "./switch";
 export * as Toolbar from "./toolbar";
-export { ChangeSetPreview, ExplanationTree, TransactionTimeline, ValueInspector } from "./operational";
+export {
+  ChangeSetPreview,
+  ExplanationTree,
+  TransactionTimeline,
+  ValueInspector,
+} from "./operational";
 export type { Consequence, ExplanationNode, TimelineEntry, ValueChange } from "./operational";
 export { Accordion, Collapsible } from "./collections";
 export { Heading, Link, Text, VisuallyHidden } from "./content";
@@ -46,6 +55,7 @@ export {
   ToggleGroup,
 } from "./forms";
 export { Progress, Skeleton, Sonner, Spinner, StatusMessage } from "./feedback";
+export type { ProgressConfig, ProgressSlot, ProgressTone } from "./feedback";
 export { NumberField } from "./number-field";
 export { Stepper } from "./stepper";
 export { Tag } from "./tag";

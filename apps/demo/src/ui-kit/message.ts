@@ -37,5 +37,8 @@ export const Message = defineMessageUnion({
   SelectedPage: { page: S.Int },
   SelectedCalendarDay: { day: S.Int },
   ClickedAction: { action: S.String },
+  ClickedCopySnippet: {},
+  CompletedCopySnippet: { isCopied: S.Boolean },
+  ClearedCopiedSnippet: {},
 });
 export type Message = typeof Message.Type;

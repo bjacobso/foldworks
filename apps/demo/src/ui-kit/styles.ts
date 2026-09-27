@@ -177,6 +177,23 @@ export const uiKitStyles = stylex.create({
     gap: "8px",
   },
   catalogStack: { display: "flex", flexDirection: "column", gap: "10px" },
+  statGrid: {
+    display: "grid",
+    gap: "12px",
+    gridTemplateColumns: {
+      default: "repeat(4, minmax(0, 1fr))",
+      "@media (max-width: 960px)": "repeat(2, minmax(0, 1fr))",
+    },
+  },
+  detailsGrid: {
+    alignItems: "start",
+    display: "grid",
+    gap: "12px",
+    gridTemplateColumns: {
+      default: "repeat(2, minmax(0, 1fr))",
+      "@media (max-width: 760px)": "1fr",
+    },
+  },
   catalogTile: {
     backgroundColor: "var(--foldworks-ui-surface-subtle)",
     borderColor: "var(--foldworks-ui-border)",

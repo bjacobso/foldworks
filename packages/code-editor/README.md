@@ -20,12 +20,15 @@ const editor = CodeEditor.init({
 });
 
 // Inside your parent view:
-CodeEditor.view({
-  model: model.editor,
-  label: "Configuration",
-  showInspector: false,
-  toParentMessage: (message) => Message.Editor({ message }),
-}, h);
+CodeEditor.view(
+  {
+    model: model.editor,
+    label: "Configuration",
+    showInspector: false,
+    toParentMessage: (message) => Message.Editor({ message }),
+  },
+  h,
+);
 ```
 
 Add `CodeEditor.Model` to the parent model schema and `CodeEditor.Message` to its
@@ -59,17 +62,21 @@ message. The same operations and outgoing events are available independently at
 `@foldworks/code-editor/contracts`.
 
 ```ts
-CodeEditor.execute(CodeEditor.Operation.ApplyEdits({
-  expected: CodeEditor.documentVersion(model.editor.document),
-  edits: [{ from: 0, to: 0, insert: "// Note\n" }],
-  // Optional selection in the resulting document; otherwise mapped through edits.
-}));
+CodeEditor.execute(
+  CodeEditor.Operation.ApplyEdits({
+    expected: CodeEditor.documentVersion(model.editor.document),
+    edits: [{ from: 0, to: 0, insert: "// Note\n" }],
+    // Optional selection in the resulting document; otherwise mapped through edits.
+  }),
+);
 
 CodeEditor.execute(CodeEditor.Operation.Undo());
-CodeEditor.execute(CodeEditor.Operation.SetOptions({
-  ...model.editor.options,
-  lineWrapping: true,
-}));
+CodeEditor.execute(
+  CodeEditor.Operation.SetOptions({
+    ...model.editor.options,
+    lineWrapping: true,
+  }),
+);
 ```
 
 `ApplyEdits` is atomic and undoable. `Select({ expected, selection })` focuses and
@@ -97,6 +104,16 @@ JSON, YAML, JavaScript, and TypeScript use a small stateful lexer; unknown langu
 fall back to plain text. This does not perform type checking or parse full JSX/TSX
 syntax. JSON syntax validation runs locally and shows squiggles and a navigable
 problems list. It does not validate JSON Schema.
+
+For a read-only snippet, `highlight(code, language)` returns tokenized lines
+without creating an editor model. Pass it to `@foldworks/ui`'s `CodeBlock`:
+
+```ts
+import { highlight } from "@foldworks/code-editor";
+import { CodeBlock } from "@foldworks/ui";
+
+CodeBlock.view({ code: '{"enabled": true}', language: "json", highlight }, h);
+```
 
 ### JSON and YAML with an Effect Schema
 

@@ -147,6 +147,9 @@ try {
       declaration: true,
       declarationMap: false,
       emitDeclarationOnly: true,
+      // The UI package checks source in bounded groups. Checking its full graph here
+      // exhausts TypeScript's relation map before declaration emit can finish.
+      noCheck: packageJson.name === "@foldworks/ui",
       noEmit: false,
       outDir: stagedOutputDirectory,
       preserveSymlinks: true,

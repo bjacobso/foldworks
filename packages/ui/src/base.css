@@ -1,6 +1,9 @@
 :root,
 [data-theme] {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --radius: 0.625rem;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -46,6 +49,12 @@
   --foldworks-ui-drop-target-active: color-mix(in oklch, var(--primary) 14%, var(--card));
   --foldworks-ui-drop-target-active-border: var(--primary);
   --foldworks-ui-overlay: oklch(0.145 0 0 / 30%);
+  --foldworks-ui-code-keyword: #8741a0;
+  --foldworks-ui-code-string: #246b46;
+  --foldworks-ui-code-number: #975312;
+  --foldworks-ui-code-comment: #6c7180;
+  --foldworks-ui-code-type: #13677b;
+  --foldworks-ui-code-property: #315ba6;
 
   /* Compatibility aliases for existing Foldworks feature packages. */
   --foldworks-ui-background: var(--background);
@@ -102,6 +111,12 @@
   --foldworks-ui-info: oklch(0.707 0.165 254.624);
   --foldworks-ui-info-surface: oklch(0.282 0.091 267.935);
   --foldworks-ui-overlay: oklch(0 0 0 / 58%);
+  --foldworks-ui-code-keyword: #d5a2ef;
+  --foldworks-ui-code-string: #8dcca1;
+  --foldworks-ui-code-number: #efb87d;
+  --foldworks-ui-code-comment: #9a9eaa;
+  --foldworks-ui-code-type: #84c9d9;
+  --foldworks-ui-code-property: #a0bfff;
   --shadow-sm: 0 1px 2px oklch(0 0 0 / 22%);
   --shadow-control: 0 1px 2px oklch(0 0 0 / 26%);
   --shadow-interactive: 0 1px 2px oklch(0 0 0 / 28%);
@@ -169,7 +184,7 @@
   }
 
   :where(code, kbd, samp, pre) {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-family: var(--font-mono);
     font-size: 1em;
   }
 

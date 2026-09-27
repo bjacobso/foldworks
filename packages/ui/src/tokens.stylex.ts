@@ -76,6 +76,7 @@ export const space = stylex.defineConsts({
 
 export const typography = stylex.defineConsts({
   fontFamily: "var(--font-sans)",
+  fontMono: "var(--font-mono)",
   sizeXs: "11px",
   sizeSm: "12px",
   sizeMd: "13px",
