@@ -43,11 +43,25 @@ export const Viewport = S.Struct({
 });
 export type Viewport = typeof Viewport.Type;
 
+export const RowSelectionMode = S.Literals(["None", "Single"]);
+export type RowSelectionMode = typeof RowSelectionMode.Type;
+
+/** Group expansion is stored as exceptions to a default, keyed by the parent
+ * row's stable ID, so it survives filtering, sorting, and virtualization. */
+export const RowGroupExpansion = S.Struct({
+  expandedByDefault: S.Boolean,
+  toggledRowIds: S.Array(S.String),
+});
+export type RowGroupExpansion = typeof RowGroupExpansion.Type;
+
 export const Model = S.Struct({
   id: S.String,
   columnOrder: S.Array(S.String),
   selectedCell: S.Option(CellAddress),
   selectionAnchor: S.Option(CellAddress),
+  rowSelection: RowSelectionMode,
+  selectedRowId: S.Option(S.String),
+  rowGroups: RowGroupExpansion,
   sorting: S.Option(Sorting),
   columnSizes: S.Array(ColumnSize),
   resizeState: ResizeState,
@@ -65,6 +79,10 @@ export type InitConfig<Row = unknown, ParentMessage = never> = Readonly<{
   id: string;
   columns: ReadonlyArray<Pick<ColumnDef<Row, ParentMessage>, "id" | "width">>;
   editing?: Readonly<{ mode: "Immediate" | "Batch" }>;
+  /** `"Single"` selects the focused row when a cell is clicked or reached
+   * with an unshifted arrow key, independent of the cell-range selection. */
+  rowSelection?: RowSelectionMode;
+  rowGroups?: Readonly<{ initiallyExpanded?: boolean }>;
 }>;
 
 export const init = (config: InitConfig): Model => ({
@@ -72,6 +90,12 @@ export const init = (config: InitConfig): Model => ({
   columnOrder: config.columns.map((column) => column.id),
   selectedCell: Option.none(),
   selectionAnchor: Option.none(),
+  rowSelection: config.rowSelection ?? "None",
+  selectedRowId: Option.none(),
+  rowGroups: {
+    expandedByDefault: config.rowGroups?.initiallyExpanded ?? true,
+    toggledRowIds: [],
+  },
   sorting: Option.none(),
   columnSizes: config.columns.map((column) => ({
     columnId: column.id,

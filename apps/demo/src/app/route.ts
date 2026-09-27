@@ -2,6 +2,7 @@ import { Option, Schema as S, pipe } from "effect";
 import { Route } from "foldkit";
 import { defineRouteUnion } from "foldkit/route";
 
+import { DataGridExample } from "../data-grid/example";
 import { FormExampleId, FormMode } from "../form-builder/model";
 
 export type Demo =
@@ -35,7 +36,7 @@ export const AppRoute = defineRouteUnion({
   Workflow: { orientation: S.Option(WorkflowOrientation) },
   Statechart: {},
   DataTable: { person: S.Option(S.String) },
-  DataGrid: {},
+  DataGrid: { example: S.Option(DataGridExample) },
   FormBuilder: {
     example: S.Option(FormExampleId),
     mode: S.Option(FormMode),
@@ -83,7 +84,11 @@ export const dataTableRouter = pipe(
   Route.mapTo(AppRoute.DataTable),
 );
 
-export const dataGridRouter = pipe(Route.literal("data-grid"), Route.mapTo(AppRoute.DataGrid));
+export const dataGridRouter = pipe(
+  Route.literal("data-grid"),
+  Route.query(S.Struct({ example: S.OptionFromOptional(DataGridExample) })),
+  Route.mapTo(AppRoute.DataGrid),
+);
 
 export const formBuilderRouter = pipe(
   Route.literal("form-builder"),
@@ -192,6 +197,16 @@ export const dataTablePath = (personId?: string): string =>
   dataTableRouter({
     person: personId === undefined ? Option.none() : Option.some(personId),
   });
+
+export const dataGridPath = (example: DataGridExample = "Worksheet"): string =>
+  dataGridRouter({
+    example: example === "Worksheet" ? Option.none() : Option.some(example),
+  });
+
+export const dataGridExampleFromRoute = (route: AppRoute): DataGridExample =>
+  route._tag === "DataGrid"
+    ? Option.getOrElse(route.example, () => "Worksheet" as const)
+    : "Worksheet";
 
 export const dataTablePersonFromRoute = (route: AppRoute): string =>
   route._tag === "DataTable" ? Option.getOrElse(route.person, () => "") : "";

@@ -6,7 +6,8 @@ import {
   agentRouter,
   dataTablePath,
   editorRouter,
-  dataGridRouter,
+  dataGridExampleFromRoute,
+  dataGridPath,
   codeEditorRouter,
   codebaseRouter,
   workbenchRouter,
@@ -42,7 +43,12 @@ describe("demo routes", () => {
     expect(demoFromRoute(parseUrl("https://demo.test/data-table?person=contact-1"))).toBe(
       "DataTable",
     );
-    expect(dataGridRouter()).toBe("/data-grid");
+    expect(dataGridPath()).toBe("/data-grid");
+    expect(dataGridPath("Coverage")).toBe("/data-grid?example=Coverage");
+    expect(dataGridExampleFromRoute(parseUrl("https://demo.test/data-grid?example=Coverage"))).toBe(
+      "Coverage",
+    );
+    expect(dataGridExampleFromRoute(parseUrl("https://demo.test/data-grid"))).toBe("Worksheet");
     expect(codeEditorRouter()).toBe("/code-editor");
     expect(demoFromRoute(parseUrl("https://demo.test/code-editor"))).toBe("CodeEditor");
     expect(codebaseRouter()).toBe("/codebase");

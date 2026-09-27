@@ -9,7 +9,11 @@ import { Model as CodeEditorModel, init as initCodeEditor } from "../code-editor
 import type { Snapshot } from "../workbench/domain";
 
 import type { PersistedWorkspace } from "../document-storage";
-import { Model as DataGridModel, initialModel as initialDataGrid } from "../data-grid/model";
+import {
+  Model as DataGridModel,
+  initialModel as initialDataGrid,
+  setExample as setDataGridExample,
+} from "../data-grid/model";
 import { Model as DataTableModel, init as initDataTable } from "../data-table/model";
 import { Model as DiffViewerModel, initialModel as initialDiffViewer } from "../diff-viewer/model";
 import { Model as FormEditorModel, init as initFormEditor } from "../form-builder/editor-model";
@@ -24,6 +28,7 @@ import { Model as StatechartModel, initialModel as initialStatechart } from "../
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
 import {
   AppRoute,
+  dataGridExampleFromRoute,
   dataTablePersonFromRoute,
   formStateFromRoute,
   workflowOrientationFromRoute,
@@ -69,7 +74,7 @@ export const init = (
     workflowEditor: initWorkflowEditor(persisted?.workflow, workflowOrientationFromRoute(route)),
     statechart: initialStatechart,
     formEditor: initFormEditor(persisted?.forms ?? exampleForms, exampleId, mode),
-    dataGridDemo: initialDataGrid,
+    dataGridDemo: setDataGridExample(initialDataGrid, dataGridExampleFromRoute(route)),
     dataTableDemo: initDataTable(dataTablePersonFromRoute(route)),
     diffViewerDemo: initialDiffViewer,
     queryBuilderDemo: initialQueryBuilder,

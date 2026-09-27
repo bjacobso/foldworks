@@ -28,6 +28,7 @@ import { view as workbenchView } from "../workbench/view";
 import { contacts } from "../data-table/contacts";
 import { view as dataTableView } from "../data-table/view";
 import { view as dataGridView } from "../data-grid/demo";
+import { countRows, coverageRows } from "../data-grid/coverage-rows";
 import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
 import { view as homeView } from "../home/view";
@@ -39,7 +40,7 @@ import {
   editorRouter,
   agentRouter,
   dataTablePath,
-  dataGridRouter,
+  dataGridPath,
   codeEditorRouter,
   codebaseRouter,
   diffViewerRouter,
@@ -171,7 +172,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
         {
           id: "data-grid",
           label: "Data grid",
-          href: dataGridRouter(),
+          href: dataGridPath(),
           icon: Table2,
           isActive: demo === "DataGrid",
         },
@@ -282,7 +283,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                     : demo === "DataTable"
                       ? "People"
                       : demo === "DataGrid"
-                        ? "Headcount worksheet"
+                        ? model.dataGridDemo.example === "Coverage"
+                          ? "Coverage matrix"
+                          : "Headcount worksheet"
                         : demo === "FormBuilder"
                           ? model.formEditor.document.title
                           : demo === "QueryBuilder"
@@ -312,7 +315,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                     : demo === "DataTable"
                       ? `${contacts.length} people · resource-first CRUD table`
                       : demo === "DataGrid"
-                        ? `${people.length} rows · cell editing · spreadsheet controls`
+                        ? model.dataGridDemo.example === "Coverage"
+                          ? `${countRows(coverageRows).toLocaleString("en-US")} rows · row groups · gap highlighting`
+                          : `${people.length} rows · cell editing · spreadsheet controls`
                         : demo === "FormBuilder"
                           ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
                           : demo === "QueryBuilder"
@@ -355,7 +360,19 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ),
                             ]
                           : demo === "DataGrid"
-                            ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
+                            ? [
+                                Badge.view(
+                                  {
+                                    label:
+                                      model.dataGridDemo.example === "Coverage"
+                                        ? "Virtualized row groups"
+                                        : "Excel-like grid",
+                                    tone: "info",
+                                    dot: true,
+                                  },
+                                  h,
+                                ),
+                              ]
                             : demo === "QueryBuilder"
                               ? [
                                   Badge.view(

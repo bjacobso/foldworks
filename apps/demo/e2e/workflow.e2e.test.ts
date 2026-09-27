@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { build, preview, type PreviewServer } from "vite";
 
 import { workbenchScenarios } from "./workbench.scenarios";
-import { dataGridEditingScenarios } from "./data-grid.scenarios";
+import { dataGridCoverageScenarios, dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
 import { workspaceScenarios } from "./workspace.scenarios";
@@ -1560,6 +1560,7 @@ describe.sequential("structured workflow builder", () => {
 
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
+  dataGridCoverageScenarios(() => page, appUrl, screenshot);
   statefulUiScenarios(() => page, appUrl, screenshot);
   desktopScenarios(() => page, appUrl);
   nativeEditorScenarios(() => page, appUrl, screenshot);

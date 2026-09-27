@@ -12,6 +12,7 @@ import { update as updateCodeEditor } from "../code-editor/update";
 import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
 import { setActiveContact, type Model as DataTableModel } from "../data-table/model";
+import { setExample as setDataGridExample } from "../data-grid/model";
 import { update as updateDataTable } from "../data-table/update";
 import { update as updateDiffViewer } from "../diff-viewer/update";
 import type { Model as DiffViewerModel } from "../diff-viewer/model";
@@ -30,6 +31,7 @@ import {
   dataTablePersonFromRoute,
   formStateFromRoute,
   urlToAppRoute,
+  dataGridExampleFromRoute,
   workflowOrientationFromRoute,
   workflowPath,
 } from "./route";
@@ -226,6 +228,7 @@ const applyRoute = (model: Model, route: Model["route"]): Model => {
   next = {
     ...next,
     dataTableDemo: setActiveContact(next.dataTableDemo, dataTablePersonFromRoute(route)),
+    dataGridDemo: setDataGridExample(next.dataGridDemo, dataGridExampleFromRoute(route)),
   };
   if (model.route._tag === "Agent" && route._tag !== "Agent" && Agent.isActive(next.agent)) {
     next = { ...next, agent: Agent.update(next.agent, Agent.Message.Stopped()).model };
