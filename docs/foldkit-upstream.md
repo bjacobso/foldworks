@@ -41,18 +41,20 @@ covariant interface that every variant is assignable to:
 
 ```ts
 export interface Attribute<out Message> {
-  readonly _tag: AttributeTag
-  readonly key?: string
-  readonly value?: unknown
-  readonly text?: string
-  readonly name?: string
-  readonly message?: Message
-  readonly options?: ClickOptions
-  readonly f?: (...args: never) =>
+  readonly _tag: AttributeTag;
+  readonly key?: string;
+  readonly value?: unknown;
+  readonly text?: string;
+  readonly name?: string;
+  readonly message?: Message;
+  readonly options?: ClickOptions;
+  readonly f?: (
+    ...args: never
+  ) =>
     | Message
     | Option.Option<Message>
-    | Option.Option<Readonly<{ focusSelector: string; message: Message }>>
-  readonly action?: MountAction<Message, any>
+    | Option.Option<Readonly<{ focusSelector: string; message: Message }>>;
+  readonly action?: MountAction<Message, any>;
 }
 ```
 
@@ -61,12 +63,12 @@ constructors keep their precise return types.
 
 Measured on `@foldworks/ui` with the patch:
 
-| | before | after |
-|---|---:|---:|
-| TS 6 identity cache | 15,955,484 | 3,149 |
-| TS 6 check time | 122 s | 2.6 s |
-| TS 6 memory | 2.36 GB | 0.45 GB |
-| TS 7 `--checkers 1` | 51 s | 0.7 s |
+|                     |     before |   after |
+| ------------------- | ---------: | ------: |
+| TS 6 identity cache | 15,955,484 |   3,149 |
+| TS 6 check time     |      122 s |   2.6 s |
+| TS 6 memory         |    2.36 GB | 0.45 GB |
+| TS 7 `--checkers 1` |       51 s |   0.7 s |
 
 What the change keeps and what it gives up:
 
