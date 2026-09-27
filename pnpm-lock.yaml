@@ -52,8 +52,8 @@ catalogs:
       specifier: 1.62.1
       version: 1.62.1
     typescript:
-      specifier: 6.0.3
-      version: 6.0.3
+      specifier: 7.0.2
+      version: 7.0.2
     vite:
       specifier: 8.2.2
       version: 8.2.2
@@ -61,13 +61,18 @@ catalogs:
       specifier: 4.1.11
       version: 4.1.11
 
+patchedDependencies:
+  foldkit@0.156.0:
+    hash: 2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57
+    path: patches/foldkit@0.156.0.patch
+
 importers:
 
   .:
     devDependencies:
       '@alchemy.run/frontend-frameworks':
         specifier: 2.0.0-beta.76
-        version: 2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
+        version: 2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
       '@changesets/cli':
         specifier: ^3.0.2
         version: 3.0.2
@@ -79,7 +84,7 @@ importers:
         version: 24.13.3
       alchemy:
         specifier: 2.0.0-beta.76
-        version: 2.0.0-beta.76(@alchemy.run/frontend-frameworks@2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(ws@8.21.3)
+        version: 2.0.0-beta.76(@alchemy.run/frontend-frameworks@2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(ws@8.21.3)
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
@@ -94,22 +99,22 @@ importers:
         version: 1.85.0
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@microsoft/api-extractor@7.59.0(@types/node@24.13.3))(postcss@8.5.26)(typescript@5.9.3)(yaml@2.9.0)
+        version: 8.5.1(@microsoft/api-extractor@7.59.0(@types/node@24.13.3))(postcss@8.5.26)(typescript@7.0.2)(yaml@2.9.0)
       turbo:
         specifier: ^2.11.3
         version: 2.11.3
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   apps/demo:
     dependencies:
       '@foldkit/markdown':
         specifier: 'catalog:'
-        version: 0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+        version: 0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@foldworks/agent':
         specifier: workspace:*
         version: link:../../packages/agent
@@ -172,17 +177,17 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       pdf-lib:
         specifier: 'catalog:'
         version: 1.17.1
     devDependencies:
       '@foldkit/devtools':
         specifier: 'catalog:'
-        version: 0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@foldkit/vite-plugin':
         specifier: 'catalog:'
-        version: 0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+        version: 0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.1
@@ -197,7 +202,7 @@ importers:
         version: 1.62.1
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vite:
         specifier: 'catalog:'
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0)
@@ -222,10 +227,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -241,10 +246,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -256,7 +261,7 @@ importers:
         version: 24.13.3
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -275,10 +280,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -294,10 +299,10 @@ importers:
     devDependencies:
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -309,10 +314,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -324,10 +329,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -358,10 +363,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -370,13 +375,13 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -395,10 +400,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -410,7 +415,7 @@ importers:
         version: 4.0.0-rc.112
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -425,7 +430,7 @@ importers:
         version: 4.0.0-rc.112
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -441,10 +446,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -466,16 +471,16 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -497,10 +502,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -516,7 +521,7 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -525,10 +530,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -550,10 +555,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -569,7 +574,7 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -581,10 +586,10 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -597,13 +602,13 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       typescript:
         specifier: 'catalog:'
-        version: 6.0.3
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
@@ -2682,6 +2687,126 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
+  '@typescript/typescript-aix-ppc64@7.0.2':
+    resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [ppc64]
+    os: [aix]
+
+  '@typescript/typescript-darwin-arm64@7.0.2':
+    resolution: {integrity: sha512-gowzar9MwS/aRWp6f3a4KUqzRjAZjOsmGNCM6LcTgXum+dBfgsBVMN+AgvOCCbguXyick6LJhpBszxMebJ8syA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@typescript/typescript-darwin-x64@7.0.2':
+    resolution: {integrity: sha512-SZ9xZInqApNlNGc9s0W1VSsktYSOe9cFqNOIqmN1Gs8SmkjKZYFt017G4VwPxASInODuAdbTW7sXiFUf893RgA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@typescript/typescript-freebsd-arm64@7.0.2':
+    resolution: {integrity: sha512-W5NH4y/J0plIIS5b2xvTEkU7JFxyqdMAOgf+Ilhl0vHQXKO5dZoxd+C/jEtq56c4F3wk71RB4BMRQ2XdI+bwYQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [freebsd]
+
+  '@typescript/typescript-freebsd-x64@7.0.2':
+    resolution: {integrity: sha512-UMGDx5sTpzNw3WiPebH7l90IWfJggEd+egHt/q6p7/Cm3zqoV7VxkGXt+3DxPIw8CcmvAB0j3sVVfbhX+M4Tpw==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@typescript/typescript-linux-arm64@7.0.2':
+    resolution: {integrity: sha512-Qh4eU4/y3yDjnfjjyPYihMj5/ODIlmt+Bzu17OI+fiSRDW57QmU5SiN63exPRNJPKUzcc1INa1NXdrJ+MqHjUQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@typescript/typescript-linux-arm@7.0.2':
+    resolution: {integrity: sha512-gffT3xPz9sR7j/YJExkyPntrI0P2EP9XbOyWzth2/Gs0RstK+90RBcO0ncXoXy/beYll1SXw846Nf2zdnEz0QQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm]
+    os: [linux]
+
+  '@typescript/typescript-linux-loong64@7.0.2':
+    resolution: {integrity: sha512-uEHck9i8hoAzXPiYRib1O7miOnz23SxIeVl6F4LXox+qov1K35jHcEW6VHKvZI+pyvl7fZEP4MCU5LYvIq1GuQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [loong64]
+    os: [linux]
+
+  '@typescript/typescript-linux-mips64el@7.0.2':
+    resolution: {integrity: sha512-R4KvAMnE43W5Qeqb0Ly56O3mWMWIAgsMyz36DCaycd5nbg/9kzm0liw3JocfRqyJY0KPmzFjbswozXyW0DnIYA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [mips64el]
+    os: [linux]
+
+  '@typescript/typescript-linux-ppc64@7.0.2':
+    resolution: {integrity: sha512-DORx5b3sd/4S7eayxm4FQv+A7CrkUIGRaHiwI8oiHTAI1fAPWhF4J0vAlkC8biAlHSVVwxMQ3tjZ2/DVbnQiiA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [ppc64]
+    os: [linux]
+
+  '@typescript/typescript-linux-riscv64@7.0.2':
+    resolution: {integrity: sha512-wf0jqEDOjrPRnKwYRyyJDRo11KMbvMFrU+q4zqKyChODBzvlkbhNQfKvLxQCcwTpdDaXSHZTVuh0JoCrKCUMHQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@typescript/typescript-linux-s390x@7.0.2':
+    resolution: {integrity: sha512-IkwJc3L7yhytWd/ewjyxNDfOmswCm9GWMJT/ue/dU4aZNbwZeYAetq42VyLmsmSjvoX7z74X6ZaYCtzAr0EuGw==}
+    engines: {node: '>=16.20.0'}
+    cpu: [s390x]
+    os: [linux]
+
+  '@typescript/typescript-linux-x64@7.0.2':
+    resolution: {integrity: sha512-EYdf2cNg7rgCWJnxCdJ+F3V39O8ihb37eHAu1LK8oAFizgTQbPOK7zHHXbPt8rX24COqODXeI3sIf0fCXG7H/A==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@typescript/typescript-netbsd-arm64@7.0.2':
+    resolution: {integrity: sha512-+polYF4MF04aPpO5FTkHran9yUQDSXqy5GiSDKpsll5jy3l3+g9QLhpf39T+ePtefhXLOGrLl0QIjkQP6VnelA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [netbsd]
+
+  '@typescript/typescript-netbsd-x64@7.0.2':
+    resolution: {integrity: sha512-8YIT0EHM/3dq10ZOVF/A7pc/YSMtbcecct4rWtexrnSCHOPcpC2KTLXfTCR6vDpnSiY12heNb1GiN/wu+T/FyA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [netbsd]
+
+  '@typescript/typescript-openbsd-arm64@7.0.2':
+    resolution: {integrity: sha512-APT8+ClYnuYm1u9+kgGXoMj2VzWzcymwh2gNSQVySHfkRDGOTVkoWLjCmOQSaO+PoqQ57B0flRp9SA+7GnnkzQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [openbsd]
+
+  '@typescript/typescript-openbsd-x64@7.0.2':
+    resolution: {integrity: sha512-yX7s+Q0Dln0Dt9tEzZsAjXXR/+ytBM7AlglaqyeMPxQszJ1JhlJdZ6jLA+IzldHtflX81em7lDao1xXu+aRRkg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [openbsd]
+
+  '@typescript/typescript-sunos-x64@7.0.2':
+    resolution: {integrity: sha512-dLJDGaLZ1D4HPQn62u1n8mBDkJREwMsAkCdkwd4Ieqw+x3TUyTsqY0YiBCtE6H6OzzgGk3iuZ3vFWRS+E8/d1g==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [sunos]
+
+  '@typescript/typescript-win32-arm64@7.0.2':
+    resolution: {integrity: sha512-Gyl1Vy6OsWesLzmq+EP0Fb7b4Nid5232AvcA2SFcdYreldpNtYFFofPjnt62y9hQy7VTaZp65ICJjuAQRaVcIQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@typescript/typescript-win32-x64@7.0.2':
+    resolution: {integrity: sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [win32]
+
   '@vitest/expect@4.1.11':
     resolution: {integrity: sha512-VX2x5vNJXET47KAFzwERI+KRMtTTCSWTfSMKsW7JsUsXV4psq++e3DvZpuTDOpHcxytiDs6p2nhVb2tVDiiUYw==}
 
@@ -4078,9 +4203,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@6.0.3:
-    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
-    engines: {node: '>=14.17'}
+  typescript@7.0.2:
+    resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
+    engines: {node: '>=16.20.0'}
     hasBin: true
 
   ufo@1.6.4:
@@ -4318,13 +4443,13 @@ snapshots:
       ansi-styles: 6.2.3
       is-fullwidth-code-point: 5.1.0
 
-  '@alchemy.run/cloudflare-runtime@2.0.0-beta.76(@distilled.cloud/cloudflare@1.0.0-rc.8(effect@4.0.0-rc.112))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(rolldown@1.2.5)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))':
+  '@alchemy.run/cloudflare-runtime@2.0.0-beta.76(@distilled.cloud/cloudflare@1.0.0-rc.8(effect@4.0.0-rc.112))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(rolldown@1.2.5)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))':
     dependencies:
       '@alchemy.run/node-utils': 2.0.0-beta.76
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260704.1)
       '@distilled.cloud/cloudflare': 1.0.0-rc.8(effect@4.0.0-rc.112)
       '@puppeteer/browsers': 3.2.2(yauzl@3.4.0)
-      capnp-es: 0.0.14(typescript@5.9.3)
+      capnp-es: 0.0.14(typescript@7.0.2)
       effect: 4.0.0-rc.112
       magic-string: 0.30.21
       sharp: 0.35.4(@types/node@24.13.3)
@@ -4344,9 +4469,9 @@ snapshots:
     dependencies:
       effect: 4.0.0-rc.112
 
-  '@alchemy.run/frontend-frameworks@2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))':
+  '@alchemy.run/frontend-frameworks@2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))':
     dependencies:
-      '@alchemy.run/cloudflare-runtime': 2.0.0-beta.76(@distilled.cloud/cloudflare@1.0.0-rc.8(effect@4.0.0-rc.112))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(rolldown@1.2.5)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
+      '@alchemy.run/cloudflare-runtime': 2.0.0-beta.76(@distilled.cloud/cloudflare@1.0.0-rc.8(effect@4.0.0-rc.112))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(rolldown@1.2.5)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
       '@distilled.cloud/cloudflare': 1.0.0-rc.8(effect@4.0.0-rc.112)
       effect: 4.0.0-rc.112
       esbuild: 0.28.2
@@ -5082,18 +5207,18 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
-  '@foldkit/devtools@0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))':
+  '@foldkit/devtools@0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))':
     dependencies:
       '@effect/platform-browser': 4.0.0-rc.112(effect@4.0.0-rc.112)
-      '@foldkit/ui': 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+      '@foldkit/ui': 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       clsx: 2.1.1
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
 
-  '@foldkit/markdown@0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
+  '@foldkit/markdown@0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
     dependencies:
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       remark-directive: 4.0.0
       remark-frontmatter: 5.0.0
       remark-gfm: 4.0.1
@@ -5103,16 +5228,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))':
+  '@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))':
     dependencies:
       '@floating-ui/dom': 1.8.0
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
 
-  '@foldkit/vite-plugin@0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
+  '@foldkit/vite-plugin@0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
     dependencies:
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       magic-string: 1.2.3
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0)
       ws: 8.21.3
@@ -5689,7 +5814,7 @@ snapshots:
 
   '@prisma/debug@7.2.0': {}
 
-  '@prisma/dev@0.20.0(typescript@5.9.3)':
+  '@prisma/dev@0.20.0(typescript@7.0.2)':
     dependencies:
       '@electric-sql/pglite': 0.3.15
       '@electric-sql/pglite-socket': 0.0.20(@electric-sql/pglite@0.3.15)
@@ -5706,7 +5831,7 @@ snapshots:
       proper-lockfile: 4.1.2
       remeda: 2.33.4
       std-env: 3.10.0
-      valibot: 1.2.0(typescript@5.9.3)
+      valibot: 1.2.0(typescript@7.0.2)
       zeptomatch: 2.1.0
     transitivePeerDependencies:
       - typescript
@@ -6107,6 +6232,66 @@ snapshots:
     dependencies:
       '@types/node': 24.13.3
 
+  '@typescript/typescript-aix-ppc64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-darwin-arm64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-darwin-x64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-freebsd-arm64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-freebsd-x64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-arm64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-arm@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-loong64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-mips64el@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-ppc64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-riscv64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-s390x@7.0.2':
+    optional: true
+
+  '@typescript/typescript-linux-x64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-netbsd-arm64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-netbsd-x64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-openbsd-arm64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-openbsd-x64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-sunos-x64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-win32-arm64@7.0.2':
+    optional: true
+
+  '@typescript/typescript-win32-x64@7.0.2':
+    optional: true
+
   '@vitest/expect@4.1.11':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -6184,9 +6369,9 @@ snapshots:
       require-from-string: 2.0.2
     optional: true
 
-  alchemy@2.0.0-beta.76(@alchemy.run/frontend-frameworks@2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(ws@8.21.3):
+  alchemy@2.0.0-beta.76(@alchemy.run/frontend-frameworks@2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)))(ws@8.21.3):
     dependencies:
-      '@alchemy.run/cloudflare-runtime': 2.0.0-beta.76(@distilled.cloud/cloudflare@1.0.0-rc.8(effect@4.0.0-rc.112))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(rolldown@1.2.5)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
+      '@alchemy.run/cloudflare-runtime': 2.0.0-beta.76(@distilled.cloud/cloudflare@1.0.0-rc.8(effect@4.0.0-rc.112))(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(rolldown@1.2.5)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
       '@alchemy.run/floci': 2.0.0-beta.76(effect@4.0.0-rc.112)
       '@alchemy.run/node-utils': 2.0.0-beta.76
       '@aws-sdk/credential-providers': 3.1126.0
@@ -6206,7 +6391,7 @@ snapshots:
       '@libsql/client': 0.17.4
       '@octokit/rest': 22.0.1
       '@octokit/webhooks': 14.2.0
-      '@prisma/dev': 0.20.0(typescript@5.9.3)
+      '@prisma/dev': 0.20.0(typescript@7.0.2)
       '@smithy/node-config-provider': 4.6.2
       '@smithy/shared-ini-file-loader': 4.7.2
       '@smithy/types': 4.18.0
@@ -6226,7 +6411,7 @@ snapshots:
       undici: 7.29.0
       yaml: 2.9.0
     optionalDependencies:
-      '@alchemy.run/frontend-frameworks': 2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@5.9.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
+      '@alchemy.run/frontend-frameworks': 2.0.0-beta.76(@effect/platform-node@4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1))(@types/node@24.13.3)(effect@4.0.0-rc.112)(hono@4.12.14)(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0))
       '@effect/platform-node': 4.0.0-rc.112(effect@4.0.0-rc.112)(redis@6.2.1)
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.27.7)(yaml@2.9.0)
       ws: 8.21.3
@@ -6302,9 +6487,9 @@ snapshots:
 
   caniuse-lite@1.0.30001810: {}
 
-  capnp-es@0.0.14(typescript@5.9.3):
+  capnp-es@0.0.14(typescript@7.0.2):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 7.0.2
 
   capnweb@0.6.1: {}
 
@@ -6565,7 +6750,7 @@ snapshots:
       mlly: 1.8.2
       rollup: 4.63.1
 
-  foldkit@0.156.0(effect@4.0.0-rc.112):
+  foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112):
     dependencies:
       effect: 4.0.0-rc.112
       parse5: 8.0.1
@@ -7755,7 +7940,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.1(@microsoft/api-extractor@7.59.0(@types/node@24.13.3))(postcss@8.5.26)(typescript@5.9.3)(yaml@2.9.0):
+  tsup@8.5.1(@microsoft/api-extractor@7.59.0(@types/node@24.13.3))(postcss@8.5.26)(typescript@7.0.2)(yaml@2.9.0):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.7)
       cac: 6.7.14
@@ -7777,7 +7962,7 @@ snapshots:
     optionalDependencies:
       '@microsoft/api-extractor': 7.59.0(@types/node@24.13.3)
       postcss: 8.5.26
-      typescript: 5.9.3
+      typescript: 7.0.2
     transitivePeerDependencies:
       - jiti
       - supports-color
@@ -7797,9 +7982,31 @@ snapshots:
     dependencies:
       tagged-tag: 1.0.0
 
-  typescript@5.9.3: {}
+  typescript@5.9.3:
+    optional: true
 
-  typescript@6.0.3: {}
+  typescript@7.0.2:
+    optionalDependencies:
+      '@typescript/typescript-aix-ppc64': 7.0.2
+      '@typescript/typescript-darwin-arm64': 7.0.2
+      '@typescript/typescript-darwin-x64': 7.0.2
+      '@typescript/typescript-freebsd-arm64': 7.0.2
+      '@typescript/typescript-freebsd-x64': 7.0.2
+      '@typescript/typescript-linux-arm': 7.0.2
+      '@typescript/typescript-linux-arm64': 7.0.2
+      '@typescript/typescript-linux-loong64': 7.0.2
+      '@typescript/typescript-linux-mips64el': 7.0.2
+      '@typescript/typescript-linux-ppc64': 7.0.2
+      '@typescript/typescript-linux-riscv64': 7.0.2
+      '@typescript/typescript-linux-s390x': 7.0.2
+      '@typescript/typescript-linux-x64': 7.0.2
+      '@typescript/typescript-netbsd-arm64': 7.0.2
+      '@typescript/typescript-netbsd-x64': 7.0.2
+      '@typescript/typescript-openbsd-arm64': 7.0.2
+      '@typescript/typescript-openbsd-x64': 7.0.2
+      '@typescript/typescript-sunos-x64': 7.0.2
+      '@typescript/typescript-win32-arm64': 7.0.2
+      '@typescript/typescript-win32-x64': 7.0.2
 
   ufo@1.6.4: {}
 
@@ -7862,9 +8069,9 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  valibot@1.2.0(typescript@5.9.3):
+  valibot@1.2.0(typescript@7.0.2):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 7.0.2
 
   vfile-message@4.0.3:
     dependencies:
