@@ -7,13 +7,20 @@ export * as Fieldset from "./fieldset";
 export * as Icon from "./icon";
 export * as Layout from "./layout";
 export * as Workspace from "./workspace";
+export * as SplitView from "./split-view";
+export * as AppHeader from "./app-header";
 export * as Tree from "./tree";
 export * as Panel from "./panel";
 export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";
 export * as Switch from "./switch";
 export * as Toolbar from "./toolbar";
-export { ChangeSetPreview, ExplanationTree, TransactionTimeline, ValueInspector } from "./operational";
+export {
+  ChangeSetPreview,
+  ExplanationTree,
+  TransactionTimeline,
+  ValueInspector,
+} from "./operational";
 export type { Consequence, ExplanationNode, TimelineEntry, ValueChange } from "./operational";
 export { Accordion, Collapsible } from "./collections";
 export { Heading, Link, Text, VisuallyHidden } from "./content";
