@@ -61,6 +61,11 @@ catalogs:
       specifier: 4.1.11
       version: 4.1.11
 
+patchedDependencies:
+  foldkit@0.156.0:
+    hash: 2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57
+    path: patches/foldkit@0.156.0.patch
+
 importers:
 
   .:
@@ -106,10 +111,10 @@ importers:
     dependencies:
       '@foldkit/markdown':
         specifier: 'catalog:'
-        version: 0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+        version: 0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@foldworks/agent':
         specifier: workspace:*
         version: link:../../packages/agent
@@ -172,17 +177,17 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       pdf-lib:
         specifier: 'catalog:'
         version: 1.17.1
     devDependencies:
       '@foldkit/devtools':
         specifier: 'catalog:'
-        version: 0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@foldkit/vite-plugin':
         specifier: 'catalog:'
-        version: 0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+        version: 0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.1
@@ -222,7 +227,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -241,7 +246,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -275,7 +280,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -294,7 +299,7 @@ importers:
     devDependencies:
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -309,7 +314,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -324,7 +329,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -358,7 +363,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -370,10 +375,10 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -395,7 +400,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -441,7 +446,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -466,13 +471,13 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -497,7 +502,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -516,7 +521,7 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -525,7 +530,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -550,7 +555,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -569,7 +574,7 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
@@ -581,7 +586,7 @@ importers:
         version: 4.0.0-rc.112
       foldkit:
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)
+        version: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -597,7 +602,7 @@ importers:
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
-        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+        version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112
@@ -5082,18 +5087,18 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
-  '@foldkit/devtools@0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))':
+  '@foldkit/devtools@0.156.0(@effect/platform-browser@4.0.0-rc.112(effect@4.0.0-rc.112))(@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)))(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))':
     dependencies:
       '@effect/platform-browser': 4.0.0-rc.112(effect@4.0.0-rc.112)
-      '@foldkit/ui': 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+      '@foldkit/ui': 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))
       clsx: 2.1.1
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
 
-  '@foldkit/markdown@0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
+  '@foldkit/markdown@0.9.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
     dependencies:
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       remark-directive: 4.0.0
       remark-frontmatter: 5.0.0
       remark-gfm: 4.0.1
@@ -5103,16 +5108,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))':
+  '@foldkit/ui@0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))':
     dependencies:
       '@floating-ui/dom': 1.8.0
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
 
-  '@foldkit/vite-plugin@0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
+  '@foldkit/vite-plugin@0.20.0(effect@4.0.0-rc.112)(foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))':
     dependencies:
       effect: 4.0.0-rc.112
-      foldkit: 0.156.0(effect@4.0.0-rc.112)
+      foldkit: 0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112)
       magic-string: 1.2.3
       vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0)
       ws: 8.21.3
@@ -6565,7 +6570,7 @@ snapshots:
       mlly: 1.8.2
       rollup: 4.63.1
 
-  foldkit@0.156.0(effect@4.0.0-rc.112):
+  foldkit@0.156.0(patch_hash=2e3fbfd91eeb160fa0879eebb47a2962a50160152acfa4f47e95626db473be57)(effect@4.0.0-rc.112):
     dependencies:
       effect: 4.0.0-rc.112
       parse5: 8.0.1
