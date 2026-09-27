@@ -152,7 +152,10 @@ export const styles = stylex.create({
   previewGrid: {
     display: "grid",
     gap: "12px",
-    gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 0.8fr)",
+    gridTemplateColumns: {
+      default: "minmax(0, 1.2fr) minmax(0, 0.8fr)",
+      "@media (max-width: 620px)": "minmax(0, 1fr)",
+    },
   },
   previewCard: {
     minWidth: 0,
@@ -180,24 +183,38 @@ export const styles = stylex.create({
   },
   teamRow: {
     alignItems: "center",
-    display: "flex",
-    gap: "9px",
+    columnGap: "9px",
+    display: "grid",
+    gridTemplateColumns: {
+      default: "auto minmax(0, 1fr)",
+      "@media (max-width: 620px)": "auto minmax(0, 1fr) auto",
+    },
+    rowGap: "2px",
   },
-  teamCopy: {
-    display: "flex",
-    flex: 1,
-    flexDirection: "column",
-    minWidth: 0,
+  teamAvatar: {
+    alignSelf: { default: "start", "@media (max-width: 620px)": "center" },
+    gridRow: { default: "1 / span 3", "@media (max-width: 620px)": "1 / span 2" },
   },
   teamName: {
     color: "var(--foreground)",
     fontSize: "12px",
     fontWeight: 600,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   teamRole: {
     color: "var(--muted-foreground)",
     fontSize: "10px",
-    marginTop: "2px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  teamStatus: {
+    gridColumn: { default: "2", "@media (max-width: 620px)": "3" },
+    gridRow: { default: "auto", "@media (max-width: 620px)": "1 / span 2" },
+    justifySelf: "start",
+    marginTop: { default: "4px", "@media (max-width: 620px)": 0 },
   },
   chartCard: {
     gridColumn: "1 / -1",

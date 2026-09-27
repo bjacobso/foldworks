@@ -215,15 +215,18 @@ const person = <Message>(
   h.div(
     [h.Class(className(styles.teamRow))],
     [
-      Avatar.view({ alt: name, fallback, size: "sm" }, h),
-      h.div(
-        [h.Class(className(styles.teamCopy))],
-        [
-          h.span([h.Class(className(styles.teamName))], [name]),
-          h.span([h.Class(className(styles.teamRole))], [role]),
-        ],
+      Avatar.view({ alt: name, fallback, size: "sm", sx: styles.teamAvatar }, h),
+      h.span([h.Class(className(styles.teamName))], [name]),
+      h.span([h.Class(className(styles.teamRole))], [role]),
+      Badge.view(
+        {
+          label: status,
+          tone: status === "Ready" ? "success" : "neutral",
+          dot: true,
+          sx: styles.teamStatus,
+        },
+        h,
       ),
-      Badge.view({ label: status, tone: status === "Ready" ? "success" : "neutral", dot: true }, h),
     ],
   );
 
@@ -481,7 +484,7 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                   ),
                   h.h2(
                     [h.Class(className(styles.title))],
-                    ["Application primitives for product teams."],
+                    ["Application primitives for ambitious teams."],
                   ),
                   h.p(
                     [h.Class(className(styles.lead))],
