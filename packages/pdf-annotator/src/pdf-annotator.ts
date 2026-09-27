@@ -13,7 +13,7 @@ export {
   serializeAnnotationDocument,
   validateAnnotationDocument,
 } from "./document";
-export { extractPdfAnnotations, serializePdf } from "./pdf";
+export { extractPdfAnnotations, PdfDocumentError, serializePdf } from "./pdf";
 export { subscriptions } from "./subscriptions";
 export { update } from "./update";
 export { view } from "./view";

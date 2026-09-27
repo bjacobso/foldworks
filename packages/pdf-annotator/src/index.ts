@@ -31,9 +31,11 @@ export {
 } from "./document";
 export {
   extractPdfAnnotations,
+  PdfDocumentError,
   serializePdf,
   type ExtractedPdfAnnotations,
   type PdfWarning,
   type SerializedPdf,
+  type SerializeOptions,
 } from "./pdf";
 export * as PdfAnnotator from "./pdf-annotator";

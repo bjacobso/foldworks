@@ -34,6 +34,30 @@ export type CellContext<Row> = Readonly<{
   rowIndex: number;
   columnId: string;
   value: CellValue;
+  /** Nesting level: 0 for top-level rows, 1 for their sub-rows, and so on. */
+  depth?: number;
+}>;
+
+export type RowTone = "Neutral" | "Info" | "Success" | "Warning" | "Danger";
+
+export type RowContext = Readonly<{
+  rowId: string;
+  rowIndex: number;
+  depth: number;
+  childCount: number;
+  isExpanded: boolean;
+  isSelected: boolean;
+}>;
+
+/** Per-row presentation and behavior returned by `ViewConfig.rowAttributes`. */
+export type RowAttributes<ParentMessage> = Readonly<{
+  /** Dispatched when the row is clicked, or when Enter is pressed on a
+   * read-only cell in the row. */
+  onClick?: ParentMessage;
+  /** Tints the row and marks its leading edge, for example coverage gaps. */
+  tone?: RowTone;
+  /** Accessible row name, announced when focus enters the row. */
+  label?: string;
 }>;
 
 export type HeaderContext<Row, ParentMessage> = Readonly<{
@@ -51,12 +75,14 @@ export type ColumnDef<Row, ParentMessage = never> = Readonly<{
   enableSorting?: boolean;
   enableResizing?: boolean;
   pinned?: ColumnPin;
+  /** Renders this column's body cells as row headers. */
+  rowHeader?: boolean;
   compare?: (left: Row, right: Row) => number;
+  /** Plain-text hover and focus details for a cell. Multiple lines are kept.
+   * Details hold no model state; one shared popover serves the whole grid. */
+  details?: (context: CellContext<Row>) => string | undefined;
   clipboardValue?: (context: CellContext<Row>) => string;
-  renderCell?: (
-    context: CellContext<Row>,
-    h: HtmlBuilder<ParentMessage>,
-  ) => Html;
+  renderCell?: (context: CellContext<Row>, h: HtmlBuilder<ParentMessage>) => Html;
   renderHeader?: (
     context: HeaderContext<Row, ParentMessage>,
     h: HtmlBuilder<ParentMessage>,
@@ -77,6 +103,12 @@ export type TableRow<Row, ParentMessage> = Readonly<{
   index: number;
   original: Row;
   cells: ReadonlyArray<TableCell<Row, ParentMessage>>;
+  depth: number;
+  parentId: string | undefined;
+  childCount: number;
+  isExpanded: boolean;
+  positionInSet: number;
+  setSize: number;
 }>;
 
 export type TableColumn<Row, ParentMessage> = Readonly<{
@@ -107,6 +139,9 @@ export type CreateTableConfig<Row, ParentMessage> = Readonly<{
   columns: ReadonlyArray<ColumnDef<Row, ParentMessage>>;
   rows: ReadonlyArray<Row>;
   getRowId: (row: Row) => string;
+  /** Returns a row's child rows. Rows with children become expandable row
+   * groups whose expansion is keyed by their stable row ID. */
+  getSubRows?: (row: Row) => ReadonlyArray<Row> | undefined;
 }>;
 
 export type ColumnMoveDirection = "Before" | "After";
@@ -126,8 +161,7 @@ export const orderedColumns = <Row, ParentMessage>(
   const reconciled = [...ordered, ...columns.filter((column) => !seen.has(column.id))];
   return [
     ...reconciled.filter((column) => column.pinned === "Start"),
-    ...reconciled.filter((column) =>
-      column.pinned !== "Start" && column.pinned !== "End"),
+    ...reconciled.filter((column) => column.pinned !== "Start" && column.pinned !== "End"),
     ...reconciled.filter((column) => column.pinned === "End"),
   ];
 };
@@ -142,10 +176,7 @@ export const moveColumn = (
   const toIndex = fromIndex + (direction === "Before" ? -1 : 1);
   if (fromIndex < 0 || toIndex < 0 || toIndex >= uniqueIds.length) return uniqueIds;
   const reordered = [...uniqueIds];
-  [reordered[fromIndex], reordered[toIndex]] = [
-    reordered[toIndex]!,
-    reordered[fromIndex]!,
-  ];
+  [reordered[fromIndex], reordered[toIndex]] = [reordered[toIndex]!, reordered[fromIndex]!];
   return reordered;
 };
 
@@ -167,37 +198,82 @@ export const columnWidth = (
   model: Model,
   columnId: string,
   fallback = DEFAULT_COLUMN_WIDTH,
-): number =>
-  model.columnSizes.find((size) => size.columnId === columnId)?.width ?? fallback;
+): number => model.columnSizes.find((size) => size.columnId === columnId)?.width ?? fallback;
+
+export const isRowGroupExpanded = (model: Model, rowId: string): boolean =>
+  model.rowGroups.expandedByDefault !== model.rowGroups.toggledRowIds.includes(rowId);
+
+type VisibleRow<Row> = Omit<TableRow<Row, never>, "index" | "cells">;
+
+const flattenVisibleRows = <Row, ParentMessage>(
+  config: CreateTableConfig<Row, ParentMessage>,
+  compare: ((left: Row, right: Row) => number) | undefined,
+): ReadonlyArray<VisibleRow<Row>> => {
+  const toggled = new Set(config.model.rowGroups.toggledRowIds);
+  const expandedByDefault = config.model.rowGroups.expandedByDefault;
+  const output: Array<VisibleRow<Row>> = [];
+  const visit = (rows: ReadonlyArray<Row>, depth: number, parentId: string | undefined): void => {
+    const siblings = compare === undefined ? rows : [...rows].sort(compare);
+    siblings.forEach((row, index) => {
+      const id = config.getRowId(row);
+      const children = config.getSubRows?.(row) ?? [];
+      const isExpanded = children.length > 0 && expandedByDefault !== toggled.has(id);
+      output.push({
+        id,
+        original: row,
+        depth,
+        parentId,
+        childCount: children.length,
+        isExpanded,
+        positionInSet: index + 1,
+        setSize: siblings.length,
+      });
+      if (isExpanded) visit(children, depth + 1, id);
+    });
+  };
+  visit(config.rows, 0, undefined);
+  return output;
+};
+
+/** Flattens grouped rows depth-first, including rows inside collapsed groups. */
+export const flattenRows = <Row>(
+  rows: ReadonlyArray<Row>,
+  getSubRows?: (row: Row) => ReadonlyArray<Row> | undefined,
+): ReadonlyArray<Row> => {
+  if (getSubRows === undefined) return rows;
+  const output: Array<Row> = [];
+  const visit = (items: ReadonlyArray<Row>): void => {
+    for (const item of items) {
+      output.push(item);
+      const children = getSubRows(item);
+      if (children !== undefined && children.length > 0) visit(children);
+    }
+  };
+  visit(rows);
+  return output;
+};
 
 export const createTable = <Row, ParentMessage>(
   config: CreateTableConfig<Row, ParentMessage>,
 ): Table<Row, ParentMessage> => {
   const definitions = orderedColumns(config.columns, config.model.columnOrder);
   const sorting = Option.getOrUndefined(config.model.sorting);
-  const sortingColumn = sorting === undefined
-    ? undefined
-    : definitions.find((column) => column.id === sorting.columnId);
-  const rows = [...config.rows];
-  if (sorting !== undefined && sortingColumn !== undefined) {
-    const direction = sorting.direction === "Ascending" ? 1 : -1;
-    rows.sort((left, right) =>
-      direction * (
-        sortingColumn.compare?.(left, right) ??
-        compareValues(sortingColumn.accessor(left), sortingColumn.accessor(right))
-      ),
-    );
-  }
-
+  const sortingColumn =
+    sorting === undefined
+      ? undefined
+      : definitions.find((column) => column.id === sorting.columnId);
+  const compare =
+    sorting === undefined || sortingColumn === undefined
+      ? undefined
+      : (left: Row, right: Row) =>
+          (sorting.direction === "Ascending" ? 1 : -1) *
+          (sortingColumn.compare?.(left, right) ??
+            compareValues(sortingColumn.accessor(left), sortingColumn.accessor(right)));
+  const visibleRows = flattenVisibleRows(config, compare);
   const baseColumns = definitions.map((definition) => ({
     definition,
-    width: columnWidth(
-      config.model,
-      definition.id,
-      definition.width ?? DEFAULT_COLUMN_WIDTH,
-    ),
-    sortDirection:
-      sorting?.columnId === definition.id ? sorting.direction : undefined,
+    width: columnWidth(config.model, definition.id, definition.width ?? DEFAULT_COLUMN_WIDTH),
+    sortDirection: sorting?.columnId === definition.id ? sorting.direction : undefined,
   }));
   const startOffsets = new Map<string, number>();
   let startOffset = 0;
@@ -215,38 +291,41 @@ export const createTable = <Row, ParentMessage>(
   }
   const columns = baseColumns.map((column, index) => {
     const pinned = column.definition.pinned;
-    const neighbor = pinned === "Start"
-      ? baseColumns[index + 1]
-      : pinned === "End"
-        ? baseColumns[index - 1]
-        : undefined;
+    const neighbor =
+      pinned === "Start"
+        ? baseColumns[index + 1]
+        : pinned === "End"
+          ? baseColumns[index - 1]
+          : undefined;
     return {
       ...column,
       pinned,
-      pinOffset: pinned === "Start"
-        ? startOffsets.get(column.definition.id) ?? 0
-        : pinned === "End"
-          ? endOffsets.get(column.definition.id) ?? 0
-          : 0,
+      pinOffset:
+        pinned === "Start"
+          ? (startOffsets.get(column.definition.id) ?? 0)
+          : pinned === "End"
+            ? (endOffsets.get(column.definition.id) ?? 0)
+            : 0,
       isPinBoundary: pinned !== undefined && neighbor?.definition.pinned !== pinned,
     };
   });
-  const tableRows = rows.map((row, index) => {
-    const rowId = config.getRowId(row);
-    return {
-      id: rowId,
-      index,
-      original: row,
-      cells: definitions.map((column) => ({
-        id: `${rowId}:${column.id}`,
-        column,
-        value: (() => {
-          const draft = config.model.drafts.find((item) => sameCell(item, { rowId, columnId: column.id }));
-          return draft === undefined ? column.accessor(row) : draft.value;
-        })(),
-      })),
-    };
-  });
+  const tableRows = visibleRows.map((row, index) => ({
+    ...row,
+    index,
+    cells: definitions.map((column) => ({
+      id: `${row.id}:${column.id}`,
+      column,
+      value: (() => {
+        const draft =
+          config.model.drafts.length === 0
+            ? undefined
+            : config.model.drafts.find((item) =>
+                sameCell(item, { rowId: row.id, columnId: column.id }),
+              );
+        return draft === undefined ? column.accessor(row.original) : draft.value;
+      })(),
+    })),
+  }));
   const widths = columns.map((column) => column.width);
   return {
     columns,
@@ -261,7 +340,9 @@ const addressIndexes = <Row, ParentMessage>(
   address: Readonly<{ rowId: string; columnId: string }>,
 ): Readonly<{ rowIndex: number; columnIndex: number }> | undefined => {
   const rowIndex = table.rows.findIndex((row) => row.id === address.rowId);
-  const columnIndex = table.columns.findIndex((column) => column.definition.id === address.columnId);
+  const columnIndex = table.columns.findIndex(
+    (column) => column.definition.id === address.columnId,
+  );
   return rowIndex < 0 || columnIndex < 0 ? undefined : { rowIndex, columnIndex };
 };
 
@@ -274,7 +355,8 @@ export const selectionRange = <Row, ParentMessage>(
   const focusIndexes = addressIndexes(table, focus);
   if (focusIndexes === undefined) return undefined;
   const anchor = Option.getOrUndefined(model.selectionAnchor);
-  const anchorIndexes = anchor === undefined ? focusIndexes : addressIndexes(table, anchor) ?? focusIndexes;
+  const anchorIndexes =
+    anchor === undefined ? focusIndexes : (addressIndexes(table, anchor) ?? focusIndexes);
   return {
     startRowIndex: Math.min(anchorIndexes.rowIndex, focusIndexes.rowIndex),
     endRowIndex: Math.max(anchorIndexes.rowIndex, focusIndexes.rowIndex),
@@ -287,36 +369,50 @@ export const isCellInSelection = (
   range: SelectionRange | undefined,
   rowIndex: number,
   columnIndex: number,
-): boolean => range !== undefined &&
-  rowIndex >= range.startRowIndex && rowIndex <= range.endRowIndex &&
-  columnIndex >= range.startColumnIndex && columnIndex <= range.endColumnIndex;
+): boolean =>
+  range !== undefined &&
+  rowIndex >= range.startRowIndex &&
+  rowIndex <= range.endRowIndex &&
+  columnIndex >= range.startColumnIndex &&
+  columnIndex <= range.endColumnIndex;
 
-export const selectionSize = (range: SelectionRange | undefined): number => range === undefined
-  ? 0
-  : (range.endRowIndex - range.startRowIndex + 1) *
-    (range.endColumnIndex - range.startColumnIndex + 1);
+export const selectionSize = (range: SelectionRange | undefined): number =>
+  range === undefined
+    ? 0
+    : (range.endRowIndex - range.startRowIndex + 1) *
+      (range.endColumnIndex - range.startColumnIndex + 1);
 
-const clipboardField = (value: string): string => /[\t\r\n"]/.test(value)
-  ? `"${value.replaceAll('"', '""')}"`
-  : value;
+const clipboardField = (value: string): string =>
+  /[\t\r\n"]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 
 export const selectionText = <Row, ParentMessage>(
   table: Table<Row, ParentMessage>,
   range: SelectionRange | undefined,
-): string => range === undefined ? "" : table.rows
-  .slice(range.startRowIndex, range.endRowIndex + 1)
-  .map((row) => row.cells
-    .slice(range.startColumnIndex, range.endColumnIndex + 1)
-    .map((cell) => clipboardField(cell.column.clipboardValue?.({
-      row: row.original,
-      rowId: row.id,
-      rowIndex: row.index,
-      columnId: cell.column.id,
-      value: cell.value,
-    }) ?? (cell.value === null || cell.value === undefined ? "" : String(cell.value))))
-    .join("\t"))
-  .join("\n");
+): string =>
+  range === undefined
+    ? ""
+    : table.rows
+        .slice(range.startRowIndex, range.endRowIndex + 1)
+        .map((row) =>
+          row.cells
+            .slice(range.startColumnIndex, range.endColumnIndex + 1)
+            .map((cell) =>
+              clipboardField(
+                cell.column.clipboardValue?.({
+                  row: row.original,
+                  rowId: row.id,
+                  rowIndex: row.index,
+                  columnId: cell.column.id,
+                  value: cell.value,
+                  depth: row.depth,
+                }) ?? (cell.value === null || cell.value === undefined ? "" : String(cell.value)),
+              ),
+            )
+            .join("\t"),
+        )
+        .join("\n");
 
-export const defineColumns = <Row, ParentMessage = never>() =>
+export const defineColumns =
+  <Row, ParentMessage = never>() =>
   <const Columns extends ReadonlyArray<ColumnDef<Row, ParentMessage>>>(columns: Columns) =>
     columns;

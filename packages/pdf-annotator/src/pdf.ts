@@ -1,6 +1,4 @@
-/// <reference path="./vite-env.d.ts" />
-
-import { Schema as S } from "effect";
+import { Data, Effect, Schema as S } from "effect";
 import {
   PDFCheckBox,
   PDFDocument,
@@ -14,12 +12,43 @@ import {
   StandardFonts,
   rgb,
   type PDFField,
+  type PDFFont,
   type PDFPage,
 } from "pdf-lib";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import {
+  displayRectToUserSpace,
+  downloadBytes,
+  getPage,
+  normalizeRotation,
+  rasterizePage,
+  userSpaceToDisplayRect,
+  withPdfDocument,
+  type PdfPageGeometry,
+  type PdfRenderError,
+} from "@foldworks/pdf";
+
+export { base64ToBytes, bytesToBase64 } from "@foldworks/pdf";
 
 import { annotationValueText } from "./document";
 import type { Annotation } from "./model";
+
+/** Raised when pdf-lib cannot load, edit, or save a document. */
+export class PdfDocumentError extends Data.TaggedError("PdfDocumentError")<{
+  readonly reason: string;
+  readonly cause?: unknown;
+}> {}
+
+const documentFailure = (cause: unknown): PdfDocumentError =>
+  new PdfDocumentError({
+    reason: cause instanceof Error ? cause.message : "The PDF could not be processed.",
+    cause,
+  });
+
+const tryDocument = <A>(run: () => Promise<A>): Effect.Effect<A, PdfDocumentError> =>
+  Effect.tryPromise({ try: run, catch: documentFailure });
+
+const trySync = <A>(run: () => A): Effect.Effect<A, PdfDocumentError> =>
+  Effect.try({ try: run, catch: documentFailure });
 
 export type RenderedPage = Readonly<{
   pageCount: number;
@@ -65,7 +94,9 @@ const readFieldSemanticMetadata = (field: PDFField): FieldSemanticMetadata => {
     return {
       ...(typeof record.id === "string" ? { id: record.id } : {}),
       ...(typeof record.kind === "string" ? { kind: record.kind } : {}),
-      ...(typeof record.metadata === "object" && record.metadata !== null && !Array.isArray(record.metadata)
+      ...(typeof record.metadata === "object" &&
+      record.metadata !== null &&
+      !Array.isArray(record.metadata)
         ? { metadata: S.decodeUnknownSync(S.JsonObject)(record.metadata) }
         : {}),
     };
@@ -78,126 +109,52 @@ const writeFieldSemanticMetadata = (field: PDFField, annotation: Annotation): vo
   const metadata = Object.fromEntries(
     Object.entries(annotation.metadata ?? {}).filter(([key]) => key !== "pdfWidgetIndex"),
   );
-  field.acroField.dict.set(packageMetadataKey, PDFHexString.fromText(JSON.stringify({
-    schemaVersion: 1,
-    id: annotation.id,
-    kind: annotation.kind,
-    metadata,
-  })));
+  field.acroField.dict.set(
+    packageMetadataKey,
+    PDFHexString.fromText(
+      JSON.stringify({
+        schemaVersion: 1,
+        id: annotation.id,
+        kind: annotation.kind,
+        metadata,
+      }),
+    ),
+  );
 };
 
-const normalizedRotation = (page: PDFPage): 0 | 90 | 180 | 270 => {
-  const angle = ((page.getRotation().angle % 360) + 360) % 360;
-  return angle === 90 || angle === 180 || angle === 270 ? angle : 0;
-};
+const pageGeometry = (page: PDFPage): PdfPageGeometry => ({
+  cropBox: page.getCropBox(),
+  rotation: normalizeRotation(page.getRotation().angle),
+});
 
 /** Convert a raw bottom-left PDF rectangle to displayed top-left PDF points. */
-const toCanonicalRect = (page: PDFPage, raw: RawPdfRect): RawPdfRect => {
-  const crop = page.getCropBox();
-  const x = raw.x - crop.x;
-  const y = raw.y - crop.y;
-  switch (normalizedRotation(page)) {
-    case 90: return { x: y, y: x, width: raw.height, height: raw.width };
-    case 180: return {
-      x: crop.width - x - raw.width,
-      y,
-      width: raw.width,
-      height: raw.height,
-    };
-    case 270: return {
-      x: crop.height - y - raw.height,
-      y: crop.width - x - raw.width,
-      width: raw.height,
-      height: raw.width,
-    };
-    default: return {
-      x,
-      y: crop.height - y - raw.height,
-      width: raw.width,
-      height: raw.height,
-    };
-  }
-};
+const toCanonicalRect = (page: PDFPage, raw: RawPdfRect): RawPdfRect =>
+  userSpaceToDisplayRect(pageGeometry(page), raw);
 
 /** Convert displayed top-left PDF points back to a raw PDF rectangle. */
-const toRawRect = (page: PDFPage, annotation: Annotation): RawPdfRect => {
-  const crop = page.getCropBox();
-  const rect = annotation.rect;
-  switch (normalizedRotation(page)) {
-    case 90: return {
-      x: crop.x + rect.y,
-      y: crop.y + rect.x,
-      width: rect.height,
-      height: rect.width,
-    };
-    case 180: return {
-      x: crop.x + crop.width - rect.x - rect.width,
-      y: crop.y + rect.y,
-      width: rect.width,
-      height: rect.height,
-    };
-    case 270: return {
-      x: crop.x + crop.width - rect.y - rect.height,
-      y: crop.y + crop.height - rect.x - rect.width,
-      width: rect.height,
-      height: rect.width,
-    };
-    default: return {
-      x: crop.x + rect.x,
-      y: crop.y + crop.height - rect.y - rect.height,
-      width: rect.width,
-      height: rect.height,
-    };
-  }
-};
+const toRawRect = (page: PDFPage, annotation: Annotation): RawPdfRect =>
+  displayRectToUserSpace(pageGeometry(page), annotation.rect);
 
-export const bytesToBase64 = (bytes: Uint8Array): string => {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
-  }
-  return btoa(binary);
-};
-
-export const base64ToBytes = (value: string): Uint8Array => {
-  const binary = atob(value);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
-};
-
-export const renderPdfPage = async (
+export const renderPdfPage = (
   bytes: Uint8Array,
   requestedPage: number,
-): Promise<RenderedPage> => {
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-  // PDF.js transfers the supplied buffer to its worker. Keep the component's
-  // source bytes intact for page changes, extraction, and export.
-  const loadingTask = pdfjs.getDocument({ data: bytes.slice() });
-  try {
-    const document = await loadingTask.promise;
-    const pageNumber = Math.min(document.numPages, Math.max(1, requestedPage));
-    const page = await document.getPage(pageNumber);
-    const baseViewport = page.getViewport({ scale: 1 });
-    const renderWidth = 1440;
-    const viewport = page.getViewport({ scale: renderWidth / baseViewport.width });
-    const canvas = window.document.createElement("canvas");
-    canvas.width = Math.ceil(viewport.width);
-    canvas.height = Math.ceil(viewport.height);
-    const context = canvas.getContext("2d", { alpha: false });
-    if (context === null) throw new Error("Canvas rendering is not available.");
-    await page.render({ canvas, canvasContext: context, viewport }).promise;
-    return {
-      pageCount: document.numPages,
-      page: pageNumber,
-      pageWidth: baseViewport.width,
-      pageHeight: baseViewport.height,
-      previewDataUrl: canvas.toDataURL("image/png"),
-    };
-  } finally {
-    await loadingTask.destroy();
-  }
-};
+): Effect.Effect<RenderedPage, PdfRenderError> =>
+  withPdfDocument(bytes, (document) =>
+    Effect.gen(function* () {
+      const pageNumber = Math.min(document.numPages, Math.max(1, requestedPage));
+      const page = yield* getPage(document, pageNumber - 1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const renderWidth = 1440;
+      const raster = yield* rasterizePage(page, renderWidth / baseViewport.width);
+      return {
+        pageCount: document.numPages,
+        page: pageNumber,
+        pageWidth: baseViewport.width,
+        pageHeight: baseViewport.height,
+        previewDataUrl: raster.imageUrl,
+      };
+    }),
+  );
 
 const uniqueId = (
   name: string,
@@ -205,13 +162,17 @@ const uniqueId = (
   used: Set<string>,
   semanticId?: string,
 ): string => {
-  const candidate = semanticId === undefined
-    ? `${name || "field"}-${widgetIndex + 1}`
-    : widgetIndex === 0 ? semanticId : `${semanticId}-${widgetIndex + 1}`;
-  const base = candidate
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || `field-${widgetIndex + 1}`;
+  const candidate =
+    semanticId === undefined
+      ? `${name || "field"}-${widgetIndex + 1}`
+      : widgetIndex === 0
+        ? semanticId
+        : `${semanticId}-${widgetIndex + 1}`;
+  const base =
+    candidate
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || `field-${widgetIndex + 1}`;
   let id = base;
   let suffix = 2;
   while (used.has(id)) id = `${base}-${suffix++}`;
@@ -219,7 +180,9 @@ const uniqueId = (
   return id;
 };
 
-const fieldDescription = (field: PDFField): Readonly<{
+const fieldDescription = (
+  field: PDFField,
+): Readonly<{
   kind: string;
   fieldType?: "text" | "checkbox" | "radio" | "choice" | "signature";
   value?: string | boolean | ReadonlyArray<string>;
@@ -249,7 +212,7 @@ const fieldDescription = (field: PDFField): Readonly<{
     return {
       kind: "select",
       fieldType: "choice",
-      value: field.isMultiselect() ? selected : selected[0] ?? "",
+      value: field.isMultiselect() ? selected : (selected[0] ?? ""),
       metadata: { options: field.getOptions(), multiSelect: field.isMultiselect() },
     };
   }
@@ -268,10 +231,14 @@ const fieldDescription = (field: PDFField): Readonly<{
 };
 
 /** Extract existing AcroForm widgets into the portable annotation model. */
-export const extractPdfAnnotations = async (
+export const extractPdfAnnotations = (
   bytes: Uint8Array,
-): Promise<ExtractedPdfAnnotations> => {
-  const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+): Effect.Effect<ExtractedPdfAnnotations, PdfDocumentError> =>
+  tryDocument(() => PDFDocument.load(bytes, { ignoreEncryption: true })).pipe(
+    Effect.flatMap((pdf) => trySync(() => collectAnnotations(pdf))),
+  );
+
+const collectAnnotations = (pdf: PDFDocument): ExtractedPdfAnnotations => {
   const pages = pdf.getPages();
   const pageByRef = new Map(pages.map((page, index) => [page.ref.toString(), index]));
   const annotations: Annotation[] = [];
@@ -284,7 +251,10 @@ export const extractPdfAnnotations = async (
     const semantic = readFieldSemanticMetadata(field);
     const widgets = field.acroField.getWidgets();
     if (widgets.length === 0) {
-      warnings.push({ code: "field-without-widget", message: `Field "${field.getName()}" has no widget.` });
+      warnings.push({
+        code: "field-without-widget",
+        message: `Field "${field.getName()}" has no widget.`,
+      });
       continue;
     }
     widgets.forEach((widget, widgetIndex) => {
@@ -328,16 +298,6 @@ export const extractPdfAnnotations = async (
   return { annotations, warnings };
 };
 
-const downloadBytes = (bytes: Uint8Array, filename: string, type: string): void => {
-  const blob = new Blob([bytes as BlobPart], { type });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
-};
-
 const safeFieldName = (annotation: Annotation): string => {
   const candidate = annotation.name?.trim().replace(/\./g, "_") ?? "";
   return candidate || `annotation_${annotation.id.replace(/[^a-zA-Z0-9_-]+/g, "_")}`;
@@ -376,20 +336,24 @@ const updateImportedField = (
   writeFieldSemanticMetadata(field, annotation);
   if (field instanceof PDFTextField) field.setText(annotationValueText(annotation));
   else if (field instanceof PDFCheckBox) {
-    if (annotation.value === true || annotation.value === "true" || annotation.value === "Checked") field.check();
+    if (annotation.value === true || annotation.value === "true" || annotation.value === "Checked")
+      field.check();
     else field.uncheck();
   } else if (field instanceof PDFRadioGroup && typeof annotation.value === "string") {
     if (field.getOptions().includes(annotation.value)) field.select(annotation.value);
-  } else if ((field instanceof PDFDropdown || field instanceof PDFOptionList)) {
+  } else if (field instanceof PDFDropdown || field instanceof PDFOptionList) {
     const selected = Array.isArray(annotation.value)
       ? annotation.value.filter((value): value is string => typeof value === "string")
-      : typeof annotation.value === "string" ? [annotation.value] : [];
+      : typeof annotation.value === "string"
+        ? [annotation.value]
+        : [];
     if (selected.length > 0) field.select(selected);
   }
 
-  const widgetIndex = typeof annotation.metadata?.pdfWidgetIndex === "number"
-    ? annotation.metadata.pdfWidgetIndex
-    : 0;
+  const widgetIndex =
+    typeof annotation.metadata?.pdfWidgetIndex === "number"
+      ? annotation.metadata.pdfWidgetIndex
+      : 0;
   const widget = field.acroField.getWidgets()[widgetIndex];
   if (widget !== undefined) {
     if (widget.P()?.toString() !== page.ref.toString()) {
@@ -405,16 +369,33 @@ const updateImportedField = (
   }
 };
 
+export type SerializeOptions = Readonly<{ deletedFieldNames?: ReadonlyArray<string> }>;
+
 /** Serialize supported annotations as AcroForm widgets and return bytes without downloading. */
-export const serializePdf = async (
+export const serializePdf = (
   bytes: Uint8Array,
   annotations: ReadonlyArray<Annotation>,
-  options: Readonly<{ deletedFieldNames?: ReadonlyArray<string> }> = {},
-): Promise<SerializedPdf> => {
-  const pdf = await PDFDocument.load(bytes);
+  options: SerializeOptions = {},
+): Effect.Effect<SerializedPdf, PdfDocumentError> =>
+  Effect.gen(function* () {
+    const pdf = yield* tryDocument(() => PDFDocument.load(bytes));
+    const regular = yield* tryDocument(() => pdf.embedFont(StandardFonts.Helvetica));
+    const bold = yield* tryDocument(() => pdf.embedFont(StandardFonts.HelveticaBold));
+    const warnings = yield* trySync(() =>
+      writeAnnotations(pdf, annotations, options, regular, bold),
+    );
+    return { bytes: yield* tryDocument(() => pdf.save()), warnings };
+  });
+
+/** Apply annotations to a loaded document in place and return the warnings. */
+const writeAnnotations = (
+  pdf: PDFDocument,
+  annotations: ReadonlyArray<Annotation>,
+  options: SerializeOptions,
+  regular: PDFFont,
+  bold: PDFFont,
+): ReadonlyArray<PdfWarning> => {
   const form = pdf.getForm();
-  const regular = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const pages = pdf.getPages();
   const warnings: PdfWarning[] = [];
 
@@ -477,7 +458,12 @@ export const serializePdf = async (
       const field = form.createCheckBox(name);
       applyFieldFlags(field, annotation);
       writeFieldSemanticMetadata(field, annotation);
-      if (annotation.value === true || annotation.value === "true" || annotation.value === "Checked") field.check();
+      if (
+        annotation.value === true ||
+        annotation.value === "true" ||
+        annotation.value === "Checked"
+      )
+        field.check();
       field.addToPage(page, fieldRect(annotation, page));
       existingNames.add(name);
       continue;
@@ -486,9 +472,10 @@ export const serializePdf = async (
       const field = form.createRadioGroup(name);
       applyFieldFlags(field, annotation);
       writeFieldSemanticMetadata(field, annotation);
-      const option = typeof annotation.pdf?.optionValue === "string"
-        ? annotation.pdf.optionValue
-        : annotationValueText(annotation) || "option";
+      const option =
+        typeof annotation.pdf?.optionValue === "string"
+          ? annotation.pdf.optionValue
+          : annotationValueText(annotation) || "option";
       field.addOptionToPage(option, page, fieldRect(annotation, page));
       field.select(option);
       existingNames.add(name);
@@ -532,17 +519,21 @@ export const serializePdf = async (
   }
 
   form.updateFieldAppearances(regular);
-  return { bytes: await pdf.save(), warnings };
+  return warnings;
 };
 
-export const exportAnnotatedPdf = async (
+export const exportAnnotatedPdf = (
   bytes: Uint8Array,
   annotations: ReadonlyArray<Annotation>,
   sourceName: string,
-  options: Readonly<{ deletedFieldNames?: ReadonlyArray<string> }> = {},
-): Promise<ReadonlyArray<PdfWarning>> => {
-  const serialized = await serializePdf(bytes, annotations, options);
-  const base = sourceName.replace(/\.pdf$/i, "") || "document";
-  downloadBytes(serialized.bytes, `${base}-annotated.pdf`, "application/pdf");
-  return serialized.warnings;
-};
+  options: SerializeOptions = {},
+): Effect.Effect<ReadonlyArray<PdfWarning>, PdfDocumentError> =>
+  serializePdf(bytes, annotations, options).pipe(
+    Effect.tap((serialized) =>
+      Effect.sync(() => {
+        const base = sourceName.replace(/\.pdf$/i, "") || "document";
+        downloadBytes(serialized.bytes, `${base}-annotated.pdf`, "application/pdf");
+      }),
+    ),
+    Effect.map((serialized) => serialized.warnings),
+  );

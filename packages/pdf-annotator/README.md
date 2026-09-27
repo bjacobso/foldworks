@@ -2,7 +2,8 @@
 
 A Foldkit-native PDF annotation authoring tool with controlled state, portable
 JSON, AcroForm inspection and writing, custom annotation metadata, and
-zoom-independent PDF geometry.
+zoom-independent PDF geometry. It composes the shared page surface and renderer
+from `@foldworks/pdf`.
 
 ## UI integration
 
@@ -90,19 +91,22 @@ const output = serializeAnnotationDocument(next);
 
 ## Headless PDF APIs
 
-The PDF APIs do not require the default UI:
+The PDF APIs do not require the default UI. They are Effects that fail with a
+typed `PdfDocumentError` (`{ reason, cause }`):
 
 ```ts
+import { Effect } from "effect";
 import { extractPdfAnnotations, serializePdf } from "@foldworks/pdf-annotator";
 
-const { annotations, warnings: importWarnings } =
-  await extractPdfAnnotations(sourceBytes);
+const roundTrip = Effect.gen(function* () {
+  const { annotations, warnings: importWarnings } = yield* extractPdfAnnotations(sourceBytes);
+  const { bytes, warnings: saveWarnings } = yield* serializePdf(sourceBytes, annotations, {
+    deletedFieldNames: ["obsolete_field"],
+  });
+  return { bytes, warnings: [...importWarnings, ...saveWarnings] };
+});
 
-const { bytes, warnings: saveWarnings } = await serializePdf(
-  sourceBytes,
-  annotations,
-  { deletedFieldNames: ["obsolete_field"] },
-);
+// Outside an Effect program: await Effect.runPromise(roundTrip)
 ```
 
 Imported widgets retain logical-field and widget IDs in `annotation.pdf`.
