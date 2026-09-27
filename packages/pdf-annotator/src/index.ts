@@ -37,3 +37,22 @@ export {
   type SerializedPdf,
 } from "./pdf";
 export * as PdfAnnotator from "./pdf-annotator";
+export {
+  PdfRenderError,
+  readPdfPages,
+  renderPages,
+  type PdfPageInfo,
+  type RenderPagesOptions,
+  type RenderedPdfPage,
+} from "./render";
+export {
+  displayRectToUserSpace,
+  displaySize,
+  normalizeRotation,
+  userSpaceToDisplayRect,
+  userSpaceToPageFraction,
+  type PdfPageGeometry,
+  type PdfPageRotation,
+} from "./page-geometry";
+export type { PdfOverlay, PdfOverlayTone } from "./viewer-view";
+export * as PdfViewer from "./pdf-viewer";

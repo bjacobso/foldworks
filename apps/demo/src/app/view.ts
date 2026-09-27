@@ -5,6 +5,7 @@ import {
   Blocks,
   Bot,
   Braces,
+  FileSearch,
   FileText,
   FolderGit2,
   FileDiff,
@@ -31,6 +32,7 @@ import { view as dataGridView } from "../data-grid/demo";
 import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
 import { view as homeView } from "../home/view";
+import { view as pdfViewerView } from "../pdf-viewer/view";
 import { view as queryBuilderView } from "../query-builder/view";
 import { statechartSummary, view as statechartView } from "../statechart/view";
 import { view as uiKitView } from "../ui-kit/view";
@@ -48,6 +50,7 @@ import {
   formBuilderPath,
   homeRouter,
   pdfAnnotatorRouter,
+  pdfViewerRouter,
   queryBuilderRouter,
   statechartRouter,
   uiKitRouter,
@@ -71,13 +74,15 @@ const activeAnnouncement = (model: Model): string => {
           ? model.queryBuilderDemo.announcement
           : demo === "PdfAnnotator"
             ? model.pdfAnnotator.announcement
-            : demo === "UiKit"
-              ? model.uiKit.announcement
-              : demo === "Agent"
-                ? ""
-                : demo === "DataTable"
-                  ? model.dataTableDemo.announcement
-                  : model.announcement;
+            : demo === "PdfViewer"
+              ? ""
+              : demo === "UiKit"
+                ? model.uiKit.announcement
+                : demo === "Agent"
+                  ? ""
+                  : demo === "DataTable"
+                    ? model.dataTableDemo.announcement
+                    : model.announcement;
 };
 
 const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
@@ -210,6 +215,13 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
           icon: FileText,
           isActive: demo === "PdfAnnotator",
         },
+        {
+          id: "pdf-viewer",
+          label: "PDF viewer",
+          href: pdfViewerRouter(),
+          icon: FileSearch,
+          isActive: demo === "PdfViewer",
+        },
       ],
     },
   ];
@@ -289,9 +301,11 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                             ? "Employee query"
                             : demo === "PdfAnnotator"
                               ? "PDF annotator"
-                              : demo === "Home"
-                                ? "Foldworks"
-                                : "@foldworks/ui";
+                              : demo === "PdfViewer"
+                                ? "Onboarding packet review"
+                                : demo === "Home"
+                                  ? "Foldworks"
+                                  : "@foldworks/ui";
   const description =
     demo === "Editor"
       ? "Native Foldkit editing · Markdown · Custom blocks"
@@ -319,9 +333,11 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                             ? "Configured attributes · recursive groups · live validation"
                             : demo === "PdfAnnotator"
                               ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-                              : demo === "Home"
-                                ? "Polished application primitives for Foldkit and StyleX"
-                                : "61 application primitives · Foldkit behavior · StyleX";
+                              : demo === "PdfViewer"
+                                ? "Read-only pages · overlay hotspots · crop boxes and rotation"
+                                : demo === "Home"
+                                  ? "Polished application primitives for Foldkit and StyleX"
+                                  : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view(
     {
       title,
@@ -374,21 +390,28 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                       h,
                                     ),
                                   ]
-                                : demo === "Home"
+                                : demo === "PdfViewer"
                                   ? [
                                       Badge.view(
-                                        { label: "17 packages", tone: "info", dot: true },
+                                        { label: "Read-only viewer", tone: "info", dot: true },
                                         h,
                                       ),
-                                      Badge.view({ label: "Open source" }, h),
                                     ]
-                                  : [
-                                      Badge.view(
-                                        { label: "61 primitives", tone: "info", dot: true },
-                                        h,
-                                      ),
-                                      Badge.view({ label: "StyleX + Foldkit" }, h),
-                                    ]),
+                                  : demo === "Home"
+                                    ? [
+                                        Badge.view(
+                                          { label: "17 packages", tone: "info", dot: true },
+                                          h,
+                                        ),
+                                        Badge.view({ label: "Open source" }, h),
+                                      ]
+                                    : [
+                                        Badge.view(
+                                          { label: "61 primitives", tone: "info", dot: true },
+                                          h,
+                                        ),
+                                        Badge.view({ label: "StyleX + Foldkit" }, h),
+                                      ]),
         Select.control(
           {
             value: model.themeName,
@@ -527,6 +550,14 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
     });
   }
+  if (demo === "PdfViewer") {
+    return h.submodel({
+      slotId: "pdf-viewer-content",
+      model: model.pdfViewerDemo,
+      view: pdfViewerView,
+      toParentMessage: (message) => Message.GotPdfViewerDemoMessage({ message }),
+    });
+  }
   return h.submodel({
     slotId: "ui-kit-content",
     model: model.uiKit,
@@ -549,6 +580,7 @@ const documentTitle = (demo: Demo): string =>
     Match.when("FormBuilder", () => "Form builder · Foldworks"),
     Match.when("QueryBuilder", () => "Query builder · Foldworks"),
     Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
+    Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
     Match.when("UiKit", () => "UI components · Foldworks"),
     Match.when("Workflow", () => "Workflow · Foldworks"),
     Match.when("Statechart", () => "Statechart · Foldworks"),

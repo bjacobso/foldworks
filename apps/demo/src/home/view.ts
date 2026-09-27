@@ -156,7 +156,8 @@ const packages: ReadonlyArray<Package> = [
   {
     name: "@foldworks/pdf-annotator",
     category: "Application primitive",
-    description: "Place, resize, remove, and export annotations on real PDF documents.",
+    description:
+      "Annotate and export real PDF documents, or view them read-only with overlay hotspots.",
     href: pdfAnnotatorRouter(),
     icon: FileText,
   },
@@ -345,6 +346,7 @@ const comparison = <Message>(h: HtmlBuilder<Message>): Html =>
               "FormBuilder",
               "Workflow",
               "PdfAnnotator",
+              "PdfViewer",
             ].map((name) => h.span([h.Class(className(styles.chip))], [name])),
           ),
         ],

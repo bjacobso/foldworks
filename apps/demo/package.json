@@ -33,6 +33,7 @@
     "@stylexjs/stylex": "catalog:",
     "effect": "catalog:",
     "foldkit": "catalog:",
+    "pdf-lib": "catalog:",
     "@foldworks/editor": "workspace:*",
     "@foldworks/code-editor": "workspace:*"
   },

@@ -18,6 +18,8 @@ import type { Model as DiffViewerModel } from "../diff-viewer/model";
 import { serializeWorkspace, writePersistedWorkspace } from "../document-storage";
 import { OutMessage as FormOutMessage } from "../form-builder/message";
 import { loadExample, setMode, update as updateForm } from "../form-builder/update";
+import { Message as PdfViewerMessage } from "../pdf-viewer/message";
+import { update as updatePdfViewer } from "../pdf-viewer/update";
 import { update as updateQueryBuilder } from "../query-builder/update";
 import { applyTheme, ThemeName } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
@@ -139,7 +141,9 @@ const foldStatechart = Update.foldChild({
 export const enterRoute = (model: Model): UpdateReturn =>
   model.route._tag === "Statechart"
     ? foldStatechart(model, StatechartMessage.ClickedFit())
-    : { model };
+    : model.route._tag === "PdfViewer"
+      ? enterPdfViewer(model)
+      : { model };
 
 const foldCodeEditor = Update.foldChild({
   update: updateCodeEditor,
@@ -203,6 +207,19 @@ const foldPdfAnnotator = Update.foldChild({
   write: (model, pdfAnnotator) => evo(model, { pdfAnnotator: () => pdfAnnotator }),
   toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
 });
+
+const foldPdfViewer = Update.foldChild({
+  update: updatePdfViewer,
+  read: (model: Model) => Option.some(model.pdfViewerDemo),
+  write: (model, pdfViewerDemo) => evo(model, { pdfViewerDemo: () => pdfViewerDemo }),
+  toParentMessage: (message) => Message.GotPdfViewerDemoMessage({ message }),
+});
+
+// Generate the sample PDF the first time the viewer demo opens.
+const enterPdfViewer = (model: Model): UpdateReturn =>
+  model.pdfViewerDemo.viewer.document._tag === "Empty"
+    ? foldPdfViewer(model, PdfViewerMessage.RequestedSample())
+    : { model };
 
 const foldEditor = Update.foldChild({
   update: ArticleEditor.update,
@@ -323,6 +340,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) => foldPdfAnnotator(model, childMessage),
+    GotPdfViewerDemoMessage: ({ message: childMessage }) => foldPdfViewer(model, childMessage),
     GotEditorMessage: ({ message }) => foldEditor(model, message),
     GotSidebarMessage: ({ message: childMessage }) => foldSidebar(model, childMessage),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),

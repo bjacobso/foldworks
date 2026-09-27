@@ -167,6 +167,9 @@ importers:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
+      pdf-lib:
+        specifier: 'catalog:'
+        version: 1.17.1
     devDependencies:
       '@foldkit/devtools':
         specifier: 'catalog:'
