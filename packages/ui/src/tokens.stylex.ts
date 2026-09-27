@@ -76,6 +76,7 @@ export const space = stylex.defineConsts({
 
 export const typography = stylex.defineConsts({
   fontFamily: "var(--font-sans)",
+  fontMono: "var(--font-mono)",
   sizeXs: "11px",
   sizeSm: "12px",
   sizeMd: "13px",
@@ -140,3 +141,6 @@ export const contentWidths = stylex.defineConsts({
   xl: "1280px",
   full: "100%",
 });
+
+/** Marks a stateless tooltip root so its panel can react to hover and focus within it. */
+export const tooltipMarker = stylex.defineMarker();

@@ -1,16 +1,22 @@
 export * as Badge from "./badge";
 export * as Button from "./button";
 export * as Checkbox from "./checkbox";
+export * as CodeBlock from "./code-block";
+export * as DescriptionList from "./description-list";
 export * as Disclosure from "./disclosure";
 export * as Field from "./field";
 export * as Fieldset from "./fieldset";
 export * as Icon from "./icon";
 export * as Layout from "./layout";
+export * as Legend from "./legend";
 export * as Workspace from "./workspace";
+export * as SplitView from "./split-view";
+export * as AppHeader from "./app-header";
 export * as Tree from "./tree";
 export * as Panel from "./panel";
 export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";
+export * as Stat from "./stat";
 export * as Switch from "./switch";
 export * as Toolbar from "./toolbar";
 export {
@@ -34,7 +40,24 @@ export {
   Separator,
   Table,
 } from "./display";
-export type { CardConfig, CardSlot } from "./display";
+export type {
+  ButtonItemConfig,
+  CardConfig,
+  CardSlot,
+  InteractiveItemConfig,
+  ItemConfig,
+  LinkItemConfig,
+  StaticItemConfig,
+  TableAlign,
+  TableCell,
+  TableCellConfig,
+  TableColumn,
+  TableConfig,
+  TableRow,
+  TableRowConfig,
+  TableRowTone,
+  TableSlot,
+} from "./display";
 export { Direction } from "./direction";
 export {
   ButtonGroup,
@@ -58,6 +81,7 @@ export type {
   ToggleSlot,
 } from "./forms";
 export { Progress, Skeleton, Sonner, Spinner, StatusMessage } from "./feedback";
+export type { ProgressConfig, ProgressSlot, ProgressTone } from "./feedback";
 export { NumberField } from "./number-field";
 export { Stepper } from "./stepper";
 export { Tag } from "./tag";
@@ -74,6 +98,13 @@ export type {
   TabBarTab,
 } from "./navigation";
 export { AlertDialog, Dialog, Drawer, HoverCard, Popover, Sheet, Tooltip } from "./overlays";
+export type {
+  ControlledTooltipConfig,
+  StatelessTooltipConfig,
+  StatelessTooltipSlot,
+  TooltipConfig,
+  TooltipPlacement,
+} from "./overlays";
 export { Combobox, Command, ContextMenu, DropdownMenu, Menubar } from "./menus";
 export { Calendar } from "./calendar";
 export { Carousel, Resizable, ScrollArea } from "./containers";
@@ -102,4 +133,5 @@ export * as OverflowList from "./overflow-list";
 export * as EditableText from "./editable-text";
 export * as TokenField from "./token-field";
 export * as PanelStack from "./panel-stack";
+export * as ReadOnlyValue from "./read-only-value";
 export * as DateInput from "./date-input";

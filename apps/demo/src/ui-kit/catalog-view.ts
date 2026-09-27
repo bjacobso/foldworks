@@ -4,6 +4,7 @@ import {
   Accordion,
   Alert,
   AlertDialog,
+  AppHeader,
   AspectRatio,
   Attachment,
   Avatar,
@@ -16,9 +17,11 @@ import {
   Card,
   Carousel,
   Chart,
+  CodeBlock,
   Collapsible,
   Combobox,
   ContextMenu,
+  DescriptionList,
   Direction,
   Drawer,
   DropdownMenu,
@@ -33,6 +36,7 @@ import {
   Kbd,
   Label,
   Layout,
+  Legend,
   Link,
   Marker,
   Menubar,
@@ -51,9 +55,11 @@ import {
   Sheet,
   Sidebar,
   Skeleton,
+  SplitView,
   Slider,
   Sonner,
   Spinner,
+  Stat,
   Stateful,
   Stepper,
   TabBar,
@@ -66,11 +72,22 @@ import {
   Tooltip,
   VisuallyHidden,
 } from "@foldworks/ui";
-import { FileText, Folder, Inbox, Paperclip, Search, Settings, User } from "@lucide/icons";
+import { highlight } from "@foldworks/code-editor";
+import {
+  Eye,
+  EyeOff,
+  FileText,
+  Folder,
+  Inbox,
+  Paperclip,
+  Search,
+  Settings,
+  User,
+} from "@lucide/icons";
 import { Icon } from "@foldworks/ui";
 
 import { Message } from "./message";
-import type { Model } from "./model";
+import { catalogSnippet, type Model } from "./model";
 import {
   AccountTabs,
   ActionMenu,
@@ -493,6 +510,16 @@ const dataDisplay = (model: Model, h: HtmlBuilder<Message>): Html =>
         },
         h,
       ),
+      Item.view(
+        {
+          title: "Review report activity",
+          description: "Open the latest activity",
+          trailing: ["3 new"],
+          onClick: action("Review report activity"),
+          isSelected: true,
+        },
+        h,
+      ),
       AspectRatio.view(
         {
           ratio: 3 / 1,
@@ -504,10 +531,24 @@ const dataDisplay = (model: Model, h: HtmlBuilder<Message>): Html =>
       Table.view(
         {
           caption: "Recent invoices",
-          columns: ["Invoice", "Status", "Amount"],
+          rowHeaders: true,
+          columns: ["Invoice", "Status", { label: "Amount", align: "end" }],
           rows: [
-            ["INV-024", "Paid", "$320"],
-            ["INV-025", "Pending", "$180"],
+            {
+              key: "INV-024",
+              cells: ["INV-024", "Paid", "$320"],
+              onClick: action("Open invoice INV-024"),
+              ariaLabel: "Open invoice INV-024",
+              isSelected: true,
+              tone: "success",
+            },
+            {
+              key: "INV-025",
+              cells: ["INV-025", "Pending", "$180"],
+              onClick: action("Open invoice INV-025"),
+              ariaLabel: "Open invoice INV-025",
+              tone: "warning",
+            },
           ],
         },
         h,
@@ -863,6 +904,59 @@ const disclosureAndLayout = (model: Model, h: HtmlBuilder<Message>): Html =>
   section(
     "Disclosure and layout",
     [
+      Layout.Container.view(
+        {
+          query: true,
+          size: "full",
+          padding: "none",
+          children: [
+            AppHeader.view(
+              {
+                title: "Compliance library",
+                breadcrumb: {
+                  items: [{ label: "Forms", onClick: action("Forms breadcrumb") }],
+                  current: "I-9",
+                },
+                status: [Badge.view({ label: "Staging", tone: "warning" }, h)],
+                actions: [
+                  Button.view(
+                    { label: "Help", size: "sm", variant: "ghost", onClick: action("Help") },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+            SplitView.view(
+              {
+                responsiveTo: "container",
+                collapseBelow: "sm",
+                gap: "sm",
+                ariaLabel: "Form and document",
+                panes: [
+                  {
+                    key: "fields",
+                    label: "Fields",
+                    width: "minmax(12rem, 1fr)",
+                    children: [h.div([h.Class(className(styles.catalogTile))], ["Field list"])],
+                  },
+                  {
+                    key: "preview",
+                    label: "PDF preview",
+                    width: "minmax(12rem, 2fr)",
+                    sticky: true,
+                    children: [
+                      h.div([h.Class(className(styles.catalogTile))], ["Document preview"]),
+                    ],
+                  },
+                ],
+              },
+              h,
+            ),
+          ],
+        },
+        h,
+      ),
       Accordion.view(
         {
           items: [
@@ -942,6 +1036,7 @@ const disclosureAndLayout = (model: Model, h: HtmlBuilder<Message>): Html =>
       ),
     ],
     h,
+    true,
   );
 
 const overlayDialog = (
@@ -1069,6 +1164,16 @@ const overlaysAndMenus = (model: Model, h: HtmlBuilder<Message>): Html => {
               label: "Helpful context",
               isOpen: model.openComponent === "Tooltip",
               onOpenChange: (isOpen) => toggleComponent("Tooltip", isOpen),
+            },
+            h,
+          ),
+          Tooltip.view(
+            {
+              mode: "stateless",
+              id: "catalog-stateless-tooltip",
+              trigger: ["CSS tooltip"],
+              label: "Shown on hover or focus without model state",
+              placement: "bottom",
             },
             h,
           ),
@@ -1216,6 +1321,296 @@ const calendarAndMessages = (model: Model, h: HtmlBuilder<Message>): Html =>
     h,
   );
 
+const detailsGrid = className(styles.detailsGrid);
+
+const metricsAndDetails = (model: Model, h: HtmlBuilder<Message>): Html =>
+  section(
+    "Metrics and details",
+    [
+      h.div(
+        [h.Class(className(styles.statGrid))],
+        [
+          Stat.view(
+            {
+              label: "Passing journeys",
+              value: "4 / 4",
+              tone: "success",
+              description: "Every expectation holds.",
+            },
+            h,
+          ),
+          Stat.view(
+            {
+              label: "Coverage gaps",
+              value: "3",
+              tone: "danger",
+              delta: { value: "2", trend: "down", tone: "success", label: "since last release" },
+            },
+            h,
+          ),
+          Stat.view(
+            {
+              label: "Needs review",
+              value: "2",
+              tone: "warning",
+              description: "Conditions without a journey.",
+            },
+            h,
+          ),
+          Stat.view(
+            {
+              label: "Mapped fields",
+              value: "279",
+              delta: { value: "+12", trend: "up", label: "this week" },
+              children: [
+                Progress.view(
+                  { value: 279, max: 310, size: "sm", ariaLabel: "Mapped fields", caption: "90%" },
+                  h,
+                ),
+              ],
+            },
+            h,
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class(detailsGrid)],
+        [
+          Card.view(
+            {
+              title: "Release source",
+              description: "Horizontal rows with dividers.",
+              children: [
+                DescriptionList.view(
+                  {
+                    dividers: true,
+                    items: [
+                      { term: "Form", value: "I-9 Employment Eligibility" },
+                      { term: "Edition", value: "08/01/23", format: "code" },
+                      {
+                        term: "Status",
+                        value: [Badge.view({ label: "Ready", tone: "success", dot: true }, h)],
+                        format: "chips",
+                      },
+                      {
+                        term: "Tags",
+                        value: [
+                          Badge.view(
+                            { label: "Calculated", tone: "accent", variant: "outline" },
+                            h,
+                          ),
+                          Badge.view({ label: "Hidden", tone: "muted" }, h),
+                          Badge.view({ label: "text", tone: "info", mono: true }, h),
+                        ],
+                        format: "chips",
+                      },
+                      { term: "Reviewer" },
+                    ],
+                  },
+                  h,
+                ),
+              ],
+            },
+            h,
+          ),
+          Card.view(
+            {
+              title: "Field inspector",
+              description: "Stacked, compact rows.",
+              children: [
+                DescriptionList.view(
+                  {
+                    layout: "stacked",
+                    size: "sm",
+                    items: [
+                      { term: "Key", value: "applicant.alien_number", format: "code" },
+                      {
+                        term: "Visibility",
+                        value: "Shown when citizenship is not citizen",
+                        format: "muted",
+                      },
+                      {
+                        term: "Coverage",
+                        value: [
+                          Progress.view(
+                            {
+                              value: 2,
+                              max: 9,
+                              size: "sm",
+                              tone: "warning",
+                              ariaLabel: "Condition coverage",
+                              caption: "2 / 9",
+                            },
+                            h,
+                          ),
+                        ],
+                      },
+                    ],
+                  },
+                  h,
+                ),
+              ],
+            },
+            h,
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class(detailsGrid)],
+        [
+          h.div(
+            [h.Class(className(styles.catalogStack))],
+            [
+              Progress.view(
+                {
+                  value: 9,
+                  max: 9,
+                  size: "sm",
+                  tone: "success",
+                  ariaLabel: "Complete coverage",
+                  caption: "9 / 9",
+                },
+                h,
+              ),
+              Progress.view(
+                {
+                  value: 2,
+                  max: 9,
+                  size: "sm",
+                  tone: "warning",
+                  ariaLabel: "Partial coverage",
+                  caption: "2 / 9",
+                },
+                h,
+              ),
+              Progress.view(
+                {
+                  value: 0,
+                  max: 4,
+                  size: "sm",
+                  tone: "danger",
+                  ariaLabel: "Missing coverage",
+                  caption: "0 / 4",
+                },
+                h,
+              ),
+              Progress.view(
+                {
+                  value: model.sliderValue,
+                  tone: "info",
+                  ariaLabel: "Verification",
+                  caption: `${model.sliderValue}%`,
+                },
+                h,
+              ),
+              Legend.view(
+                {
+                  ariaLabel: "PDF widget states",
+                  items: [
+                    { label: "Filled", marker: { kind: "swatch", tone: "success", fill: "soft" } },
+                    {
+                      label: "Blank",
+                      marker: { kind: "swatch", tone: "neutral", fill: "outline" },
+                    },
+                    {
+                      label: "Omitted",
+                      marker: { kind: "swatch", tone: "warning", fill: "dashed" },
+                    },
+                    { label: "Missing", marker: { kind: "swatch", tone: "danger", fill: "solid" } },
+                  ],
+                },
+                h,
+              ),
+            ],
+          ),
+          Legend.view(
+            {
+              ariaLabel: "Field visibility",
+              orientation: "vertical",
+              items: [
+                {
+                  label: "Shown",
+                  value: "214",
+                  marker: { kind: "icon", icon: Eye, tone: "accent" },
+                },
+                {
+                  label: "Hidden",
+                  value: "65",
+                  marker: { kind: "icon", icon: EyeOff, tone: "muted" },
+                },
+                {
+                  label: "Required",
+                  description: "Blocks release when missing",
+                  marker: { kind: "symbol", symbol: "*", tone: "danger" },
+                },
+                {
+                  label: "Chart series",
+                  marker: { kind: "swatch", shape: "line", color: "var(--chart-2)" },
+                },
+              ],
+            },
+            h,
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class(detailsGrid)],
+        [
+          CodeBlock.view(
+            {
+              code: catalogSnippet,
+              language: "liquid",
+              title: "legal-name.liquid",
+              lineNumbers: true,
+              copy: { onCopy: Message.ClickedCopySnippet(), isCopied: model.isSnippetCopied },
+            },
+            h,
+          ),
+          CodeBlock.view(
+            {
+              code: '{\n  "field": "applicant.alien_number",\n  "required": true,\n  "pages": [1, 2]\n}',
+              language: "json",
+              highlight,
+              maxHeight: "96px",
+              ariaLabel: "Field payload",
+            },
+            h,
+          ),
+        ],
+      ),
+      Card.view(
+        {
+          title: "Journeys",
+          description: "A flush card lets tables reach its edges.",
+          flush: true,
+          children: [
+            Table.view(
+              {
+                columns: ["Journey", "Result", "Pages"],
+                rows: [
+                  [
+                    "Citizen, no preparer",
+                    Badge.view({ label: "Passes", tone: "success" }, h),
+                    "3",
+                  ],
+                  [
+                    "Permanent resident",
+                    Badge.view({ label: "2 failures", tone: "danger" }, h),
+                    "4",
+                  ],
+                ],
+              },
+              h,
+            ),
+          ],
+        },
+        h,
+      ),
+    ],
+    h,
+    true,
+  );
+
 export const catalogView = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [h.Class(className(styles.catalogGrid)), h.DataAttribute("component-catalog", "true")],
@@ -1228,5 +1623,6 @@ export const catalogView = (model: Model, h: HtmlBuilder<Message>): Html =>
       disclosureAndLayout(model, h),
       overlaysAndMenus(model, h),
       calendarAndMessages(model, h),
+      metricsAndDetails(model, h),
     ],
   );

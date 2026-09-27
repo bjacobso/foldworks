@@ -3,7 +3,7 @@ import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 import { Stateful } from "@foldworks/ui";
 
-import { Department, FoundationStep, Tool, View } from "./model";
+import { AnswerPresentation, Department, FoundationStep, Tool, View } from "./model";
 
 export const Message = defineMessageUnion({
   GotDesktop: { message: Desktop.Message },
@@ -37,5 +37,11 @@ export const Message = defineMessageUnion({
   SelectedPage: { page: S.Int },
   SelectedCalendarDay: { day: S.Int },
   ClickedAction: { action: S.String },
+  ClickedCopySnippet: {},
+  CompletedCopySnippet: { isCopied: S.Boolean },
+  ClearedCopiedSnippet: {},
+  SelectedAnswerPresentation: { value: AnswerPresentation },
+  CommittedReference: { value: S.String },
+  ChangedZoom: { zoom: S.Int },
 });
 export type Message = typeof Message.Type;

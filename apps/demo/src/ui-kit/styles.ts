@@ -70,6 +70,22 @@ export const uiKitStyles = stylex.create({
     },
   },
   fullWidth: { gridColumn: "1 / -1" },
+  answerLabel: {
+    color: "var(--foldworks-ui-foreground)",
+    fontSize: "14px",
+    fontWeight: 500,
+    lineHeight: 1,
+  },
+  answerGroup: { display: "flex", flexDirection: "column", gap: "8px", minWidth: 0 },
+  toolReadout: {
+    color: "var(--foldworks-ui-foreground)",
+    fontSize: "13px",
+    fontVariantNumeric: "tabular-nums",
+    minWidth: "44px",
+    paddingLeft: "8px",
+    paddingRight: "8px",
+    textAlign: "center",
+  },
   compactControl: { maxWidth: "210px" },
   iconSample: {
     alignItems: "center",
@@ -177,6 +193,23 @@ export const uiKitStyles = stylex.create({
     gap: "8px",
   },
   catalogStack: { display: "flex", flexDirection: "column", gap: "10px" },
+  statGrid: {
+    display: "grid",
+    gap: "12px",
+    gridTemplateColumns: {
+      default: "repeat(4, minmax(0, 1fr))",
+      "@media (max-width: 960px)": "repeat(2, minmax(0, 1fr))",
+    },
+  },
+  detailsGrid: {
+    alignItems: "start",
+    display: "grid",
+    gap: "12px",
+    gridTemplateColumns: {
+      default: "repeat(2, minmax(0, 1fr))",
+      "@media (max-width: 760px)": "1fr",
+    },
+  },
   catalogTile: {
     backgroundColor: "var(--foldworks-ui-surface-subtle)",
     borderColor: "var(--foldworks-ui-border)",

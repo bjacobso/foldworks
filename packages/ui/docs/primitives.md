@@ -13,17 +13,25 @@ smaller value. Scalars apply from `base` onward. Values respond to the viewport
 by default; a query container can make them respond to local inline size.
 
 ```ts
-Layout.Container.view({
-  size: "lg",
-  query: true,
-  padding: { base: "sm", md: "lg" },
-  children: [Layout.Grid.view({
-    columns: { base: 1, sm: 2, lg: 3 },
-    responsiveTo: "container",
-    gap: { base: "sm", lg: "xl" },
-    children: cards,
-  }, h)],
-}, h)
+Layout.Container.view(
+  {
+    size: "lg",
+    query: true,
+    padding: { base: "sm", md: "lg" },
+    children: [
+      Layout.Grid.view(
+        {
+          columns: { base: 1, sm: 2, lg: 3 },
+          responsiveTo: "container",
+          gap: { base: "sm", lg: "xl" },
+          children: cards,
+        },
+        h,
+      ),
+    ],
+  },
+  h,
+);
 ```
 
 Grid supports one through twelve explicit columns. Use `minColumnWidth` for an
@@ -52,6 +60,95 @@ avoid ordinary decimal stepping drift. The parent owns the numeric value.
 `Stepper` renders an ordered journey with current, complete, upcoming, and error
 states. It derives statuses from `currentStepId` unless a step overrides its
 status. Provide `onSelect` for nonlinear journeys; omit it for read-only progress.
+
+## Metrics and technical details
+
+`Badge` and `Tag` share neutral, muted, accent, success, warning, danger, and
+info tones. Badge adds outline and monospace options; Tag keeps selection and
+removal actions. `Progress` supports compact bars, tones, and a visible caption
+that is also announced as its value text. `Card` can use `flush: true` for edge
+to edge tables and lists.
+
+`DescriptionList` renders semantic term and value pairs in horizontal or stacked
+rows. Values can be plain text, code, muted text, or a group of chips. Omitted
+values show an em dash by default. `Stat` pairs a label and value with an
+optional description, trend, and extra content such as a progress bar. A trend's
+tone can be overridden when a downward change is good.
+
+`Legend` renders an accessible list with decorative swatches, icons, or symbols.
+Its markers accept a shared tone or a CSS color. `CodeBlock` renders read-only
+source with optional line numbers, scrolling, copy state, and a pure syntax
+highlighter. The `highlight` export from `@foldworks/code-editor` implements
+its highlighter contract for supported languages; other languages stay plain.
+The application handles `copy.onCopy` and can use `CodeBlock.writeClipboard`
+inside a Foldkit command.
+
+## Dense lists and tables
+
+`Item.view` accepts a static item with `actions`, a button item with `onClick`,
+or a link item with `href`. Interactive items use native buttons or links, with
+`isSelected`, `isDisabled`, and non-interactive `trailing` content. Use `isPressed`
+on button items for toggle state. Keep nested controls in a static item's
+`actions` instead of putting them inside an interactive item.
+
+`Table.view` still accepts simple string columns and array rows. Object columns
+add width and alignment. Object rows require a stable `key` and can have
+selection, tone, click handling, and an accessible label. Set `rowHeaders` to
+make the first cell of each body row a row header; cell objects can override
+that choice and add spans, width, alignment, attributes, and StyleX styles.
+
+```ts
+Table.view(
+  {
+    caption: "Recent invoices",
+    rowHeaders: true,
+    columns: [
+      { label: "Invoice", width: "12rem" },
+      { label: "Amount", align: "end" },
+    ],
+    rows: invoices.map((invoice) => ({
+      key: invoice.id,
+      cells: [invoice.number, { content: invoice.amount }],
+      onClick: Message.OpenedInvoice({ id: invoice.id }),
+      ariaLabel: `Open invoice ${invoice.number}`,
+      isSelected: invoice.id === selectedInvoiceId,
+    })),
+  },
+  h,
+);
+```
+
+The row's first cell contains a keyboard-focusable button when `onClick` is
+provided. `slotProps` styles the root, table, caption, head, body, header cells,
+rows, and body cells. Use `@foldworks/data-table` or `@foldworks/data-grid` for
+sorting, selection controls, and grid behavior.
+
+## Stateless tooltips
+
+`Tooltip.view({ mode: "stateless", ... })` displays a plain-text panel on hover
+or focus without adding tooltip state to the application model. The default
+trigger is a focusable span; `renderTrigger` lets an existing button or link own
+focus. An `id` connects the trigger with `aria-describedby`; without one, the
+label is attached with `aria-description`.
+
+```ts
+Tooltip.view(
+  {
+    mode: "stateless",
+    id: "save-help",
+    trigger: ["Save"],
+    label: "Save the current draft",
+    placement: "bottom",
+    renderTrigger: (attributes, children, h) =>
+      h.button([...attributes, h.Type("button"), h.OnClick(Message.Saved())], children),
+  },
+  h,
+);
+```
+
+The stateless panel uses CSS positioning and supports `top`, `bottom`, `start`,
+and `end`. Use `Stateful.Tooltip` for hover delay, Escape handling, and viewport
+collision. Tooltip labels are non-interactive text; use a popover for controls.
 
 ## Floating layers
 

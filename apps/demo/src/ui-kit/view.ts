@@ -7,7 +7,10 @@ import {
   Bell,
   CalendarDays,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Eye,
+  Minus,
   Plus,
   Send,
   Settings,
@@ -16,13 +19,18 @@ import {
 import {
   Badge,
   Button,
+  ButtonGroup,
   Checkbox,
   Disclosure,
   Field,
   Fieldset,
   Icon,
+  Input,
+  Label,
   Layout,
+  NumberField,
   Panel,
+  RadioGroup,
   SegmentedControl,
   Select,
   Switch,
@@ -52,11 +60,12 @@ const group = (
     [h.p([h.Class(className(styles.groupLabel))], [label]), ...children],
   );
 
-const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
+const buttonsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
   Panel.view(
     {
       title: "Button",
-      description: "Five intent variants, four text sizes, icons, and controlled disabled states.",
+      description:
+        "Intent variants, a link-styled action, four text sizes, icon tools, and controlled disabled states.",
       children: [
         Layout.stack(
           {
@@ -106,6 +115,14 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
                             label: "Danger",
                             variant: "danger",
                             onClick: Message.ClickedAction({ action: "Danger" }),
+                          },
+                          h,
+                        ),
+                        Button.view(
+                          {
+                            label: "Link",
+                            variant: "link",
+                            onClick: Message.ClickedAction({ action: "Link" }),
                           },
                           h,
                         ),
@@ -197,6 +214,95 @@ const buttonsPanel = (h: HtmlBuilder<Message>): Html =>
                       isFullWidth: true,
                       variant: "outline",
                       onClick: Message.ClickedAction({ action: "Full-width" }),
+                    },
+                    h,
+                  ),
+                ],
+                h,
+              ),
+              h.hr([h.Class(className(styles.divider))]),
+              group(
+                "Icon tools",
+                [
+                  Layout.row(
+                    {
+                      gap: "lg",
+                      wrap: true,
+                      children: [
+                        ButtonGroup.view(
+                          {
+                            ariaLabel: "Pages",
+                            children: [
+                              Button.icon(
+                                {
+                                  icon: ChevronLeft,
+                                  label: "Previous page",
+                                  size: "sm",
+                                  isDisabled: model.page <= 1,
+                                  onClick: Message.SelectedPage({ page: model.page - 1 }),
+                                },
+                                h,
+                              ),
+                              h.span(
+                                [h.Class(className(styles.toolReadout))],
+                                [`Page ${model.page} of 4`],
+                              ),
+                              Button.icon(
+                                {
+                                  icon: ChevronRight,
+                                  label: "Next page",
+                                  size: "sm",
+                                  isDisabled: model.page >= 4,
+                                  onClick: Message.SelectedPage({ page: model.page + 1 }),
+                                },
+                                h,
+                              ),
+                            ],
+                          },
+                          h,
+                        ),
+                        ButtonGroup.view(
+                          {
+                            ariaLabel: "Zoom",
+                            children: [
+                              Button.icon(
+                                {
+                                  icon: Minus,
+                                  label: "Zoom out",
+                                  size: "sm",
+                                  variant: "outline",
+                                  isDisabled: model.zoom <= 50,
+                                  onClick: Message.ChangedZoom({ zoom: model.zoom - 25 }),
+                                },
+                                h,
+                              ),
+                              h.span([h.Class(className(styles.toolReadout))], [`${model.zoom}%`]),
+                              Button.icon(
+                                {
+                                  icon: Plus,
+                                  label: "Zoom in",
+                                  size: "sm",
+                                  variant: "outline",
+                                  isDisabled: model.zoom >= 200,
+                                  onClick: Message.ChangedZoom({ zoom: model.zoom + 25 }),
+                                },
+                                h,
+                              ),
+                            ],
+                          },
+                          h,
+                        ),
+                        Button.view(
+                          {
+                            label: "Back to journeys",
+                            icon: ChevronLeft,
+                            variant: "link",
+                            size: "sm",
+                            onClick: Message.ClickedAction({ action: "Back to journeys" }),
+                          },
+                          h,
+                        ),
+                      ],
                     },
                     h,
                   ),
@@ -383,6 +489,194 @@ const fieldsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
       ),
     ],
   );
+
+const departmentOptions = [
+  { value: "Engineering", label: "Engineering" },
+  { value: "Operations", label: "Operations" },
+  { value: "People", label: "People" },
+] as const;
+
+const answersPanel = (model: Model, h: HtmlBuilder<Message>): Html => {
+  const presentation = model.answerPresentation;
+  return h.div(
+    [h.Class(className(styles.wide))],
+    [
+      Panel.view(
+        {
+          title: "Read-only answers",
+          description:
+            "The same controls in review mode show each answer legibly. Read-only answers stay focusable and selectable; they are not disabled.",
+          children: [
+            Layout.stack(
+              {
+                gap: "lg",
+                children: [
+                  SegmentedControl.view(
+                    {
+                      value: presentation,
+                      ariaLabel: "Answer presentation",
+                      options: [
+                        { value: "control", label: "Edit" },
+                        { value: "value", label: "Review" },
+                      ],
+                      onChange: (value) => Message.SelectedAnswerPresentation({ value }),
+                    },
+                    h,
+                  ),
+                  h.div(
+                    [h.Class(className(styles.fieldGrid))],
+                    [
+                      Field.input(
+                        {
+                          id: "ui-kit-answer-name",
+                          label: "Legal name",
+                          value: model.name,
+                          presentation,
+                          onInput: (value) => Message.ChangedName({ value }),
+                        },
+                        h,
+                      ),
+                      Field.select(
+                        {
+                          id: "ui-kit-answer-department",
+                          label: "Department",
+                          value: model.department,
+                          presentation,
+                          onChange: (value) =>
+                            Message.SelectedDepartment({
+                              value: uiKitDepartmentFromString(value, model.department),
+                            }),
+                          options: departmentOptions,
+                        },
+                        h,
+                      ),
+                      Field.input(
+                        {
+                          id: "ui-kit-answer-email",
+                          label: "Work email",
+                          description: "Required before the offer is sent.",
+                          value: model.email,
+                          presentation,
+                          isRequired: true,
+                          ...(model.email.includes("@") && model.email.includes(".")
+                            ? {}
+                            : { error: "Enter a complete email address." }),
+                          onInput: (value) => Message.ChangedEmail({ value }),
+                        },
+                        h,
+                      ),
+                      Field.input(
+                        {
+                          id: "ui-kit-answer-preferred-name",
+                          label: "Preferred name",
+                          description: "Optional; unanswered values show a dash.",
+                          presentation,
+                        },
+                        h,
+                      ),
+                      NumberField.view(
+                        {
+                          id: "ui-kit-answer-completion",
+                          label: "Completion",
+                          value: model.sliderValue,
+                          min: 0,
+                          max: 100,
+                          step: 5,
+                          presentation,
+                          formatValue: (value) => `${value}%`,
+                          onChange: (value) => Message.ChangedSlider({ value: value ?? 0 }),
+                        },
+                        h,
+                      ),
+                      h.div(
+                        [h.Class(className(styles.answerGroup))],
+                        [
+                          h.span(
+                            [
+                              h.Id("ui-kit-answer-team-label"),
+                              h.Class(className(styles.answerLabel)),
+                            ],
+                            ["Team"],
+                          ),
+                          RadioGroup.view(
+                            {
+                              name: "ui-kit-answer-team",
+                              value: model.department,
+                              ariaLabel: "Team",
+                              presentation,
+                              options: departmentOptions,
+                              onChange: (value) => Message.SelectedDepartment({ value }),
+                            },
+                            h,
+                          ),
+                        ],
+                      ),
+                      h.div(
+                        [h.Class(className(styles.answerGroup))],
+                        [
+                          Label.view(
+                            {
+                              id: "ui-kit-answer-reference-label",
+                              for: "ui-kit-answer-reference",
+                              children: ["Employee reference (commits on blur)"],
+                            },
+                            h,
+                          ),
+                          Input.view(
+                            {
+                              id: "ui-kit-answer-reference",
+                              ariaLabelledBy: "ui-kit-answer-reference-label",
+                              value: model.committedReference,
+                              presentation,
+                              onChange: (value) => Message.CommittedReference({ value }),
+                            },
+                            h,
+                          ),
+                        ],
+                      ),
+                      h.div(
+                        [h.Class(className(styles.fullWidth))],
+                        [
+                          Checkbox.view(
+                            {
+                              id: "ui-kit-answer-terms",
+                              label: "Accepted the workspace terms",
+                              isChecked: model.termsAccepted,
+                              presentation,
+                              onToggle: (isChecked) => Message.ToggledTerms({ isChecked }),
+                            },
+                            h,
+                          ),
+                        ],
+                      ),
+                      h.div(
+                        [h.Class(className(styles.fullWidth))],
+                        [
+                          Field.textarea(
+                            {
+                              id: "ui-kit-answer-notes",
+                              label: "Notes",
+                              value: model.notes,
+                              presentation,
+                              onInput: (value) => Message.ChangedNotes({ value }),
+                            },
+                            h,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              },
+              h,
+            ),
+          ],
+        },
+        h,
+      ),
+    ],
+  );
+};
 
 const controlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
   Panel.view(
@@ -817,10 +1111,11 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
             [h.Class(className(styles.sectionGrid))],
             [
               h.div([h.Class(className(styles.wide))], [catalogView(model, h)]),
-              buttonsPanel(h),
+              buttonsPanel(model, h),
               badgesPanel(h),
               iconsPanel(h),
               fieldsPanel(model, h),
+              answersPanel(model, h),
               controlsPanel(model, h),
               choiceControlsPanel(model, h),
               compositionPanel(h),

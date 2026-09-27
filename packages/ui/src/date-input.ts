@@ -4,6 +4,7 @@ import { Calendar, Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
 import type { HtmlBuilder } from "foldkit/html";
 import * as DatePicker from "./stateful/date-picker";
+import * as ReadOnlyValue from "./read-only-value";
 import { sxAttrs } from "./sx";
 import { desktopStyles as styles } from "./desktop.styles";
 export type Date = Calendar.CalendarDate;
@@ -33,9 +34,7 @@ export const numericLocale = (locale: string): Codec => {
     month: "2-digit",
     day: "2-digit",
   });
-  const sample = formatter.formatToParts(
-    new globalThis.Date("2006-11-22T12:00:00Z"),
-  );
+  const sample = formatter.formatToParts(new globalThis.Date("2006-11-22T12:00:00Z"));
   const fields: string[] = [];
   const pattern = sample
     .map((part) => {
@@ -66,9 +65,7 @@ export const numericLocale = (locale: string): Codec => {
     parse: (text) => {
       const match = new RegExp(`^${pattern}$`).exec(text);
       if (!match) return;
-      const parts = Object.fromEntries(
-        fields.map((field, i) => [field, Number(match[i + 1])]),
-      );
+      const parts = Object.fromEntries(fields.map((field, i) => [field, Number(match[i + 1])]));
       const date = { year: parts.year!, month: parts.month!, day: parts.day! };
       return Calendar.isCalendarDate(date) ? date : undefined;
     },
@@ -79,11 +76,7 @@ export const calendarLocale = (
   locale: string,
   firstDayOfWeek: Calendar.DayOfWeek,
 ): Calendar.LocaleConfig => {
-  const format = (
-    options: Intl.DateTimeFormatOptions,
-    month: number,
-    day: number,
-  ) =>
+  const format = (options: Intl.DateTimeFormatOptions, month: number, day: number) =>
     new Intl.DateTimeFormat(locale, {
       ...options,
       calendar: "gregory",
@@ -92,19 +85,11 @@ export const calendarLocale = (
     }).format(new globalThis.Date(globalThis.Date.UTC(2026, month, day)));
   return S.decodeUnknownSync(Calendar.LocaleConfig)({
     firstDayOfWeek,
-    monthNames: Array.from({ length: 12 }, (_, month) =>
-      format({ month: "long" }, month, 1),
-    ),
-    shortMonthNames: Array.from({ length: 12 }, (_, month) =>
-      format({ month: "short" }, month, 1),
-    ),
+    monthNames: Array.from({ length: 12 }, (_, month) => format({ month: "long" }, month, 1)),
+    shortMonthNames: Array.from({ length: 12 }, (_, month) => format({ month: "short" }, month, 1)),
     // March 1, 2026 is a Sunday. Foldkit stores day names Sunday-first.
-    dayNames: Array.from({ length: 7 }, (_, day) =>
-      format({ weekday: "long" }, 2, day + 1),
-    ),
-    shortDayNames: Array.from({ length: 7 }, (_, day) =>
-      format({ weekday: "short" }, 2, day + 1),
-    ),
+    dayNames: Array.from({ length: 7 }, (_, day) => format({ weekday: "long" }, 2, day + 1)),
+    shortDayNames: Array.from({ length: 7 }, (_, day) => format({ weekday: "short" }, 2, day + 1)),
   });
 };
 export const Model = S.Struct({
@@ -142,10 +127,7 @@ export const init = (config: DatePicker.InitConfig): Model => ({
   draft: null,
   error: "",
 });
-const constrained = (
-  model: DatePicker.Model,
-  config: Config,
-): DatePicker.Model => ({
+const constrained = (model: DatePicker.Model, config: Config): DatePicker.Model => ({
   ...model,
   calendar: {
     ...model.calendar,
@@ -167,17 +149,10 @@ export const update = (
   config: Config,
 ): Update.ReturnWithOutMessage<Model, Message, OutMessage> => {
   if (message._tag === "GotPicker") {
-    const result = DatePicker.update(
-      constrained(model.picker, config),
-      message.message,
-    );
-    const value =
-      result.outMessage?._tag === "SelectedDate"
-        ? result.outMessage.date
-        : null;
+    const result = DatePicker.update(constrained(model.picker, config), message.message);
+    const value = result.outMessage?._tag === "SelectedDate" ? result.outMessage.date : null;
     const changed =
-      result.outMessage?._tag === "SelectedDate" ||
-      result.outMessage?._tag === "ClearedDate";
+      result.outMessage?._tag === "SelectedDate" || result.outMessage?._tag === "ClearedDate";
     return {
       model: {
         ...model,
@@ -185,9 +160,7 @@ export const update = (
         ...(changed ? { draft: null, error: "" } : {}),
       },
       commands: (result.commands ?? []).map((command) =>
-        Command.mapMessage(command, (message) =>
-          Message.GotPicker({ message }),
-        ),
+        Command.mapMessage(command, (message) => Message.GotPicker({ message })),
       ),
       ...(changed &&
       !config.isDisabled &&
@@ -198,10 +171,8 @@ export const update = (
     };
   }
   if (config.isDisabled || config.isReadOnly) return { model };
-  if (message._tag === "Changed")
-    return { model: { ...model, draft: message.text, error: "" } };
-  if (message._tag === "Cancelled")
-    return { model: { ...model, draft: null, error: "" } };
+  if (message._tag === "Changed") return { model: { ...model, draft: message.text, error: "" } };
+  if (message._tag === "Cancelled") return { model: { ...model, draft: null, error: "" } };
   if (model.draft === null) return { model };
   const text = model.draft.trim();
   const value = text === "" ? null : (config.codec ?? iso).parse(text);
@@ -242,12 +213,30 @@ export const view = <ParentMessage>(
       model: Model;
       label: string;
       name?: string;
+      /** `"value"` shows the formatted date as a read-only answer, without the picker. */
+      presentation?: ReadOnlyValue.Presentation;
       toParentMessage: (message: Message) => ParentMessage;
     }>,
   h: HtmlBuilder<ParentMessage>,
 ) => {
   const { model, toParentMessage: send } = config;
   const codec = config.codec ?? iso;
+  if (config.presentation === "value") {
+    return h.div(sxAttrs(h, styles.column), [
+      h.span([h.Id(`${model.id}-label`)], [config.label]),
+      ReadOnlyValue.view(
+        {
+          id: `${model.id}-input`,
+          ariaLabelledBy: `${model.id}-label`,
+          ...(config.value ? { value: codec.format(config.value) } : {}),
+          ...(config.name && !config.isDisabled
+            ? { name: config.name, formValue: config.value ? iso.format(config.value) : "" }
+            : {}),
+        },
+        h,
+      ),
+    ]);
+  }
   return h.div(sxAttrs(h, styles.column), [
     h.label([h.For(`${model.id}-input`)], [config.label]),
     h.div(sxAttrs(h, styles.row), [
@@ -255,9 +244,7 @@ export const view = <ParentMessage>(
         h.OnMount(GuardComposition()),
         h.Id(`${model.id}-input`),
         h.Type("text"),
-        h.Value(
-          model.draft ?? (config.value ? codec.format(config.value) : ""),
-        ),
+        h.Value(model.draft ?? (config.value ? codec.format(config.value) : "")),
         h.Placeholder(codec.hint),
         h.Disabled(config.isDisabled === true),
         h.Readonly(config.isReadOnly === true),
@@ -284,8 +271,7 @@ export const view = <ParentMessage>(
             value: config.value,
             label: `Choose ${config.label}`,
             format: codec.format,
-            isDisabled:
-              config.isDisabled === true || config.isReadOnly === true,
+            isDisabled: config.isDisabled === true || config.isReadOnly === true,
           },
           h,
         ),

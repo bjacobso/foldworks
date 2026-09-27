@@ -1,5 +1,6 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
+import { catalogStyles as styles } from "./catalog.styles";
 import {
   countView,
   hasAdornments,
@@ -7,7 +8,6 @@ import {
   type AdornedOption,
   type AdornmentSlot,
 } from "./adornments";
-import { catalogStyles as styles } from "./catalog.styles";
 import {
   rootAttrs,
   slotAttrs,
@@ -16,6 +16,7 @@ import {
   type StyledConfig,
   type WithSlotProps,
 } from "./catalog.shared";
+import * as ReadOnlyValue from "./read-only-value";
 import { sxAttrs } from "./sx";
 
 type ControlConfig<Message> = StyledConfig<Message> &
@@ -25,51 +26,98 @@ type ControlConfig<Message> = StyledConfig<Message> &
     value?: string;
     placeholder?: string;
     ariaLabel?: string;
+    ariaLabelledBy?: string;
     isDisabled?: boolean;
     isReadOnly?: boolean;
     isRequired?: boolean;
     isInvalid?: boolean;
+    /** `"value"` renders the answer as read-only text instead of a control. */
+    presentation?: ReadOnlyValue.Presentation;
+    /** Fires on every keystroke. */
     onInput?: (value: string) => Message;
+    /** Fires when the user commits the value: on blur after an edit, or Enter in single-line inputs. */
+    onChange?: (value: string) => Message;
   }>;
 
 const controlAttributes = <Message>(config: ControlConfig<Message>, h: HtmlBuilder<Message>) => [
-  ...styledAttrs<Message>(config, h, styles.control, styles.focusable),
+  ...styledAttrs(config, h, styles.control, styles.focusable),
   ...(config.id === undefined ? [] : [h.Id(config.id)]),
   ...(config.name === undefined ? [] : [h.Name(config.name)]),
   ...(config.value === undefined ? [] : [h.Value(config.value)]),
   ...(config.placeholder === undefined ? [] : [h.Placeholder(config.placeholder)]),
   ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)]),
+  ...(config.ariaLabelledBy === undefined ? [] : [h.AriaLabelledBy(config.ariaLabelledBy)]),
   ...(config.isDisabled === undefined ? [] : [h.Disabled(config.isDisabled)]),
   ...(config.isReadOnly === undefined ? [] : [h.Readonly(config.isReadOnly)]),
   ...(config.isRequired === undefined ? [] : [h.Required(config.isRequired)]),
   ...(config.isInvalid === undefined ? [] : [h.AriaInvalid(config.isInvalid)]),
   ...(config.onInput === undefined ? [] : [h.OnInput(config.onInput)]),
+  ...(config.onChange === undefined ? [] : [h.OnChange(config.onChange)]),
 ];
+
+/** Password answers are masked with a fixed length so the value's length is not revealed. */
+const maskedValue = (value: string | undefined, type: string | undefined) =>
+  type === "password" && value !== undefined && value !== "" ? "••••••••" : value;
+
+const controlValue = <Message>(
+  config: ControlConfig<Message> & Readonly<{ type?: string }>,
+  h: HtmlBuilder<Message>,
+  isMultiline: boolean,
+): Html => {
+  const value = maskedValue(config.value, config.type);
+  return ReadOnlyValue.view(
+    {
+      ...(config.attributes === undefined ? {} : { attributes: config.attributes }),
+      ...(config.sx === undefined ? {} : { sx: config.sx }),
+      ...(config.id === undefined ? {} : { id: config.id }),
+      ...(value === undefined ? {} : { value }),
+      ...(config.ariaLabel === undefined ? {} : { ariaLabel: config.ariaLabel }),
+      ...(config.ariaLabelledBy === undefined ? {} : { ariaLabelledBy: config.ariaLabelledBy }),
+      ...(config.name === undefined || config.isDisabled === true ? {} : { name: config.name }),
+      ...(config.value === undefined ? {} : { formValue: config.value }),
+      ...(config.isInvalid === undefined ? {} : { isInvalid: config.isInvalid }),
+      isMultiline,
+    },
+    h,
+  );
+};
 
 const input = <Message>(
   config: ControlConfig<Message> & Readonly<{ type?: string }>,
   h: HtmlBuilder<Message>,
-): Html => h.input([...controlAttributes(config, h), h.Type(config.type ?? "text")]);
+): Html =>
+  config.presentation === "value"
+    ? controlValue(config, h, false)
+    : h.input([...controlAttributes(config, h), h.Type(config.type ?? "text")]);
 
 const textarea = <Message>(
   config: ControlConfig<Message> & Readonly<{ rows?: number }>,
   h: HtmlBuilder<Message>,
 ): Html =>
-  h.textarea([
-    ...controlAttributes(config, h),
-    ...sxAttrs<Message>(h, styles.textarea),
-    ...(config.rows === undefined ? [] : [h.Rows(config.rows)]),
-  ]);
+  config.presentation === "value"
+    ? controlValue(config, h, true)
+    : h.textarea([
+        ...controlAttributes(config, h),
+        ...sxAttrs(h, styles.textarea),
+        ...(config.rows === undefined ? [] : [h.Rows(config.rows)]),
+      ]);
 
 const label = <Message>(
   config: StyledConfig<Message> &
-    Readonly<{ for: string; children: Children; isDisabled?: boolean }>,
+    Readonly<{
+      for: string;
+      children: Children;
+      isDisabled?: boolean;
+      /** Lets a `presentation: "value"` answer reference this label through `ariaLabelledBy`. */
+      id?: string;
+    }>,
   h: HtmlBuilder<Message>,
 ): Html =>
   h.label(
     [
-      ...styledAttrs<Message>(config, h, styles.label),
+      ...styledAttrs(config, h, styles.label),
       h.For(config.for),
+      ...(config.id === undefined ? [] : [h.Id(config.id)]),
       ...(config.isDisabled === true ? [h.AriaDisabled(true)] : []),
     ],
     config.children,
@@ -83,19 +131,40 @@ const nativeSelect = <Message>(
       value: string;
       options: ReadonlyArray<SelectOption>;
       ariaLabel: string;
+      id?: string;
       name?: string;
       isDisabled?: boolean;
+      isInvalid?: boolean;
+      presentation?: ReadOnlyValue.Presentation;
       onChange?: (value: string) => Message;
     }>,
   h: HtmlBuilder<Message>,
-): Html =>
-  h.select(
+): Html => {
+  if (config.presentation === "value") {
+    const value = ReadOnlyValue.optionLabel(config.value, config.options);
+    return ReadOnlyValue.view(
+      {
+        ...(config.attributes === undefined ? {} : { attributes: config.attributes }),
+        ...(config.sx === undefined ? {} : { sx: config.sx }),
+        ...(config.id === undefined ? {} : { id: config.id }),
+        ...(value === undefined ? {} : { value }),
+        ...(config.name === undefined || config.isDisabled === true ? {} : { name: config.name }),
+        ...(config.isInvalid === undefined ? {} : { isInvalid: config.isInvalid }),
+        ariaLabel: config.ariaLabel,
+        formValue: config.value,
+      },
+      h,
+    );
+  }
+  return h.select(
     [
-      ...styledAttrs<Message>(config, h, styles.control, styles.focusable),
+      ...styledAttrs(config, h, styles.control, styles.focusable),
       h.Value(config.value),
       h.AriaLabel(config.ariaLabel),
+      ...(config.id === undefined ? [] : [h.Id(config.id)]),
       ...(config.name === undefined ? [] : [h.Name(config.name)]),
       ...(config.isDisabled === undefined ? [] : [h.Disabled(config.isDisabled)]),
+      ...(config.isInvalid === undefined ? [] : [h.AriaInvalid(config.isInvalid)]),
       ...(config.onChange === undefined ? [] : [h.OnChange(config.onChange)]),
     ],
     config.options.map((option) =>
@@ -109,6 +178,7 @@ const nativeSelect = <Message>(
       ),
     ),
   );
+};
 
 const inputGroup = <Message>(
   config: StyledConfig<Message> &
@@ -119,14 +189,14 @@ const inputGroup = <Message>(
     }>,
   h: HtmlBuilder<Message>,
 ): Html =>
-  h.div(styledAttrs<Message>(config, h, styles.inset, styles.inputGroup), [
+  h.div(styledAttrs(config, h, styles.inset, styles.inputGroup), [
     ...(config.prefix === undefined
       ? []
-      : [h.div(sxAttrs<Message>(h, styles.inputGroupAddon), config.prefix)]),
-    h.div(sxAttrs<Message>(h, styles.inputGroupControl), [config.control]),
+      : [h.div(sxAttrs(h, styles.inputGroupAddon), config.prefix)]),
+    h.div(sxAttrs(h, styles.inputGroupControl), [config.control]),
     ...(config.suffix === undefined
       ? []
-      : [h.div(sxAttrs<Message>(h, styles.inputGroupAddon), config.suffix)]),
+      : [h.div(sxAttrs(h, styles.inputGroupAddon), config.suffix)]),
   ]);
 
 const inputGroupInput = <Message>(
@@ -134,7 +204,7 @@ const inputGroupInput = <Message>(
   h: HtmlBuilder<Message>,
 ): Html =>
   h.input([
-    ...styledAttrs<Message>(config, h, styles.control, styles.focusable, styles.inputGroupControl),
+    ...styledAttrs(config, h, styles.control, styles.focusable, styles.inputGroupControl),
     ...(config.id === undefined ? [] : [h.Id(config.id)]),
     ...(config.name === undefined ? [] : [h.Name(config.name)]),
     ...(config.value === undefined ? [] : [h.Value(config.value)]),
@@ -143,6 +213,7 @@ const inputGroupInput = <Message>(
     ...(config.isDisabled === undefined ? [] : [h.Disabled(config.isDisabled)]),
     ...(config.isReadOnly === undefined ? [] : [h.Readonly(config.isReadOnly)]),
     ...(config.onInput === undefined ? [] : [h.OnInput(config.onInput)]),
+    ...(config.onChange === undefined ? [] : [h.OnChange(config.onChange)]),
     h.Type(config.type ?? "text"),
   ]);
 
@@ -158,9 +229,9 @@ const inputOtp = <Message>(
   h: HtmlBuilder<Message>,
 ): Html => {
   const length = config.length ?? 6;
-  return h.div(styledAttrs<Message>(config, h, styles.otp), [
+  return h.div(styledAttrs(config, h, styles.otp), [
     h.input([
-      ...sxAttrs<Message>(h, styles.control, styles.focusable),
+      ...sxAttrs(h, styles.control, styles.focusable),
       h.Value(config.value),
       h.AriaLabel(config.ariaLabel ?? "One-time password"),
       h.Attribute("inputmode", "numeric"),
@@ -198,20 +269,37 @@ const radioGroup = <Message, Value extends string>(
       options: ReadonlyArray<RadioOption<Value>>;
       ariaLabel: string;
       isDisabled?: boolean;
+      /** `"value"` shows the selected option's label as a read-only answer. */
+      presentation?: ReadOnlyValue.Presentation;
       onChange: (value: Value) => Message;
     }>,
   h: HtmlBuilder<Message>,
-): Html =>
-  h.fieldset(
+): Html => {
+  if (config.presentation === "value") {
+    const value = ReadOnlyValue.optionLabel(config.value, config.options);
+    return ReadOnlyValue.view(
+      {
+        ...(config.attributes === undefined ? {} : { attributes: config.attributes }),
+        ...(config.sx === undefined ? {} : { sx: config.sx }),
+        ...(value === undefined ? {} : { value }),
+        ...(config.value === undefined ? {} : { formValue: config.value }),
+        ariaLabel: config.ariaLabel,
+        // Native radios only submit a checked value.
+        ...(config.value === undefined || config.isDisabled === true ? {} : { name: config.name }),
+      },
+      h,
+    );
+  }
+  return h.fieldset(
     [
-      ...styledAttrs<Message>(config, h, styles.radioGroup),
+      ...styledAttrs(config, h, styles.radioGroup),
       h.AriaLabel(config.ariaLabel),
       ...(config.isDisabled === true ? [h.Disabled(true)] : []),
     ],
     config.options.map((option) =>
-      h.label(sxAttrs<Message>(h, styles.radioItem), [
+      h.label(sxAttrs(h, styles.radioItem), [
         h.input([
-          ...sxAttrs<Message>(h, styles.radioControl, styles.focusable),
+          ...sxAttrs(h, styles.radioControl, styles.focusable),
           h.Type("radio"),
           h.Name(config.name),
           h.Value(option.value),
@@ -225,12 +313,13 @@ const radioGroup = <Message, Value extends string>(
             option.label,
             ...(option.description === undefined
               ? []
-              : [h.span(sxAttrs<Message>(h, styles.description), [option.description])]),
+              : [h.span(sxAttrs(h, styles.description), [option.description])]),
           ],
         ),
       ]),
     ),
   );
+};
 
 const slider = <Message>(
   config: StyledConfig<Message> &
@@ -246,7 +335,7 @@ const slider = <Message>(
   h: HtmlBuilder<Message>,
 ): Html =>
   h.input([
-    ...styledAttrs<Message>(config, h, styles.range, styles.focusable),
+    ...styledAttrs(config, h, styles.range, styles.focusable),
     h.Type("range"),
     h.Value(String(config.value)),
     h.AriaLabel(config.ariaLabel),
@@ -366,7 +455,7 @@ const buttonGroup = <Message>(
 ): Html =>
   h.div(
     [
-      ...styledAttrs<Message>(config, h, styles.group),
+      ...styledAttrs(config, h, styles.group),
       h.Role("group"),
       ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)]),
     ],
@@ -384,7 +473,7 @@ const form = <Message>(
 ): Html =>
   h.form(
     [
-      ...styledAttrs<Message>(config, h),
+      ...styledAttrs(config, h),
       h.OnSubmit(config.onSubmit),
       ...(config.ariaLabel === undefined ? [] : [h.AriaLabel(config.ariaLabel)]),
     ],

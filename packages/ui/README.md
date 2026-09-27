@@ -15,6 +15,8 @@ semantics and parent-owned state.
 Foldworks also includes first-principles application foundations beyond that
 catalog: responsive Container/Grid/Stack/Row layout, semantic Text/Heading/Link,
 actionable Tag, NumberField, Stepper, and a shared anchored-layer policy.
+DescriptionList, Stat, Legend, and CodeBlock cover structured details, metrics,
+chart keys, and read-only source.
 
 For interactive tabs, modal dialogs, custom selects, command palettes, menus,
 popovers, tooltips, comboboxes, and managed toast stacks, use
@@ -252,6 +254,12 @@ import { Badge, Button, Icon, Toolbar } from "@foldworks/ui";
 
 Icon.view({ icon: Send, size: 20, label: "Send" }, h);
 
+// Icon-only tools have a required accessible name and square hit area.
+Button.icon({ icon: Send, label: "Send message", onClick: Message.ClickedSend() }, h);
+
+// A link-looking action retains button semantics.
+Button.view({ label: "Edit answer", variant: "link", onClick: Message.ClickedEdit() }, h);
+
 Toolbar.view(
   {
     title: "Candidate workflow",
@@ -339,6 +347,42 @@ The [integration guide](docs/stateful.md) includes complete tabs wiring and
 Dialog, Select, and Command usage. Dialog and Select support optional transitions
 that respect reduced motion. Select uses Foldkit's custom Listbox engine;
 `Select.control` and `NativeSelect.view` remain native browser controls.
+For conditional fields and animated presence, see the [animation guide](docs/animation.md).
+
+### Read-only answers
+
+Set `presentation: "value"` on `Input`, `Textarea`, `NativeSelect`,
+`RadioGroup`, `Checkbox`, `Field.input`, `Field.textarea`, or `Field.select` to
+show a legible answer in a review form. `Select.control`, `NumberField`, and
+`DateInput` support the same presentation. The default is `"control"`.
+Text answers render as focusable, selectable read-only text. Selects and radio
+groups show their option label. When a control has a `name`, its answer is
+submitted through a hidden input. This is distinct from `isDisabled`, which
+removes a control from form submission. Password answers are masked.
+
+```ts
+import { Field, Input, ReadOnlyValue } from "@foldworks/ui";
+
+Field.input(
+  {
+    id: "legal-name",
+    label: "Legal name",
+    name: "legalName",
+    value: model.legalName,
+    presentation: "value",
+  },
+  h,
+);
+
+// For answers without an existing control, use the same presentation directly.
+ReadOnlyValue.view({ ariaLabel: "Address", value: model.address }, h);
+
+// onInput reports typing; onChange reports a committed edit.
+Input.view({ value: model.name, onInput: Message.TypedName, onChange: Message.CommittedName }, h);
+```
+
+`ReadOnlyValue` is exported separately for composite answers while the
+`presentation` prop keeps existing control APIs and form layouts intact.
 
 Unstyled Foldkit engines are available under `Headless`. Use that
 surface when an application needs the complete state machine, including focus
@@ -370,6 +414,42 @@ Layout.Grid.view(
 For component-local responsiveness, establish containment with
 `Layout.Container.view({ query: true, ... }, h)` and set `responsiveTo:
 "container"` on a nested grid, stack, or row.
+
+`SplitView` arranges two or three panes in columns and stacks them below a
+breakpoint. Pane `width` values are CSS grid tracks. Use `sticky` for a pane
+that stays in view and scrolls independently, or `height: "fill"` inside a
+bounded parent to make every pane scroll independently. `resizable` enables a
+native horizontal resize handle on an individual pane. For a master/detail
+layout, set `collapsedPane` to the active pane key; the other pane stays
+mounted and appears again at the split breakpoint.
+
+```ts
+SplitView.view(
+  {
+    collapseBelow: "md",
+    panes: [
+      { key: "list", label: "Mappings", width: "280px", children: [list] },
+      { key: "detail", label: "Inspector", sticky: true, children: [inspector] },
+    ],
+    collapsedPane: "detail",
+  },
+  h,
+);
+
+AppHeader.view(
+  {
+    title: "Compliance library",
+    breadcrumb: { items: [{ label: "Forms", onClick: showForms }], current: "I-9" },
+    status: [environmentBadge],
+  },
+  h,
+);
+```
+
+`SplitView` accepts `responsiveTo: "container"` inside a query container,
+`stickyOffset` for an app header, and `slotProps` for pane styling. `AppHeader`
+also accepts leading content, actions, a linked or message-driven title, and
+slot props for its regions.
 
 See the [foundational primitives guide](docs/primitives.md) for layout,
 typography, tags, numeric fields, and steppers.
@@ -459,9 +539,8 @@ slot uses the same `{ attributes?, sx? }` contract. Top-level `attributes` and
 `slotProps.root` styles are applied last:
 
 This contract is available on Button, Badge, Card, Checkbox, Disclosure, Field,
-Fieldset, Icon, Layout, NumberField, Panel, SegmentedControl, Select, Switch,
-TabBar, Tag, Toggle, ToggleGroup, Toolbar, and the stateful Dialog, Popover,
-Tabs, and Tooltip adapters.
+Fieldset, Icon, Layout, SplitView, AppHeader, NumberField, Panel, SegmentedControl, Select, Switch,
+TabBar, Tag, Toggle, ToggleGroup, Toolbar, and the stateful Dialog, Popover, Tabs, and Tooltip adapters.
 
 ```ts
 Card.view(

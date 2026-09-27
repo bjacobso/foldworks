@@ -97,20 +97,14 @@ const breadcrumb = <Message>(config: BreadcrumbConfig<Message>, h: HtmlBuilder<M
   const entries = collapseBreadcrumbItems(config.items, config.current, config);
   const separator = () =>
     h.span(
-      [...slotAttrs<Message>(config.slotProps?.separator, h), h.AriaHidden(true)],
+      [...slotAttrs(config.slotProps?.separator, h), h.AriaHidden(true)],
       [config.separator ?? "/"],
     );
   const actionable = (item: BreadcrumbItem<Message>) => {
-    const attributes = slotAttrs<Message>(
-      config.slotProps?.link,
-      h,
-      styles.breadcrumbLink,
-      styles.focusable,
-    );
     if (item.href !== undefined)
       return h.a(
         [
-          ...attributes,
+          ...slotAttrs(config.slotProps?.link, h, styles.breadcrumbLink, styles.focusable),
           h.Href(item.href),
           ...(item.onClick === undefined ? [] : [h.OnClick(item.onClick)]),
         ],
@@ -119,26 +113,33 @@ const breadcrumb = <Message>(config: BreadcrumbConfig<Message>, h: HtmlBuilder<M
     if (item.onClick !== undefined)
       return h.button(
         [
-          ...attributes,
-          ...sxAttrs<Message>(h, styles.breadcrumbButton),
+          ...slotAttrs(
+            config.slotProps?.link,
+            h,
+            styles.breadcrumbLink,
+            styles.focusable,
+            styles.breadcrumbButton,
+          ),
           h.Type("button"),
           h.OnClick(item.onClick),
         ],
         [item.label],
       );
-    return h.span(attributes, [item.label]);
+    return h.span(slotAttrs(config.slotProps?.link, h, styles.breadcrumbLink, styles.focusable), [
+      item.label,
+    ]);
   };
 
   return h.nav(
-    [...rootAttrs<Message>(config, h), h.AriaLabel(config.ariaLabel ?? "Breadcrumb")],
+    [...rootAttrs(config, h), h.AriaLabel(config.ariaLabel ?? "Breadcrumb")],
     [
       h.ol(
-        slotAttrs<Message>(config.slotProps?.list, h, styles.breadcrumb),
+        slotAttrs(config.slotProps?.list, h, styles.breadcrumb),
         entries.map((entry, index) => {
           if (entry.kind === "current")
             return h.li(
               [
-                ...slotAttrs<Message>(config.slotProps?.current, h, styles.breadcrumbCurrent),
+                ...slotAttrs(config.slotProps?.current, h, styles.breadcrumbCurrent),
                 h.AriaCurrent("page"),
               ],
               [entry.label],
@@ -150,18 +151,14 @@ const breadcrumb = <Message>(config: BreadcrumbConfig<Message>, h: HtmlBuilder<M
               : config.onExpand === undefined
                 ? h.span(
                     [
-                      ...slotAttrs<Message>(
-                        config.slotProps?.overflow,
-                        h,
-                        styles.breadcrumbOverflow,
-                      ),
+                      ...slotAttrs(config.slotProps?.overflow, h, styles.breadcrumbOverflow),
                       h.AriaLabel(`${entry.hiddenCount} hidden breadcrumb items`),
                     ],
                     [config.overflowLabel ?? "…"],
                   )
                 : h.button(
                     [
-                      ...slotAttrs<Message>(
+                      ...slotAttrs(
                         config.slotProps?.overflow,
                         h,
                         styles.breadcrumbLink,
@@ -174,7 +171,7 @@ const breadcrumb = <Message>(config: BreadcrumbConfig<Message>, h: HtmlBuilder<M
                     ],
                     [config.overflowLabel ?? "…"],
                   );
-          return h.li(slotAttrs<Message>(config.slotProps?.item, h, styles.breadcrumbItem), [
+          return h.li(slotAttrs(config.slotProps?.item, h, styles.breadcrumbItem), [
             content,
             ...(index === entries.length - 1 ? [] : [separator()]),
           ]);
@@ -196,12 +193,12 @@ const pagination = <Message>(
 ): Html => {
   const pages = Array.from({ length: config.pageCount }, (_, index) => index + 1);
   return h.nav(
-    [...styledAttrs<Message>(config, h), h.AriaLabel(config.ariaLabel ?? "Pagination")],
+    [...styledAttrs(config, h), h.AriaLabel(config.ariaLabel ?? "Pagination")],
     [
-      h.div(sxAttrs<Message>(h, styles.pagination), [
+      h.div(sxAttrs(h, styles.pagination), [
         h.button(
           [
-            ...sxAttrs<Message>(h, styles.pageButton, styles.focusable),
+            ...sxAttrs(h, styles.pageButton, styles.focusable),
             h.Type("button"),
             h.AriaLabel("Previous page"),
             h.Disabled(config.page <= 1),
@@ -212,7 +209,7 @@ const pagination = <Message>(
         ...pages.map((page) =>
           h.button(
             [
-              ...sxAttrs<Message>(
+              ...sxAttrs(
                 h,
                 styles.pageButton,
                 styles.focusable,
@@ -228,7 +225,7 @@ const pagination = <Message>(
         ),
         h.button(
           [
-            ...sxAttrs<Message>(h, styles.pageButton, styles.focusable),
+            ...sxAttrs(h, styles.pageButton, styles.focusable),
             h.Type("button"),
             h.AriaLabel("Next page"),
             h.Disabled(config.page >= config.pageCount),
@@ -260,17 +257,13 @@ const tabs = <Message, Value extends string>(
     }>,
   h: HtmlBuilder<Message>,
 ): Html =>
-  h.div(styledAttrs<Message>(config, h, styles.tabs), [
+  h.div(styledAttrs(config, h, styles.tabs), [
     h.div(
-      [
-        ...sxAttrs<Message>(h, styles.tabsList),
-        h.Role("tablist"),
-        h.AriaLabel(config.ariaLabel ?? "Tabs"),
-      ],
+      [...sxAttrs(h, styles.tabsList), h.Role("tablist"), h.AriaLabel(config.ariaLabel ?? "Tabs")],
       config.tabs.map((tab) =>
         h.button(
           [
-            ...sxAttrs<Message>(
+            ...sxAttrs(
               h,
               styles.tabsTrigger,
               styles.focusable,
@@ -308,16 +301,16 @@ const navigationMenu = <Message>(
   h: HtmlBuilder<Message>,
 ): Html =>
   h.nav(
-    [...styledAttrs<Message>(config, h), h.AriaLabel(config.ariaLabel ?? "Primary navigation")],
+    [...styledAttrs(config, h), h.AriaLabel(config.ariaLabel ?? "Primary navigation")],
     [
       h.ul(
-        sxAttrs<Message>(h, styles.nav),
+        sxAttrs(h, styles.nav),
         config.items.map((item) =>
           h.li(
             [],
             [
               h.a(
-                [...sxAttrs<Message>(h, styles.navLink, styles.focusable), h.Href(item.href)],
+                [...sxAttrs(h, styles.navLink, styles.focusable), h.Href(item.href)],
                 [item.label],
               ),
             ],
