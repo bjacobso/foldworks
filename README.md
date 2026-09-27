@@ -65,7 +65,11 @@ versions for builds and tests. Currently,
 `foldkit@0.156.0` and `@foldkit/ui@0.156.0` themselves require Effect
 `4.0.0-rc.112` exactly, so applications using those releases must use that
 Effect version. Applications consuming StyleX components must also configure
-the StyleX transform; see the [`@foldworks/ui` setup](./packages/ui/README.md#setup).
+the StyleX transform and its cascade layers; see the
+[`@foldworks/ui` setup](./packages/ui/README.md#setup). To test views without
+the StyleX compiler, use `foldworksStylexTest()` from `@foldworks/ui/vite`; see
+[Testing views](./packages/ui/README.md#testing-views). The packages in this
+repository use the same plugin in their Vitest configurations.
 
 ## Development
 

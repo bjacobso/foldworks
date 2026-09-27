@@ -47,8 +47,17 @@
       "types": "./dist/tokens.stylex.d.ts",
       "import": "./dist/tokens.stylex.js"
     },
+    "./testing/stylex": {
+      "types": "./dist/testing/stylex.d.ts",
+      "import": "./dist/testing/stylex.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
+    },
     "./theme.css": "./dist/theme.css",
     "./base.css": "./dist/base.css",
+    "./layers.css": "./dist/layers.css",
     "./themes/shadcn.css": "./dist/themes/shadcn.css",
     "./themes/blueprint.css": "./dist/themes/blueprint.css",
     "./themes/office.css": "./dist/themes/office.css",

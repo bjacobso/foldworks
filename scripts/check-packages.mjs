@@ -163,7 +163,7 @@ try {
         name: "foldworks-package-smoke-test",
         private: true,
         type: "module",
-        scripts: { build: "vite build", typecheck: "tsc --noEmit" },
+        scripts: { build: "vite build", test: "vitest run", typecheck: "tsc --noEmit" },
         dependencies: Object.fromEntries([
           ...Object.entries(sharedRuntimeVersions),
           ...[...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
@@ -172,6 +172,7 @@ try {
           "@stylexjs/unplugin": "0.19.0",
           typescript: "6.0.3",
           vite: "8.2.2",
+          vitest: "4.1.11",
         },
       },
       null,
@@ -184,11 +185,12 @@ try {
   );
   await writeFile(
     join(consumerDirectory, "vite.config.ts"),
-    `import stylex from "@stylexjs/unplugin";
+    `import { foldworksLayers } from "@foldworks/ui/vite";
+import stylex from "@stylexjs/unplugin";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [stylex.vite({ runtimeInjection: false, useCSSLayers: true }), {
+  plugins: [stylex.vite({ runtimeInjection: false, useCSSLayers: { before: foldworksLayers } }), {
     name: "native-editor-isolation",
     generateBundle(_options, bundle) {
       if (process.env.FOLDWORKS_NATIVE_SMOKE !== "1") return;
@@ -224,7 +226,8 @@ export default defineConfig({
   await writeFile(join(consumerDirectory, "src", "env.d.ts"), 'declare module "*.css";\n');
   await writeFile(
     join(consumerDirectory, "src", "main.ts"),
-    `import "@foldworks/ui/base.css";
+    `import "@foldworks/ui/layers.css";
+import "@foldworks/ui/base.css";
 import "@foldworks/ui/themes/shadcn.css";
 import "@foldworks/editor/styles.css";
 import "@foldworks/code-editor/styles.css";
@@ -258,10 +261,42 @@ app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.k
 `,
   );
 
+  // Views from installed packages must render under Vitest without the StyleX
+  // compiler, which is the setup `@foldworks/ui/vite` documents.
+  await writeFile(
+    join(consumerDirectory, "vitest.config.ts"),
+    `import { foldworksStylexTest } from "@foldworks/ui/vite";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({ plugins: [foldworksStylexTest()] });
+`,
+  );
+  await writeFile(
+    join(consumerDirectory, "src", "view.test.ts"),
+    `import * as stylex from "@stylexjs/stylex";
+import { Button, sxAttrs } from "@foldworks/ui";
+import { Option } from "effect";
+import { inertHtml as h } from "foldkit/html";
+import { Scene } from "foldkit/test";
+import { expect, it } from "vitest";
+
+const styles = stylex.create({ action: { marginInline: "auto" } });
+
+it("renders Foldworks and application StyleX in a view test", () => {
+  const html = Button.view({ label: "Save", sx: styles.action }, h);
+  if (html === null) throw new Error("Expected a button");
+  const button = Option.getOrThrow(Scene.find(html, "button"));
+  expect(Option.getOrThrow(Scene.attr(button, "class"))).toContain("action");
+  expect(sxAttrs(h, styles.action)).toHaveLength(1);
+});
+`,
+  );
+
   await run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund"], {
     cwd: consumerDirectory,
   });
   await run("npm", ["run", "typecheck"], { cwd: consumerDirectory });
+  await run("npm", ["run", "test"], { cwd: consumerDirectory });
   await run("npm", ["run", "build"], { cwd: consumerDirectory });
 
   await stat(join(consumerDirectory, "dist", "index.html"));
@@ -315,7 +350,7 @@ for (const [languageId, text] of [["yaml", "enabled: true"], ["json", '{"enabled
   );
 
   console.log(
-    `\nValidated ${tarballs.size} package tarballs, a clean Vite consumer, and native-editor bundle isolation.`,
+    `\nValidated ${tarballs.size} package tarballs, a clean Vite and Vitest consumer, and native-editor bundle isolation.`,
   );
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });

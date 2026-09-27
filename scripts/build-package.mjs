@@ -23,7 +23,9 @@ const entries =
     ? {
         icon: "src/icon.ts",
         index: "src/index.ts",
+        "testing/stylex": "src/testing/stylex.ts",
         "tokens.stylex": "src/tokens.stylex.ts",
+        vite: "src/vite.ts",
       }
     : packageJson.name === "@foldworks/generative-ui"
       ? {
@@ -116,7 +118,7 @@ try {
     clean: false,
     dts: false,
     entry: entries,
-    external: packageJson.name === "@foldworks/ui" ? ["./tokens.stylex.js"] : [],
+    external: packageJson.name === "@foldworks/ui" ? ["./tokens.stylex.js", "node:*"] : [],
     format: ["esm"],
     minify: false,
     outDir: stagedOutputDirectory,
