@@ -1,5 +1,6 @@
 import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
 import { Match } from "effect";
+import * as stylex from "@stylexjs/stylex";
 
 import {
   Blocks,
@@ -58,6 +59,10 @@ import { className, styles } from "../workflow/styles";
 import { view as workflowEditorView } from "../workflow/view";
 import { Message } from "./message";
 import type { Model } from "./model";
+
+const toolbarSelectStyles = stylex.create({
+  theme: { width: "167px" },
+});
 
 const activeAnnouncement = (model: Model): string => {
   const demo = demoFromRoute(model.route);
@@ -391,6 +396,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                     ]),
         Select.control(
           {
+            sx: toolbarSelectStyles.theme,
             value: model.themeName,
             ariaLabel: "Theme",
             onChange: (name) =>
