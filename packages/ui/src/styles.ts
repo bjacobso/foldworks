@@ -81,9 +81,18 @@ export const buttonStyles = stylex.create({
   md: { height: "32px", paddingLeft: "10px", paddingRight: "10px" },
   lg: { fontSize: typography.sizeLg, height: "36px", paddingLeft: "12px", paddingRight: "12px" },
   icon: { height: "32px", padding: 0, width: "32px" },
-  iconXs: { borderRadius: "var(--radius-button-sm)", height: "24px", padding: 0, width: "24px" },
-  iconSm: { height: "28px", padding: 0, width: "28px" },
-  iconLg: { height: "36px", padding: 0, width: "36px" },
+  // Square shapes for Button.icon. They follow a text-size recipe, so they reset
+  // its padding with longhands: StyleX ranks longhands above the `padding` shorthand.
+  iconXs: {
+    borderRadius: "var(--radius-button-sm)",
+    height: "24px",
+    paddingLeft: 0,
+    paddingRight: 0,
+    width: "24px",
+  },
+  iconSm: { height: "28px", paddingLeft: 0, paddingRight: 0, width: "28px" },
+  iconMd: { height: "32px", paddingLeft: 0, paddingRight: 0, width: "32px" },
+  iconLg: { height: "36px", paddingLeft: 0, paddingRight: 0, width: "36px" },
   /** Applied after the size recipe so link actions flow inline with text. */
   linkShape: { height: "auto", paddingLeft: 0, paddingRight: 0, transform: "none" },
   fullWidth: { width: "100%" },

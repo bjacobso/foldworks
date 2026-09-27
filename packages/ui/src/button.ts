@@ -163,7 +163,7 @@ const iconShape = (size: IconSize) => {
     case "sm":
       return buttonStyles.iconSm;
     case "md":
-      return buttonStyles.icon;
+      return buttonStyles.iconMd;
     case "lg":
       return buttonStyles.iconLg;
   }
