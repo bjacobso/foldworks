@@ -13,7 +13,12 @@ export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";
 export * as Switch from "./switch";
 export * as Toolbar from "./toolbar";
-export { ChangeSetPreview, ExplanationTree, TransactionTimeline, ValueInspector } from "./operational";
+export {
+  ChangeSetPreview,
+  ExplanationTree,
+  TransactionTimeline,
+  ValueInspector,
+} from "./operational";
 export type { Consequence, ExplanationNode, TimelineEntry, ValueChange } from "./operational";
 export { Accordion, Collapsible } from "./collections";
 export { Heading, Link, Text, VisuallyHidden } from "./content";
@@ -29,7 +34,24 @@ export {
   Separator,
   Table,
 } from "./display";
-export type { CardConfig, CardSlot } from "./display";
+export type {
+  ButtonItemConfig,
+  CardConfig,
+  CardSlot,
+  InteractiveItemConfig,
+  ItemConfig,
+  LinkItemConfig,
+  StaticItemConfig,
+  TableAlign,
+  TableCell,
+  TableCellConfig,
+  TableColumn,
+  TableConfig,
+  TableRow,
+  TableRowConfig,
+  TableRowTone,
+  TableSlot,
+} from "./display";
 export { Direction } from "./direction";
 export {
   ButtonGroup,
@@ -52,6 +74,13 @@ export { Tag } from "./tag";
 export { Breadcrumb, NavigationMenu, Pagination, Sidebar, Tabs } from "./navigation";
 export type { BreadcrumbConfig, BreadcrumbItem, BreadcrumbSlot } from "./navigation";
 export { AlertDialog, Dialog, Drawer, HoverCard, Popover, Sheet, Tooltip } from "./overlays";
+export type {
+  ControlledTooltipConfig,
+  StatelessTooltipConfig,
+  StatelessTooltipSlot,
+  TooltipConfig,
+  TooltipPlacement,
+} from "./overlays";
 export { Combobox, Command, ContextMenu, DropdownMenu, Menubar } from "./menus";
 export { Calendar } from "./calendar";
 export { Carousel, Resizable, ScrollArea } from "./containers";

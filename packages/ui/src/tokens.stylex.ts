@@ -140,3 +140,6 @@ export const contentWidths = stylex.defineConsts({
   xl: "1280px",
   full: "100%",
 });
+
+/** Marks a stateless tooltip root so its panel can react to hover and focus within it. */
+export const tooltipMarker = stylex.defineMarker();

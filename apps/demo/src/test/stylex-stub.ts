@@ -7,9 +7,14 @@ export const create = <Styles extends Record<string, unknown>>(
     [Key in keyof Styles]: string;
   };
 
-export const defineConsts = <const Values extends Record<string, string>>(
-  values: Values,
-): Values => values;
+export const defineConsts = <const Values extends Record<string, string>>(values: Values): Values =>
+  values;
+
+export const defineMarker = () => "stylex-test-marker";
+
+export const when = {
+  ancestor: (pseudo: string) => `:where-ancestor(${pseudo})`,
+};
 
 export const keyframes = () => "stylex-test-keyframes";
 
