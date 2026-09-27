@@ -17,6 +17,9 @@ export type Tool = typeof Tool.Type;
 export const FoundationStep = S.Literals(["Compose", "Validate", "Ship"]);
 export type FoundationStep = typeof FoundationStep.Type;
 
+export const AnswerPresentation = S.Literals(["control", "value"]);
+export type AnswerPresentation = typeof AnswerPresentation.Type;
+
 export const Model = S.Struct({
   desktop: Desktop.Model,
   tabs: Stateful.Tabs.Model,
@@ -48,6 +51,9 @@ export const Model = S.Struct({
   page: S.Int,
   selectedCalendarDay: S.Int,
   announcement: S.String,
+  answerPresentation: AnswerPresentation,
+  committedReference: S.String,
+  zoom: S.Int,
 });
 export type Model = typeof Model.Type;
 
@@ -60,7 +66,10 @@ export const initialModel: Model = {
   actionMenu: Stateful.Menu.init({ id: "catalog-action-menu", isAnimated: true }),
   popover: Stateful.Popover.init({ id: "catalog-stateful-popover", isAnimated: true }),
   tooltip: Stateful.Tooltip.init({ id: "catalog-stateful-tooltip", showDelay: 250 }),
-  departmentCombobox: Stateful.Combobox.init({ id: "catalog-department-combobox", isAnimated: true }),
+  departmentCombobox: Stateful.Combobox.init({
+    id: "catalog-department-combobox",
+    isAnimated: true,
+  }),
   toolCombobox: Stateful.Combobox.Multi.init({ id: "catalog-tool-combobox", isAnimated: true }),
   toasts: Stateful.Toast.init({ id: "catalog-toasts", defaultDuration: 4000 }),
   name: "Maya Chen",
@@ -82,4 +91,7 @@ export const initialModel: Model = {
   page: 2,
   selectedCalendarDay: 4,
   announcement: "UI component demo ready.",
+  answerPresentation: "value",
+  committedReference: "EMP-2041",
+  zoom: 100,
 };

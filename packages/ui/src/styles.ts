@@ -63,11 +63,29 @@ export const buttonStyles = stylex.create({
     borderColor: "transparent",
     color: colors.danger,
   },
-  xs: { borderRadius: "var(--radius-button-sm)", fontSize: typography.sizeSm, height: "24px", paddingLeft: "8px", paddingRight: "8px" },
+  link: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    color: colors.primary,
+    textDecorationLine: { default: "none", ":hover": "underline" },
+    textUnderlineOffset: "3px",
+  },
+  xs: {
+    borderRadius: "var(--radius-button-sm)",
+    fontSize: typography.sizeSm,
+    height: "24px",
+    paddingLeft: "8px",
+    paddingRight: "8px",
+  },
   sm: { fontSize: typography.sizeSm, height: "28px", paddingLeft: "10px", paddingRight: "10px" },
   md: { height: "32px", paddingLeft: "10px", paddingRight: "10px" },
   lg: { fontSize: typography.sizeLg, height: "36px", paddingLeft: "12px", paddingRight: "12px" },
   icon: { height: "32px", padding: 0, width: "32px" },
+  iconXs: { borderRadius: "var(--radius-button-sm)", height: "24px", padding: 0, width: "24px" },
+  iconSm: { height: "28px", padding: 0, width: "28px" },
+  iconLg: { height: "36px", padding: 0, width: "36px" },
+  /** Applied after the size recipe so link actions flow inline with text. */
+  linkShape: { height: "auto", paddingLeft: 0, paddingRight: 0, transform: "none" },
   fullWidth: { width: "100%" },
   disabled: { cursor: "not-allowed", opacity: 0.5, pointerEvents: "none", transform: "none" },
 });
@@ -129,8 +147,19 @@ export const toolbarStyles = stylex.create({
     letterSpacing: "-0.015em",
     margin: 0,
   },
-  description: { color: colors.foregroundMuted, fontSize: "12px", marginBottom: 0, marginTop: "2px" },
-  actions: { alignItems: "center", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "flex-end" },
+  description: {
+    color: colors.foregroundMuted,
+    fontSize: "12px",
+    marginBottom: 0,
+    marginTop: "2px",
+  },
+  actions: {
+    alignItems: "center",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    justifyContent: "flex-end",
+  },
 });
 
 export const segmentedStyles = stylex.create({
@@ -170,7 +199,12 @@ export const segmentedStyles = stylex.create({
 
 export const fieldStyles = stylex.create({
   root: { display: "flex", flexDirection: "column", gap: "8px", minWidth: 0 },
-  label: { color: colors.foreground, fontSize: "14px", fontWeight: typography.weightMedium, lineHeight: 1 },
+  label: {
+    color: colors.foreground,
+    fontSize: "14px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1,
+  },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   control: {
     backgroundColor: "color-mix(in oklch, var(--input) 12%, transparent)",
@@ -212,10 +246,31 @@ export const fieldStyles = stylex.create({
     width: "100%",
   },
   textareaWrapper: { alignItems: "flex-start" },
-  controlInWrapper: { backgroundColor: "transparent", border: 0, borderRadius: 0, boxShadow: "none", minWidth: 0, outline: "none" },
-  adornment: { alignItems: "center", color: colors.foregroundMuted, display: "inline-flex", flexShrink: 0, minHeight: "32px", paddingLeft: "10px", paddingRight: "10px" },
+  controlInWrapper: {
+    backgroundColor: "transparent",
+    border: 0,
+    borderRadius: 0,
+    boxShadow: "none",
+    minWidth: 0,
+    outline: "none",
+  },
+  adornment: {
+    alignItems: "center",
+    color: colors.foregroundMuted,
+    display: "inline-flex",
+    flexShrink: 0,
+    minHeight: "32px",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+  },
   selectControl: { minHeight: "32px", paddingRight: "28px", width: "auto" },
-  textarea: { lineHeight: 1.5, minHeight: "84px", paddingBottom: "9px", paddingTop: "9px", resize: "vertical" },
+  textarea: {
+    lineHeight: 1.5,
+    minHeight: "84px",
+    paddingBottom: "9px",
+    paddingTop: "9px",
+    resize: "vertical",
+  },
   invalid: {
     borderColor: colors.danger,
     boxShadow: `0 0 0 3px color-mix(in oklch, ${colors.danger} 20%, transparent)`,
@@ -233,6 +288,7 @@ export const choiceStyles = stylex.create({
     gap: space.sm,
   },
   disabled: { cursor: "not-allowed", opacity: 0.5 },
+  readOnly: { cursor: "default" },
   control: {
     alignItems: "center",
     backgroundColor: colors.surface,
@@ -264,7 +320,12 @@ export const choiceStyles = stylex.create({
     borderColor: colors.primary,
   },
   content: { display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 },
-  label: { cursor: "pointer", fontSize: "14px", fontWeight: typography.weightMedium, lineHeight: 1.35 },
+  label: {
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1.35,
+  },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   hiddenInput: {
     clip: "rect(0 0 0 0)",
@@ -275,6 +336,36 @@ export const choiceStyles = stylex.create({
     whiteSpace: "nowrap",
     width: "1px",
   },
+});
+
+export const readOnlyValueStyles = stylex.create({
+  root: {
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: "transparent",
+    borderRadius: radii.md,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    color: colors.foreground,
+    cursor: "text",
+    display: "block",
+    fontFamily: typography.fontFamily,
+    fontSize: "14px",
+    lineHeight: "20px",
+    minHeight: "32px",
+    minWidth: 0,
+    outline: { default: "none", ":focus-visible": `3px solid ${colors.focusGlow}` },
+    outlineOffset: "0px",
+    overflowWrap: "anywhere",
+    paddingBottom: "5px",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    paddingTop: "5px",
+    whiteSpace: "pre-wrap",
+    width: "100%",
+  },
+  compact: { minHeight: "28px", paddingBottom: "3px", paddingTop: "3px" },
+  empty: { color: colors.foregroundMuted },
+  invalid: { borderColor: colors.danger },
 });
 
 export const switchStyles = stylex.create({
@@ -288,7 +379,12 @@ export const switchStyles = stylex.create({
   },
   disabled: { cursor: "not-allowed", opacity: 0.5 },
   copy: { display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 },
-  label: { cursor: "pointer", fontSize: "14px", fontWeight: typography.weightMedium, lineHeight: 1.35 },
+  label: {
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1.35,
+  },
   description: { color: colors.foregroundMuted, fontSize: "12px", lineHeight: 1.4, margin: 0 },
   control: {
     alignItems: "center",
@@ -411,8 +507,25 @@ export const panelStyles = stylex.create({
     boxShadow: metrics.shadowPanel,
     overflow: "hidden",
   },
-  header: { borderBottomColor: colors.border, borderBottomStyle: "solid", borderBottomWidth: "1px", padding: "16px" },
-  title: { color: "inherit", fontSize: "16px", fontWeight: typography.weightMedium, lineHeight: 1.35, margin: 0 },
-  description: { color: colors.foregroundMuted, fontSize: "14px", lineHeight: 1.45, marginBottom: 0, marginTop: "4px" },
+  header: {
+    borderBottomColor: colors.border,
+    borderBottomStyle: "solid",
+    borderBottomWidth: "1px",
+    padding: "16px",
+  },
+  title: {
+    color: "inherit",
+    fontSize: "16px",
+    fontWeight: typography.weightMedium,
+    lineHeight: 1.35,
+    margin: 0,
+  },
+  description: {
+    color: colors.foregroundMuted,
+    fontSize: "14px",
+    lineHeight: 1.45,
+    marginBottom: 0,
+    marginTop: "4px",
+  },
   body: { padding: "16px" },
 });

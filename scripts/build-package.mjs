@@ -146,6 +146,9 @@ try {
     );
     const declarationProgram = ts.createProgram(declarationRoots, {
       ...parsedConfig.options,
+      // The UI catalog exceeds TypeScript's relation-cache limit in one program.
+      // Its source is typechecked in bounded groups by scripts/typecheck-ui.mjs.
+      ...(packageJson.name === "@foldworks/ui" ? { noCheck: true } : {}),
       declaration: true,
       declarationMap: false,
       emitDeclarationOnly: true,

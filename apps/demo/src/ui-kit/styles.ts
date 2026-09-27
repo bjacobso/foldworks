@@ -70,6 +70,22 @@ export const uiKitStyles = stylex.create({
     },
   },
   fullWidth: { gridColumn: "1 / -1" },
+  answerLabel: {
+    color: "var(--foldworks-ui-foreground)",
+    fontSize: "14px",
+    fontWeight: 500,
+    lineHeight: 1,
+  },
+  answerGroup: { display: "flex", flexDirection: "column", gap: "8px", minWidth: 0 },
+  toolReadout: {
+    color: "var(--foldworks-ui-foreground)",
+    fontSize: "13px",
+    fontVariantNumeric: "tabular-nums",
+    minWidth: "44px",
+    paddingLeft: "8px",
+    paddingRight: "8px",
+    textAlign: "center",
+  },
   compactControl: { maxWidth: "210px" },
   iconSample: {
     alignItems: "center",
