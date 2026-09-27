@@ -71,7 +71,7 @@
     "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
     "prepack": "pnpm run build",
     "test": "vitest run",
-    "typecheck": "node ../../scripts/typecheck-ui.mjs"
+    "typecheck": "tsc --noEmit --checkers 1"
   },
   "dependencies": {
     "@foldworks/keyboard": "workspace:*",
