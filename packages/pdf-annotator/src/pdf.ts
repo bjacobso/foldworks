@@ -1,4 +1,4 @@
-import { Schema as S } from "effect";
+import { Data, Effect, Schema as S } from "effect";
 import {
   PDFCheckBox,
   PDFDocument,
@@ -12,22 +12,43 @@ import {
   StandardFonts,
   rgb,
   type PDFField,
+  type PDFFont,
   type PDFPage,
 } from "pdf-lib";
 import {
   displayRectToUserSpace,
   downloadBytes,
+  getPage,
   normalizeRotation,
   rasterizePage,
   userSpaceToDisplayRect,
   withPdfDocument,
   type PdfPageGeometry,
+  type PdfRenderError,
 } from "@foldworks/pdf";
 
 export { base64ToBytes, bytesToBase64 } from "@foldworks/pdf";
 
 import { annotationValueText } from "./document";
 import type { Annotation } from "./model";
+
+/** Raised when pdf-lib cannot load, edit, or save a document. */
+export class PdfDocumentError extends Data.TaggedError("PdfDocumentError")<{
+  readonly reason: string;
+  readonly cause?: unknown;
+}> {}
+
+const documentFailure = (cause: unknown): PdfDocumentError =>
+  new PdfDocumentError({
+    reason: cause instanceof Error ? cause.message : "The PDF could not be processed.",
+    cause,
+  });
+
+const tryDocument = <A>(run: () => Promise<A>): Effect.Effect<A, PdfDocumentError> =>
+  Effect.tryPromise({ try: run, catch: documentFailure });
+
+const trySync = <A>(run: () => A): Effect.Effect<A, PdfDocumentError> =>
+  Effect.try({ try: run, catch: documentFailure });
 
 export type RenderedPage = Readonly<{
   pageCount: number;
@@ -114,24 +135,26 @@ const toCanonicalRect = (page: PDFPage, raw: RawPdfRect): RawPdfRect =>
 const toRawRect = (page: PDFPage, annotation: Annotation): RawPdfRect =>
   displayRectToUserSpace(pageGeometry(page), annotation.rect);
 
-export const renderPdfPage = async (
+export const renderPdfPage = (
   bytes: Uint8Array,
   requestedPage: number,
-): Promise<RenderedPage> =>
-  withPdfDocument(bytes, async (document) => {
-    const pageNumber = Math.min(document.numPages, Math.max(1, requestedPage));
-    const page = await document.getPage(pageNumber);
-    const baseViewport = page.getViewport({ scale: 1 });
-    const renderWidth = 1440;
-    const raster = await rasterizePage(page, renderWidth / baseViewport.width);
-    return {
-      pageCount: document.numPages,
-      page: pageNumber,
-      pageWidth: baseViewport.width,
-      pageHeight: baseViewport.height,
-      previewDataUrl: raster.imageUrl,
-    };
-  });
+): Effect.Effect<RenderedPage, PdfRenderError> =>
+  withPdfDocument(bytes, (document) =>
+    Effect.gen(function* () {
+      const pageNumber = Math.min(document.numPages, Math.max(1, requestedPage));
+      const page = yield* getPage(document, pageNumber - 1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const renderWidth = 1440;
+      const raster = yield* rasterizePage(page, renderWidth / baseViewport.width);
+      return {
+        pageCount: document.numPages,
+        page: pageNumber,
+        pageWidth: baseViewport.width,
+        pageHeight: baseViewport.height,
+        previewDataUrl: raster.imageUrl,
+      };
+    }),
+  );
 
 const uniqueId = (
   name: string,
@@ -208,10 +231,14 @@ const fieldDescription = (
 };
 
 /** Extract existing AcroForm widgets into the portable annotation model. */
-export const extractPdfAnnotations = async (
+export const extractPdfAnnotations = (
   bytes: Uint8Array,
-): Promise<ExtractedPdfAnnotations> => {
-  const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+): Effect.Effect<ExtractedPdfAnnotations, PdfDocumentError> =>
+  tryDocument(() => PDFDocument.load(bytes, { ignoreEncryption: true })).pipe(
+    Effect.flatMap((pdf) => trySync(() => collectAnnotations(pdf))),
+  );
+
+const collectAnnotations = (pdf: PDFDocument): ExtractedPdfAnnotations => {
   const pages = pdf.getPages();
   const pageByRef = new Map(pages.map((page, index) => [page.ref.toString(), index]));
   const annotations: Annotation[] = [];
@@ -342,16 +369,33 @@ const updateImportedField = (
   }
 };
 
+export type SerializeOptions = Readonly<{ deletedFieldNames?: ReadonlyArray<string> }>;
+
 /** Serialize supported annotations as AcroForm widgets and return bytes without downloading. */
-export const serializePdf = async (
+export const serializePdf = (
   bytes: Uint8Array,
   annotations: ReadonlyArray<Annotation>,
-  options: Readonly<{ deletedFieldNames?: ReadonlyArray<string> }> = {},
-): Promise<SerializedPdf> => {
-  const pdf = await PDFDocument.load(bytes);
+  options: SerializeOptions = {},
+): Effect.Effect<SerializedPdf, PdfDocumentError> =>
+  Effect.gen(function* () {
+    const pdf = yield* tryDocument(() => PDFDocument.load(bytes));
+    const regular = yield* tryDocument(() => pdf.embedFont(StandardFonts.Helvetica));
+    const bold = yield* tryDocument(() => pdf.embedFont(StandardFonts.HelveticaBold));
+    const warnings = yield* trySync(() =>
+      writeAnnotations(pdf, annotations, options, regular, bold),
+    );
+    return { bytes: yield* tryDocument(() => pdf.save()), warnings };
+  });
+
+/** Apply annotations to a loaded document in place and return the warnings. */
+const writeAnnotations = (
+  pdf: PDFDocument,
+  annotations: ReadonlyArray<Annotation>,
+  options: SerializeOptions,
+  regular: PDFFont,
+  bold: PDFFont,
+): ReadonlyArray<PdfWarning> => {
   const form = pdf.getForm();
-  const regular = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const pages = pdf.getPages();
   const warnings: PdfWarning[] = [];
 
@@ -475,17 +519,21 @@ export const serializePdf = async (
   }
 
   form.updateFieldAppearances(regular);
-  return { bytes: await pdf.save(), warnings };
+  return warnings;
 };
 
-export const exportAnnotatedPdf = async (
+export const exportAnnotatedPdf = (
   bytes: Uint8Array,
   annotations: ReadonlyArray<Annotation>,
   sourceName: string,
-  options: Readonly<{ deletedFieldNames?: ReadonlyArray<string> }> = {},
-): Promise<ReadonlyArray<PdfWarning>> => {
-  const serialized = await serializePdf(bytes, annotations, options);
-  const base = sourceName.replace(/\.pdf$/i, "") || "document";
-  downloadBytes(serialized.bytes, `${base}-annotated.pdf`, "application/pdf");
-  return serialized.warnings;
-};
+  options: SerializeOptions = {},
+): Effect.Effect<ReadonlyArray<PdfWarning>, PdfDocumentError> =>
+  serializePdf(bytes, annotations, options).pipe(
+    Effect.tap((serialized) =>
+      Effect.sync(() => {
+        const base = sourceName.replace(/\.pdf$/i, "") || "document";
+        downloadBytes(serialized.bytes, `${base}-annotated.pdf`, "application/pdf");
+      }),
+    ),
+    Effect.map((serialized) => serialized.warnings),
+  );

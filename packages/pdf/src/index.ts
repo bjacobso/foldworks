@@ -12,10 +12,13 @@ export {
 export {
   DEFAULT_RENDER_SCALE,
   PdfRenderError,
+  getPage,
+  pageInfo,
   rasterizePage,
   readPdfPages,
   renderPages,
   withPdfDocument,
+  type PageRaster,
   type PdfPageInfo,
   type RenderPagesOptions,
   type RenderedPdfPage,

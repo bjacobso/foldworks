@@ -60,3 +60,17 @@ Other view options: `actions` (extra toolbar controls), `label`,
 `showToolbar`, `showDownload`, `emptyTitle`, and `emptyDescription`. The viewer
 fills its container and scrolls internally, so give it a sized parent. Import
 `@foldworks/pdf-viewer/styles.css` once.
+
+## Known behavior
+
+- **Memory:** rendered pages are kept in the model as PNG `data:` URLs, and
+  pages render one at a time, each from a fresh PDF.js session. This suits forms
+  and short documents; very long documents hold every page image in memory.
+- **Fit width** scales the widest page to the viewer, so all pages share one
+  scale. In mixed-orientation documents, portrait pages are narrower than the
+  viewer. Fit width is capped at 200% and may go below 50% in narrow viewers.
+- **Overlays** also render over pages that are still loading, so `scrollTo`
+  works before rendering finishes.
+- **`/UserUnit`** is not applied to page sizes. Overlays still line up, but
+  100% is not the physical size for such pages. See the
+  [`@foldworks/pdf` limitations](../pdf/README.md#limitations).

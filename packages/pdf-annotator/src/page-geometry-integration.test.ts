@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { PDFDocument, degrees } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 
@@ -17,7 +18,7 @@ describe("annotator PDF geometry", () => {
       .getForm()
       .createTextField("employee_name")
       .addToPage(page, { ...widget, borderWidth: 0 });
-    const { annotations } = await extractPdfAnnotations(await pdf.save());
+    const { annotations } = await Effect.runPromise(extractPdfAnnotations(await pdf.save()));
     expect(annotations[0]?.rect).toEqual(
       userSpaceToDisplayRect({ cropBox, rotation: 270 }, widget),
     );

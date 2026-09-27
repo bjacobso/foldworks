@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { displayRectToUserSpace, type PdfPageGeometry, type PdfRect } from "@foldworks/pdf";
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
@@ -221,7 +222,13 @@ const text = (
 };
 
 /** Build the demo document. Values are synthetic; no real person is described. */
-export const generateSamplePdf = async (): Promise<Uint8Array> => {
+export const generateSamplePdf: Effect.Effect<Uint8Array, Error> = Effect.tryPromise({
+  try: () => buildSamplePdf(),
+  catch: (cause) =>
+    cause instanceof Error ? cause : new Error("The sample PDF could not be generated."),
+});
+
+const buildSamplePdf = async (): Promise<Uint8Array> => {
   const pdf = await PDFDocument.create();
   pdf.setTitle("Synthetic onboarding packet");
   const regular = await pdf.embedFont(StandardFonts.Helvetica);

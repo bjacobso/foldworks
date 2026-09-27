@@ -10,19 +10,12 @@ type UpdateReturn = Update.Return<Model, Message>;
 
 const GenerateSample = Command.define("GeneratePdfViewerSample", {
   messages: [Message.GotViewerMessage, Message.FailedGenerateSample],
-  execute: Effect.tryPromise({
-    try: generateSamplePdf,
-    catch: (error) => error,
-  }).pipe(
+  execute: generateSamplePdf.pipe(
     Effect.map((bytes) =>
       Message.GotViewerMessage({ message: PdfViewer.loadBytes(sampleName, bytes) }),
     ),
     Effect.catch((error) =>
-      Effect.succeed(
-        Message.FailedGenerateSample({
-          reason: error instanceof Error ? error.message : "The sample PDF could not be generated.",
-        }),
-      ),
+      Effect.succeed(Message.FailedGenerateSample({ reason: error.message })),
     ),
   ),
 });
