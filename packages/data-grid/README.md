@@ -17,7 +17,12 @@ The first slice supports:
 - rectangular selection with arrow and Shift+Arrow navigation;
 - spreadsheet-friendly TSV clipboard copy and validated paste;
 - opt-in fixed-row virtualization with measured viewport overscan;
-- sticky headers, horizontal scrolling, and accessible grid semantics.
+- expandable row groups with stable, filter-proof group keys;
+- message-driven single-row selection, row click messages, row tones, and
+  accessible row labels;
+- row-header columns and stateless hover details for dense cells;
+- sticky headers, horizontal scrolling, and accessible grid and treegrid
+  semantics with full keyboard navigation.
 
 ```ts
 const columns = DataGrid.defineColumns<Person, Message>()([
@@ -27,9 +32,9 @@ const columns = DataGrid.defineColumns<Person, Message>()([
     accessor: (person) => person.name,
     width: 240,
   },
-])
+]);
 
-const dataGrid = DataGrid.init({ id: "people", columns })
+const dataGrid = DataGrid.init({ id: "people", columns });
 
 DataGrid.view(
   {
@@ -42,7 +47,7 @@ DataGrid.view(
     showRowNumbers: true,
   },
   h,
-)
+);
 ```
 
 Embed `dataGrid` in the application model, wrap `DataGrid.Message` in the
@@ -83,17 +88,127 @@ as direct edits; select labels and the checkbox values `true`/`false`,
 and block saving. Batch mode stages the matrix for review, while Immediate mode
 submits a valid matrix as one application-owned save request.
 
+Keyboard navigation is always on. Arrow keys move the focused cell, Home and
+End move to the first or last column, Ctrl/⌘+Home and Ctrl/⌘+End move to the
+first or last cell, and PageUp and PageDown move by a viewport of rows. Jumps to
+rows outside the rendered window focus them after they mount.
+
+## Row groups
+
+Supply `getSubRows` to turn rows with children into expandable groups. The grid
+renders a `treegrid`, with `aria-level`, `aria-setsize`, `aria-posinset`, and
+`aria-expanded` on each row, and flattens visible rows depth-first so row
+virtualization works unchanged:
+
+```ts
+const grid = DataGrid.init({
+  id: "coverage",
+  columns,
+  rowGroups: { initiallyExpanded: true },
+});
+
+DataGrid.view(
+  {
+    ...config,
+    rows: fields, // each field lists its conditions as `children`
+    getSubRows: (row) => row.children,
+    groupColumnId: "label", // defaults to the first displayed column
+    virtualization: { overscan: 6 },
+  },
+  h,
+);
+```
+
+Expansion is stored in the grid model as exceptions to a default, keyed by the
+parent row's ID. Keep those IDs stable (a field key, not an index) and the
+decision survives filtering, sorting, and virtualization: filter a group out and
+back in and it returns as it was. Sorting orders siblings within each level.
+
+The group column shows a disclosure button and indents rows by depth. With
+focus in that column, ArrowRight expands a collapsed group, ArrowLeft collapses
+an expanded group or moves from a child row to its parent, and Enter toggles a
+group row that has no click message. Dispatch
+`Message.ToggledRowGroup({ rowId })`,
+`Message.ChangedRowGroupExpansion({ rowId, isExpanded })`,
+`Message.ExpandedAllRowGroups()`, or `Message.CollapsedAllRowGroups()` from
+your own controls, and read state with `isRowGroupExpanded(model, rowId)`.
+`flattenRows(rows, getSubRows)` returns every nested row, including those in
+collapsed groups; editing uses it to find source rows.
+
+## Row state and selection
+
+`rowAttributes(row, context)` returns per-row presentation and behavior. It runs
+only for rendered rows, so it stays cheap under virtualization:
+
+```ts
+DataGrid.view(
+  {
+    ...config,
+    rowAttributes: (row, { depth, isSelected }) => ({
+      tone: row.covered === 0 ? "Danger" : "Neutral",
+      label: `${depth === 0 ? "Field" : "Condition"} ${row.label}`,
+      onClick: Message.OpenedRow({ rowId: row.id }),
+    }),
+  },
+  h,
+);
+```
+
+- `tone` (`"Neutral"`, `"Info"`, `"Success"`, `"Warning"`, or `"Danger"`) tints
+  the row, including pinned cells, and marks its leading edge.
+- `label` becomes the row's `aria-label`.
+- `onClick` is dispatched on click and when Enter is pressed on a read-only
+  cell in the row.
+
+Single-row selection is separate from the rectangular cell range. Enable it at
+initialization with `rowSelection: "Single"`: clicking a cell, or moving with an
+unshifted arrow key, selects that cell's row, and Shift+Arrow extends the cell
+range without changing the selected row. Drive it from elsewhere with
+`Message.SelectedRow({ rowId })` and `Message.ClearedRowSelection()`, and read
+`model.selectedRowId` to render an inspector. Selected rows expose
+`aria-selected` and `data-row-selected`. Row IDs outlive filtering, so a
+selection hidden by a filter returns with its row.
+
+## Row headers and cell details
+
+Set `rowHeader: true` on a column to render its cells with the `rowheader` role,
+so assistive technology announces them as each row's name. Pin it with
+`pinned: "Start"` for a sticky label column. Header cells always use the
+`columnheader` role (the grid is built from ARIA roles, so `scope` does not
+apply); a column's `align` now applies to its header as well as its cells.
+
+For dense cells, return plain text from a column's `details(context)`:
+
+```ts
+{
+  id: "coverage",
+  header: "Coverage",
+  accessor: (row) => row.covered,
+  details: ({ row }) => `Reached by:\n${row.journeys.join("\n")}`,
+}
+```
+
+Details hold no model state, so hundreds of cells cost nothing in the model.
+Each cell with details references a hidden description through
+`aria-describedby`. One shared `popover="manual"` element per grid, driven by
+DOM listeners, shows that text on hover (after a short delay) or keyboard focus.
+Because it sits in the top layer, the scroller never clips it. Escape and
+scrolling dismiss it, and the pointer can move onto it. Line breaks are kept.
+
 ## Row virtualization
 
 Set `virtualization` on the view when a grid has enough rows to benefit from
 windowed rendering:
 
 ```ts
-DataGrid.view({
-  ...config,
-  rowHeight: 52,
-  virtualization: { overscan: 4, initialViewportHeight: 700 },
-}, h)
+DataGrid.view(
+  {
+    ...config,
+    rowHeight: 52,
+    virtualization: { overscan: 4, initialViewportHeight: 700 },
+  },
+  h,
+);
 ```
 
 The grid measures its live scroll viewport with a mount-scoped
@@ -103,7 +218,9 @@ provides the first-render estimate until measurement arrives. Sorting,
 selection, editing, and clipboard operations continue to use the complete
 headless table, and `aria-rowcount`/`aria-rowindex` retain absolute values.
 At least one overscan row is always retained so arrow-key focus can cross a
-window boundary safely.
+window boundary safely. The focused row stays mounted when it scrolls away; far
+from the window it renders on its own between spacers, so a jump such as
+Ctrl+End never renders the rows in between.
 
 ## Column ordering
 
@@ -125,10 +242,10 @@ visible while the grid scrolls horizontally:
 
 ```ts
 const columns = DataGrid.defineColumns<Person, Message>()([
-  { id: "name", header: "Name", pinned: "Start", /* ... */ },
-  { id: "status", header: "Status", /* ... */ },
-  { id: "actions", header: "Actions", pinned: "End", /* ... */ },
-])
+  { id: "name", header: "Name", pinned: "Start" /* ... */ },
+  { id: "status", header: "Status" /* ... */ },
+  { id: "actions", header: "Actions", pinned: "End" /* ... */ },
+]);
 ```
 
 Pinned columns form stable start and end bands around unpinned columns. Their
@@ -151,7 +268,7 @@ const columns = DataGrid.defineColumns<Person, Message>()([
     accessor: (person) => person.name,
     editor: {
       kind: "Text",
-      validate: (value) => String(value).trim() ? undefined : "Name is required.",
+      validate: (value) => (String(value).trim() ? undefined : "Name is required."),
     },
   },
   {
@@ -233,9 +350,7 @@ values **in the same parent update** that folds this message into the grid:
 DataGrid.Message.CompletedSave({
   batchId,
   accepted: [{ rowId: "person-1", columnId: "name" }],
-  rejected: [
-    { rowId: "person-2", columnId: "name", error: "You cannot edit this record." },
-  ],
+  rejected: [{ rowId: "person-2", columnId: "name", error: "You cannot edit this record." }],
 });
 ```
 

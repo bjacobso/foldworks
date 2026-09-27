@@ -6,7 +6,8 @@ import {
   agentRouter,
   dataTablePath,
   editorRouter,
-  dataGridRouter,
+  dataGridExampleFromRoute,
+  dataGridPath,
   codeEditorRouter,
   codebaseRouter,
   workbenchRouter,
@@ -16,6 +17,7 @@ import {
   homeRouter,
   queryBuilderRouter,
   pdfAnnotatorRouter,
+  pdfViewerRouter,
   statechartRouter,
   uiKitRouter,
   urlToAppRoute,
@@ -42,7 +44,12 @@ describe("demo routes", () => {
     expect(demoFromRoute(parseUrl("https://demo.test/data-table?person=contact-1"))).toBe(
       "DataTable",
     );
-    expect(dataGridRouter()).toBe("/data-grid");
+    expect(dataGridPath()).toBe("/data-grid");
+    expect(dataGridPath("Coverage")).toBe("/data-grid?example=Coverage");
+    expect(dataGridExampleFromRoute(parseUrl("https://demo.test/data-grid?example=Coverage"))).toBe(
+      "Coverage",
+    );
+    expect(dataGridExampleFromRoute(parseUrl("https://demo.test/data-grid"))).toBe("Worksheet");
     expect(codeEditorRouter()).toBe("/code-editor");
     expect(demoFromRoute(parseUrl("https://demo.test/code-editor"))).toBe("CodeEditor");
     expect(codebaseRouter()).toBe("/codebase");
@@ -53,9 +60,11 @@ describe("demo routes", () => {
     expect(uiKitRouter()).toBe("/ui-kit");
     expect(queryBuilderRouter()).toBe("/query-builder");
     expect(pdfAnnotatorRouter()).toBe("/pdf-annotator");
+    expect(pdfViewerRouter()).toBe("/pdf-viewer");
     expect(demoFromRoute(parseUrl("https://demo.test/query-builder"))).toBe("QueryBuilder");
     expect(demoFromRoute(parseUrl("https://demo.test/ui-kit"))).toBe("UiKit");
     expect(demoFromRoute(parseUrl("https://demo.test/pdf-annotator"))).toBe("PdfAnnotator");
+    expect(demoFromRoute(parseUrl("https://demo.test/pdf-viewer"))).toBe("PdfViewer");
   });
 
   it("parses form state and supplies defaults for a bare form route", () => {

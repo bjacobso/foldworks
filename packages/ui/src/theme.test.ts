@@ -39,7 +39,15 @@ const requiredThemeTokens = [
 ] as const;
 
 describe("theme contract", () => {
-  for (const theme of ["shadcn", "blueprint", "office", "google", "apple", "polaris"] as const) {
+  for (const theme of [
+    "shadcn",
+    "blueprint",
+    "office",
+    "fluent2",
+    "google",
+    "apple",
+    "polaris",
+  ] as const) {
     it(`${theme} defines every semantic token in light and dark mode`, async () => {
       const css = await readFile(resolve(import.meta.dirname, "themes", `${theme}.css`), "utf8");
 
@@ -87,6 +95,16 @@ describe("theme contract", () => {
     expect(css).toContain("--radius-panel: 1.25rem");
     expect(css).toContain("--background: #0a0a0a");
     expect(css).toContain("--primary: #fcfcfc");
+  });
+
+  it("maps Fluent 2 web light and dark tokens", async () => {
+    const css = await readFile(resolve(import.meta.dirname, "themes", "fluent2.css"), "utf8");
+
+    expect(css).toContain("--primary: #0f6cbd");
+    expect(css).toContain("--primary: #115ea3");
+    expect(css).toContain("--ring: #479ef5");
+    expect(css).toContain("--radius-button: 4px");
+    expect(css).toContain("--duration-normal: 200ms");
   });
 
   it("includes a low-specificity browser reset", async () => {

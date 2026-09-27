@@ -1,0 +1,60 @@
+{
+  "name": "@foldworks/pdf",
+  "version": "0.0.0",
+  "description": "Composable PDF page geometry, rendering, and overlay surface primitives for Foldkit.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/pdf"
+  },
+  "homepage": "https://github.com/bjacobso/foldworks#readme",
+  "bugs": {
+    "url": "https://github.com/bjacobso/foldworks/issues"
+  },
+  "keywords": [
+    "foldkit",
+    "pdf",
+    "rendering",
+    "geometry",
+    "overlays"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pdfjs-dist": "catalog:"
+  },
+  "devDependencies": {
+    "effect": "catalog:",
+    "foldkit": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers"
+  }
+}

@@ -1,8 +1,13 @@
+import { Effect } from "effect";
 import { PDFDocument, degrees } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 
 import type { Annotation } from "./model";
 import { extractPdfAnnotations, serializePdf } from "./pdf";
+
+const serialize = (...args: Parameters<typeof serializePdf>) =>
+  Effect.runPromise(serializePdf(...args));
+const extract = (bytes: Uint8Array) => Effect.runPromise(extractPdfAnnotations(bytes));
 
 const blankPdf = async (): Promise<Uint8Array> => {
   const pdf = await PDFDocument.create();
@@ -51,10 +56,10 @@ describe("PDF annotation contracts", () => {
       },
     ];
 
-    const serialized = await serializePdf(await blankPdf(), annotations);
+    const serialized = await serialize(await blankPdf(), annotations);
     const reopened = await PDFDocument.load(serialized.bytes);
     const fields = reopened.getForm().getFields();
-    const extracted = await extractPdfAnnotations(serialized.bytes);
+    const extracted = await extract(serialized.bytes);
 
     expect(fields.map((field) => field.getName())).toEqual([
       "employee_name",
@@ -62,7 +67,12 @@ describe("PDF annotation contracts", () => {
       "department",
       "start_date",
     ]);
-    expect(extracted.annotations.map(({ kind }) => kind)).toEqual(["text", "checkbox", "select", "date"]);
+    expect(extracted.annotations.map(({ kind }) => kind)).toEqual([
+      "text",
+      "checkbox",
+      "select",
+      "date",
+    ]);
     expect(extracted.annotations.map(({ id }) => id)).toEqual([
       "employee-name",
       "accepted",
@@ -78,15 +88,17 @@ describe("PDF annotation contracts", () => {
   });
 
   it("removes deleted imported logical fields", async () => {
-    const source = await serializePdf(await blankPdf(), [{
-      id: "remove-me",
-      kind: "text",
-      pageIndex: 0,
-      rect: { x: 50, y: 50, width: 100, height: 20 },
-      name: "remove_me",
-      value: "Gone",
-    }]);
-    const removed = await serializePdf(source.bytes, [], { deletedFieldNames: ["remove_me"] });
+    const source = await serialize(await blankPdf(), [
+      {
+        id: "remove-me",
+        kind: "text",
+        pageIndex: 0,
+        rect: { x: 50, y: 50, width: 100, height: 20 },
+        name: "remove_me",
+        value: "Gone",
+      },
+    ]);
+    const removed = await serialize(source.bytes, [], { deletedFieldNames: ["remove_me"] });
     const reopened = await PDFDocument.load(removed.bytes);
 
     expect(reopened.getForm().getFields()).toEqual([]);
@@ -107,8 +119,8 @@ describe("PDF annotation contracts", () => {
       value: "Rotation safe",
     };
 
-    const serialized = await serializePdf(await pdf.save(), [annotation]);
-    const extracted = await extractPdfAnnotations(serialized.bytes);
+    const serialized = await serialize(await pdf.save(), [annotation]);
+    const extracted = await extract(serialized.bytes);
 
     expect(extracted.annotations[0]?.rect).toEqual(annotation.rect);
   });

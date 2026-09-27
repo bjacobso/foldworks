@@ -1,15 +1,24 @@
-import { cp, mkdir, mkdtemp, readdir, rename, rm } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+// Builds the package in the current directory into `dist`:
+// - JavaScript: tsup bundles every JavaScript target in `exports` and `bin`
+//   from the matching `src/*.ts` file;
+// - CSS: every `src/**/*.css` file is copied as is;
+// - declarations: the package's own `tsc`, excluding tests. This also fails
+//   the build on type errors.
+//
+// Output is staged and swapped into `dist` in one rename, so a running
+// `vite dev` never sees a half-written package. `--runtime-only` (used by
+// `turbo dev` via `build:runtime`) skips declarations and keeps the previous
+// ones, because nothing at runtime needs them and `tsc` is the slow step.
+import { spawnSync } from "node:child_process";
+import { cp, mkdir, mkdtemp, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 
 import { build } from "tsup";
-import ts from "typescript";
 
 const packageRoot = process.cwd();
-const packageJson = (
-  await import(resolve(packageRoot, "package.json"), {
-    with: { type: "json" },
-  })
-).default;
+const require = createRequire(join(packageRoot, "package.json"));
+const packageJson = require("./package.json");
 const runtimeOnly = process.argv.includes("--runtime-only");
 const unknownArguments = process.argv.slice(2).filter((argument) => argument !== "--runtime-only");
 
@@ -17,30 +26,31 @@ if (unknownArguments.length > 0) {
   throw new Error(`Unknown build arguments: ${unknownArguments.join(", ")}`);
 }
 
-const isCodebase = packageJson.name === "@foldworks/codebase";
-const entries =
-  packageJson.name === "@foldworks/ui"
-    ? {
-        icon: "src/icon.ts",
-        index: "src/index.ts",
-        "tokens.stylex": "src/tokens.stylex.ts",
-      }
-    : packageJson.name === "@foldworks/generative-ui"
-      ? {
-          ai: "src/ai.ts",
-          core: "src/core.ts",
-          foldworks: "src/foldworks.ts",
-          index: "src/index.ts",
-          mcp: "src/mcp.ts",
-          "mcp-app": "src/mcp-app.ts",
-        }
-      : packageJson.name === "@foldworks/code-editor"
-        ? { index: "src/index.ts", contracts: "src/contracts.ts", structured: "src/structured.ts" }
-        : packageJson.name === "@foldworks/agent"
-          ? { index: "src/index.ts", testing: "src/testing.ts" }
-          : isCodebase
-            ? { index: "src/index.ts", server: "src/server.ts", cli: "src/cli.ts" }
-            : { index: "src/index.ts" };
+// `"./dist/testing/stylex.js"` is built from `src/testing/stylex.ts`.
+const targets = [
+  ...Object.values(packageJson.exports ?? {}).map((target) =>
+    typeof target === "string" ? target : target.import,
+  ),
+  ...(typeof packageJson.bin === "string"
+    ? [packageJson.bin]
+    : Object.values(packageJson.bin ?? {})),
+];
+const entries = Object.fromEntries(
+  targets
+    .map((target) => /^\.\/dist\/(.+)\.js$/.exec(target ?? "")?.[1])
+    .filter((name) => name !== undefined)
+    .map((name) => [name, `src/${name}.ts`]),
+);
+for (const source of Object.values(entries)) {
+  await stat(join(packageRoot, source)).catch(() => {
+    throw new Error(`${packageJson.name} exports a build of ${source}, which does not exist.`);
+  });
+}
+
+// StyleX resolves `defineVars` by module path, so `*.stylex` entries stay
+// standalone files: other entries import them as externals, and packages that
+// have them are not split, because splitting would make the token module import a shared chunk.
+const stylexEntries = Object.keys(entries).filter((name) => name.endsWith(".stylex"));
 
 const liveOutputDirectory = join(packageRoot, "dist");
 const stagingParent = join(packageRoot, "node_modules");
@@ -50,15 +60,15 @@ const stagedOutputDirectory = join(stagingRoot, "dist");
 const previousOutputDirectory = join(stagingRoot, "previous-dist");
 
 const copyMatchingFiles = async (sourceDirectory, destinationDirectory, matches) => {
-  let entries;
+  let directoryEntries;
   try {
-    entries = await readdir(sourceDirectory, { withFileTypes: true });
+    directoryEntries = await readdir(sourceDirectory, { withFileTypes: true });
   } catch (error) {
     if (error?.code === "ENOENT") return;
     throw error;
   }
 
-  for (const entry of entries) {
+  for (const entry of directoryEntries) {
     const source = join(sourceDirectory, entry.name);
     const destination = join(destinationDirectory, entry.name);
     if (entry.isDirectory()) {
@@ -71,15 +81,35 @@ const copyMatchingFiles = async (sourceDirectory, destinationDirectory, matches)
   }
 };
 
-const copyCss = (destinationDirectory) =>
-  copyMatchingFiles(resolve(packageRoot, "src"), destinationDirectory, (fileName) =>
-    fileName.endsWith(".css"),
+const emitDeclarations = async () => {
+  const tsconfigPath = join(stagingRoot, "tsconfig.json");
+  await writeFile(
+    tsconfigPath,
+    JSON.stringify({
+      extends: join(packageRoot, "tsconfig.json"),
+      compilerOptions: {
+        declaration: true,
+        declarationMap: false,
+        emitDeclarationOnly: true,
+        noEmit: false,
+        outDir: stagedOutputDirectory,
+        preserveSymlinks: true,
+        rootDir: join(packageRoot, "src"),
+      },
+      exclude: [join(packageRoot, "src/**/*.test.*"), join(packageRoot, "src/**/*.spec.*")],
+    }),
   );
-
-const copyDeclarations = (destinationDirectory) =>
-  copyMatchingFiles(liveOutputDirectory, destinationDirectory, (fileName) =>
-    /\.d\.[cm]?ts(?:\.map)?$/.test(fileName),
-  );
+  const typescriptManifestPath = require.resolve("typescript/package.json");
+  const tsc = join(dirname(typescriptManifestPath), require(typescriptManifestPath).bin.tsc);
+  const result = spawnSync(process.execPath, [tsc, "-p", tsconfigPath], {
+    cwd: packageRoot,
+    stdio: "inherit",
+  });
+  if (result.error !== undefined) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`tsc reported errors for ${packageJson.name}; see above.`);
+  }
+};
 
 const publishStagedOutput = async () => {
   let movedPreviousOutput = false;
@@ -102,73 +132,36 @@ const publishStagedOutput = async () => {
 try {
   await mkdir(stagedOutputDirectory, { recursive: true });
 
-  // Runtime-only builds retain the last declarations for editor tooling while
-  // replacing JavaScript and CSS together. Turbo only caches the runtime files.
   if (runtimeOnly) {
-    await copyDeclarations(stagedOutputDirectory);
+    await copyMatchingFiles(liveOutputDirectory, stagedOutputDirectory, (fileName) =>
+      /\.d\.[cm]?ts(?:\.map)?$/.test(fileName),
+    );
   }
 
-  // CSS is ready before any potentially slow declaration work begins.
-  await copyCss(stagedOutputDirectory);
+  await copyMatchingFiles(join(packageRoot, "src"), stagedOutputDirectory, (fileName) =>
+    fileName.endsWith(".css"),
+  );
 
   await build({
     bundle: true,
     clean: false,
+    config: false,
     dts: false,
     entry: entries,
-    external: packageJson.name === "@foldworks/ui" ? ["./tokens.stylex.js"] : [],
+    external: ["node:*", ...stylexEntries.map((name) => `./${name}.js`)],
     format: ["esm"],
     minify: false,
     outDir: stagedOutputDirectory,
-    platform: isCodebase ? "node" : "browser",
+    // A package that ships a CLI is a Node program; the rest run in browsers.
+    platform: packageJson.bin === undefined ? "browser" : "node",
     silent: false,
     sourcemap: true,
-    splitting:
-      packageJson.name === "@foldworks/code-editor" ||
-      packageJson.name === "@foldworks/agent" ||
-      packageJson.name === "@foldworks/generative-ui" ||
-      isCodebase,
+    splitting: Object.keys(entries).length > 1 && stylexEntries.length === 0,
     target: "es2022",
     treeshake: true,
   });
 
-  if (!runtimeOnly) {
-    const configPath = join(packageRoot, "tsconfig.json");
-    const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
-    if (configFile.error !== undefined) {
-      throw new Error(ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n"));
-    }
-    const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, packageRoot);
-    const declarationRoots = parsedConfig.fileNames.filter(
-      (file) => !/\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file),
-    );
-    const declarationProgram = ts.createProgram(declarationRoots, {
-      ...parsedConfig.options,
-      declaration: true,
-      declarationMap: false,
-      emitDeclarationOnly: true,
-      noEmit: false,
-      outDir: stagedOutputDirectory,
-      preserveSymlinks: true,
-      rootDir: join(packageRoot, "src"),
-    });
-    const declarationResult = declarationProgram.emit();
-    const diagnostics = [
-      ...ts.getPreEmitDiagnostics(declarationProgram),
-      ...declarationResult.diagnostics,
-    ];
-    if (diagnostics.length > 0) {
-      const host = {
-        getCanonicalFileName: (fileName) => fileName,
-        getCurrentDirectory: () => packageRoot,
-        getNewLine: () => "\n",
-      };
-      throw new Error(ts.formatDiagnosticsWithColorAndContext(diagnostics, host));
-    }
-    if (declarationResult.emitSkipped) {
-      throw new Error("TypeScript skipped declaration output.");
-    }
-  }
+  if (!runtimeOnly) await emitDeclarations();
 
   await publishStagedOutput();
 } finally {
