@@ -1,5 +1,7 @@
+import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
+import { countView } from "./adornments";
 import { catalogStyles as styles } from "./catalog.styles";
 import {
   rootAttrs,
@@ -318,48 +320,271 @@ const navigationMenu = <Message>(
     ],
   );
 
-type SidebarGroup = Readonly<{
-  label?: string;
-  items: ReadonlyArray<Link & Readonly<{ isCurrent?: boolean; media?: Html }>>;
+export type SidebarItem<Message> = Readonly<{
+  label: string;
+  /** Native navigation target. Omit for a message-driven item rendered as a button. */
+  href?: string;
+  /** Message dispatched when the item is activated, with or without an `href`. */
+  onClick?: Message;
+  isCurrent?: boolean;
+  media?: Html;
+  /** Trailing count, such as the number of fields on a page. */
+  count?: number | string;
+  /** Accessible replacement for the visible count, for example "3 hidden fields". */
+  countLabel?: string;
 }>;
 
-const sidebar = <Message>(
-  config: StyledConfig<Message> &
-    Readonly<{
-      header?: Children;
-      groups: ReadonlyArray<SidebarGroup>;
-      footer?: Children;
-      ariaLabel?: string;
-    }>,
-  h: HtmlBuilder<Message>,
-): Html =>
+export type SidebarGroup<Message> = Readonly<{
+  label?: string;
+  items: ReadonlyArray<SidebarItem<Message>>;
+}>;
+
+export type SidebarConfig<Message> = StyledConfig<Message> &
+  Readonly<{
+    header?: Children;
+    groups: ReadonlyArray<SidebarGroup<Message>>;
+    footer?: Children;
+    ariaLabel?: string;
+  }>;
+
+const sidebarItem = <Message>(item: SidebarItem<Message>, h: HtmlBuilder<Message>): Html => {
+  const isCurrent = item.isCurrent === true;
+  const attributes = (isButton: boolean) => [
+    ...sxAttrs<Message>(
+      h,
+      styles.sidebarItem,
+      styles.focusable,
+      isButton && styles.sidebarButton,
+      isCurrent && styles.sidebarItemCurrent,
+    ),
+    h.AriaCurrent(isCurrent ? "page" : "false"),
+  ];
+  const children = [
+    ...(item.media === undefined ? [] : [item.media]),
+    item.label,
+    ...(item.count === undefined
+      ? []
+      : [countView<Message>(item.count, item.countLabel, undefined, h, styles.sidebarCount)]),
+  ];
+  if (item.href !== undefined)
+    return h.a(
+      [
+        ...attributes(false),
+        h.Href(item.href),
+        ...(item.onClick === undefined ? [] : [h.OnClick(item.onClick)]),
+      ],
+      children,
+    );
+  if (item.onClick !== undefined)
+    return h.button([...attributes(true), h.Type("button"), h.OnClick(item.onClick)], children);
+  return h.span(attributes(false), children);
+};
+
+const sidebar = <Message>(config: SidebarConfig<Message>, h: HtmlBuilder<Message>): Html =>
   h.aside(
-    [...styledAttrs(config, h, styles.sidebar), h.AriaLabel(config.ariaLabel ?? "Sidebar")],
+    [
+      ...styledAttrs<Message>(config, h, styles.sidebar),
+      h.AriaLabel(config.ariaLabel ?? "Sidebar"),
+    ],
     [
       ...(config.header ?? []),
       ...config.groups.map((group) =>
-        h.div(sxAttrs(h, styles.sidebarGroup), [
+        h.div(sxAttrs<Message>(h, styles.sidebarGroup), [
           ...(group.label === undefined
             ? []
-            : [h.div(sxAttrs(h, styles.sidebarLabel), [group.label])]),
-          ...group.items.map((item) =>
-            h.a(
-              [
-                ...sxAttrs(h, styles.sidebarItem, styles.focusable),
-                h.Href(item.href),
-                h.AriaCurrent(item.isCurrent === true ? "page" : "false"),
-              ],
-              [...(item.media === undefined ? [] : [item.media]), item.label],
-            ),
-          ),
+            : [h.div(sxAttrs<Message>(h, styles.sidebarLabel), [group.label])]),
+          ...group.items.map((item) => sidebarItem(item, h)),
         ]),
       ),
       ...(config.footer ?? []),
     ],
   );
 
+export type TabBarTab<Value extends string> = Readonly<{
+  value: Value;
+  label: string;
+  /** Native navigation target. Only used with navigation semantics. */
+  href?: string;
+  /** Secondary text, announced as the tab's description. Use it to say why a tab is disabled. */
+  hint?: string;
+  /** Content after the label, such as a `Badge`. */
+  badge?: Children;
+  /** Disabled tabs stay discoverable: they render `aria-disabled` and dispatch nothing. */
+  isDisabled?: boolean;
+}>;
+
+export type TabBarSlot = "root" | "list" | "item" | "tab" | "label" | "hint" | "badge" | "trailing";
+
+type TabBarBase<Message, Value extends string> = StyledConfig<Message> &
+  WithSlotProps<Message, TabBarSlot> &
+  Readonly<{
+    /** Prefix for tab element IDs. See `TabBar.tabId`. */
+    id: string;
+    tabs: ReadonlyArray<TabBarTab<Value>>;
+    /** The current tab. Omit when no tab matches the visible screen. */
+    value?: Value;
+    ariaLabel: string;
+    /** Content after the tabs, for example a release status `Badge`. */
+    trailing?: Children;
+  }>;
+
+export type TabBarConfig<Message, Value extends string> = TabBarBase<Message, Value> &
+  (
+    | Readonly<{
+        /** A navigation landmark whose current tab has `aria-current="page"`. Tab moves between tabs. */
+        semantics?: "navigation";
+        onChange?: (value: Value) => Message;
+      }>
+    | Readonly<{
+        /** A tablist with one tab stop. Arrow keys, Home, and End move focus and select. */
+        semantics: "tablist";
+        onChange: (value: Value) => Message;
+        /** ID of the single `tabpanel` the application renders for the selected tab. */
+        panelId?: string;
+      }>
+  );
+
+/** The element ID of a tab. A tablist panel can use it for `aria-labelledby`. */
+export const tabBarTabId = (id: string, value: string): string => `${id}-tab-${value}`;
+
+const nextEnabledIndex = (
+  tabs: ReadonlyArray<TabBarTab<string>>,
+  index: number,
+  key: string,
+): number | undefined => {
+  const enabled = (candidate: number) => tabs[candidate]?.isDisabled !== true;
+  const search = (start: number, step: 1 | -1) => {
+    for (let offset = 0; offset < tabs.length; offset += 1) {
+      const candidate = (((start + offset * step) % tabs.length) + tabs.length) % tabs.length;
+      if (enabled(candidate)) return candidate;
+    }
+    return undefined;
+  };
+  if (key === "ArrowRight") return search(index + 1, 1);
+  if (key === "ArrowLeft") return search(index - 1, -1);
+  if (key === "Home") return search(0, 1);
+  if (key === "End") return search(tabs.length - 1, -1);
+  return undefined;
+};
+
+const tabBar = <Message, Value extends string>(
+  config: TabBarConfig<Message, Value>,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const slots = config.slotProps;
+  const isTablist = config.semantics === "tablist";
+  const selectedIndex = config.tabs.findIndex(
+    (tab) => tab.value === config.value && tab.isDisabled !== true,
+  );
+  const tabStop =
+    selectedIndex >= 0 ? selectedIndex : config.tabs.findIndex((tab) => tab.isDisabled !== true);
+
+  const tabView = (tab: TabBarTab<Value>, index: number): Html => {
+    const id = tabBarTabId(config.id, tab.value);
+    const isCurrent = tab.value === config.value;
+    const isDisabled = tab.isDisabled === true;
+    const hintId = `${id}-hint`;
+    const children = [
+      h.span(slotAttrs<Message>(slots?.label, h, isDisabled && styles.tabBarLabelDisabled), [
+        tab.label,
+      ]),
+      ...(tab.badge === undefined
+        ? []
+        : [h.span(slotAttrs<Message>(slots?.badge, h, styles.tabBarBadge), tab.badge)]),
+      ...(tab.hint === undefined
+        ? []
+        : [
+            h.span(
+              [...slotAttrs<Message>(slots?.hint, h, styles.tabBarHint), h.Id(hintId)],
+              [tab.hint],
+            ),
+          ]),
+    ];
+    const attributes = [
+      ...slotAttrs<Message>(
+        slots?.tab,
+        h,
+        styles.focusable,
+        styles.tabBarTab,
+        isCurrent && styles.tabBarTabCurrent,
+        isDisabled && styles.tabBarTabDisabled,
+      ),
+      h.Id(id),
+      ...(tab.hint === undefined ? [] : [h.AriaDescribedBy(hintId)]),
+      ...(isDisabled ? [h.AriaDisabled(true)] : []),
+    ];
+
+    if (config.semantics === "tablist") {
+      const onChange = config.onChange;
+      return h.button(
+        [
+          ...attributes,
+          h.Type("button"),
+          h.Role("tab"),
+          h.AriaSelected(isCurrent),
+          h.Tabindex(index === tabStop ? 0 : -1),
+          ...(config.panelId === undefined ? [] : [h.AriaControls(config.panelId)]),
+          ...(isDisabled ? [] : [h.OnClick(onChange(tab.value))]),
+          h.OnKeyDownFocus((key) => {
+            const next = nextEnabledIndex(config.tabs, index, key);
+            const target = next === undefined ? undefined : config.tabs[next];
+            return target === undefined || next === index
+              ? Option.none()
+              : Option.some({
+                  focusSelector: `[id="${tabBarTabId(config.id, target.value)}"]`,
+                  message: onChange(target.value),
+                });
+          }),
+        ],
+        children,
+      );
+    }
+
+    const current = isCurrent ? [h.AriaCurrent("page")] : [];
+    const onClick =
+      isDisabled || config.onChange === undefined ? [] : [h.OnClick(config.onChange(tab.value))];
+    const control =
+      tab.href !== undefined && !isDisabled
+        ? h.a([...attributes, ...current, h.Href(tab.href), ...onClick], children)
+        : h.button([...attributes, ...current, h.Type("button"), ...onClick], children);
+    return h.li(slotAttrs<Message>(slots?.item, h, styles.tabBarItem), [control]);
+  };
+
+  const tabs = config.tabs.map(tabView);
+  const trailing =
+    config.trailing === undefined
+      ? []
+      : [h.div(slotAttrs<Message>(slots?.trailing, h, styles.tabBarTrailing), config.trailing)];
+
+  return isTablist
+    ? h.div(
+        [...rootAttrs<Message>(config, h, styles.tabBar), h.DataAttribute("tab-bar", "tablist")],
+        [
+          h.div(
+            [
+              ...slotAttrs<Message>(slots?.list, h, styles.tabBarList),
+              h.Role("tablist"),
+              h.AriaLabel(config.ariaLabel),
+              h.AriaOrientation("horizontal"),
+            ],
+            tabs,
+          ),
+          ...trailing,
+        ],
+      )
+    : h.nav(
+        [
+          ...rootAttrs<Message>(config, h, styles.tabBar),
+          h.AriaLabel(config.ariaLabel),
+          h.DataAttribute("tab-bar", "navigation"),
+        ],
+        [h.ul(slotAttrs<Message>(slots?.list, h, styles.tabBarList), tabs), ...trailing],
+      );
+};
+
 export const Breadcrumb = { view: breadcrumb, collapseItems: collapseBreadcrumbItems } as const;
 export const NavigationMenu = { view: navigationMenu } as const;
 export const Pagination = { view: pagination } as const;
 export const Sidebar = { view: sidebar } as const;
+export const TabBar = { view: tabBar, tabId: tabBarTabId } as const;
 export const Tabs = { view: tabs } as const;

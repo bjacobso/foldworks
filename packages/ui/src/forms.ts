@@ -1,7 +1,21 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { catalogStyles as styles } from "./catalog.styles";
-import { styledAttrs, type Children, type StyledConfig } from "./catalog.shared";
+import {
+  countView,
+  hasAdornments,
+  optionAdornments,
+  type AdornedOption,
+  type AdornmentSlot,
+} from "./adornments";
+import {
+  rootAttrs,
+  slotAttrs,
+  styledAttrs,
+  type Children,
+  type StyledConfig,
+  type WithSlotProps,
+} from "./catalog.shared";
 import * as ReadOnlyValue from "./read-only-value";
 import { sxAttrs } from "./sx";
 
@@ -332,47 +346,72 @@ const slider = <Message>(
     h.OnInput((value) => config.onChange(Number(value))),
   ]);
 
-const toggle = <Message>(
-  config: StyledConfig<Message> &
-    Readonly<{
-      label: string;
-      isPressed: boolean;
-      onToggle: (isPressed: boolean) => Message;
-      isDisabled?: boolean;
-    }>,
-  h: HtmlBuilder<Message>,
-): Html =>
+export type ToggleSlot = "root" | "count";
+
+export type ToggleConfig<Message> = StyledConfig<Message> &
+  WithSlotProps<Message, ToggleSlot> &
+  Readonly<{
+    label: string;
+    isPressed: boolean;
+    onToggle: (isPressed: boolean) => Message;
+    isDisabled?: boolean;
+    /** Trailing count for filter chips, for example matching rows. */
+    count?: number | string;
+    /** Accessible replacement for the visible count, for example "0 journeys". */
+    countLabel?: string;
+  }>;
+
+const toggle = <Message>(config: ToggleConfig<Message>, h: HtmlBuilder<Message>): Html =>
   h.button(
     [
-      ...styledAttrs(
+      ...rootAttrs<Message>(
         config,
         h,
         styles.toggle,
         styles.focusable,
+        config.count !== undefined && styles.withAdornments,
         config.isPressed && styles.togglePressed,
+        config.isDisabled === true && styles.toggleDisabled,
       ),
       h.Type("button"),
       h.AriaPressed(String(config.isPressed)),
       h.OnClick(config.onToggle(!config.isPressed)),
       ...(config.isDisabled === true ? [h.Disabled(true)] : []),
     ],
-    [config.label],
+    [
+      config.label,
+      ...(config.count === undefined
+        ? []
+        : [countView<Message>(config.count, config.countLabel, config.slotProps?.count, h)]),
+    ],
   );
 
+export type ToggleGroupOption<Value extends string> = AdornedOption &
+  Readonly<{
+    value: Value;
+    label: string;
+    isDisabled?: boolean;
+  }>;
+
+export type ToggleGroupSlot = "root" | "item" | AdornmentSlot;
+
+export type ToggleGroupConfig<Message, Value extends string> = StyledConfig<Message> &
+  WithSlotProps<Message, ToggleGroupSlot> &
+  Readonly<{
+    values: ReadonlyArray<Value>;
+    options: ReadonlyArray<ToggleGroupOption<Value>>;
+    ariaLabel: string;
+    multiple?: boolean;
+    onChange: (values: ReadonlyArray<Value>) => Message;
+  }>;
+
 const toggleGroup = <Message, Value extends string>(
-  config: StyledConfig<Message> &
-    Readonly<{
-      values: ReadonlyArray<Value>;
-      options: ReadonlyArray<Readonly<{ value: Value; label: string }>>;
-      ariaLabel: string;
-      multiple?: boolean;
-      onChange: (values: ReadonlyArray<Value>) => Message;
-    }>,
+  config: ToggleGroupConfig<Message, Value>,
   h: HtmlBuilder<Message>,
 ): Html =>
   h.div(
     [
-      ...styledAttrs(config, h, styles.inset, styles.group),
+      ...rootAttrs<Message>(config, h, styles.inset, styles.group),
       h.Role("group"),
       h.AriaLabel(config.ariaLabel),
     ],
@@ -386,19 +425,26 @@ const toggleGroup = <Message, Value extends string>(
           : [option.value];
       return h.button(
         [
-          ...sxAttrs(
+          ...slotAttrs<Message>(
+            config.slotProps?.item,
             h,
             styles.toggle,
             styles.groupConnected,
             index === 0 && styles.groupFirst,
             index === config.options.length - 1 && styles.groupLast,
+            hasAdornments(option) && styles.withAdornments,
             isPressed && styles.togglePressed,
+            option.needsAttention === true && styles.toggleAttention,
+            option.isDisabled === true && styles.toggleDisabled,
           ),
           h.Type("button"),
           h.AriaPressed(String(isPressed)),
-          h.OnClick(config.onChange(nextValues)),
+          ...(option.needsAttention === true ? [h.DataAttribute("attention", "true")] : []),
+          ...(option.isDisabled === true
+            ? [h.Disabled(true)]
+            : [h.OnClick(config.onChange(nextValues))]),
         ],
-        [option.label],
+        [option.label, ...optionAdornments<Message>(option, config.slotProps, h)],
       );
     }),
   );

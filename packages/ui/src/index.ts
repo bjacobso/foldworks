@@ -73,13 +73,30 @@ export {
   Toggle,
   ToggleGroup,
 } from "./forms";
+export type {
+  ToggleConfig,
+  ToggleGroupConfig,
+  ToggleGroupOption,
+  ToggleGroupSlot,
+  ToggleSlot,
+} from "./forms";
 export { Progress, Skeleton, Sonner, Spinner, StatusMessage } from "./feedback";
 export type { ProgressConfig, ProgressSlot, ProgressTone } from "./feedback";
 export { NumberField } from "./number-field";
 export { Stepper } from "./stepper";
 export { Tag } from "./tag";
-export { Breadcrumb, NavigationMenu, Pagination, Sidebar, Tabs } from "./navigation";
-export type { BreadcrumbConfig, BreadcrumbItem, BreadcrumbSlot } from "./navigation";
+export { Breadcrumb, NavigationMenu, Pagination, Sidebar, TabBar, Tabs } from "./navigation";
+export type {
+  BreadcrumbConfig,
+  BreadcrumbItem,
+  BreadcrumbSlot,
+  SidebarConfig,
+  SidebarGroup,
+  SidebarItem,
+  TabBarConfig,
+  TabBarSlot,
+  TabBarTab,
+} from "./navigation";
 export { AlertDialog, Dialog, Drawer, HoverCard, Popover, Sheet, Tooltip } from "./overlays";
 export type {
   ControlledTooltipConfig,

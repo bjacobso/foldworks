@@ -220,6 +220,8 @@ export const segmentedStyles = stylex.create({
     boxShadow: metrics.shadowSm,
     color: colors.foreground,
   },
+  attention: { color: colors.foreground },
+  disabled: { cursor: "not-allowed", opacity: 0.5 },
 });
 
 export const fieldStyles = stylex.create({

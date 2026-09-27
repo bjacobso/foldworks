@@ -62,6 +62,7 @@ import {
   Stat,
   Stateful,
   Stepper,
+  TabBar,
   Table,
   Tag,
   Text,
@@ -711,6 +712,39 @@ const forms = (model: Model, h: HtmlBuilder<Message>): Html =>
           ),
         ],
       ),
+      h.div(
+        [h.Class(className(styles.catalogRow))],
+        [
+          Toggle.view(
+            {
+              label: "Failing journeys only",
+              isPressed: model.mixedPermissions,
+              count: 0,
+              countLabel: "0 journeys",
+              onToggle: (isChecked) => Message.ToggledMixedPermissions({ isChecked }),
+            },
+            h,
+          ),
+          ToggleGroup.view(
+            {
+              values: [model.selectedView],
+              ariaLabel: "Form pages",
+              onChange: (values) => Message.SelectedView({ value: values[0] ?? "Overview" }),
+              options: [
+                { value: "Overview", label: "Page 1", count: 3, countLabel: "3 hidden fields" },
+                {
+                  value: "Details",
+                  label: "Page 2",
+                  needsAttention: true,
+                  attentionLabel: "Linked field is on this page",
+                },
+                { value: "Activity", label: "Page 3", isDisabled: true },
+              ],
+            },
+            h,
+          ),
+        ],
+      ),
       ButtonGroup.view(
         {
           ariaLabel: "Alignment",
@@ -781,33 +815,84 @@ const navigation = (model: Model, h: HtmlBuilder<Message>): Html =>
         ),
         toParentMessage: (message) => Message.GotTabsMessage({ message }),
       }),
-      h.div(
-        [h.Class(className(styles.catalogSidebar))],
-        [
-          Sidebar.view(
+      TabBar.view(
+        {
+          id: "catalog-tab-bar",
+          ariaLabel: "Form views",
+          value: model.selectedView,
+          tabs: [
+            { value: "Overview", label: "Overview" },
             {
-              header: [h.strong([], ["Acme"])],
-              groups: [
+              value: "Details",
+              label: "Scenarios",
+              badge: [Badge.view({ label: "2", tone: "danger" }, h)],
+            },
+            { value: "PDF", label: "PDF", hint: "Not added", isDisabled: true },
+            { value: "Translations", label: "Translations", hint: "Planned", isDisabled: true },
+          ],
+          onChange: (value) =>
+            value === "PDF" || value === "Translations"
+              ? action(value)
+              : Message.SelectedView({ value }),
+          trailing: [Badge.view({ label: "Ready", tone: "success", dot: true }, h)],
+        },
+        h,
+      ),
+      h.div(
+        [h.Class(className(styles.catalogRow))],
+        [
+          h.div(
+            [h.Class(className(styles.catalogSidebar))],
+            [
+              Sidebar.view(
                 {
-                  label: "Workspace",
-                  items: [
+                  header: [h.strong([], ["Acme"])],
+                  groups: [
                     {
-                      label: "Overview",
-                      href: "#",
-                      isCurrent: true,
-                      media: Icon.view({ icon: Folder, size: 15 }, h),
+                      label: "Workspace",
+                      items: [
+                        {
+                          label: "Overview",
+                          href: "#",
+                          isCurrent: true,
+                          media: Icon.view({ icon: Folder, size: 15 }, h),
+                        },
+                        {
+                          label: "Settings",
+                          href: "#",
+                          media: Icon.view({ icon: Settings, size: 15 }, h),
+                        },
+                      ],
                     },
+                  ],
+                  footer: ["maya@example.com"],
+                },
+                h,
+              ),
+            ],
+          ),
+          h.div(
+            [h.Class(className(styles.catalogSidebar))],
+            [
+              Sidebar.view(
+                {
+                  ariaLabel: "Form pages",
+                  groups: [
                     {
-                      label: "Settings",
-                      href: "#",
-                      media: Icon.view({ icon: Settings, size: 15 }, h),
+                      label: "Pages",
+                      items: [1, 2, 3].map((page) => ({
+                        label: `Page ${page}`,
+                        onClick: Message.SelectedPage({ page }),
+                        isCurrent: model.page === page,
+                        count: page * 4,
+                        countLabel: `${page * 4} fields`,
+                      })),
                     },
                   ],
                 },
-              ],
-              footer: ["maya@example.com"],
-            },
-            h,
+                h,
+              ),
+            ],
           ),
         ],
       ),

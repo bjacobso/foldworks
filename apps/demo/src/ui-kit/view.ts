@@ -704,6 +704,34 @@ const controlsPanel = (model: Model, h: HtmlBuilder<Message>): Html =>
                     },
                     h,
                   ),
+                  SegmentedControl.view(
+                    {
+                      value: model.selectedView,
+                      ariaLabel: "Form pages",
+                      options: [
+                        {
+                          value: "Overview",
+                          label: "Identity",
+                          count: 2,
+                          countLabel: "2 hidden fields",
+                        },
+                        {
+                          value: "Details",
+                          label: "Employment",
+                          needsAttention: true,
+                          attentionLabel: "Linked field is on this page",
+                        },
+                        {
+                          value: "Activity",
+                          label: "Review",
+                          count: 0,
+                          countLabel: "No hidden fields",
+                        },
+                      ],
+                      onChange: (value) => Message.SelectedView({ value }),
+                    },
+                    h,
+                  ),
                 ],
                 h,
               ),
