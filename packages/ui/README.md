@@ -162,6 +162,49 @@ Toolbar.view(
 );
 ```
 
+Navigation primitives work with or without a router. `Breadcrumb`, `Sidebar`,
+and `TabBar` items accept an `href`, a message, or both. `TabBar` switches whole
+screens without rendering panels:
+
+```ts
+import { Badge, TabBar } from "@foldworks/ui";
+
+TabBar.view(
+  {
+    id: "bundle",
+    ariaLabel: "Form views",
+    value: model.screen,
+    tabs: [
+      { value: "overview", label: "Overview" },
+      {
+        value: "scenarios",
+        label: "Scenarios",
+        badge: [Badge.view({ label: "2 failing", tone: "danger" }, h)],
+      },
+      { value: "translations", label: "Translations", hint: "Planned", isDisabled: true },
+    ],
+    onChange: (screen) => Message.SelectedScreen({ screen }),
+    trailing: [Badge.view({ label: "Release ready", tone: "success", dot: true }, h)],
+  },
+  h,
+);
+```
+
+The default `semantics: "navigation"` renders a `nav` landmark and marks the
+current tab with `aria-current="page"`; use it when each tab is a separate
+screen. `semantics: "tablist"` renders `role="tablist"` with one tab stop and
+Arrow/Home/End selection; use it when the tabs switch one region of a page, and
+label that region with `role="tabpanel"` and
+`aria-labelledby={TabBar.tabId(id, value)}`. In navigation mode, disabled tabs
+remain focusable and describe themselves with their `hint`. Tablist arrow keys
+skip disabled tabs.
+
+`Toggle`, `ToggleGroup`, and `SegmentedControl` options accept a `count` (with
+an optional `countLabel` for assistive technology). `ToggleGroup` and
+`SegmentedControl` options also accept a `badge`, `isDisabled`, and a
+`needsAttention` state with an announced `attentionLabel`, for example when a
+linked field is on another page.
+
 Presentation helpers use the namespace-style surface:
 
 ```ts
@@ -259,7 +302,8 @@ slot uses the same `{ attributes?, sx? }` contract. Top-level `attributes` and
 
 This contract is available on Button, Badge, Card, Checkbox, Disclosure, Field,
 Fieldset, Icon, Layout, NumberField, Panel, SegmentedControl, Select, Switch,
-Tag, Toolbar, and the stateful Dialog, Popover, Tabs, and Tooltip adapters.
+TabBar, Tag, Toggle, ToggleGroup, Toolbar, and the stateful Dialog, Popover,
+Tabs, and Tooltip adapters.
 
 ```ts
 Card.view(

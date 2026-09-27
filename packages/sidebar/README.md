@@ -13,21 +13,60 @@ import { Sidebar } from "@foldworks/sidebar";
 
 const model = Sidebar.init({ id: "application-sidebar" });
 
-Sidebar.view({
-  model,
-  toParentMessage: (message) => AppMessage.GotSidebarMessage({ message }),
-  brand: {
-    title: "Acme",
-    description: "Operations",
-    href: "/",
-    icon: Blocks,
+Sidebar.view(
+  {
+    model,
+    toParentMessage: (message) => AppMessage.GotSidebarMessage({ message }),
+    brand: {
+      title: "Acme",
+      description: "Operations",
+      href: "/",
+      icon: Blocks,
+    },
+    groups: [
+      {
+        id: "workspace",
+        label: "Workspace",
+        items: [{ id: "home", label: "Home", href: "/", icon: House }],
+      },
+    ],
+    header: applicationHeader,
+    content: applicationContent,
   },
-  groups: [{
-    id: "workspace",
-    label: "Workspace",
-    items: [{ id: "home", label: "Home", href: "/", icon: House }],
-  }],
-  header: applicationHeader,
-  content: applicationContent,
-}, h);
+  h,
+);
+```
+
+Items and sub-items accept an `href`, an `onClick` message, or both, so
+applications without a router can navigate with messages. Either kind of
+activation also closes the mobile drawer. `count` adds a trailing number (hidden
+while the sidebar is icon-collapsed), and `countLabel` replaces it for
+assistive technology:
+
+```ts
+Sidebar.view(
+  {
+    model,
+    toParentMessage: (message) => AppMessage.GotSidebarMessage({ message }),
+    brand,
+    groups: [
+      {
+        id: "pages",
+        label: "Pages",
+        items: pages.map((page) => ({
+          id: page.id,
+          label: page.title,
+          icon: FileText,
+          onClick: AppMessage.SelectedPage({ pageId: page.id }),
+          isActive: page.id === model.pageId,
+          count: page.hiddenFieldCount,
+          countLabel: `${page.hiddenFieldCount} hidden fields`,
+        })),
+      },
+    ],
+    header: applicationHeader,
+    content: applicationContent,
+  },
+  h,
+);
 ```
