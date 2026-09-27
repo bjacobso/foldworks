@@ -14,6 +14,7 @@ import { Message as DataGridMessage } from "../data-grid/message";
 import { Message as DataTableMessage } from "../data-table/message";
 import { Message as DiffViewerMessage } from "../diff-viewer/message";
 import { Message as FormEditorMessage } from "../form-builder/message";
+import { Message as PdfViewerDemoMessage } from "../pdf-viewer/message";
 import { Message as QueryBuilderDemoMessage } from "../query-builder/message";
 import { ThemeName, ThemePreference } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
@@ -41,6 +42,7 @@ export const Message = defineMessageUnion({
   GotDiffViewerDemoMessage: { message: DiffViewerMessage },
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
   GotPdfAnnotatorMessage: { message: PdfAnnotator.Message },
+  GotPdfViewerDemoMessage: { message: PdfViewerDemoMessage },
   GotEditorMessage: { message: EditorMessage },
   GotSidebarMessage: { message: Sidebar.Message },
   GotUiKitMessage: { message: UiKitMessage },

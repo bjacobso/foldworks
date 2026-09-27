@@ -16,7 +16,9 @@ const expectedPackages = [
   "@foldworks/form-builder",
   "@foldworks/diagram",
   "@foldworks/workflow",
+  "@foldworks/pdf",
   "@foldworks/pdf-annotator",
+  "@foldworks/pdf-viewer",
   "@foldworks/history",
   "@foldworks/generative-ui",
 ] as const;

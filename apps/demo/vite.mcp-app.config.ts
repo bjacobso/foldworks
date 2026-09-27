@@ -1,4 +1,5 @@
 import { foldkit } from "@foldkit/vite-plugin";
+import { foldworksLayers } from "@foldworks/ui/vite";
 import stylex from "@stylexjs/unplugin";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
@@ -43,7 +44,7 @@ export default defineConfig(({ mode }) => ({
     stylex.vite({
       dev: mode === "development",
       runtimeInjection: false,
-      useCSSLayers: true,
+      useCSSLayers: { before: foldworksLayers },
     }),
     foldkit(),
     inlineMcpApp(),

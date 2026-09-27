@@ -2,6 +2,9 @@ import { Option, Schema as S } from "effect";
 import { defineTaggedUnion } from "foldkit/schema";
 
 import { DragAndDrop, FileDrop } from "@foldkit/ui";
+import { PdfRect } from "@foldworks/pdf";
+
+export { PdfRect };
 
 /** Kinds supplied by the default palette. Custom JSON-only kinds are also valid. */
 export const BuiltInAnnotationKind = S.Literals([
@@ -20,14 +23,6 @@ export type BuiltInAnnotationKind = typeof BuiltInAnnotationKind.Type;
 /** Annotation kinds are intentionally open so hosts can round-trip custom tools. */
 export const AnnotationKind = S.String;
 export type AnnotationKind = typeof AnnotationKind.Type;
-
-export const PdfRect = S.Struct({
-  x: S.Number,
-  y: S.Number,
-  width: S.Number,
-  height: S.Number,
-});
-export type PdfRect = typeof PdfRect.Type;
 
 export const PdfBinding = S.Struct({
   fieldType: S.optionalKey(S.Literals(["text", "checkbox", "radio", "choice", "signature"])),
