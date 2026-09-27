@@ -17,6 +17,10 @@ Status values: **carried** (we ship a local patch or workaround), **proposed**
   Not filed.
 - Affects: every generic `view<Message>(config, h)` component and helper. In
   practice that is `@foldworks/ui`, and any package built the same way.
+- Guard: `packages/ui/src/foldkit-attribute.test.ts` fails to type-check if
+  `Attribute` becomes a union again, for example after a Foldkit upgrade that
+  drops the patch. `@foldworks/ui` type-checks with `tsc --checkers 1`, so
+  TS 7's parallel checkers can't hide a relation cache that outgrows the limit.
 
 `foldkit/html` types `Attribute<Message>` as a 310-variant `Data.TaggedEnum`.
 Only 65 of those variants mention `Message`, but each instantiation
