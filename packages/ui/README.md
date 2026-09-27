@@ -53,6 +53,7 @@ Import the base contract and the themes your application supports:
 @import "@foldworks/ui/themes/shadcn.css";
 @import "@foldworks/ui/themes/blueprint.css";
 @import "@foldworks/ui/themes/office.css";
+@import "@foldworks/ui/themes/fluent2.css";
 @import "@foldworks/ui/themes/google.css";
 @import "@foldworks/ui/themes/apple.css";
 @import "@foldworks/ui/themes/polaris.css";
@@ -80,7 +81,7 @@ Set `data-theme` and the resolved `data-mode` on a root ancestor:
 <html data-theme="shadcn" data-mode="dark" class="dark"></html>
 ```
 
-`data-theme` accepts `shadcn`, `blueprint`, `office`, `google`, `apple`, or
+`data-theme` accepts `shadcn`, `blueprint`, `office`, `fluent2`, `google`, `apple`, or
 `polaris`.
 `data-mode` accepts `light` or `dark`; the optional `.dark` class remains
 compatible with shadcn theme providers. CSS variables cascade, so the same
@@ -107,11 +108,36 @@ are available through the exported StyleX `colors` constants.
 
 In the demo, select a preset in the **Theme** menu. Shadcn is the neutral
 default with crisp monochrome surfaces; Blueprint is dense and
-enterprise-oriented; Office follows Fluent-like geometry; Google uses tonal
-Material-like surfaces; Apple uses layered system grays and generous corners;
-and Polaris follows Shopify's Polaris 2 admin palette, pill actions, and soft
-elevation. Compare the UI kit, Workers workbench, and workflow builder using
-the same controls.
+enterprise-oriented; Office follows Fluent-like geometry; Fluent 2 maps the
+Microsoft web light and dark color, font family, radius, shadow, and motion
+tokens to Foldworks roles; Google uses tonal Material-like surfaces; Apple uses
+layered system grays and generous corners; and Polaris follows Shopify's Polaris
+2 admin palette, pill actions, and soft elevation. Compare the UI kit, Workers
+workbench, and workflow builder using the same controls.
+
+The Fluent 2 palette maps values from Microsoft's
+[`@fluentui/tokens` web themes](https://github.com/microsoft/fluentui/tree/master/packages/tokens/src/themes/web)
+to Foldworks semantic roles. The CSS theme does not load Fluent React or its
+runtime; it keeps the Foldkit components and their existing behavior. Fluent
+spacing and typography scales are not yet fully themeable because several
+component recipes still use fixed StyleX values.
+
+### Fluent 2 component coverage
+
+The current catalog already covers Fluent's core buttons, form controls,
+dialogs, navigation, tree, toolbar, tabs, and feedback. The most useful
+Fluent-specific additions are:
+
+| Priority | Primitive               | Reason                                                                                             |
+| -------- | ----------------------- | -------------------------------------------------------------------------------------------------- |
+| High     | AvatarGroup and Persona | Avatar exists, but grouped presence and identity details need shared overflow and status behavior. |
+| High     | SearchBox               | InputGroup can render a search field, but it lacks a dedicated clear action and search semantics.  |
+| Medium   | InfoLabel               | Field and Tooltip exist, but the paired help trigger and popover behavior is not packaged.         |
+| Medium   | Rating                  | There is no accessible read-only and interactive star rating control.                              |
+
+MessageBar can initially use `Alert` or `StatusMessage`; TagPicker behavior is
+largely covered by `TokenField`. Those are lower-priority Fluent wrappers until
+their distinct layouts or APIs are needed.
 
 The shared recipes expose shape and elevation variables so presets can alter
 more than color. Their base values preserve component behavior:

@@ -401,6 +401,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
               { value: "Shadcn", label: "shadcn/ui" },
               { value: "Blueprint", label: "Palantir Blueprint" },
               { value: "Office", label: "Microsoft Office" },
+              { value: "Fluent2", label: "Microsoft Fluent 2" },
               { value: "Google", label: "Google" },
               { value: "Apple", label: "Apple" },
               { value: "Polaris", label: "Shopify Polaris 2" },
