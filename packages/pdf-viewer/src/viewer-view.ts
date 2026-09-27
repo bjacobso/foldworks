@@ -13,9 +13,8 @@ import {
   ZoomOut,
 } from "@lucide/icons";
 import { Button, Empty, Icon, Skeleton } from "@foldworks/ui";
+import { overlayPosition, pageSurface, type PdfRect } from "@foldworks/pdf";
 
-import type { PdfRect } from "./model";
-import { userSpaceToPageFraction } from "./page-geometry";
 import { Message } from "./viewer-message";
 import {
   MAX_ZOOM_PERCENT,
@@ -191,22 +190,14 @@ const skeleton = <ParentMessage>(label: string, h: HtmlBuilder<ParentMessage>): 
     [Skeleton.view({ label, width: "100%", height: "100%" }, h)],
   );
 
-const percent = (fraction: number): string => `${fraction * 100}%`;
-
 const overlayView = <ParentMessage>(
   page: ViewerPage,
   overlay: PdfOverlay<ParentMessage>,
   h: HtmlBuilder<ParentMessage>,
 ): Html => {
-  const box = userSpaceToPageFraction(page, overlay.rect);
   const attributes = [
     h.Class("fk-pdf-viewer__overlay"),
-    h.Style({
-      left: percent(box.x),
-      top: percent(box.y),
-      width: percent(box.width),
-      height: percent(box.height),
-    }),
+    h.Style(overlayPosition(page, overlay.rect)),
     h.DataAttribute("pdf-overlay-key", overlay.key),
     h.DataAttribute("tone", overlay.tone ?? "neutral"),
     h.DataAttribute("selected", overlay.isSelected === true ? "true" : "false"),
@@ -237,46 +228,48 @@ const pageView = <ParentMessage>(
   h: HtmlBuilder<ParentMessage>,
 ): Html => {
   const label = `Page ${page.pageIndex + 1} of ${pageCount}`;
-  return h.keyed("div")(
-    `page-${page.pageIndex}`,
-    [
-      h.Class("fk-pdf-viewer__page"),
-      h.DataAttribute("pdf-viewer-page", String(page.pageIndex)),
-      h.DataAttribute("state", page.image._tag.toLowerCase()),
-      h.Role("group"),
-      h.AriaLabel(label),
-      h.Style({
-        width: `${pageDisplayWidth(config.model, page)}px`,
-        aspectRatio: `${page.width} / ${page.height}`,
-      }),
-    ],
-    [
-      page.image._tag === "Rendered"
-        ? h.img([
-            h.Class("fk-pdf-viewer__page-image"),
-            h.Src(page.image.url),
-            h.Alt(`${label} of ${name}`),
-            h.Draggable(false),
-          ])
-        : page.image._tag === "Failed"
-          ? h.div(
-              [h.Class("fk-pdf-viewer__page-error"), h.Role("alert")],
-              [
-                Icon.view({ icon: FileX, size: 18 }, h),
-                h.span([], [`${label} could not be rendered. ${page.image.reason}`]),
-              ],
-            )
-          : skeleton(`Rendering ${label.toLowerCase()}`, h),
-      config.watermark === undefined
-        ? h.empty
-        : h.span([h.Class("fk-pdf-viewer__watermark"), h.AriaHidden(true)], [config.watermark]),
-      overlays.length === 0
-        ? h.empty
-        : h.div(
-            [h.Class("fk-pdf-viewer__overlays")],
-            overlays.map((overlay) => overlayView(page, overlay, h)),
-          ),
-    ],
+  return pageSurface(
+    {
+      key: `page-${page.pageIndex}`,
+      pageIndex: page.pageIndex,
+      width: page.width,
+      height: page.height,
+      displayWidth: pageDisplayWidth(config.model, page),
+      label,
+      className: "fk-pdf-viewer__page",
+      dataAttributes: {
+        "pdf-viewer-page": String(page.pageIndex),
+        state: page.image._tag.toLowerCase(),
+      },
+      content: [
+        page.image._tag === "Rendered"
+          ? h.img([
+              h.Class("fk-pdf-viewer__page-image"),
+              h.Src(page.image.url),
+              h.Alt(`${label} of ${name}`),
+              h.Draggable(false),
+            ])
+          : page.image._tag === "Failed"
+            ? h.div(
+                [h.Class("fk-pdf-viewer__page-error"), h.Role("alert")],
+                [
+                  Icon.view({ icon: FileX, size: 18 }, h),
+                  h.span([], [`${label} could not be rendered. ${page.image.reason}`]),
+                ],
+              )
+            : skeleton(`Rendering ${label.toLowerCase()}`, h),
+        config.watermark === undefined
+          ? h.empty
+          : h.span([h.Class("fk-pdf-viewer__watermark"), h.AriaHidden(true)], [config.watermark]),
+        overlays.length === 0
+          ? h.empty
+          : h.div(
+              [h.Class("fk-pdf-viewer__overlays")],
+              overlays.map((overlay) => overlayView(page, overlay, h)),
+            ),
+      ],
+    },
+    h,
   );
 };
 

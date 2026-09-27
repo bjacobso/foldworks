@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { PdfViewer } from "@foldworks/pdf-annotator";
+import { PdfViewer } from "@foldworks/pdf-viewer";
 import { defineMessageUnion } from "foldkit/message";
 
 import { StatusFilter } from "./model";

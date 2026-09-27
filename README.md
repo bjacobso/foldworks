@@ -39,6 +39,8 @@ accessible application interfaces with Foldkit:
 - [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
   branch-aware operations, layout, and drag-and-drop primitives, built on the
   `@foldworks/diagram` scene contract.
+- [`@foldworks/pdf`](./packages/pdf) — PDF page rendering, geometry, and composable surfaces.
+- [`@foldworks/pdf-viewer`](./packages/pdf-viewer) — read-only PDF viewing with overlay hotspots.
 - [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
   annotation authoring with AcroForm inspection, versioned JSON, custom data,
   zoom-aware editing, and interactive PDF export.

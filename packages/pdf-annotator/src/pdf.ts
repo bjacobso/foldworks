@@ -14,18 +14,20 @@ import {
   type PDFField,
   type PDFPage,
 } from "pdf-lib";
-
-import { downloadBytes } from "./bytes";
-export { base64ToBytes, bytesToBase64 } from "./bytes";
-import { annotationValueText } from "./document";
-import type { Annotation } from "./model";
 import {
   displayRectToUserSpace,
+  downloadBytes,
   normalizeRotation,
+  rasterizePage,
   userSpaceToDisplayRect,
+  withPdfDocument,
   type PdfPageGeometry,
-} from "./page-geometry";
-import { rasterizePage, withPdfDocument } from "./render";
+} from "@foldworks/pdf";
+
+export { base64ToBytes, bytesToBase64 } from "@foldworks/pdf";
+
+import { annotationValueText } from "./document";
+import type { Annotation } from "./model";
 
 export type RenderedPage = Readonly<{
   pageCount: number;

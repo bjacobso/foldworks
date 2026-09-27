@@ -1,5 +1,5 @@
 import { Option, Schema as S } from "effect";
-import { PdfViewer } from "@foldworks/pdf-annotator";
+import { PdfViewer } from "@foldworks/pdf-viewer";
 
 export const StatusFilter = S.Literals(["all", "filled", "blank", "omitted", "missing"]);
 export type StatusFilter = typeof StatusFilter.Type;

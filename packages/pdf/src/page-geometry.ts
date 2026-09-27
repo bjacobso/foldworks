@@ -1,4 +1,4 @@
-import type { PdfRect } from "./model";
+import type { PdfRect } from "./rect";
 
 /** Page rotation, normalized to the four angles PDF viewers display. */
 export type PdfPageRotation = 0 | 90 | 180 | 270;

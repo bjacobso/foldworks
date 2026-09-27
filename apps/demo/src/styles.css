@@ -12,6 +12,7 @@
 @import "@foldworks/data-table/styles.css";
 @import "@foldworks/diff-viewer/styles.css";
 @import "@foldworks/pdf-annotator/styles.css";
+@import "@foldworks/pdf-viewer/styles.css";
 @import "./diff-viewer/styles.css";
 
 *,

@@ -1,8 +1,6 @@
 import { Schema as S } from "effect";
 import { defineTaggedUnion } from "foldkit/schema";
-
-import { PdfRect } from "./model";
-import { DEFAULT_RENDER_SCALE } from "./render";
+import { DEFAULT_RENDER_SCALE, PdfRect } from "@foldworks/pdf";
 
 export const PdfPageRotation = S.Literals([0, 90, 180, 270]);
 export type PdfPageRotation = typeof PdfPageRotation.Type;

@@ -1,4 +1,3 @@
-import { PDFDocument, degrees } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -9,7 +8,6 @@ import {
   userSpaceToPageFraction,
   type PdfPageGeometry,
 } from "./page-geometry";
-import { extractPdfAnnotations } from "./pdf";
 
 const letter = { x: 0, y: 0, width: 612, height: 792 };
 // A crop box that trims 36 pt on the left and 72 pt at the bottom of a larger media box.
@@ -116,18 +114,5 @@ describe("PDF page geometry", () => {
     expect(normalizeRotation(-90)).toBe(270);
     expect(normalizeRotation(450)).toBe(90);
     expect(normalizeRotation(45)).toBe(0);
-  });
-
-  it("agrees with the annotator's AcroForm import on rotated, cropped pages", async () => {
-    const pdf = await PDFDocument.create();
-    const page = pdf.addPage([612, 792]);
-    page.setCropBox(offsetCrop.x, offsetCrop.y, offsetCrop.width, offsetCrop.height);
-    page.setRotation(degrees(270));
-    pdf
-      .getForm()
-      .createTextField("employee_name")
-      .addToPage(page, { ...widget, borderWidth: 0 });
-    const { annotations } = await extractPdfAnnotations(await pdf.save());
-    expect(annotations[0]?.rect).toEqual(userSpaceToDisplayRect(geometry(270, offsetCrop), widget));
   });
 });

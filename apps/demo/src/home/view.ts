@@ -33,6 +33,7 @@ import {
   dataGridRouter,
   formBuilderPath,
   pdfAnnotatorRouter,
+  pdfViewerRouter,
   queryBuilderRouter,
   statechartRouter,
   uiKitRouter,
@@ -154,11 +155,24 @@ const packages: ReadonlyArray<Package> = [
     icon: Workflow,
   },
   {
+    name: "@foldworks/pdf",
+    category: "Foundation",
+    description: "PDF rendering, page geometry, and composable page surfaces.",
+    href: pdfViewerRouter(),
+    icon: FileText,
+  },
+  {
     name: "@foldworks/pdf-annotator",
     category: "Application primitive",
-    description:
-      "Annotate and export real PDF documents, or view them read-only with overlay hotspots.",
+    description: "Annotate and export real PDF documents.",
     href: pdfAnnotatorRouter(),
+    icon: FileText,
+  },
+  {
+    name: "@foldworks/pdf-viewer",
+    category: "Application primitive",
+    description: "Read PDF pages with navigation, zoom, and overlay hotspots.",
+    href: pdfViewerRouter(),
     icon: FileText,
   },
   {

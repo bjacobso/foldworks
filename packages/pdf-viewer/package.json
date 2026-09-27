@@ -1,7 +1,7 @@
 {
-  "name": "@foldworks/pdf-annotator",
-  "version": "0.1.0",
-  "description": "A controlled PDF annotation authoring tool with portable JSON and AcroForm workflows.",
+  "name": "@foldworks/pdf-viewer",
+  "version": "0.0.0",
+  "description": "A composable read-only PDF viewer for Foldkit.",
   "license": "MIT",
   "author": "Ben Jacobson",
   "type": "module",
@@ -16,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bjacobso/foldworks.git",
-    "directory": "packages/pdf-annotator"
+    "directory": "packages/pdf-viewer"
   },
   "homepage": "https://github.com/bjacobso/foldworks#readme",
   "bugs": {
@@ -25,9 +25,8 @@
   "keywords": [
     "foldkit",
     "pdf",
-    "annotation",
-    "drag-and-drop",
-    "pdf-lib"
+    "viewer",
+    "overlays"
   ],
   "publishConfig": {
     "access": "public",
@@ -50,18 +49,15 @@
   "dependencies": {
     "@foldworks/pdf": "workspace:*",
     "@foldworks/ui": "workspace:*",
-    "@lucide/icons": "catalog:",
-    "pdf-lib": "catalog:"
+    "@lucide/icons": "catalog:"
   },
   "devDependencies": {
-    "@foldkit/ui": "catalog:",
     "effect": "catalog:",
     "foldkit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@foldkit/ui": "catalog:peers",
     "effect": "catalog:peers",
     "foldkit": "catalog:peers"
   }

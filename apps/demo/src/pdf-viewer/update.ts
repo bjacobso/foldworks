@@ -1,5 +1,5 @@
 import { Effect, Option } from "effect";
-import { PdfViewer } from "@foldworks/pdf-annotator";
+import { PdfViewer } from "@foldworks/pdf-viewer";
 import { Command, Update } from "foldkit";
 
 import { generateSamplePdf, sampleName } from "./fixture";

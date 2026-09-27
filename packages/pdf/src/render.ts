@@ -1,5 +1,3 @@
-/// <reference path="./vite-env.d.ts" />
-
 import { Data, Effect } from "effect";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";

@@ -1,8 +1,13 @@
 import { Effect, Schema as S } from "effect";
 import { Command, type Update } from "foldkit";
+import {
+  base64ToBytes,
+  bytesToBase64,
+  downloadBytes,
+  readPdfPages,
+  renderPages,
+} from "@foldworks/pdf";
 
-import { base64ToBytes, bytesToBase64, downloadBytes } from "./bytes";
-import { readPdfPages, renderPages } from "./render";
 import { Message } from "./viewer-message";
 import {
   PageImage,

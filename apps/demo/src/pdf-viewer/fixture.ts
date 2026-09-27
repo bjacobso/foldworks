@@ -1,8 +1,4 @@
-import {
-  displayRectToUserSpace,
-  type PdfPageGeometry,
-  type PdfRect,
-} from "@foldworks/pdf-annotator";
+import { displayRectToUserSpace, type PdfPageGeometry, type PdfRect } from "@foldworks/pdf";
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 export const sampleName = "synthetic-onboarding-packet.pdf";
