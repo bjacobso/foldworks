@@ -13,11 +13,15 @@ import {
   House,
   ListFilter,
   ListChecks,
+  Monitor,
+  Moon,
   Network,
+  Palette,
+  Sun,
   Table2,
   Workflow as WorkflowIcon,
 } from "@lucide/icons";
-import { Badge, Select, Toolbar } from "@foldworks/ui";
+import { Badge, Icon, Select, Toolbar } from "@foldworks/ui";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
@@ -64,9 +68,90 @@ import { view as workflowEditorView } from "../workflow/view";
 import { Message } from "./message";
 import type { Model } from "./model";
 
-const toolbarSelectStyles = stylex.create({
-  theme: { width: "167px" },
+const compact = "@media (max-width: 640px)";
+
+const toolbarStyles = stylex.create({
+  root: {
+    flexWrap: { default: "nowrap", [compact]: "wrap" },
+    rowGap: "8px",
+  },
+  copy: {
+    flexBasis: "auto",
+    flexGrow: { default: 0, [compact]: 1 },
+    flexShrink: 1,
+  },
+  actions: {
+    marginLeft: "auto",
+  },
+  title: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  description: {
+    display: { default: "block", [compact]: "none" },
+  },
+  badge: {
+    display: { default: "inline-flex", [compact]: "none" },
+  },
 });
+
+const toolbarSelectStyles = stylex.create({
+  root: {
+    alignItems: "center",
+    display: "inline-flex",
+    flexShrink: 0,
+    position: "relative",
+  },
+  icon: {
+    color: "var(--muted-foreground)",
+    left: { default: "10px", [compact]: "50%" },
+    pointerEvents: "none",
+    position: "absolute",
+    top: "50%",
+    transform: { default: "translateY(-50%)", [compact]: "translate(-50%, -50%)" },
+  },
+  select: {
+    appearance: { default: null, [compact]: "none" },
+    color: { default: null, [compact]: "transparent" },
+    minHeight: { default: null, [compact]: "36px" },
+    paddingLeft: { default: "32px", [compact]: 0 },
+    paddingRight: { default: null, [compact]: 0 },
+  },
+  theme: { width: { default: "190px", [compact]: "36px" } },
+  appearance: { width: { default: "118px", [compact]: "36px" } },
+});
+
+const appearanceIcon = (preference: Model["themePreference"]): Icon.IconData =>
+  preference === "Light" ? Sun : preference === "Dark" ? Moon : Monitor;
+
+/** A native select with a leading icon that collapses to an icon button on phones. */
+const iconSelect = (
+  icon: Icon.IconData,
+  width: stylex.StyleXStyles,
+  config: Select.ControlConfig<Message>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.span(
+    [h.Class(className(toolbarSelectStyles.root))],
+    [
+      h.span(
+        [h.Class(className(toolbarSelectStyles.icon)), h.AriaHidden(true)],
+        [Icon.view({ icon, size: 15 }, h)],
+      ),
+      Select.control(
+        {
+          ...config,
+          sx: toolbarSelectStyles.select,
+          slotProps: { root: { sx: width } },
+        },
+        h,
+      ),
+    ],
+  );
+
+const toolbarBadge = (config: Badge.ViewConfig<Message>, h: HtmlBuilder<Message>): Html =>
+  Badge.view({ ...config, sx: toolbarStyles.badge }, h);
 
 const activeAnnouncement = (model: Model): string => {
   const demo = demoFromRoute(model.route);
@@ -352,26 +437,38 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
     {
       title,
       description,
+      sx: toolbarStyles.root,
+      slotProps: {
+        copy: { sx: toolbarStyles.copy },
+        actions: { sx: toolbarStyles.actions },
+        title: { sx: toolbarStyles.title },
+        description: { sx: toolbarStyles.description },
+      },
       actions: [
         ...(demo === "Editor"
-          ? [Badge.view({ label: "Native editor preview", dot: true }, h)]
+          ? [toolbarBadge({ label: "Native editor preview", dot: true }, h)]
           : demo === "Agent"
-            ? [Badge.view({ label: "Simulated", tone: "info", dot: true }, h)]
+            ? [toolbarBadge({ label: "Simulated", tone: "info", dot: true }, h)]
             : demo === "Workflow" || demo === "FormBuilder"
               ? [persistenceBadge(model, h), childRegion(model, "Toolbar", h)]
               : demo === "Statechart"
                 ? [childRegion(model, "Toolbar", h)]
                 : demo === "CodeEditor"
-                  ? [Badge.view({ label: "Live diagnostics", tone: "info", dot: true }, h)]
+                  ? [toolbarBadge({ label: "Live diagnostics", tone: "info", dot: true }, h)]
                   : demo === "Codebase"
-                    ? [Badge.view({ label: "Read-only fixture", tone: "info", dot: true }, h)]
+                    ? [toolbarBadge({ label: "Read-only fixture", tone: "info", dot: true }, h)]
                     : demo === "DiffViewer"
-                      ? [Badge.view({ label: "Interactive prototype", tone: "info", dot: true }, h)]
+                      ? [
+                          toolbarBadge(
+                            { label: "Interactive prototype", tone: "info", dot: true },
+                            h,
+                          ),
+                        ]
                       : demo === "Workbench"
-                        ? [Badge.view({ label: "Reference workspace", dot: true }, h)]
+                        ? [toolbarBadge({ label: "Reference workspace", dot: true }, h)]
                         : demo === "DataTable"
                           ? [
-                              Badge.view(
+                              toolbarBadge(
                                 {
                                   label: "Semantic table + controlled data",
                                   tone: "info",
@@ -382,7 +479,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                             ]
                           : demo === "DataGrid"
                             ? [
-                                Badge.view(
+                                toolbarBadge(
                                   {
                                     label:
                                       model.dataGridDemo.example === "Coverage"
@@ -396,14 +493,14 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ]
                             : demo === "QueryBuilder"
                               ? [
-                                  Badge.view(
+                                  toolbarBadge(
                                     { label: "Validates as you edit", tone: "success", dot: true },
                                     h,
                                   ),
                                 ]
                               : demo === "PdfAnnotator"
                                 ? [
-                                    Badge.view(
+                                    toolbarBadge(
                                       {
                                         label: "Foldkit drag + PDF export",
                                         tone: "info",
@@ -414,29 +511,24 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                   ]
                                 : demo === "PdfViewer"
                                   ? [
-                                      Badge.view(
+                                      toolbarBadge(
                                         { label: "Read-only viewer", tone: "info", dot: true },
                                         h,
                                       ),
                                     ]
                                   : demo === "Home"
-                                    ? [
-                                        Badge.view(
-                                          { label: "17 packages", tone: "info", dot: true },
-                                          h,
-                                        ),
-                                        Badge.view({ label: "Open source" }, h),
-                                      ]
+                                    ? []
                                     : [
-                                        Badge.view(
+                                        toolbarBadge(
                                           { label: "61 primitives", tone: "info", dot: true },
                                           h,
                                         ),
-                                        Badge.view({ label: "StyleX + Foldkit" }, h),
+                                        toolbarBadge({ label: "StyleX + Foldkit" }, h),
                                       ]),
-        Select.control(
+        iconSelect(
+          Palette,
+          toolbarSelectStyles.theme,
           {
-            sx: toolbarSelectStyles.theme,
             value: model.themeName,
             ariaLabel: "Theme",
             onChange: (name) =>
@@ -455,7 +547,9 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
           },
           h,
         ),
-        Select.control(
+        iconSelect(
+          appearanceIcon(model.themePreference),
+          toolbarSelectStyles.appearance,
           {
             value: model.themePreference,
             ariaLabel: "Appearance",

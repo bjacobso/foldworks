@@ -174,7 +174,7 @@ describe.sequential("structured workflow builder", () => {
       .poll(() =>
         page
           .getByRole("heading", {
-            name: "Application primitives for product teams.",
+            name: "Application primitives for ambitious teams.",
           })
           .isVisible(),
       )
