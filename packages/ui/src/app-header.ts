@@ -114,38 +114,30 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
     catalogStyles.focusable,
     config.titleHref === undefined && config.onTitleClick !== undefined && styles.titleButton,
   );
-  let title: Html;
-  if (config.titleHref !== undefined) {
-    const attrs = [...titleAttrs, h.Href(config.titleHref)];
-    if (config.onTitleClick !== undefined) attrs.push(h.OnClick(config.onTitleClick));
-    title = h.a(attrs, [config.title]);
-  } else if (config.onTitleClick !== undefined) {
-    title = h.button(
-      [...titleAttrs, h.Type("button"), h.OnClick(config.onTitleClick)],
-      [config.title],
-    );
-  } else {
-    title = h.span(titleAttrs, [config.title]);
-  }
-
-  const children: Array<Html | string> = [
-    h.div(slotAttrs(config.slotProps?.brand, h, styles.brand), [...(config.leading ?? []), title]),
+  const title =
+    config.titleHref !== undefined
+      ? h.a(
+          [
+            ...titleAttrs,
+            h.Href(config.titleHref),
+            ...(config.onTitleClick === undefined ? [] : [h.OnClick(config.onTitleClick)]),
+          ],
+          [config.title],
+        )
+      : config.onTitleClick !== undefined
+        ? h.button(
+            [...titleAttrs, h.Type("button"), h.OnClick(config.onTitleClick)],
+            [config.title],
+          )
+        : h.span(titleAttrs, [config.title]);
+  const end = [
+    ...(config.status === undefined
+      ? []
+      : [h.div(slotAttrs(config.slotProps?.status, h, styles.status), config.status)]),
+    ...(config.actions === undefined
+      ? []
+      : [h.div(slotAttrs(config.slotProps?.actions, h, styles.actions), config.actions)]),
   ];
-  if (config.breadcrumb !== undefined) {
-    children.push(
-      h.div(slotAttrs(config.slotProps?.navigation, h, styles.navigation), [
-        Breadcrumb.view(config.breadcrumb, h),
-      ]),
-    );
-  }
-  const end: Array<Html | string> = [];
-  if (config.status !== undefined) {
-    end.push(h.div(slotAttrs(config.slotProps?.status, h, styles.status), config.status));
-  }
-  if (config.actions !== undefined) {
-    end.push(h.div(slotAttrs(config.slotProps?.actions, h, styles.actions), config.actions));
-  }
-  if (end.length > 0) children.push(h.div(sxAttrs(h, styles.end), end));
 
   return h.header(
     rootAttrs(
@@ -155,6 +147,19 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
       config.breadcrumb === undefined && styles.withoutNavigation,
       config.sticky === true && styles.sticky,
     ),
-    children,
+    [
+      h.div(slotAttrs(config.slotProps?.brand, h, styles.brand), [
+        ...(config.leading ?? []),
+        title,
+      ]),
+      ...(config.breadcrumb === undefined
+        ? []
+        : [
+            h.div(slotAttrs(config.slotProps?.navigation, h, styles.navigation), [
+              Breadcrumb.view(config.breadcrumb, h),
+            ]),
+          ]),
+      ...(end.length === 0 ? [] : [h.div(sxAttrs(h, styles.end), end)]),
+    ],
   );
 };

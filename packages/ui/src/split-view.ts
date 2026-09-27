@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import type { Attribute, ChildAttribute, Html, HtmlBuilder } from "foldkit/html";
+import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
   rootAttrs,
@@ -422,7 +422,7 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
     const tag = value.label === undefined ? "div" : "section";
     // Foldkit keeps one class attribute per element, so the shared slot and the pane merge here.
     // Offstage hiding is applied last: it owns `display` for panes that are hidden when stacked.
-    const attributes: ReadonlyArray<Attribute<Message> | ChildAttribute> = [
+    const attributes = [
       ...(config.slotProps?.pane?.attributes ?? []),
       ...(value.attributes ?? []),
       ...sxAttrs(
