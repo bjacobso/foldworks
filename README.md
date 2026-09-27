@@ -55,6 +55,9 @@ machine with cycles, parallel regions, submachines, notes, and a simulator on
 `@foldworks/diagram`. The agent flow is a deterministic browser-only
 fixture and performs no provider calls or tool side effects.
 
+See [planned work-surface primitives](./docs/planned-primitives.md) for the
+next areas to explore beyond the current package suite.
+
 ## Dependency compatibility
 
 Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
