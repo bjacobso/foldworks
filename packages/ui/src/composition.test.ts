@@ -5,9 +5,7 @@ import { inertHtml as h, type Html } from "foldkit/html";
 import { Scene } from "foldkit/test";
 import { describe, expect, it } from "vitest";
 
-import * as Button from "./button";
-import { Card } from "./display";
-import * as Field from "./field";
+import { Button, Card, Field } from "./index";
 
 const styles = stylex.create({
   root: { color: "green" },
@@ -27,88 +25,71 @@ const attr = (html: Html, selector: string, name: string) =>
 
 describe("composition contract", () => {
   it("orders root sx overrides and supports root slot attributes", () => {
-    const html = Card.view(
-      {
-        title: "Review",
-        children: ["Content"],
-        sx: styles.root,
-        slotProps: {
-          root: {
-            attributes: [h.DataAttribute("composition-root", "card")],
-            sx: styles.rootSlot,
-          },
+    const html = Card.view({
+      title: "Review",
+      children: ["Content"],
+      sx: styles.root,
+      slotProps: {
+        root: {
+          attributes: [h.DataAttribute("composition-root", "card")],
+          sx: styles.rootSlot,
         },
       },
-      h,
-    );
+    }, h);
 
     expect(attr(html, "section", "class")).toContain("root rootSlot");
     expect(attr(html, "section", "data-composition-root")).toBe("card");
   });
 
   it("styles and augments named internal slots", () => {
-    const html = Card.view(
-      {
-        title: "Review",
-        children: ["Content"],
-        slotProps: {
-          content: {
-            attributes: [h.DataAttribute("composition-slot", "content")],
-            sx: styles.internalSlot,
-          },
+    const html = Card.view({
+      title: "Review",
+      children: ["Content"],
+      slotProps: {
+        content: {
+          attributes: [h.DataAttribute("composition-slot", "content")],
+          sx: styles.internalSlot,
         },
       },
-      h,
-    );
+    }, h);
 
     expect(attr(html, '[data-composition-slot="content"]', "class")).toContain("internalSlot");
   });
 
   it("uses the same slot shape for behavioral and form components", () => {
-    const button = Button.view(
-      {
-        label: "Continue",
-        icon: Circle,
-        slotProps: {
-          startIcon: { attributes: [h.DataAttribute("composition-slot", "start-icon")] },
-          label: {
-            attributes: [h.DataAttribute("composition-slot", "label")],
-            sx: styles.internalSlot,
-          },
+    const button = Button.view({
+      label: "Continue",
+      icon: Circle,
+      slotProps: {
+        startIcon: { attributes: [h.DataAttribute("composition-slot", "start-icon")] },
+        label: {
+          attributes: [h.DataAttribute("composition-slot", "label")],
+          sx: styles.internalSlot,
         },
       },
-      h,
-    );
-    const field = Field.input(
-      {
-        id: "name",
-        label: "Name",
-        slotProps: {
-          control: {
-            attributes: [h.DataAttribute("composition-slot", "control")],
-            sx: styles.internalSlot,
-          },
+    }, h);
+    const field = Field.input({
+      id: "name",
+      label: "Name",
+      slotProps: {
+        control: {
+          attributes: [h.DataAttribute("composition-slot", "control")],
+          sx: styles.internalSlot,
         },
       },
-      h,
-    );
+    }, h);
 
-    expect(attr(button, '[data-composition-slot="start-icon"]', "data-composition-slot")).toBe(
-      "start-icon",
-    );
+    expect(attr(button, '[data-composition-slot="start-icon"]', "data-composition-slot")).toBe("start-icon");
     expect(attr(button, '[data-composition-slot="label"]', "class")).toContain("internalSlot");
     expect(attr(field, '[data-composition-slot="control"]', "class")).toContain("internalSlot");
   });
 
   it("renders a button-styled label around file inputs", () => {
-    const upload = Button.view(
-      {
-        as: "label",
-        label: "Upload schema",
-        children: [h.input([h.Type("file"), h.AriaLabel("Schema file")])],
-      },
-      h,
-    );
+    const upload = Button.view({
+      as: "label",
+      label: "Upload schema",
+      children: [h.input([h.Type("file"), h.AriaLabel("Schema file")])],
+    }, h);
 
     expect(find(upload, "label")).toBeDefined();
     expect(attr(upload, "input", "type")).toBe("file");

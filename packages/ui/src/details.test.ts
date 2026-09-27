@@ -4,14 +4,7 @@ import { inertHtml as h, type Html } from "foldkit/html";
 import { Scene } from "foldkit/test";
 import { describe, expect, it } from "vitest";
 
-import * as Badge from "./badge";
-import * as CodeBlock from "./code-block";
-import * as DescriptionList from "./description-list";
-import { Card } from "./display";
-import { Progress } from "./feedback";
-import * as Legend from "./legend";
-import * as Stat from "./stat";
-import { Tag } from "./tag";
+import { Badge, Card, CodeBlock, DescriptionList, Legend, Progress, Stat, Tag } from "./index";
 
 const find = (html: Html, selector: string) => {
   if (html === null) throw new Error("Expected rendered HTML");
