@@ -43,6 +43,29 @@ const fixtureHeading = (page: Page, fixture: (typeof fixtures)[number]) =>
     { name: fixture.heading, exact: true },
   );
 
+const isolateFixture = async (component: ReturnType<Page["locator"]>): Promise<void> => {
+  await component.evaluate((element) => {
+    const catalog = element.closest('[data-component-catalog="true"]');
+    const fixtureGrid = catalog ?? element.parentElement;
+    const outerItem = catalog?.parentElement ?? element;
+    const outerGrid = outerItem.parentElement;
+
+    if (!fixtureGrid || !outerGrid || (catalog && element.parentElement !== catalog)) {
+      throw new Error("Visual fixture is no longer a direct child of its grid");
+    }
+
+    // Keep both grid widths, but remove every other fixture's height and grid placement.
+    if (catalog) {
+      for (const sibling of fixtureGrid.children) {
+        if (sibling !== element) (sibling as HTMLElement).style.display = "none";
+      }
+    }
+    for (const sibling of outerGrid.children) {
+      if (sibling !== outerItem) (sibling as HTMLElement).style.display = "none";
+    }
+  });
+};
+
 for (const mode of ["Light", "Dark"] as const) {
   test.describe(`Polaris ${mode.toLowerCase()}`, () => {
     test.beforeEach(async ({ page }) => openCatalog(page, mode));
@@ -56,6 +79,7 @@ for (const mode of ["Light", "Dark"] as const) {
     for (const fixture of fixtures) {
       test(`${fixture.name} matches its approved image`, async ({ page }) => {
         const component = fixtureHeading(page, fixture).locator("xpath=ancestor::section[1]");
+        await isolateFixture(component);
         await component.scrollIntoViewIfNeeded();
         await expect(component).toBeVisible();
         await expect(component).toHaveScreenshot([

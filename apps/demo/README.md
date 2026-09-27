@@ -118,15 +118,22 @@ Use `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify the example. Run
 `pnpm test:e2e` for the Vitest + Playwright interaction suite and screenshots in
 `apps/demo/test-results/demo`.
 
-The isolated component visual suite uses Playwright Test to compare every
-catalog fixture in Polaris light and dark mode against reviewed PNG baselines.
-Run `pnpm test:visual` from the repository root to validate them. Intentional
-visual changes must be reviewed and recorded with `pnpm test:visual:update`.
-Generate approved baselines on Ubuntu 24.04, the CI runner used for screenshot
-comparison. System font fallbacks can render differently on other operating
-systems, so local screenshot results may differ even when the UI is unchanged.
-Playwright writes expected, actual, and diff images to `test-results/visual` on
-failure.
+The component visual suite compares every fixture in Polaris light and dark
+mode against reviewed PNG baselines. Before each fixture capture, the test hides
+the other catalog sections and panels from layout while preserving the fixture's
+grid width. Its position and text rasterization therefore cannot change when
+another fixture gains a fractional height. The coverage, copy, dialog, and
+dropdown tests still use the full page.
+
+Run `pnpm test:visual` from the repository root to validate the images. Generate
+approved baselines on Ubuntu 24.04, the CI runner used for screenshot comparison;
+system font fallbacks can render differently elsewhere. For an intentional visual
+change, push the branch and download CI's `visual-test-report` artifact with
+`gh run download <run-id> -n visual-test-report`. Inspect each `*-diff.png` in
+`test-results/visual`, then copy the matching `*-actual.png` into
+`apps/demo/visual/__screenshots__/polaris-<mode>/<fixture>.png`. Re-run CI to
+confirm the reviewed baselines. `pnpm test:visual:update` is suitable only when
+running on the same Ubuntu 24.04 renderer as CI.
 
 The browser suite discovers the package catalog rendered on the homepage and
 captures every linked showcase as `site-docs-<package>.png`. This provides a
