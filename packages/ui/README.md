@@ -35,16 +35,25 @@ pnpm add -D @stylexjs/unplugin
 
 ```ts
 // vite.config.ts
+import { foldworksLayers } from "@foldworks/ui/vite";
 import stylex from "@stylexjs/unplugin";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [stylex.vite({ runtimeInjection: false, useCSSLayers: true })],
+  plugins: [
+    stylex.vite({
+      runtimeInjection: false,
+      // Rank the Foldworks reset below StyleX in development and in builds.
+      useCSSLayers: { before: foldworksLayers },
+    }),
+  ],
 });
 ```
 
 The plugin automatically discovers installed packages that depend on
-`@stylexjs/stylex`, including the Foldworks packages.
+`@stylexjs/stylex`, including the Foldworks packages. `@foldworks/ui/vite` is a
+Node-only configuration entry; see [Cascade layers](#cascade-layers) for why
+`before` matters and [Testing views](#testing-views) for its Vitest plugin.
 
 Import the base contract and the themes your application supports:
 
@@ -53,6 +62,7 @@ Import the base contract and the themes your application supports:
 @import "@foldworks/ui/themes/shadcn.css";
 @import "@foldworks/ui/themes/blueprint.css";
 @import "@foldworks/ui/themes/office.css";
+@import "@foldworks/ui/themes/fluent2.css";
 @import "@foldworks/ui/themes/google.css";
 @import "@foldworks/ui/themes/apple.css";
 @import "@foldworks/ui/themes/polaris.css";
@@ -61,9 +71,9 @@ Import the base contract and the themes your application supports:
 For a Shadcn-only application, `@foldworks/ui/theme.css` is a convenient
 combined base-and-theme import.
 
-`base.css` also includes a modern browser reset in the low-priority
-`foldworks-reset` cascade layer. StyleX atomic styles and application CSS remain
-unlayered, so they always override the reset regardless of stylesheet order.
+`base.css` also includes a modern browser reset in the `foldworks-reset`
+cascade layer, ranked below the StyleX styles. See
+[Cascade layers](#cascade-layers).
 
 The theme contract exposes the familiar shadcn semantic roles (`--background`,
 `--foreground`, `--card`, `--primary`, `--muted`, `--accent`, `--destructive`,
@@ -80,7 +90,7 @@ Set `data-theme` and the resolved `data-mode` on a root ancestor:
 <html data-theme="shadcn" data-mode="dark" class="dark"></html>
 ```
 
-`data-theme` accepts `shadcn`, `blueprint`, `office`, `google`, `apple`, or
+`data-theme` accepts `shadcn`, `blueprint`, `office`, `fluent2`, `google`, `apple`, or
 `polaris`.
 `data-mode` accepts `light` or `dark`; the optional `.dark` class remains
 compatible with shadcn theme providers. CSS variables cascade, so the same
@@ -103,15 +113,115 @@ theme's `--primary`, `--card`, and `--border` tokens, while remaining distinct
 from success, warning, danger, and information status colors. The same roles
 are available through the exported StyleX `colors` constants.
 
+### Cascade layers
+
+`base.css` includes a modern browser reset in the `foldworks-reset` cascade
+layer. With `useCSSLayers`, StyleX puts its atomic styles in layers named
+`priority1`, `priority2`, and so on. A layer's rank comes from the first
+stylesheet in the document that names it, and later layers win, so
+`foldworks-reset` must be named before the StyleX layers.
+
+A production build puts the StyleX rules at the end of the application
+stylesheet, so the order is correct there. Under `vite dev`, the StyleX dev
+runtime injects its own `<style>` element, and Vite injects each stylesheet
+imported from JavaScript when its module runs. When the StyleX element arrives
+first, the reset outranks StyleX, and buttons and inputs lose their padding,
+borders, radius, and font size in development only. This happens, for example,
+when the stylesheet import sits behind a lazy `import()` or a dependency with
+top-level await.
+
+Passing `foldworksLayers` to `useCSSLayers.before`, as in the setup above, makes
+the StyleX stylesheet itself start with `@layer foldworks-reset, priority1, …`.
+The order is then the same whichever stylesheet loads first.
+
+If your StyleX integration doesn't accept `before`, load
+`@foldworks/ui/layers.css` ahead of any StyleX output. It declares the layer
+order and contains no rules. Import it at the top of the stylesheet that
+contains the StyleX output, or declare the order at the top of `<head>` in
+`index.html`:
+
+```html
+<style>
+  @layer foldworks-reset;
+</style>
+```
+
+Unlayered application CSS outranks every layer, including the StyleX layers.
+That is what you want for deliberate overrides, but an element-level rule
+written this way overrides Foldworks components (see
+[Control typography](#control-typography-and-the-reset)). Put element resets
+inside `@layer foldworks-reset { … }`, or in your own layer listed after the
+Foldworks layers: `useCSSLayers: { before: [...foldworksLayers, "app-base"] }`.
+A layer named only in application CSS has no fixed rank: it lands before or
+after the StyleX layers depending on stylesheet order, which differs between
+development and production.
+
+### Control typography and the reset
+
+The reset gives `button`, `input`, `optgroup`, `select`, and `textarea`
+`font: inherit`, `color: inherit`, and `letter-spacing: inherit`, so native
+controls use the theme font instead of the browser's control font. The rule has
+zero specificity and sits in the lowest layer. Every Foldworks typography
+setting wins over it: Button `size`, the sizes of Input, Textarea, NativeSelect,
+and the other form controls, and any font styles you pass through `sx` or
+`slotProps`.
+
+Don't repeat the rule in unlayered application CSS:
+
+```css
+/* Overrides Foldworks control typography. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+```
+
+Unlayered CSS outranks every StyleX layer, so this resets the font size, weight,
+and line height that components set on the control element itself. In the
+demo's UI kit it changes 168 of 220 controls: buttons drop from 13px/500 to the
+inherited 16px/400, and inputs and selects from 14px to 16px. `sx` font styles
+on those elements lose too. Typography set on a surrounding element is
+unaffected. That covers Text, Heading, Badge, Field labels and descriptions, and
+Tag and Stepper actions, which inherit their font from their container. If your
+application needs the rule, put it in `@layer foldworks-reset`, as described
+above.
+
 ## Theme gallery
 
 In the demo, select a preset in the **Theme** menu. Shadcn is the neutral
 default with crisp monochrome surfaces; Blueprint is dense and
-enterprise-oriented; Office follows Fluent-like geometry; Google uses tonal
-Material-like surfaces; Apple uses layered system grays and generous corners;
-and Polaris follows Shopify's Polaris 2 admin palette, pill actions, and soft
-elevation. Compare the UI kit, Workers workbench, and workflow builder using
-the same controls.
+enterprise-oriented; Office follows Fluent-like geometry; Fluent 2 maps the
+Microsoft web light and dark color, font family, radius, shadow, and motion
+tokens to Foldworks roles; Google uses tonal Material-like surfaces; Apple uses
+layered system grays and generous corners; and Polaris follows Shopify's Polaris
+2 admin palette, pill actions, and soft elevation. Compare the UI kit, Workers
+workbench, and workflow builder using the same controls.
+
+The Fluent 2 palette maps values from Microsoft's
+[`@fluentui/tokens` web themes](https://github.com/microsoft/fluentui/tree/master/packages/tokens/src/themes/web)
+to Foldworks semantic roles. The CSS theme does not load Fluent React or its
+runtime; it keeps the Foldkit components and their existing behavior. Fluent
+spacing and typography scales are not yet fully themeable because several
+component recipes still use fixed StyleX values.
+
+### Fluent 2 component coverage
+
+The current catalog already covers Fluent's core buttons, form controls,
+dialogs, navigation, tree, toolbar, tabs, and feedback. The most useful
+Fluent-specific additions are:
+
+| Priority | Primitive               | Reason                                                                                             |
+| -------- | ----------------------- | -------------------------------------------------------------------------------------------------- |
+| High     | AvatarGroup and Persona | Avatar exists, but grouped presence and identity details need shared overflow and status behavior. |
+| High     | SearchBox               | InputGroup can render a search field, but it lacks a dedicated clear action and search semantics.  |
+| Medium   | InfoLabel               | Field and Tooltip exist, but the paired help trigger and popover behavior is not packaged.         |
+| Medium   | Rating                  | There is no accessible read-only and interactive star rating control.                              |
+
+MessageBar can initially use `Alert` or `StatusMessage`; TagPicker behavior is
+largely covered by `TokenField`. Those are lower-priority Fluent wrappers until
+their distinct layouts or APIs are needed.
 
 The shared recipes expose shape and elevation variables so presets can alter
 more than color. Their base values preserve component behavior:
@@ -130,8 +240,9 @@ more than color. Their base values preserve component behavior:
 
 Button typography follows the shared type scale: `xs` and `sm` use 12px,
 the default `md` uses 13px, and `lg` uses 14px, all at weight 500. Heights
-remain 24, 28, 32, and 36px respectively. Keep application font resets in a
-low-priority cascade layer so they do not override component typography.
+remain 24, 28, 32, and 36px respectively. Keep application font resets out of
+unlayered CSS so they do not override component typography; see
+[Control typography](#control-typography-and-the-reset).
 
 Primitives follow Foldkit's `view(config, h)` convention:
 
@@ -266,24 +377,71 @@ from assistive technology by default, and a `label` makes a standalone icon an
 accessible image. Buttons render their icons decoratively and keep their
 accessible name on the button label or `ariaLabel`.
 
-StyleX consumers can import semantic token groups directly. These constants
-resolve to the public CSS variables at runtime:
+### Tokens in application styles
+
+Application StyleX should use the Foldworks tokens instead of literal colors,
+spacing, and radii. Themes, dark mode, and product overrides then restyle the
+application's own surfaces along with the components, and custom layouts match
+component density. Adopting the tokens is the prerequisite for theming an
+application.
+
+Import the token groups from `@foldworks/ui/tokens.stylex`. The StyleX compiler
+only resolves constants imported from `.stylex` modules. The same names
+imported from the `@foldworks/ui` root fail to compile inside `stylex.create`
+with "Could not resolve the path to the imported file"; the root export is for
+reading the values at runtime.
 
 ```ts
 import * as stylex from "@stylexjs/stylex";
-import { colors, radii, space, typography } from "@foldworks/ui";
+import { colors, radii, space, typography } from "@foldworks/ui/tokens.stylex";
 
 const styles = stylex.create({
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radii.lg,
-    color: colors.foreground,
+    color: colors.surfaceForeground,
     gap: space.md,
     fontFamily: typography.fontFamily,
+    fontSize: typography.sizeMd,
+  },
+  gapRow: {
+    backgroundColor: colors.warningSurface,
+    color: colors.warning,
   },
 });
 ```
+
+| Group        | Values                                                                                                                                                                              | Themed              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `colors`     | Semantic roles such as `surface`, `foreground`, `foregroundMuted`, `border`, and `primary`; status pairs such as `success` and `successSurface`; `selection` and `dropTarget` roles | Yes, CSS variables  |
+| `space`      | `xxs` 2px, `xs` 4px, `sm` 8px, `md` 12px, `lg` 16px, `xl` 24px, `xxl` 32px                                                                                                          | No, fixed constants |
+| `radii`      | `sm`, `md`, and `lg` from the theme's `--radius` scale; `full`                                                                                                                      | Yes, except `full`  |
+| `typography` | `fontFamily`; `sizeXs` 11px through `sizeXl` 16px; `weightMedium`, `weightSemibold`, `weightBold`; `lineHeightTight`, `lineHeightNormal`                                            | `fontFamily` only   |
+
+`shadows`, `motion`, `sizes`, `breakpoints`, and `contentWidths` follow the same
+pattern.
+
+When converting existing styles:
+
+- Choose colors by role, not by the closest match. Body text is `foreground`,
+  secondary text is `foregroundMuted`, hairlines are `border`, and panels are
+  `surface` with `surfaceForeground`. Status tints use the status pairs, for
+  example `dangerSurface` behind `danger` text.
+- Round spacing to the nearest `space` step, and font sizes to the nearest
+  `typography` size. For headings and body copy, prefer the `Text` and
+  `Heading` components.
+- Leave literals for values the scales don't cover, such as a fixed column
+  width or a display-size heading.
+- In global CSS, use the variables the color and radius tokens resolve to, such
+  as `var(--foreground)`, `var(--border)`, and `var(--radius-lg)`. `space` and
+  the `typography` sizes are plain values with no CSS variable, so themes don't
+  change them.
+
+Use matching foreground roles when choosing a surface: `surfaceForeground` for
+`surface`, `popoverForeground` for `popover`, `secondaryForeground` for
+`surfaceSubtle`, and `accentForeground` for `surfaceHover`. These use the existing
+theme variables and allow custom card and overlay palettes to differ from the canvas.
 
 ### Composition and slot styling
 
@@ -320,10 +478,70 @@ accessibility engines. A repeated slot such as a tab `trigger` applies to every
 instance. `sx` is the only StyleX override property; the former `style` alias is
 no longer accepted.
 
-Use matching foreground roles when choosing a surface: `surfaceForeground` for
-`surface`, `popoverForeground` for `popover`, `secondaryForeground` for
-`surfaceSubtle`, and `accentForeground` for `surfaceHover`. These use the existing
-theme variables and allow custom card and overlay palettes to differ from the canvas.
+## Testing views
+
+`stylex.create` throws unless the StyleX compiler has transformed the file, and
+Vitest doesn't run the compiler. You don't need to split views from update logic
+to test them. Add the Foldworks test plugin instead:
+
+```ts
+// vitest.config.ts
+import { foldworksStylexTest } from "@foldworks/ui/vite";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({ plugins: [foldworksStylexTest()] });
+```
+
+The plugin aliases `@stylexjs/stylex` to `@foldworks/ui/testing/stylex`, a
+runtime stand-in for the compiler's output. It also tells Vitest to process the
+installed `@foldworks/*` packages through Vite so the alias reaches them;
+Vitest otherwise loads installed packages directly with Node. If another
+installed package imports StyleX, add it with
+`foldworksStylexTest({ inline: ["@acme/design-system"] })`. When one Vite
+config serves both the app and its tests, use the plugin in test mode only, in
+place of the StyleX compiler plugin:
+`plugins: mode === "test" ? [foldworksStylexTest()] : [stylex.vite(...)]`.
+
+With the stand-in, each style's class name is its key, so a test can check
+which styles a view applied:
+
+```ts
+// status.ts
+import { sxAttrs } from "@foldworks/ui";
+import { colors, radii, space } from "@foldworks/ui/tokens.stylex";
+import * as stylex from "@stylexjs/stylex";
+import type { HtmlBuilder } from "foldkit/html";
+
+const styles = stylex.create({
+  pill: { borderRadius: radii.full, paddingInline: space.sm },
+  failing: { backgroundColor: colors.dangerSurface, color: colors.danger },
+});
+
+export const status = <Message>(failing: boolean, h: HtmlBuilder<Message>) =>
+  h.span(
+    [...sxAttrs(h, styles.pill, failing && styles.failing)],
+    [failing ? "Failing" : "Passing"],
+  );
+
+// status.test.ts
+import { Option } from "effect";
+import { inertHtml as h } from "foldkit/html";
+import { Scene } from "foldkit/test";
+import { expect, it } from "vitest";
+
+import { status } from "./status";
+
+it("marks failing journeys", () => {
+  const html = status(true, h);
+  if (html === null) throw new Error("Expected a status pill");
+  expect(Scene.attr(html, "class")).toEqual(Option.some("pill failing"));
+});
+```
+
+Dynamic styles also use their key as the class name, and their primitive values
+become inline styles. Tokens resolve to their CSS variable or constant values.
+The stand-in doesn't generate CSS, so check layout and appearance in a browser
+test. The demo's Playwright visual tests do this.
 
 ## Boundaries
 

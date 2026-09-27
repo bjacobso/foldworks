@@ -104,6 +104,16 @@
   width: 100%;
 }
 
+.fk-data-grid__header-cell[data-align="center"] .fk-data-grid__header-button {
+  justify-content: center;
+  text-align: center;
+}
+
+.fk-data-grid__header-cell[data-align="end"] .fk-data-grid__header-button {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
 .fk-data-grid__header-button:focus-visible {
   box-shadow: inset 0 0 0 2px var(--data-grid-accent);
 }
@@ -160,7 +170,7 @@
 
 .fk-data-grid__reorder-button:disabled {
   cursor: default;
-  opacity: .35;
+  opacity: 0.35;
 }
 
 .fk-data-grid__sort {
@@ -205,6 +215,60 @@
   background: var(--data-grid-hover);
 }
 
+/* Row state. Pinned cells are opaque, so they read the row surface too. */
+.fk-data-grid__row[data-tone="info"] {
+  --data-grid-row-surface: var(--foldworks-ui-info-surface, #eef4ff);
+  --data-grid-row-marker: var(--foldworks-ui-info, #2563eb);
+}
+
+.fk-data-grid__row[data-tone="success"] {
+  --data-grid-row-surface: var(--foldworks-ui-success-surface, #ecfdf3);
+  --data-grid-row-marker: var(--foldworks-ui-success, #16803c);
+}
+
+.fk-data-grid__row[data-tone="warning"] {
+  --data-grid-row-surface: var(--foldworks-ui-warning-surface, #fffae6);
+  --data-grid-row-marker: var(--foldworks-ui-warning, #a15c07);
+}
+
+.fk-data-grid__row[data-tone="danger"] {
+  --data-grid-row-surface: var(--foldworks-ui-danger-surface, #fef3f2);
+  --data-grid-row-marker: var(--foldworks-ui-danger, #b42318);
+}
+
+.fk-data-grid__row[data-row-selected="true"] {
+  --data-grid-row-surface: var(--data-grid-selected);
+  --data-grid-row-marker: var(--data-grid-accent);
+}
+
+.fk-data-grid__row:not([data-tone="neutral"]),
+.fk-data-grid__row[data-row-selected="true"] {
+  background: var(--data-grid-row-surface);
+}
+
+.fk-data-grid__row:not([data-tone="neutral"]) > :first-child::before,
+.fk-data-grid__row[data-row-selected="true"] > :first-child::before {
+  background: var(--data-grid-row-marker);
+  content: "";
+  inset-block: 0;
+  inset-inline-start: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 3px;
+}
+
+.fk-data-grid__row > .fk-data-grid__cell:first-child:not([data-pinned="start"]) {
+  position: relative;
+}
+
+.fk-data-grid__row[data-clickable="true"] {
+  cursor: pointer;
+}
+
+.fk-data-grid__row[data-group="true"] {
+  font-weight: 650;
+}
+
 .fk-data-grid__virtual-spacer {
   pointer-events: none;
 }
@@ -224,7 +288,7 @@
 
 .fk-data-grid__cell[data-pinned="start"],
 .fk-data-grid__cell[data-pinned="end"] {
-  background: var(--foldworks-ui-surface, #fff);
+  background: var(--data-grid-row-surface, var(--foldworks-ui-surface, #fff));
   position: sticky;
   z-index: 1;
 }
@@ -239,7 +303,10 @@
   box-shadow: -5px 0 7px -6px var(--data-grid-muted);
 }
 
-.fk-data-grid__row:hover .fk-data-grid__cell[data-pinned]:not([data-pinned="false"]):not([data-selected="true"]):not([data-dirty="true"]) {
+.fk-data-grid__row[data-tone="neutral"]:not([data-row-selected="true"]):hover
+  .fk-data-grid__cell[data-pinned]:not([data-pinned="false"]):not([data-selected="true"]):not(
+    [data-dirty="true"]
+  ) {
   background: var(--data-grid-hover);
 }
 
@@ -261,6 +328,77 @@
 
 .fk-data-grid__cell:focus-visible {
   box-shadow: inset 0 0 0 2px var(--data-grid-accent);
+}
+
+.fk-data-grid__group {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fk-data-grid__group-toggle,
+.fk-data-grid__group-spacer {
+  flex: none;
+  height: 20px;
+  width: 20px;
+}
+
+.fk-data-grid__group-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--foldworks-ui-radius-sm, 4px);
+  color: var(--data-grid-muted);
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.fk-data-grid__group-toggle:hover {
+  background: var(--foldworks-ui-surface-hover, #f3f3f4);
+  color: var(--data-grid-text);
+}
+
+.fk-data-grid__group-toggle svg {
+  transition: transform var(--foldworks-ui-duration-fast, 120ms) ease;
+}
+
+.fk-data-grid__group-toggle[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.fk-data-grid__group-content {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fk-data-grid__cell[data-has-details="true"] {
+  cursor: help;
+}
+
+.fk-data-grid__row[data-clickable="true"] .fk-data-grid__cell[data-has-details="true"] {
+  cursor: pointer;
+}
+
+/* One shared, stateless popover for cell details, placed in the top layer. */
+.fk-data-grid__hover-details {
+  background: var(--foldworks-ui-surface, #fff);
+  border: 1px solid var(--data-grid-border-strong);
+  border-radius: var(--foldworks-ui-radius-md, 6px);
+  box-shadow: var(--foldworks-ui-shadow-float, 0 12px 32px rgb(0 0 0 / 16%));
+  color: var(--data-grid-text);
+  font-size: 12px;
+  inset: auto;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 320px;
+  padding: 7px 10px;
+  position: fixed;
+  white-space: pre-line;
 }
 
 .fk-data-grid__empty {
@@ -296,7 +434,9 @@
   gap: 8px;
 }
 
-.fk-data-grid__edit-toolbar [role="status"] { margin-right: auto; }
+.fk-data-grid__edit-toolbar [role="status"] {
+  margin-right: auto;
+}
 
 .fk-data-grid__edit-button {
   background: var(--foldworks-ui-surface, #fff);
@@ -308,13 +448,30 @@
   padding: 6px 10px;
 }
 
-.fk-data-grid__edit-button:disabled { cursor: default; opacity: .5; }
-.fk-data-grid__edit-button:focus-visible { outline: 2px solid var(--foldworks-ui-selection-foreground, #24906a); outline-offset: 2px; }
+.fk-data-grid__edit-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.fk-data-grid__edit-button:focus-visible {
+  outline: 2px solid var(--foldworks-ui-selection-foreground, #24906a);
+  outline-offset: 2px;
+}
 
-.fk-data-grid__cell[data-dirty="true"] { background: var(--data-grid-selected); }
-.fk-data-grid__dirty-marker { color: var(--data-grid-accent); margin-left: 8px; font-weight: bold; }
-.fk-data-grid__cell[data-error="true"] { box-shadow: inset 0 -2px var(--foldworks-ui-danger, #b42318); }
-.fk-data-grid__edit-error { color: var(--foldworks-ui-danger, #b42318); margin: 8px 0 0; }
+.fk-data-grid__cell[data-dirty="true"] {
+  background: var(--data-grid-selected);
+}
+.fk-data-grid__dirty-marker {
+  color: var(--data-grid-accent);
+  margin-left: 8px;
+  font-weight: bold;
+}
+.fk-data-grid__cell[data-error="true"] {
+  box-shadow: inset 0 -2px var(--foldworks-ui-danger, #b42318);
+}
+.fk-data-grid__edit-error {
+  color: var(--foldworks-ui-danger, #b42318);
+  margin: 8px 0 0;
+}
 
 .fk-data-grid__editor {
   background: var(--foldworks-ui-surface, #fff);
@@ -327,5 +484,14 @@
   width: 100%;
 }
 
-.fk-data-grid__editor[type="checkbox"] { width: auto; }
-.fk-data-grid__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.fk-data-grid__editor[type="checkbox"] {
+  width: auto;
+}
+.fk-data-grid__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

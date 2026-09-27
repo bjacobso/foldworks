@@ -1,0 +1,6 @@
+/* Declares the Foldworks cascade layers without styles. A layer's rank comes
+ * from the first stylesheet in the document that names it, so load this before
+ * StyleX output when the StyleX plugin cannot declare the layers itself (see
+ * "Cascade layers" in the README). Keep in sync with `foldworksLayers` in
+ * vite.ts. */
+@layer foldworks-reset;

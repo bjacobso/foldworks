@@ -1,10 +1,12 @@
 import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
 import { Match } from "effect";
+import * as stylex from "@stylexjs/stylex";
 
 import {
   Blocks,
   Bot,
   Braces,
+  FileSearch,
   FileText,
   FolderGit2,
   FileDiff,
@@ -28,9 +30,11 @@ import { view as workbenchView } from "../workbench/view";
 import { contacts } from "../data-table/contacts";
 import { view as dataTableView } from "../data-table/view";
 import { view as dataGridView } from "../data-grid/demo";
+import { countRows, coverageRows } from "../data-grid/coverage-rows";
 import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
 import { view as homeView } from "../home/view";
+import { view as pdfViewerView } from "../pdf-viewer/view";
 import { view as queryBuilderView } from "../query-builder/view";
 import { statechartSummary, view as statechartView } from "../statechart/view";
 import { view as uiKitView } from "../ui-kit/view";
@@ -39,7 +43,7 @@ import {
   editorRouter,
   agentRouter,
   dataTablePath,
-  dataGridRouter,
+  dataGridPath,
   codeEditorRouter,
   codebaseRouter,
   diffViewerRouter,
@@ -48,6 +52,7 @@ import {
   formBuilderPath,
   homeRouter,
   pdfAnnotatorRouter,
+  pdfViewerRouter,
   queryBuilderRouter,
   statechartRouter,
   uiKitRouter,
@@ -58,6 +63,10 @@ import { className, styles } from "../workflow/styles";
 import { view as workflowEditorView } from "../workflow/view";
 import { Message } from "./message";
 import type { Model } from "./model";
+
+const toolbarSelectStyles = stylex.create({
+  theme: { width: "167px" },
+});
 
 const activeAnnouncement = (model: Model): string => {
   const demo = demoFromRoute(model.route);
@@ -71,13 +80,15 @@ const activeAnnouncement = (model: Model): string => {
           ? model.queryBuilderDemo.announcement
           : demo === "PdfAnnotator"
             ? model.pdfAnnotator.announcement
-            : demo === "UiKit"
-              ? model.uiKit.announcement
-              : demo === "Agent"
-                ? ""
-                : demo === "DataTable"
-                  ? model.dataTableDemo.announcement
-                  : model.announcement;
+            : demo === "PdfViewer"
+              ? ""
+              : demo === "UiKit"
+                ? model.uiKit.announcement
+                : demo === "Agent"
+                  ? ""
+                  : demo === "DataTable"
+                    ? model.dataTableDemo.announcement
+                    : model.announcement;
 };
 
 const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
@@ -171,7 +182,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
         {
           id: "data-grid",
           label: "Data grid",
-          href: dataGridRouter(),
+          href: dataGridPath(),
           icon: Table2,
           isActive: demo === "DataGrid",
         },
@@ -209,6 +220,13 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
           href: pdfAnnotatorRouter(),
           icon: FileText,
           isActive: demo === "PdfAnnotator",
+        },
+        {
+          id: "pdf-viewer",
+          label: "PDF viewer",
+          href: pdfViewerRouter(),
+          icon: FileSearch,
+          isActive: demo === "PdfViewer",
         },
       ],
     },
@@ -282,16 +300,20 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                     : demo === "DataTable"
                       ? "People"
                       : demo === "DataGrid"
-                        ? "Headcount worksheet"
+                        ? model.dataGridDemo.example === "Coverage"
+                          ? "Coverage matrix"
+                          : "Headcount worksheet"
                         : demo === "FormBuilder"
                           ? model.formEditor.document.title
                           : demo === "QueryBuilder"
                             ? "Employee query"
                             : demo === "PdfAnnotator"
                               ? "PDF annotator"
-                              : demo === "Home"
-                                ? "Foldworks"
-                                : "@foldworks/ui";
+                              : demo === "PdfViewer"
+                                ? "Onboarding packet review"
+                                : demo === "Home"
+                                  ? "Foldworks"
+                                  : "@foldworks/ui";
   const description =
     demo === "Editor"
       ? "Native Foldkit editing · Markdown · Custom blocks"
@@ -312,16 +334,20 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                     : demo === "DataTable"
                       ? `${contacts.length} people · resource-first CRUD table`
                       : demo === "DataGrid"
-                        ? `${people.length} rows · cell editing · spreadsheet controls`
+                        ? model.dataGridDemo.example === "Coverage"
+                          ? `${countRows(coverageRows).toLocaleString("en-US")} rows · row groups · gap highlighting`
+                          : `${people.length} rows · cell editing · spreadsheet controls`
                         : demo === "FormBuilder"
                           ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
                           : demo === "QueryBuilder"
                             ? "Configured attributes · recursive groups · live validation"
                             : demo === "PdfAnnotator"
                               ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-                              : demo === "Home"
-                                ? "Polished application primitives for Foldkit and StyleX"
-                                : "61 application primitives · Foldkit behavior · StyleX";
+                              : demo === "PdfViewer"
+                                ? "Read-only pages · overlay hotspots · crop boxes and rotation"
+                                : demo === "Home"
+                                  ? "Polished application primitives for Foldkit and StyleX"
+                                  : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view(
     {
       title,
@@ -355,7 +381,19 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ),
                             ]
                           : demo === "DataGrid"
-                            ? [Badge.view({ label: "Excel-like grid", tone: "info", dot: true }, h)]
+                            ? [
+                                Badge.view(
+                                  {
+                                    label:
+                                      model.dataGridDemo.example === "Coverage"
+                                        ? "Virtualized row groups"
+                                        : "Excel-like grid",
+                                    tone: "info",
+                                    dot: true,
+                                  },
+                                  h,
+                                ),
+                              ]
                             : demo === "QueryBuilder"
                               ? [
                                   Badge.view(
@@ -374,23 +412,31 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                       h,
                                     ),
                                   ]
-                                : demo === "Home"
+                                : demo === "PdfViewer"
                                   ? [
                                       Badge.view(
-                                        { label: "17 packages", tone: "info", dot: true },
+                                        { label: "Read-only viewer", tone: "info", dot: true },
                                         h,
                                       ),
-                                      Badge.view({ label: "Open source" }, h),
                                     ]
-                                  : [
-                                      Badge.view(
-                                        { label: "61 primitives", tone: "info", dot: true },
-                                        h,
-                                      ),
-                                      Badge.view({ label: "StyleX + Foldkit" }, h),
-                                    ]),
+                                  : demo === "Home"
+                                    ? [
+                                        Badge.view(
+                                          { label: "17 packages", tone: "info", dot: true },
+                                          h,
+                                        ),
+                                        Badge.view({ label: "Open source" }, h),
+                                      ]
+                                    : [
+                                        Badge.view(
+                                          { label: "61 primitives", tone: "info", dot: true },
+                                          h,
+                                        ),
+                                        Badge.view({ label: "StyleX + Foldkit" }, h),
+                                      ]),
         Select.control(
           {
+            sx: toolbarSelectStyles.theme,
             value: model.themeName,
             ariaLabel: "Theme",
             onChange: (name) =>
@@ -401,6 +447,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
               { value: "Shadcn", label: "shadcn/ui" },
               { value: "Blueprint", label: "Palantir Blueprint" },
               { value: "Office", label: "Microsoft Office" },
+              { value: "Fluent2", label: "Microsoft Fluent 2" },
               { value: "Google", label: "Google" },
               { value: "Apple", label: "Apple" },
               { value: "Polaris", label: "Shopify Polaris 2" },
@@ -527,6 +574,14 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
     });
   }
+  if (demo === "PdfViewer") {
+    return h.submodel({
+      slotId: "pdf-viewer-content",
+      model: model.pdfViewerDemo,
+      view: pdfViewerView,
+      toParentMessage: (message) => Message.GotPdfViewerDemoMessage({ message }),
+    });
+  }
   return h.submodel({
     slotId: "ui-kit-content",
     model: model.uiKit,
@@ -549,6 +604,7 @@ const documentTitle = (demo: Demo): string =>
     Match.when("FormBuilder", () => "Form builder · Foldworks"),
     Match.when("QueryBuilder", () => "Query builder · Foldworks"),
     Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
+    Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
     Match.when("UiKit", () => "UI components · Foldworks"),
     Match.when("Workflow", () => "Workflow · Foldworks"),
     Match.when("Statechart", () => "Statechart · Foldworks"),

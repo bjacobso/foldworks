@@ -48,10 +48,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@foldworks/pdf": "workspace:*",
     "@foldworks/ui": "workspace:*",
     "@lucide/icons": "catalog:",
-    "pdf-lib": "catalog:",
-    "pdfjs-dist": "catalog:"
+    "pdf-lib": "catalog:"
   },
   "devDependencies": {
     "@foldkit/ui": "catalog:",

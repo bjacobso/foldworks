@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { build, preview, type PreviewServer } from "vite";
 
 import { workbenchScenarios } from "./workbench.scenarios";
-import { dataGridEditingScenarios } from "./data-grid.scenarios";
+import { dataGridCoverageScenarios, dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
 import { workspaceScenarios } from "./workspace.scenarios";
@@ -15,6 +15,7 @@ import { treeScenarios } from "./tree.scenarios";
 import { agentScenarios } from "./agent.scenarios";
 import { packageDemoScreenshotScenarios } from "./package-demo.scenarios";
 import { diffViewerScenarios } from "./diff-viewer.scenarios";
+import { pdfViewerScenarios } from "./pdf-viewer.scenarios";
 import { statechartScenarios } from "./statechart.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
@@ -139,6 +140,7 @@ describe.sequential("structured workflow builder", () => {
         "Workflow builder",
         "Statechart editor",
         "PDF annotator",
+        "PDF viewer",
       ]);
     await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
     await expect.poll(() => sidebar.getByText("Design system", { exact: true }).count()).toBe(0);
@@ -1560,6 +1562,7 @@ describe.sequential("structured workflow builder", () => {
 
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
+  dataGridCoverageScenarios(() => page, appUrl, screenshot);
   statefulUiScenarios(() => page, appUrl, screenshot);
   desktopScenarios(() => page, appUrl);
   nativeEditorScenarios(() => page, appUrl, screenshot);
@@ -1567,6 +1570,7 @@ describe.sequential("structured workflow builder", () => {
   treeScenarios(() => page, appUrl);
   agentScenarios(() => page, appUrl, screenshot);
   diffViewerScenarios(() => page, appUrl, screenshot);
+  pdfViewerScenarios(() => page, appUrl, screenshot);
   statechartScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

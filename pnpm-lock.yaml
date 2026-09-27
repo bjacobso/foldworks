@@ -140,9 +140,15 @@ importers:
       '@foldworks/history':
         specifier: workspace:*
         version: link:../../packages/history
+      '@foldworks/pdf':
+        specifier: workspace:*
+        version: link:../../packages/pdf
       '@foldworks/pdf-annotator':
         specifier: workspace:*
         version: link:../../packages/pdf-annotator
+      '@foldworks/pdf-viewer':
+        specifier: workspace:*
+        version: link:../../packages/pdf-viewer
       '@foldworks/query-builder':
         specifier: workspace:*
         version: link:../../packages/query-builder
@@ -167,6 +173,9 @@ importers:
       foldkit:
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)
+      pdf-lib:
+        specifier: 'catalog:'
+        version: 1.17.1
     devDependencies:
       '@foldkit/devtools':
         specifier: 'catalog:'
@@ -421,8 +430,30 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
+  packages/pdf:
+    dependencies:
+      pdfjs-dist:
+        specifier: 'catalog:'
+        version: 6.3.289
+    devDependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
   packages/pdf-annotator:
     dependencies:
+      '@foldworks/pdf':
+        specifier: workspace:*
+        version: link:../pdf
       '@foldworks/ui':
         specifier: workspace:*
         version: link:../ui
@@ -432,13 +463,35 @@ importers:
       pdf-lib:
         specifier: 'catalog:'
         version: 1.17.1
-      pdfjs-dist:
-        specifier: 'catalog:'
-        version: 6.3.289
     devDependencies:
       '@foldkit/ui':
         specifier: 'catalog:'
         version: 0.156.0(effect@4.0.0-rc.112)(foldkit@0.156.0(effect@4.0.0-rc.112))
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.112
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.156.0(effect@4.0.0-rc.112)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
+  packages/pdf-viewer:
+    dependencies:
+      '@foldworks/pdf':
+        specifier: workspace:*
+        version: link:../pdf
+      '@foldworks/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@lucide/icons':
+        specifier: 'catalog:'
+        version: 1.40.0
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.112

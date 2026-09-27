@@ -1,0 +1,129 @@
+/* Fluent 2 web token mapping (Microsoft @fluentui/tokens@1.0.0-alpha.24 webLightTheme/webDarkTheme).
+ * Foldworks semantic roles intentionally stay stable across themes. */
+[data-theme="fluent2"] {
+  color-scheme: light;
+  --background: #fafafa; /* colorNeutralBackground2 */
+  --foreground: #242424; /* colorNeutralForeground1 */
+  --card: #ffffff; /* colorNeutralBackground1 */
+  --card-foreground: #242424;
+  --popover: #ffffff;
+  --popover-foreground: #242424;
+  --primary: #0f6cbd; /* colorBrandBackground */
+  --primary-hover: #115ea3; /* colorBrandBackgroundHover */
+  --primary-foreground: #ffffff; /* colorNeutralForegroundOnBrand */
+  --secondary: #f0f0f0; /* colorNeutralBackground4 */
+  --secondary-foreground: #242424;
+  --muted: #f5f5f5; /* colorNeutralBackground3 */
+  --muted-foreground: #616161; /* colorNeutralForeground3 */
+  --accent: #ebf3fc; /* colorBrandBackground2 */
+  --accent-foreground: #115ea3; /* colorBrandForeground2 */
+  --destructive: #b10e1c; /* colorStatusDangerForeground1 */
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #fdf3f4; /* colorStatusDangerBackground1 */
+  --destructive-border: #eeacb2; /* colorStatusDangerBorder1 */
+  --border: #e0e0e0; /* colorNeutralStroke2 */
+  --input: #d1d1d1; /* colorNeutralStroke1 */
+  --ring: #0f6cbd; /* colorBrandStroke1 */
+  --chart-1: #0f6cbd;
+  --chart-2: #0e700e; /* colorStatusSuccessForeground1 */
+  --chart-3: #bc4b09; /* colorStatusWarningForeground1 */
+  --chart-4: #341a51; /* colorPalettePurpleForeground2 */
+  --chart-5: #6b0043; /* colorPaletteMagentaForeground2 */
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: #242424;
+  --sidebar-primary: #0f6cbd;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebf3fc;
+  --sidebar-accent-foreground: #115ea3;
+  --sidebar-border: #e0e0e0;
+  --sidebar-ring: #0f6cbd;
+
+  --foldworks-ui-success: #0e700e;
+  --foldworks-ui-success-surface: #f1faf1;
+  --foldworks-ui-warning: #bc4b09;
+  --foldworks-ui-warning-surface: #fff9f5;
+  --foldworks-ui-info: #0f6cbd;
+  --foldworks-ui-info-surface: #ebf3fc;
+
+  --font-sans:
+    "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto,
+    "Helvetica Neue", sans-serif;
+  --radius: 6px; /* borderRadiusLarge */
+  --radius-sm: 2px; /* borderRadiusSmall */
+  --radius-md: 4px; /* borderRadiusMedium */
+  --radius-lg: 6px;
+  --radius-xl: 8px; /* borderRadiusXLarge */
+  --radius-button: 4px;
+  --radius-button-sm: 4px;
+  --radius-badge: 4px;
+  --radius-panel: 8px;
+  --button-outline-surface: #ffffff;
+  --shadow-sm: 0 0 2px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 14%); /* shadow2 */
+  --shadow-control: var(--shadow-sm);
+  --shadow-interactive: 0 0 2px rgb(0 0 0 / 12%), 0 2px 4px rgb(0 0 0 / 14%); /* shadow4 */
+  --shadow-card: var(--shadow-interactive);
+  --shadow-panel: var(--shadow-interactive);
+  --shadow-float: 0 0 2px rgb(0 0 0 / 12%), 0 8px 16px rgb(0 0 0 / 14%); /* shadow16 */
+  --shadow-sheet: 0 0 8px rgb(0 0 0 / 12%), 0 14px 28px rgb(0 0 0 / 14%); /* shadow28 */
+  --duration-fast: 150ms; /* durationFast */
+  --duration-normal: 200ms; /* durationNormal */
+  --duration-slow: 300ms; /* durationSlow */
+  --ease-out: cubic-bezier(0.1, 0.9, 0.2, 1); /* curveDecelerateMax */
+  --spring: cubic-bezier(0.33, 0, 0.67, 1); /* curveEasyEase */
+}
+
+[data-theme="fluent2"][data-mode="dark"],
+[data-theme="fluent2"].dark {
+  color-scheme: dark;
+  --background: #1f1f1f;
+  --foreground: #ffffff;
+  --card: #292929;
+  --card-foreground: #ffffff;
+  --popover: #292929;
+  --popover-foreground: #ffffff;
+  --primary: #115ea3;
+  --primary-hover: #0f6cbd;
+  --primary-foreground: #ffffff;
+  --secondary: #333333;
+  --secondary-foreground: #ffffff;
+  --muted: #141414;
+  --muted-foreground: #adadad;
+  --accent: #082338;
+  --accent-foreground: #62abf5;
+  --destructive: #dc626d;
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #3b0509;
+  --destructive-border: #c50f1f;
+  --border: #525252;
+  --input: #666666;
+  --ring: #479ef5;
+  --chart-1: #479ef5;
+  --chart-2: #54b054;
+  --chart-3: #faa06b;
+  --chart-4: #c6b1de;
+  --chart-5: #eca5d1;
+  --sidebar: #292929;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #115ea3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #082338;
+  --sidebar-accent-foreground: #62abf5;
+  --sidebar-border: #525252;
+  --sidebar-ring: #479ef5;
+
+  --foldworks-ui-success: #54b054;
+  --foldworks-ui-success-surface: #052505;
+  --foldworks-ui-warning: #faa06b;
+  --foldworks-ui-warning-surface: #4a1e04;
+  --foldworks-ui-info: #479ef5;
+  --foldworks-ui-info-surface: #082338;
+
+  --button-outline-surface: #292929;
+  --shadow-sm: 0 0 2px rgb(0 0 0 / 24%), 0 1px 2px rgb(0 0 0 / 28%);
+  --shadow-control: var(--shadow-sm);
+  --shadow-interactive: 0 0 2px rgb(0 0 0 / 24%), 0 2px 4px rgb(0 0 0 / 28%);
+  --shadow-card: var(--shadow-interactive);
+  --shadow-panel: var(--shadow-interactive);
+  --shadow-float: 0 0 2px rgb(0 0 0 / 24%), 0 8px 16px rgb(0 0 0 / 28%);
+  --shadow-sheet: 0 0 8px rgb(0 0 0 / 24%), 0 14px 28px rgb(0 0 0 / 28%);
+}
