@@ -92,6 +92,10 @@ fetch_verified() {
 
 provision() {
   echo "Provisioning Ubuntu 24.04 visual rootfs in $ROOTFS" >&2
+  if [[ "$ROOTFS" != */* || "$(realpath -m "$ROOTFS")" == / ]]; then
+    echo "Refusing to provision into '$ROOTFS'." >&2
+    exit 1
+  fi
   unmount_rootfs
   sudo rm -rf --one-file-system "$ROOTFS"
   sudo mkdir -p "$ROOTFS"
