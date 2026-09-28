@@ -34,8 +34,8 @@ jobs:
         run: |
           mkdir -p probe-out
           bash apps/demo/visual/probe/environment.sh | tee probe-out/environment.txt
+          echo "Renderer font fingerprint: $(bash apps/demo/visual/ubuntu-noble.sh --fingerprint --host)" | tee -a probe-out/environment.txt
       - name: Compare against committed baselines
-        continue-on-error: true
         run: pnpm --filter @foldworks/demo test:visual
       - name: Capture every screenshot twice
         run: |
@@ -43,6 +43,10 @@ jobs:
           cp -r apps/demo/visual/__screenshots__ probe-out/run1
           pnpm --filter @foldworks/demo test:visual --update-snapshots=all
           cp -r apps/demo/visual/__screenshots__ probe-out/run2
+      - name: Report byte differences from committed baselines
+        run: |
+          git status --porcelain apps/demo/visual/__screenshots__ | tee probe-out/byte-diff.txt
+          echo "$(wc -l < probe-out/byte-diff.txt) of 42 PNGs differ byte-wise from the committed baselines"
       - name: Probe platform fonts
         working-directory: apps/demo
         run: |

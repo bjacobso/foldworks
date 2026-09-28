@@ -11,7 +11,8 @@
     "test": "vitest run src",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:visual": "playwright test --config playwright.visual.config.ts",
-    "test:visual:update": "playwright test --config playwright.visual.config.ts --update-snapshots"
+    "test:visual:update": "playwright test --config playwright.visual.config.ts --update-snapshots",
+    "test:visual:ubuntu": "bash visual/ubuntu-noble.sh"
   },
   "dependencies": {
     "@foldkit/markdown": "catalog:",
