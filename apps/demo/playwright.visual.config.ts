@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -24,6 +25,13 @@ export default defineConfig({
     reducedMotion: "reduce",
     timezoneId: "UTC",
     viewport: { width: 1440, height: 1000 },
+    launchOptions: {
+      // Render only pinned fonts with explicit settings, not the host's /etc/fonts.
+      env: {
+        ...process.env,
+        FONTCONFIG_FILE: fileURLToPath(new URL("./visual/fonts.conf", import.meta.url)),
+      },
+    },
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",

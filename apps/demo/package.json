@@ -11,8 +11,7 @@
     "test": "vitest run src",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:visual": "playwright test --config playwright.visual.config.ts",
-    "test:visual:update": "playwright test --config playwright.visual.config.ts --update-snapshots",
-    "test:visual:ubuntu": "bash visual/ubuntu-noble.sh"
+    "test:visual:update": "playwright test --config playwright.visual.config.ts --update-snapshots"
   },
   "dependencies": {
     "@foldkit/markdown": "catalog:",
@@ -46,6 +45,8 @@
     "@playwright/test": "catalog:",
     "@stylexjs/unplugin": "catalog:",
     "@types/node": "catalog:",
+    "dejavu-fonts-ttf": "catalog:",
+    "inter-font": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
