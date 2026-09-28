@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/codebase",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A live, read-only codebase workbench with repository navigation, documentation, source, history, and Git diffs.",
   "license": "MIT",
   "author": "Ben Jacobson",

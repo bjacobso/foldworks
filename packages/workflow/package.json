@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/workflow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Structured workflow models, layout, registries, and drag-and-drop behavior for Foldkit.",
   "license": "MIT",
   "author": "Ben Jacobson",

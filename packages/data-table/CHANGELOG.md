@@ -1,17 +1,17 @@
-# @foldworks/query-builder
+# @foldworks/data-table
 
-## 0.1.1
+## 0.1.0
+
+### Minor Changes
+
+- 7d88f93: Add a controlled, semantic data table for CRUD applications with stable row
+  identity, resource links, sortable columns, bulk selection, density variants,
+  loading and empty states, custom cells, and start/end pinned columns.
 
 ### Patch Changes
 
 - 05217a5: Allow applications to supply compatible Effect, Foldkit, and StyleX versions
   through peer dependencies while keeping exact workspace build versions.
-- 1015b7a: Emit declarations with TypeScript 7. The JavaScript is unchanged, and the
-  public types are equivalent. The declaration files are laid out differently:
-  local helpers are declared once and referenced with `typeof`, named aliases are
-  reused, and union members may be ordered differently. The field records of
-  `defineMessageUnion` schemas (`Message.X.fields`) no longer print `readonly` on
-  some keys; the Message types themselves are identical.
 - Updated dependencies [6e05824]
 - Updated dependencies [c7b54c5]
 - Updated dependencies [ff6f731]
@@ -35,14 +35,3 @@
 - Updated dependencies [15f9d0a]
 - Updated dependencies [1015b7a]
   - @foldworks/ui@0.2.0
-
-## 0.1.0
-
-### Minor Changes
-
-- Publish the initial Foldworks package suite with controlled Foldkit behavior, StyleX styling, themeable UI components, and application primitives for data grids, forms, queries, workflows, navigation, document history, and PDF annotation.
-
-### Patch Changes
-
-- Updated dependencies
-  - @foldworks/ui@0.1.0

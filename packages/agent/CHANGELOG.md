@@ -1,13 +1,17 @@
-# @foldworks/sidebar
+# @foldworks/agent
 
-## 0.2.0
+## 0.1.0
 
 ### Minor Changes
 
-- e768f17: Navigation items and sub-items accept an `onClick` message in place of, or
-  alongside, an `href`, so applications without a router can navigate with
-  messages. Activating either kind closes the mobile drawer. Items and sub-items
-  also accept a `count` with an optional accessible `countLabel`.
+- b75b916: Add a complete agent chat view and individually composable session, transcript,
+  turn, text, reasoning, message-action, tool, permission, empty-state, and
+  composer UI components. Add anchored transcript navigation, response copying
+  and regeneration, first-class streamed reasoning, and a deterministic scenario
+  builder at `@foldworks/agent/testing` with model-aware stream timing.
+- 7d88f93: Add a controlled, provider-neutral agent conversation runtime with normalized
+  stream events, tool and permission states, cancellation, retry, model selection,
+  and transcript-following behavior.
 
 ### Patch Changes
 
@@ -42,14 +46,3 @@
 - Updated dependencies [15f9d0a]
 - Updated dependencies [1015b7a]
   - @foldworks/ui@0.2.0
-
-## 0.1.0
-
-### Minor Changes
-
-- Publish the initial Foldworks package suite with controlled Foldkit behavior, StyleX styling, themeable UI components, and application primitives for data grids, forms, queries, workflows, navigation, document history, and PDF annotation.
-
-### Patch Changes
-
-- Updated dependencies
-  - @foldworks/ui@0.1.0

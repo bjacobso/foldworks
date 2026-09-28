@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/keyboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Typed keyboard command definitions and scoped Foldkit event streams.",
   "license": "MIT",
   "author": "Ben Jacobson",

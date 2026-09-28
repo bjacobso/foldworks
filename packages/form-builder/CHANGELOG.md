@@ -1,5 +1,12 @@
 # @foldworks/form-builder
 
+## 0.1.1
+
+### Patch Changes
+
+- 05217a5: Allow applications to supply compatible Effect, Foldkit, and StyleX versions
+  through peer dependencies while keeping exact workspace build versions.
+
 ## 0.1.0
 
 ### Minor Changes

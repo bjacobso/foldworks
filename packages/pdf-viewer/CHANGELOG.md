@@ -1,23 +1,8 @@
-# @foldworks/pdf-annotator
+# @foldworks/pdf-viewer
 
-## 0.2.0
+## 0.1.0
 
 ### Minor Changes
-
-- cfeffc6: Add versioned annotation-document JSON APIs, canonical PDF-point geometry,
-  existing AcroForm inspection, interactive AcroForm serialization, open custom
-  kinds and metadata, eight-handle resizing, duplication, lock/read-only and
-  required properties, JSON editing and download, and zoom-aware editing from
-  25% to 400%.
-- dc0dbd8: Make the PDF APIs Effect-based end to end. `withPdfDocument` and
-  `rasterizePage` in `@foldworks/pdf` now return Effects that fail with
-  `PdfRenderError`. `withPdfDocument` releases the PDF.js worker on failure or
-  interruption. The new `getPage` helper loads a zero-based page.
-
-  **Breaking:** `extractPdfAnnotations` and `serializePdf` in
-  `@foldworks/pdf-annotator` now return Effects that fail with the new
-  `PdfDocumentError`. They no longer return Promises. Run them inside an Effect
-  program, or call `Effect.runPromise(...)` at the edge.
 
 - dc0dbd8: Add composable PDF page rendering, geometry, and surface primitives in
   `@foldworks/pdf`. Both the annotator and the new read-only viewer use them.
@@ -31,8 +16,6 @@
 
 ### Patch Changes
 
-- 05217a5: Allow applications to supply compatible Effect, Foldkit, and StyleX versions
-  through peer dependencies while keeping exact workspace build versions.
 - 1015b7a: Emit declarations with TypeScript 7. The JavaScript is unchanged, and the
   public types are equivalent. The declaration files are laid out differently:
   local helpers are declared once and referenced with `typeof`, named aliases are
@@ -65,14 +48,3 @@
 - Updated dependencies [1015b7a]
   - @foldworks/ui@0.2.0
   - @foldworks/pdf@0.1.0
-
-## 0.1.0
-
-### Minor Changes
-
-- Publish the initial Foldworks package suite with controlled Foldkit behavior, StyleX styling, themeable UI components, and application primitives for data grids, forms, queries, workflows, navigation, document history, and PDF annotation.
-
-### Patch Changes
-
-- Updated dependencies
-  - @foldworks/ui@0.1.0

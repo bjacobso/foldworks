@@ -1,13 +1,15 @@
-# @foldworks/sidebar
+# @foldworks/generative-ui
 
-## 0.2.0
+## 0.1.0
 
 ### Minor Changes
 
-- e768f17: Navigation items and sub-items accept an `onClick` message in place of, or
-  alongside, an `href`, so applications without a router can navigate with
-  messages. Activating either kind closes the mobile drawer. Items and sub-items
-  also accept a `count` with an optional accessible `countLabel`.
+- 5b66e6d: Add a schema-first generative UI contract with a catalog-constrained Foldkit
+  renderer, Effect AI structured generation, strict graph and resource
+  validation, inert host-owned action intents, and an Effect MCP Apps tool
+  bridge. Include a strict iframe client bridge, an Effect MCP App resource
+  helper, and a self-contained Foldkit iframe bundle demonstrated on the
+  homepage.
 
 ### Patch Changes
 
@@ -42,14 +44,3 @@
 - Updated dependencies [15f9d0a]
 - Updated dependencies [1015b7a]
   - @foldworks/ui@0.2.0
-
-## 0.1.0
-
-### Minor Changes
-
-- Publish the initial Foldworks package suite with controlled Foldkit behavior, StyleX styling, themeable UI components, and application primitives for data grids, forms, queries, workflows, navigation, document history, and PDF annotation.
-
-### Patch Changes
-
-- Updated dependencies
-  - @foldworks/ui@0.1.0
