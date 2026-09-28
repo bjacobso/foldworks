@@ -159,7 +159,7 @@ and packs the release, publishes it through npm trusted publishing, creates
 GitHub releases, and pushes package tags.
 
 Trusted publishing requires a one-time configuration on npm for every
-`@foldworks/*` package:
+`@foldworks/*` package that already exists on the registry:
 
 - Provider: GitHub Actions
 - Organization or user: `bjacobso`
@@ -172,9 +172,17 @@ In the GitHub repository settings, enable **Allow GitHub Actions to create and
 approve pull requests**. The workflow uses short-lived OIDC credentials and
 does not require an `NPM_TOKEN` secret.
 
-The initial `0.1.0` release is published. Manual publishing remains available
-for maintainers authenticated to the `@foldworks` npm organization, but the
-automated trusted-publishing workflow is preferred for future releases.
+For a new package, publish its first version manually from a tarball validated
+by `pnpm release:check`; npm cannot configure a trusted publisher before the
+package exists. Then connect it to this workflow in the package's npm settings,
+or use an authenticated npm CLI (version 11.15 or newer):
+
+```sh
+npm trust github @foldworks/<name> --file release.yml --repository bjacobso/foldworks --allow-publish
+```
+
+Do this before merging a version PR that includes the package. Subsequent
+versions publish through the automated workflow.
 
 ## Deployment
 
