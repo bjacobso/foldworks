@@ -1,9 +1,10 @@
 import { DragAndDrop } from "@foldkit/ui";
 
-import { moveRule, type QueryGroup, type RuleLocation } from "./query";
+import { moveNode, type NodeLocation, type QueryGroup } from "./query";
 
 export const DEFAULT_ACTIVATION_THRESHOLD = 8;
 export const RULE_ITEM_PREFIX = "query-rule:";
+export const GROUP_ITEM_PREFIX = "query-group:";
 export const RULE_TARGET_PREFIX = "query-target:";
 
 const decodeSegment = (value: string): string | undefined => {
@@ -23,10 +24,22 @@ export const ruleIdFromItemId = (itemId: string): string | undefined =>
     ? decodeSegment(itemId.slice(RULE_ITEM_PREFIX.length))
     : undefined;
 
-export const ruleTargetId = (location: RuleLocation): string =>
+export const groupItemId = (groupId: string): string =>
+  `${GROUP_ITEM_PREFIX}${encodeURIComponent(groupId)}`;
+
+export const groupIdFromItemId = (itemId: string): string | undefined =>
+  itemId.startsWith(GROUP_ITEM_PREFIX)
+    ? decodeSegment(itemId.slice(GROUP_ITEM_PREFIX.length))
+    : undefined;
+
+/** Resolves a rule or group drag item back to its query node id. */
+export const nodeIdFromItemId = (itemId: string): string | undefined =>
+  ruleIdFromItemId(itemId) ?? groupIdFromItemId(itemId);
+
+export const ruleTargetId = (location: NodeLocation): string =>
   `${RULE_TARGET_PREFIX}${encodeURIComponent(location.groupId)}:${String(location.index)}`;
 
-export const ruleLocationFromTargetId = (targetId: string): RuleLocation | undefined => {
+export const ruleLocationFromTargetId = (targetId: string): NodeLocation | undefined => {
   if (!targetId.startsWith(RULE_TARGET_PREFIX)) return undefined;
   const encoded = targetId.slice(RULE_TARGET_PREFIX.length);
   const separator = encoded.lastIndexOf(":");
@@ -38,17 +51,22 @@ export const ruleLocationFromTargetId = (targetId: string): RuleLocation | undef
   return Number.isSafeInteger(index) ? { groupId, index } : undefined;
 };
 
-export type ApplyRuleReorderConfig = Readonly<{
+export type ApplyNodeReorderConfig = Readonly<{
   query: QueryGroup;
   reordered: Extract<DragAndDrop.OutMessage, { readonly _tag: "Reordered" }>;
 }>;
 
-export const applyRuleReorder = (
-  config: ApplyRuleReorderConfig,
-): QueryGroup | undefined => {
-  const ruleId = ruleIdFromItemId(config.reordered.itemId);
+/** @deprecated Use ApplyNodeReorderConfig. */
+export type ApplyRuleReorderConfig = ApplyNodeReorderConfig;
+
+/** Commits a completed rule or group drag, or returns `undefined` for invalid drops. */
+export const applyNodeReorder = (config: ApplyNodeReorderConfig): QueryGroup | undefined => {
+  const nodeId = nodeIdFromItemId(config.reordered.itemId);
   const location = ruleLocationFromTargetId(config.reordered.toContainerId);
-  return ruleId === undefined || location === undefined
+  return nodeId === undefined || location === undefined
     ? undefined
-    : moveRule(config.query, ruleId, location);
+    : moveNode(config.query, nodeId, location);
 };
+
+/** @deprecated Use applyNodeReorder, which also moves groups. */
+export const applyRuleReorder = applyNodeReorder;

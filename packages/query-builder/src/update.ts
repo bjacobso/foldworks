@@ -3,7 +3,7 @@ import { Update } from "foldkit";
 import { evo } from "foldkit/struct";
 import { DragAndDrop } from "@foldkit/ui";
 
-import { applyRuleReorder } from "./interaction";
+import { applyNodeReorder } from "./interaction";
 import { Message } from "./message";
 import type { Model } from "./model";
 import { nextAvailableId } from "./model";
@@ -11,19 +11,21 @@ import { appendNode, findNode, mapNode, removeNode } from "./query";
 
 type UpdateReturn = Update.Return<Model, Message>;
 
-const commitDrop = (outMessage: DragAndDrop.OutMessage): Update.Step<Model, Message> =>
-  (model) => DragAndDrop.OutMessage.match<UpdateReturn>(outMessage, {
-    Cancelled: () => ({ model }),
-    Reordered: (reordered) => {
-      const query = applyRuleReorder({
-        query: model.query,
-        reordered: DragAndDrop.OutMessage.Reordered(reordered),
-      });
-      return query === undefined || query === model.query
-        ? { model }
-        : { model: { ...model, query } };
-    },
-  });
+const commitDrop =
+  (outMessage: DragAndDrop.OutMessage): Update.Step<Model, Message> =>
+  (model) =>
+    DragAndDrop.OutMessage.match<UpdateReturn>(outMessage, {
+      Cancelled: () => ({ model }),
+      Reordered: (reordered) => {
+        const query = applyNodeReorder({
+          query: model.query,
+          reordered: DragAndDrop.OutMessage.Reordered(reordered),
+        });
+        return query === undefined || query === model.query
+          ? { model }
+          : { model: { ...model, query } };
+      },
+    });
 
 const foldInteraction = Update.foldChild({
   update: DragAndDrop.update,
@@ -73,9 +75,9 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         : {
             model: {
               ...model,
-              query: mapNode(model.query, groupId, (candidate) => candidate._tag === "Group"
-                ? { ...candidate, combinator }
-                : candidate),
+              query: mapNode(model.query, groupId, (candidate) =>
+                candidate._tag === "Group" ? { ...candidate, combinator } : candidate,
+              ),
             },
           };
     },
@@ -86,9 +88,11 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         : {
             model: {
               ...model,
-              query: mapNode(model.query, ruleId, (candidate) => candidate._tag === "Rule"
-                ? { ...candidate, attributeId, operatorId, value }
-                : candidate),
+              query: mapNode(model.query, ruleId, (candidate) =>
+                candidate._tag === "Rule"
+                  ? { ...candidate, attributeId, operatorId, value }
+                  : candidate,
+              ),
             },
           };
     },
@@ -99,9 +103,9 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         : {
             model: {
               ...model,
-              query: mapNode(model.query, ruleId, (candidate) => candidate._tag === "Rule"
-                ? { ...candidate, operatorId }
-                : candidate),
+              query: mapNode(model.query, ruleId, (candidate) =>
+                candidate._tag === "Rule" ? { ...candidate, operatorId } : candidate,
+              ),
             },
           };
     },
@@ -112,9 +116,9 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         : {
             model: {
               ...model,
-              query: mapNode(model.query, ruleId, (candidate) => candidate._tag === "Rule"
-                ? { ...candidate, value }
-                : candidate),
+              query: mapNode(model.query, ruleId, (candidate) =>
+                candidate._tag === "Rule" ? { ...candidate, value } : candidate,
+              ),
             },
           };
     },

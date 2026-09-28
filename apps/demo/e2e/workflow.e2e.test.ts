@@ -86,6 +86,13 @@ const drag = async (sourceSelector: string, targetSelector: string) => {
   return { source, target };
 };
 
+// Drag activation expands every insertion target, so keep the nested group
+// centered to leave room for the layout shift below it.
+const centerQueryGroup = (groupId: string) =>
+  page
+    .locator(`[data-query-group="${groupId}"]`)
+    .evaluate((element) => element.scrollIntoView({ block: "center" }));
+
 describe.sequential("structured workflow builder", () => {
   beforeAll(async () => {
     await mkdir(screenshotDirectory, { recursive: true });
@@ -358,25 +365,29 @@ describe.sequential("structured workflow builder", () => {
     await expect
       .poll(() => page.locator("[data-query-readonly=true]").textContent())
       .toContain("DepartmentisEngineering");
-    await expect.poll(() => page.getByText("Query is valid", { exact: true }).count()).toBe(1);
+    await expect
+      .poll(() => page.locator("[data-query-builder] [data-query-summary]").textContent())
+      .toContain(
+        'Department is "Engineering" and (Annual salary ≥ 150000 or Is a manager is true)',
+      );
 
     const firstRule = page.locator("[data-query-rule]").first();
-    const restingShadow = await firstRule.evaluate(
-      (element) => getComputedStyle(element).boxShadow,
-    );
     const animationName = await firstRule.evaluate(
       (element) => getComputedStyle(element).animationName,
     );
     expect(animationName).not.toBe("none");
+    const handle = firstRule.locator("[data-draggable-id]");
+    const restingOpacity = await handle.evaluate((element) => getComputedStyle(element).opacity);
+    expect(restingOpacity).toBe("0");
     await firstRule.hover();
     await page.waitForTimeout(220);
-    const hoverShadow = await firstRule.evaluate((element) => getComputedStyle(element).boxShadow);
-    expect(hoverShadow).not.toBe(restingShadow);
+    const hoverOpacity = await handle.evaluate((element) => getComputedStyle(element).opacity);
+    expect(hoverOpacity).toBe("1");
 
     const conditionButton = page
       .locator('[data-query-group="employee-filter-root"]')
-      .getByRole("button", { name: "Condition" })
-      .first();
+      .getByRole("button", { name: "Add condition" })
+      .last();
     const restingTransform = await conditionButton.evaluate(
       (element) => getComputedStyle(element).transform,
     );
@@ -399,7 +410,7 @@ describe.sequential("structured workflow builder", () => {
 
     const addedRule = page.locator("[data-query-rule]").last();
     await addedRule.getByRole("textbox", { name: "Employee name value" }).fill("Maya");
-    await expect.poll(() => page.getByText("Query is valid", { exact: true }).count()).toBe(1);
+    await expect.poll(() => page.getByText("1 issue to resolve", { exact: true }).count()).toBe(0);
     await expect
       .poll(() => page.locator("[data-query-readonly=true]").textContent())
       .toContain("Employee nameisMaya");
@@ -409,6 +420,7 @@ describe.sequential("structured workflow builder", () => {
   it("reorders query rules across groups with pointer and keyboard dragging", async () => {
     await page.goto(`${appUrl}/query-builder`, { waitUntil: "networkidle" });
 
+    await centerQueryGroup("group-2");
     const pointerTarget = '[data-droppable-id="query-target:group-2:2"]';
     const { target } = await drag('[data-draggable-id="query-rule:rule-1"]', pointerTarget);
     await expect.poll(() => page.locator('[data-query-drag-ghost="true"]').count()).toBe(1);
@@ -444,6 +456,37 @@ describe.sequential("structured workflow builder", () => {
       .poll(() => nestedGroup.locator("[data-query-rule]").last().getAttribute("data-query-rule"))
       .toBe("rule-5");
     await screenshot("18-query-builder-reordered");
+  });
+
+  it("drags whole condition groups without dropping them inside themselves", async () => {
+    await page.goto(`${appUrl}/query-builder`, { waitUntil: "networkidle" });
+    await centerQueryGroup("group-2");
+
+    const { target } = await drag(
+      '[data-draggable-id="query-group:group-2"]',
+      '[data-droppable-id="query-target:employee-filter-root:0"]',
+    );
+    await expect
+      .poll(() => page.locator('[data-query-drag-ghost="true"]').textContent())
+      .toContain("2 conditions");
+    await expect.poll(() => target.getAttribute("data-query-drop-active")).toBe("true");
+    await expect
+      .poll(() => page.locator('[data-query-drop-disabled="query-target:group-2:0"]').count())
+      .toBe(1);
+    await page.mouse.up();
+
+    await expect
+      .poll(() =>
+        page
+          .locator("[data-query-rule]")
+          .evaluateAll((rules) => rules.map((rule) => rule.getAttribute("data-query-rule"))),
+      )
+      .toEqual(["rule-3", "rule-4", "rule-1", "rule-5"]);
+    await expect
+      .poll(() => page.locator("[data-query-builder] [data-query-summary]").textContent())
+      .toContain(
+        '(Annual salary ≥ 150000 or Is a manager is true) and Department is "Engineering"',
+      );
   });
 
   it("honors reduced motion in the query builder", async () => {

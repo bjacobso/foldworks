@@ -9,8 +9,11 @@ export {
   defaultValueForAttribute,
   defineAttributes,
   findNode,
+  findNodeLocation,
   findRuleLocation,
+  groupHeight,
   mapNode,
+  moveNode,
   moveRule,
   operatorsForAttribute,
   operatorsForKind,
@@ -18,18 +21,25 @@ export {
   type AttributeDefinition,
   type AttributeOption,
   type Configuration,
+  type NodeLocation,
   type OperatorDefinition,
   type RuleLocation,
 } from "./query";
 export {
   DEFAULT_ACTIVATION_THRESHOLD,
+  GROUP_ITEM_PREFIX,
   RULE_ITEM_PREFIX,
   RULE_TARGET_PREFIX,
+  applyNodeReorder,
   applyRuleReorder,
+  groupIdFromItemId,
+  groupItemId,
+  nodeIdFromItemId,
   ruleIdFromItemId,
   ruleItemId,
   ruleLocationFromTargetId,
   ruleTargetId,
+  type ApplyNodeReorderConfig,
   type ApplyRuleReorderConfig,
 } from "./interaction";
 export {
@@ -40,3 +50,11 @@ export {
   type ValidationResult,
 } from "./validation";
 export * as QueryBuilder from "./query-builder";
+export {
+  DEFAULT_SUMMARY_PREFIX,
+  combinatorDescription,
+  combinatorLabel,
+  summarizeQuery,
+  summaryText,
+  type SummarySegment,
+} from "./summary";

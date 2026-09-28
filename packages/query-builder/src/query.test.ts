@@ -7,7 +7,10 @@ import { describe, expect, it } from "vitest";
 import { Message } from "./message";
 import { init } from "./model";
 import {
+  applyNodeReorder,
   applyRuleReorder,
+  groupIdFromItemId,
+  groupItemId,
   ruleIdFromItemId,
   ruleItemId,
   ruleLocationFromTargetId,
@@ -17,10 +20,12 @@ import {
   appendNode,
   defineAttributes,
   findNode,
+  moveNode,
   moveRule,
   removeNode,
   type QueryGroup,
 } from "./query";
+import { summaryText } from "./summary";
 import { update } from "./update";
 import { validate } from "./validation";
 import { readOnlyView } from "./view";
@@ -52,7 +57,13 @@ const validQuery: QueryGroup = {
       id: "group-a",
       combinator: "Any",
       children: [
-        { _tag: "Rule", id: "rule-b", attributeId: "headcount", operatorId: "greater_than", value: "50" },
+        {
+          _tag: "Rule",
+          id: "rule-b",
+          attributeId: "headcount",
+          operatorId: "greater_than",
+          value: "50",
+        },
         { _tag: "Rule", id: "rule-c", attributeId: "status", operatorId: "is", value: "active" },
       ],
     },
@@ -80,13 +91,15 @@ describe("query operations", () => {
 
   it("rejects duplicate ids and unknown parent groups", () => {
     expect(appendNode(validQuery, "root", validQuery.children[0]!)).toBeUndefined();
-    expect(appendNode(validQuery, "missing", {
-      _tag: "Rule",
-      id: "new",
-      attributeId: "name",
-      operatorId: "equals",
-      value: "x",
-    })).toBeUndefined();
+    expect(
+      appendNode(validQuery, "missing", {
+        _tag: "Rule",
+        id: "new",
+        attributeId: "name",
+        operatorId: "equals",
+        value: "x",
+      }),
+    ).toBeUndefined();
   });
 
   it("moves rules within a group using pre-removal boundary indexes", () => {
@@ -95,8 +108,11 @@ describe("query operations", () => {
     const moved = moveRule(validQuery, "rule-b", { groupId: nested.id, index: 2 });
 
     // Boundary 2 is after rule-c before removal, then shifts to index 1.
-    expect(moved === undefined ? [] : (findNode(moved, nested.id) as QueryGroup).children.map(({ id }) => id))
-      .toEqual(["rule-c", "rule-b"]);
+    expect(
+      moved === undefined
+        ? []
+        : (findNode(moved, nested.id) as QueryGroup).children.map(({ id }) => id),
+    ).toEqual(["rule-c", "rule-b"]);
   });
 
   it("moves rules between groups without moving their old siblings", () => {
@@ -106,9 +122,59 @@ describe("query operations", () => {
     const movedNested = moved === undefined ? undefined : findNode(moved, nested.id);
 
     expect(moved?.children.map(({ id }) => id)).toEqual(["group-a"]);
-    expect(movedNested?._tag === "Group" ? movedNested.children.map(({ id }) => id) : [])
-      .toEqual(["rule-b", "rule-a", "rule-c"]);
+    expect(movedNested?._tag === "Group" ? movedNested.children.map(({ id }) => id) : []).toEqual([
+      "rule-b",
+      "rule-a",
+      "rule-c",
+    ]);
     expect(findNode(moved!, "rule-a")).toBe(validQuery.children[0]);
+  });
+
+  it("moves whole groups between parents and refuses cycles", () => {
+    const nestedQuery: QueryGroup = {
+      ...validQuery,
+      children: [
+        ...validQuery.children,
+        { _tag: "Group", id: "group-b", combinator: "All", children: [] },
+      ],
+    };
+    const moved = moveNode(nestedQuery, "group-b", { groupId: "group-a", index: 0 });
+    const movedNested = moved === undefined ? undefined : findNode(moved, "group-a");
+
+    expect(moved?.children.map(({ id }) => id)).toEqual(["rule-a", "group-a"]);
+    expect(movedNested?._tag === "Group" ? movedNested.children.map(({ id }) => id) : []).toEqual([
+      "group-b",
+      "rule-b",
+      "rule-c",
+    ]);
+    expect(
+      moveNode(nestedQuery, "group-a", { groupId: "root", index: 0 })?.children.map(({ id }) => id),
+    ).toEqual(["group-a", "rule-a", "group-b"]);
+    expect(moveNode(nestedQuery, "group-a", { groupId: "group-a", index: 0 })).toBeUndefined();
+    expect(
+      moved === undefined
+        ? "missing"
+        : moveNode(moved, "group-a", { groupId: "group-b", index: 0 }),
+    ).toBeUndefined();
+    expect(moveNode(nestedQuery, "root", { groupId: "group-a", index: 0 })).toBeUndefined();
+    expect(moveRule(nestedQuery, "group-b", { groupId: "group-a", index: 0 })).toBeUndefined();
+  });
+
+  it("commits group drags through the shared reorder helper", () => {
+    const reordered = applyNodeReorder({
+      query: validQuery,
+      reordered: DragAndDrop.OutMessage.Reordered({
+        itemId: groupItemId("group-a"),
+        fromContainerId: ruleTargetId({ groupId: "root", index: 1 }),
+        fromIndex: 0,
+        toContainerId: ruleTargetId({ groupId: "root", index: 0 }),
+        toIndex: 0,
+      }),
+    });
+
+    expect(reordered?.children.map(({ id }) => id)).toEqual(["group-a", "rule-a"]);
+    expect(groupIdFromItemId(groupItemId("actor:group"))).toBe("actor:group");
+    expect(groupIdFromItemId(ruleItemId("rule-a"))).toBeUndefined();
   });
 
   it("round-trips drag ids containing colons and rejects malformed targets", () => {
@@ -123,16 +189,18 @@ describe("query operations", () => {
   });
 
   it("rejects reorders with unknown rules or out-of-range destinations", () => {
-    expect(applyRuleReorder({
-      query: validQuery,
-      reordered: DragAndDrop.OutMessage.Reordered({
-        itemId: ruleItemId("missing"),
-        fromContainerId: ruleTargetId({ groupId: "root", index: 0 }),
-        fromIndex: 0,
-        toContainerId: ruleTargetId({ groupId: "root", index: 99 }),
-        toIndex: 0,
+    expect(
+      applyRuleReorder({
+        query: validQuery,
+        reordered: DragAndDrop.OutMessage.Reordered({
+          itemId: ruleItemId("missing"),
+          fromContainerId: ruleTargetId({ groupId: "root", index: 0 }),
+          fromIndex: 0,
+          toContainerId: ruleTargetId({ groupId: "root", index: 99 }),
+          toIndex: 0,
+        }),
       }),
-    })).toBeUndefined();
+    ).toBeUndefined();
   });
 });
 
@@ -148,26 +216,48 @@ describe("query validation", () => {
       combinator: "Any",
       children: [
         { _tag: "Rule", id: "duplicate", attributeId: "missing", operatorId: "equals", value: "x" },
-        { _tag: "Rule", id: "duplicate", attributeId: "headcount", operatorId: "greater_than", value: "many" },
-        { _tag: "Rule", id: "bad-option", attributeId: "status", operatorId: "is", value: "archived" },
+        {
+          _tag: "Rule",
+          id: "duplicate",
+          attributeId: "headcount",
+          operatorId: "greater_than",
+          value: "many",
+        },
+        {
+          _tag: "Rule",
+          id: "bad-option",
+          attributeId: "status",
+          operatorId: "is",
+          value: "archived",
+        },
         {
           _tag: "Group",
           id: "too-deep",
           combinator: "All",
-          children: [{ _tag: "Rule", id: "missing-value", attributeId: "name", operatorId: "contains", value: "" }],
+          children: [
+            {
+              _tag: "Rule",
+              id: "missing-value",
+              attributeId: "name",
+              operatorId: "contains",
+              value: "",
+            },
+          ],
         },
       ],
     };
 
     const codes = validate(invalid, { attributes, maxDepth: 0 }).issues.map((issue) => issue.code);
-    expect(codes).toEqual(expect.arrayContaining([
-      "UnknownAttribute",
-      "DuplicateId",
-      "InvalidNumber",
-      "InvalidOption",
-      "MaxDepthExceeded",
-      "MissingValue",
-    ]));
+    expect(codes).toEqual(
+      expect.arrayContaining([
+        "UnknownAttribute",
+        "DuplicateId",
+        "InvalidNumber",
+        "InvalidOption",
+        "MaxDepthExceeded",
+        "MissingValue",
+      ]),
+    );
   });
 
   it("validates calendar dates rather than only their string shape", () => {
@@ -175,7 +265,9 @@ describe("query validation", () => {
       _tag: "Group",
       id: "root",
       combinator: "All",
-      children: [{ _tag: "Rule", id: "date", attributeId: "created", operatorId: "on", value: "2025-02-29" }],
+      children: [
+        { _tag: "Rule", id: "date", attributeId: "created", operatorId: "on", value: "2025-02-29" },
+      ],
     };
     expect(validate(query, { attributes }).issues[0]?.code).toBe("InvalidDate");
   });
@@ -185,7 +277,9 @@ describe("query validation", () => {
       _tag: "Group",
       id: "root",
       combinator: "All",
-      children: [{ _tag: "Rule", id: "salary", attributeId: "headcount", operatorId: "equals", value: "-1" }],
+      children: [
+        { _tag: "Rule", id: "salary", attributeId: "headcount", operatorId: "equals", value: "-1" },
+      ],
     };
     const result = validate(query, {
       attributes,
@@ -195,34 +289,43 @@ describe("query validation", () => {
           : undefined,
     });
 
-    expect(result.issues).toEqual([expect.objectContaining({
-      code: "CustomValue",
-      message: "Headcount cannot be negative.",
-    })]);
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        code: "CustomValue",
+        message: "Headcount cannot be negative.",
+      }),
+    ]);
   });
 });
 
 describe("QueryBuilder submodel", () => {
   it("adds, edits, and removes rules through messages", () => {
     const initial = init({ id: "builder" });
-    const added = update(initial, Message.AddedRule({
-      groupId: initial.query.id,
-      attributeId: "name",
-      operatorId: "equals",
-      value: "Maya",
-    })).model;
+    const added = update(
+      initial,
+      Message.AddedRule({
+        groupId: initial.query.id,
+        attributeId: "name",
+        operatorId: "equals",
+        value: "Maya",
+      }),
+    ).model;
     const rule = added.query.children[0];
     if (rule?._tag !== "Rule") throw new Error("Expected a rule");
     const changed = update(added, Message.ChangedValue({ ruleId: rule.id, value: "Noah" })).model;
     const changedRule = findNode(changed.query, rule.id);
 
     expect(changedRule?._tag === "Rule" ? changedRule.value : undefined).toBe("Noah");
-    expect(update(changed, Message.RemovedNode({ nodeId: rule.id })).model.query.children).toEqual([]);
+    expect(update(changed, Message.RemovedNode({ nodeId: rule.id })).model.query.children).toEqual(
+      [],
+    );
   });
 
   it("ignores messages that target unknown nodes", () => {
     const model = init({ id: "builder", query: validQuery });
-    expect(update(model, Message.ChangedValue({ ruleId: "missing", value: "x" })).model).toBe(model);
+    expect(update(model, Message.ChangedValue({ ruleId: "missing", value: "x" })).model).toBe(
+      model,
+    );
     expect(update(model, Message.AddedGroup({ groupId: "missing" })).model).toBe(model);
   });
 
@@ -230,41 +333,76 @@ describe("QueryBuilder submodel", () => {
     const initial = init({ id: "builder", query: validQuery });
     const source = ruleTargetId({ groupId: "root", index: 0 });
     const destination = ruleTargetId({ groupId: "group-a", index: 2 });
-    const pressed = update(initial, Message.GotInteractionMessage({
-      message: DragAndDrop.Message.PressedDraggable({
-        itemId: ruleItemId("rule-a"),
-        containerId: source,
-        index: 0,
-        screenX: 10,
-        screenY: 10,
+    const pressed = update(
+      initial,
+      Message.GotInteractionMessage({
+        message: DragAndDrop.Message.PressedDraggable({
+          itemId: ruleItemId("rule-a"),
+          containerId: source,
+          index: 0,
+          screenX: 10,
+          screenY: 10,
+        }),
       }),
-    })).model;
-    const dragging = update(pressed, Message.GotInteractionMessage({
-      message: DragAndDrop.Message.MovedPointer({
-        screenX: 10,
-        screenY: 30,
-        clientX: 10,
-        clientY: 30,
-        maybeDropTarget: Option.some({ containerId: destination, index: 0 }),
+    ).model;
+    const dragging = update(
+      pressed,
+      Message.GotInteractionMessage({
+        message: DragAndDrop.Message.MovedPointer({
+          screenX: 10,
+          screenY: 30,
+          clientX: 10,
+          clientY: 30,
+          maybeDropTarget: Option.some({ containerId: destination, index: 0 }),
+        }),
       }),
-    })).model;
-    const dropped = update(dragging, Message.GotInteractionMessage({
-      message: DragAndDrop.Message.ReleasedPointer(),
-    })).model;
+    ).model;
+    const dropped = update(
+      dragging,
+      Message.GotInteractionMessage({
+        message: DragAndDrop.Message.ReleasedPointer(),
+      }),
+    ).model;
     const nested = findNode(dropped.query, "group-a");
 
     expect(dropped.interaction.dragState._tag).toBe("Idle");
     expect(dropped.query.children.map(({ id }) => id)).toEqual(["group-a"]);
-    expect(nested?._tag === "Group" ? nested.children.map(({ id }) => id) : [])
-      .toEqual(["rule-b", "rule-c", "rule-a"]);
+    expect(nested?._tag === "Group" ? nested.children.map(({ id }) => id) : []).toEqual([
+      "rule-b",
+      "rule-c",
+      "rule-a",
+    ]);
   });
 
   it("renders a dense readable summary without editor controls", () => {
     const html = readOnlyView({ query: validQuery, attributes }, h);
     if (html === null) throw new Error("Expected query summary");
 
-    expect(Scene.textContent(html)).toContain("NamecontainsAcmeandHeadcount>50orStatusisActive");
+    expect(Scene.textContent(html)).toContain(
+      'Applies when Name contains "Acme" and (Headcount > 50 or Status is "Active").',
+    );
+    expect(Scene.textContent(html)).toContain("NamecontainsAcme");
+    expect(Scene.findAll(html, "details")).toHaveLength(1);
     expect(Scene.findAll(html, "input")).toHaveLength(0);
     expect(Scene.findAll(html, "button")).toHaveLength(0);
+  });
+
+  it("describes queries as one plain-language sentence", () => {
+    expect(summaryText(validQuery, attributes, "This policy applies when")).toBe(
+      'This policy applies when Name contains "Acme" and (Headcount > 50 or Status is "Active").',
+    );
+    expect(
+      summaryText(
+        {
+          ...validQuery,
+          children: [
+            { _tag: "Rule", id: "rule-d", attributeId: "name", operatorId: "is_empty", value: "" },
+            { _tag: "Group", id: "group-b", combinator: "All", children: [] },
+          ],
+        },
+        attributes,
+      ),
+    ).toBe("Applies when Name is empty.");
+    expect(summaryText({ ...validQuery, children: [] }, attributes)).toBeUndefined();
   });
 });

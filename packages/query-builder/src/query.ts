@@ -64,10 +64,7 @@ export type Configuration = Readonly<{
   attributes: ReadonlyArray<AttributeDefinition>;
   maxDepth?: number;
   allowEmpty?: boolean;
-  validateValue?: (
-    attribute: AttributeDefinition,
-    value: string,
-  ) => string | undefined;
+  validateValue?: (attribute: AttributeDefinition, value: string) => string | undefined;
 }>;
 
 export const defineAttributes = <const Attributes extends ReadonlyArray<AttributeDefinition>>(
@@ -94,9 +91,7 @@ const numberOperators: ReadonlyArray<OperatorDefinition> = [
   { id: "is_empty", label: "is empty", requiresValue: false },
 ];
 
-const booleanOperators: ReadonlyArray<OperatorDefinition> = [
-  { id: "is", label: "is" },
-];
+const booleanOperators: ReadonlyArray<OperatorDefinition> = [{ id: "is", label: "is" }];
 
 const dateOperators: ReadonlyArray<OperatorDefinition> = [
   { id: "on", label: "is on" },
@@ -115,11 +110,16 @@ const selectOperators: ReadonlyArray<OperatorDefinition> = [
 
 export const operatorsForKind = (kind: AttributeKind): ReadonlyArray<OperatorDefinition> => {
   switch (kind) {
-    case "Text": return textOperators;
-    case "Number": return numberOperators;
-    case "Boolean": return booleanOperators;
-    case "Date": return dateOperators;
-    case "Select": return selectOperators;
+    case "Text":
+      return textOperators;
+    case "Number":
+      return numberOperators;
+    case "Boolean":
+      return booleanOperators;
+    case "Date":
+      return dateOperators;
+    case "Select":
+      return selectOperators;
   }
 };
 
@@ -178,9 +178,11 @@ export const appendNode = (
   if (findNode(query, node.id) !== undefined) return undefined;
   const group = findNode(query, groupId);
   if (group?._tag !== "Group") return undefined;
-  return mapNode(query, groupId, (candidate) => candidate._tag === "Group"
-    ? { ...candidate, children: [...candidate.children, node] }
-    : candidate);
+  return mapNode(query, groupId, (candidate) =>
+    candidate._tag === "Group"
+      ? { ...candidate, children: [...candidate.children, node] }
+      : candidate,
+  );
 };
 
 export const removeNode = (query: QueryGroup, nodeId: string): QueryGroup | undefined => {
@@ -189,70 +191,94 @@ export const removeNode = (query: QueryGroup, nodeId: string): QueryGroup | unde
     ...group,
     children: group.children
       .filter((child) => child.id !== nodeId)
-      .map((child) => child._tag === "Group" ? visit(child) : child),
+      .map((child) => (child._tag === "Group" ? visit(child) : child)),
   });
   return visit(query);
 };
 
-export type RuleLocation = Readonly<{
+export type NodeLocation = Readonly<{
   groupId: string;
   index: number;
 }>;
 
-export const findRuleLocation = (
-  group: QueryGroup,
-  ruleId: string,
-): RuleLocation | undefined => {
-  const index = group.children.findIndex((child) => child._tag === "Rule" && child.id === ruleId);
+/** @deprecated Use NodeLocation. */
+export type RuleLocation = NodeLocation;
+
+export const findNodeLocation = (group: QueryGroup, nodeId: string): NodeLocation | undefined => {
+  const index = group.children.findIndex((child) => child.id === nodeId);
   if (index >= 0) return { groupId: group.id, index };
   for (const child of group.children) {
     if (child._tag !== "Group") continue;
-    const location = findRuleLocation(child, ruleId);
+    const location = findNodeLocation(child, nodeId);
     if (location !== undefined) return location;
   }
   return undefined;
 };
 
-export const moveRule = (
+export const findRuleLocation = (group: QueryGroup, ruleId: string): NodeLocation | undefined =>
+  findNode(group, ruleId)?._tag === "Rule" ? findNodeLocation(group, ruleId) : undefined;
+
+/** Number of group levels beneath and including `node`; rules have no depth. */
+export const groupHeight = (node: QueryNode): number =>
+  node._tag === "Rule" ? 0 : 1 + Math.max(0, ...node.children.map(groupHeight));
+
+/**
+ * Moves a rule or nested group to a boundary within any group. A group cannot
+ * move into itself or one of its descendants, and the root group cannot move.
+ */
+export const moveNode = (
   query: QueryGroup,
-  ruleId: string,
-  location: RuleLocation,
+  nodeId: string,
+  location: NodeLocation,
 ): QueryGroup | undefined => {
-  const rule = findNode(query, ruleId);
-  const origin = findRuleLocation(query, ruleId);
+  const node = findNode(query, nodeId);
+  const origin = findNodeLocation(query, nodeId);
   const target = findNode(query, location.groupId);
   if (
-    rule?._tag !== "Rule" ||
+    node === undefined ||
     origin === undefined ||
     target?._tag !== "Group" ||
+    (node._tag === "Group" && findNode(node, location.groupId) !== undefined) ||
     !Number.isSafeInteger(location.index) ||
     location.index < 0 ||
     location.index > target.children.length
-  ) return undefined;
+  )
+    return undefined;
 
   // Drop indexes describe boundaries in the pre-removal list. Removing an
   // earlier sibling shifts later boundaries left by one.
-  const adjustedIndex = origin.groupId === location.groupId && location.index > origin.index
-    ? location.index - 1
-    : location.index;
+  const adjustedIndex =
+    origin.groupId === location.groupId && location.index > origin.index
+      ? location.index - 1
+      : location.index;
   if (origin.groupId === location.groupId && adjustedIndex === origin.index) return query;
 
-  const withoutRule = removeNode(query, ruleId);
-  if (withoutRule === undefined) return undefined;
-  const adjustedTarget = findNode(withoutRule, location.groupId);
+  const withoutNode = removeNode(query, nodeId);
+  if (withoutNode === undefined) return undefined;
+  const adjustedTarget = findNode(withoutNode, location.groupId);
   if (
     adjustedTarget?._tag !== "Group" ||
     adjustedIndex < 0 ||
     adjustedIndex > adjustedTarget.children.length
-  ) return undefined;
-  return mapNode(withoutRule, location.groupId, (candidate) => candidate._tag === "Group"
-    ? {
-        ...candidate,
-        children: [
-          ...candidate.children.slice(0, adjustedIndex),
-          rule,
-          ...candidate.children.slice(adjustedIndex),
-        ],
-      }
-    : candidate);
+  )
+    return undefined;
+  return mapNode(withoutNode, location.groupId, (candidate) =>
+    candidate._tag === "Group"
+      ? {
+          ...candidate,
+          children: [
+            ...candidate.children.slice(0, adjustedIndex),
+            node,
+            ...candidate.children.slice(adjustedIndex),
+          ],
+        }
+      : candidate,
+  );
 };
+
+export const moveRule = (
+  query: QueryGroup,
+  ruleId: string,
+  location: NodeLocation,
+): QueryGroup | undefined =>
+  findNode(query, ruleId)?._tag === "Rule" ? moveNode(query, ruleId, location) : undefined;
