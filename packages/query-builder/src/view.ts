@@ -238,8 +238,12 @@ const ruleView = (
   return h.keyed("div")(
     rule.id,
     [
-      ...sxAttrs(h, styles.rule, stylex.defaultMarker()),
-      ...(draggedNode(model)?.id === rule.id ? sxAttrs(h, styles.draggingRule) : []),
+      ...sxAttrs(
+        h,
+        styles.rule,
+        stylex.defaultMarker(),
+        draggedNode(model)?.id === rule.id && styles.draggingRule,
+      ),
       h.DataAttribute("query-rule", rule.id),
     ],
     [
@@ -325,7 +329,7 @@ const groupView = (
       h.DataAttribute("query-group", group.id),
     ],
     [
-      h.div(sxAttrs(h, styles.groupHeader, stylex.defaultMarker()), [
+      h.div(sxAttrs(h, styles.groupHeader), [
         ...(placement === undefined
           ? []
           : [dragHandle(model, group, placement.parentId, placement.index, `Move ${label}`, h)]),

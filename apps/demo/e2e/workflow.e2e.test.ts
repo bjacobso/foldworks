@@ -86,8 +86,7 @@ const drag = async (sourceSelector: string, targetSelector: string) => {
   return { source, target };
 };
 
-// Drag activation expands every insertion target, so keep the nested group
-// centered to leave room for the layout shift below it.
+// Keep the nested group centered so its insertion targets stay in view.
 const centerQueryGroup = (groupId: string) =>
   page
     .locator(`[data-query-group="${groupId}"]`)
@@ -425,9 +424,11 @@ describe.sequential("structured workflow builder", () => {
     const { target } = await drag('[data-draggable-id="query-rule:rule-1"]', pointerTarget);
     await expect.poll(() => page.locator('[data-query-drag-ghost="true"]').count()).toBe(1);
     await expect.poll(() => target.getAttribute("data-query-drop-active")).toBe("true");
-    expect(
-      await target.evaluate((element) => element.getBoundingClientRect().height),
-    ).toBeGreaterThanOrEqual(28);
+    // Insertion targets draw a line without reflowing the rows around them.
+    expect(await target.evaluate((element) => element.getBoundingClientRect().height)).toBe(8);
+    await expect
+      .poll(() => target.evaluate((element) => getComputedStyle(element, "::after").opacity))
+      .toBe("1");
     await screenshot("17-query-builder-dragging");
     await page.mouse.up();
 

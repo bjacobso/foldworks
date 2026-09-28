@@ -67,7 +67,6 @@ export const styles = stylex.create({
     gap: space.sm,
     minHeight: "28px",
     minWidth: 0,
-    position: "relative",
   },
   groupDescription: {
     color: colors.foregroundMuted,
@@ -124,34 +123,42 @@ export const styles = stylex.create({
     right: "7px",
   },
   children: { display: "flex", flexDirection: "column", minWidth: 0 },
+  // Insertion targets keep a fixed height so dragging never reflows the list.
+  // While a drag is active, ::before widens the hit area to the midpoints of
+  // the neighboring rows and ::after draws the insertion line.
   dropTarget: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    borderColor: "transparent",
-    borderRadius: radii.md,
-    borderStyle: "dashed",
-    borderWidth: "1px",
-    color: colors.brandForeground,
-    display: "flex",
+    borderRadius: radii.sm,
     height: space.sm,
-    justifyContent: "center",
-    opacity: 0,
-    transitionDuration: motion.normal,
-    transitionProperty: "background-color, border-color, height, opacity, box-shadow",
-    transitionTimingFunction: motion.spring,
+    outline: "none",
+    position: "relative",
+    "::after": {
+      borderTopColor: colors.brand,
+      borderTopStyle: "dotted",
+      borderTopWidth: "2px",
+      content: '""',
+      left: 0,
+      opacity: 0,
+      position: "absolute",
+      right: 0,
+      top: "calc(50% - 1px)",
+      transitionDuration: motion.fast,
+      transitionProperty: "opacity",
+      transitionTimingFunction: motion.easeOut,
+    },
   },
   dropTargetAvailable: {
-    backgroundColor: colors.brandSurface,
-    borderColor: colors.brandBorder,
-    height: "28px",
-    opacity: 0.72,
+    "::before": {
+      bottom: `calc(-1 * ${space.lg})`,
+      content: '""',
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: `calc(-1 * ${space.lg})`,
+      zIndex: 1,
+    },
   },
   dropTargetActive: {
-    backgroundColor: colors.brandSurface,
-    borderColor: colors.brand,
-    boxShadow: `0 0 0 3px ${colors.focusGlow}`,
-    height: "36px",
-    opacity: 1,
+    "::after": { opacity: 1 },
   },
   empty: {
     color: colors.foregroundMuted,
@@ -206,8 +213,13 @@ export const styles = stylex.create({
     transitionTimingFunction: motion.easeOut,
     width: "14px",
   },
-  // Sits in the parent's gutter, left of the nested group's rail.
-  groupDragHandle: { height: "28px", left: "-34px" },
+  // Group handles sit inline before the AND/OR selector and stay visible.
+  groupDragHandle: {
+    height: "24px",
+    marginRight: `calc(-1 * ${space.xs})`,
+    opacity: 1,
+    position: "static",
+  },
   select: {
     backgroundColor: colors.surface,
     borderColor: {
