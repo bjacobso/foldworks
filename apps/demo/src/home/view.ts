@@ -498,6 +498,7 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                       link("Open the Workers workbench", workbenchRouter(), "primary", h),
                       link("Try the agent playground", agentRouter(), "secondary", h),
                       link("Explore the UI system", uiKitRouter(), "secondary", h),
+                      link("View on GitHub", "https://github.com/bjacobso/foldworks", "secondary", h),
                     ],
                   ),
                   h.div(

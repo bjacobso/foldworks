@@ -2,6 +2,8 @@
 
 Polished application primitives for Foldkit and StyleX.
 
+**[Explore Foldworks](https://foldworks.dev)**
+
 Foldworks is an umbrella collection of reusable packages for building rich,
 accessible application interfaces with Foldkit:
 
