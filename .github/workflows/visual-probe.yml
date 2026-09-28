@@ -1,0 +1,52 @@
+name: Visual renderer probe
+
+# Temporary: checks that CI renders match host-generated baselines byte for byte.
+on:
+  push:
+    branches:
+      - conductor/polaris-font-renderer-mismatch
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe (${{ matrix.os }} ${{ matrix.shard }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, shard: a }
+          - { os: ubuntu-24.04, shard: b }
+          - { os: ubuntu-22.04, shard: c }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:packages
+      - run: pnpm --filter @foldworks/demo exec playwright install --with-deps chromium
+      - run: grep -m1 'model name' /proc/cpuinfo; fc-match sans-serif; fc-match monospace
+      - name: Compare against committed baselines
+        run: pnpm --filter @foldworks/demo test:visual
+      - name: Capture every screenshot twice
+        run: |
+          mkdir -p probe-out
+          pnpm --filter @foldworks/demo test:visual --update-snapshots=all
+          cp -r apps/demo/visual/__screenshots__ probe-out/run1
+          git status --porcelain apps/demo/visual/__screenshots__ | tee probe-out/byte-diff-run1.txt
+          pnpm --filter @foldworks/demo test:visual --update-snapshots=all
+          cp -r apps/demo/visual/__screenshots__ probe-out/run2
+          echo "run1: $(wc -l < probe-out/byte-diff-run1.txt) of 42 PNGs differ byte-wise from committed baselines"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: renderer-probe-${{ matrix.shard }}
+          path: probe-out
