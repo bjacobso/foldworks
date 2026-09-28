@@ -66,6 +66,35 @@ const isolateFixture = async (component: ReturnType<Page["locator"]>): Promise<v
   });
 };
 
+// Families from the npm fonts exposed by visual/fonts.conf; any system font means drift.
+const pinnedFontFamily = /^(Inter|DejaVu Sans)( |$)/;
+
+test("renders text only with pinned fonts", async ({ page }) => {
+  await openCatalog(page, "Light");
+  await page.evaluate(() => {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.textContent?.trim()) node.parentElement?.setAttribute("data-font-probe", "");
+    }
+  });
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("DOM.enable");
+  await cdp.send("CSS.enable");
+  const { root } = await cdp.send("DOM.getDocument", { depth: -1 });
+  const { nodeIds } = await cdp.send("DOM.querySelectorAll", {
+    nodeId: root.nodeId,
+    selector: "[data-font-probe]",
+  });
+  const families = new Set<string>();
+  for (const nodeId of nodeIds) {
+    const { fonts } = await cdp.send("CSS.getPlatformFontsForNode", { nodeId });
+    for (const font of fonts) families.add(font.familyName);
+  }
+
+  expect(nodeIds.length).toBeGreaterThan(100);
+  expect([...families].filter((family) => !pinnedFontFamily.test(family))).toEqual([]);
+});
+
 for (const mode of ["Light", "Dark"] as const) {
   test.describe(`Polaris ${mode.toLowerCase()}`, () => {
     test.beforeEach(async ({ page }) => openCatalog(page, mode));

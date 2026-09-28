@@ -45,6 +45,8 @@
     "@playwright/test": "catalog:",
     "@stylexjs/unplugin": "catalog:",
     "@types/node": "catalog:",
+    "dejavu-fonts-ttf": "catalog:",
+    "inter-font": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
