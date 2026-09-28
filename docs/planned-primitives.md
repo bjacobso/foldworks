@@ -12,7 +12,8 @@ keyboard commands, a tree, split panes, data tables and grids, document and code
 editors, diagrams, workflows, forms, queries, agent conversations, PDF annotation,
 and operational inspection views. See the [package inventory](../README.md) and
 [UI capability guide](../packages/ui/docs/capabilities.md) before adding a new
-primitive.
+primitive. [Adopting from foldkit-plus](./foldkit-plus.md) lists related code
+and ideas that could be ported from that project.
 
 As of September 2026, separate workspaces are exploring animation, themes,
 responsive split layouts and headers, navigation, read-only form controls,
