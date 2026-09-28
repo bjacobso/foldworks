@@ -39,6 +39,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
     GotInteractionMessage: ({ message: interactionMessage }) =>
       foldInteraction(model, interactionMessage),
+    CompletedGhostPortal: () => ({ model }),
     AddedRule: ({ groupId, attributeId, operatorId, value }) => {
       const id = `rule-${model.nextId}`;
       const query = appendNode(model.query, groupId, {

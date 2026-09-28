@@ -1,9 +1,11 @@
 import { ChevronDown, GripVertical, Plus, Trash2 } from "@lucide/icons";
 import * as stylex from "@stylexjs/stylex";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
+import { Mount } from "foldkit";
 import { defineView } from "foldkit/submodel";
 import { DragAndDrop } from "@foldkit/ui";
+import { portalToContainingRoot } from "@foldkit/ui/anchor";
 
 import { Button, Icon, sxAttrs } from "@foldworks/ui";
 
@@ -457,6 +459,21 @@ const ghostContent = (
   ];
 };
 
+// Fixed coordinates from DragAndDrop are viewport-relative. A transformed
+// editor ancestor changes the containing block for fixed descendants, so
+// render the preview in the containing document's overlay root.
+const PortalGhost = Mount.define("QueryBuilderGhostPortal", {
+  messages: [Message.CompletedGhostPortal],
+  execute: ({ element }) =>
+    Effect.gen(function* () {
+      yield* Effect.acquireRelease(
+        Effect.sync(() => portalToContainingRoot(element)),
+        (cleanup) => Effect.sync(cleanup),
+      );
+      return Message.CompletedGhostPortal();
+    }),
+});
+
 const ghostView = (model: Model, configuration: Configuration, h: HtmlBuilder<Message>): Html =>
   Option.match(DragAndDrop.ghostStyle(model.interaction), {
     onNone: () => h.empty,
@@ -467,6 +484,7 @@ const ghostView = (model: Model, configuration: Configuration, h: HtmlBuilder<Me
         [
           h.Style(ghostStyle),
           ...sxAttrs(h, styles.ghostPosition),
+          h.OnMount(PortalGhost()),
           h.AriaHidden(true),
           h.DataAttribute("query-drag-ghost", "true"),
         ],

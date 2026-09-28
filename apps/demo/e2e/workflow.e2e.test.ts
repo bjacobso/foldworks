@@ -424,6 +424,14 @@ describe.sequential("structured workflow builder", () => {
     const { target } = await drag('[data-draggable-id="query-rule:rule-1"]', pointerTarget);
     await expect.poll(() => page.locator('[data-query-drag-ghost="true"]').count()).toBe(1);
     await expect.poll(() => target.getAttribute("data-query-drop-active")).toBe("true");
+    const targetBox = await target.boundingBox();
+    const ghostBox = await page.locator('[data-query-drag-ghost="true"]').boundingBox();
+    expect(targetBox).not.toBeNull();
+    expect(ghostBox).not.toBeNull();
+    if (targetBox !== null && ghostBox !== null) {
+      expect(Math.abs(ghostBox.x - (targetBox.x + targetBox.width / 2))).toBeLessThan(32);
+      expect(Math.abs(ghostBox.y - (targetBox.y + targetBox.height / 2))).toBeLessThan(32);
+    }
     // Insertion targets draw a line without reflowing the rows around them.
     expect(await target.evaluate((element) => element.getBoundingClientRect().height)).toBe(8);
     await expect

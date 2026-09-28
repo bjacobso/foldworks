@@ -6,6 +6,7 @@ import { Combinator } from "./query";
 
 export const Message = defineMessageUnion({
   GotInteractionMessage: { message: DragAndDrop.Message },
+  CompletedGhostPortal: {},
   AddedRule: {
     groupId: S.String,
     attributeId: S.String,
