@@ -6,19 +6,38 @@ import { Document, Selection, TextEdit } from "./document";
 import { DiagnosticBatch } from "./diagnostics";
 import { Options, type InitConfig, Model as BaseModel } from "./model";
 
-export { Document, Selection, TextEdit, applyEdits, normalizeText, exportText, positionAt, offsetAt } from "./document";
+export {
+  Document,
+  Selection,
+  TextEdit,
+  applyEdits,
+  normalizeText,
+  exportText,
+  positionAt,
+  offsetAt,
+} from "./document";
 export { Diagnostic, DiagnosticBatch, jsonValidator, type Validator } from "./diagnostics";
 export { Options, type InitConfig } from "./model";
 
 export const DocumentVersion = S.Struct({ uri: S.String, session: S.Number, revision: S.Number });
 export type DocumentVersion = typeof DocumentVersion.Type;
-export const documentVersion = ({ uri, session, revision }: Document): DocumentVersion => ({ uri, session, revision });
+export const documentVersion = ({ uri, session, revision }: Document): DocumentVersion => ({
+  uri,
+  session,
+  revision,
+});
 
 /** Host operations shared by editor implementations. Edit batches are atomic and undoable. */
 export const Operation = defineMessageUnion({
-  ApplyEdits: { expected: DocumentVersion, edits: S.Array(TextEdit), selection: S.optional(Selection) },
+  ApplyEdits: {
+    expected: DocumentVersion,
+    edits: S.Array(TextEdit),
+    selection: S.optional(Selection),
+  },
   Select: { expected: DocumentVersion, selection: Selection },
-  Focus: {}, Undo: {}, Redo: {},
+  Focus: {},
+  Undo: {},
+  Redo: {},
   ReplaceDocument: { uri: S.String, text: S.String, languageId: S.String },
   SetLanguage: { languageId: S.String },
   SetOptions: Options.fields,
@@ -41,6 +60,10 @@ export type ViewConfig<State, Message, ParentMessage> = Readonly<{
   model: State;
   label: string;
   toParentMessage: (message: Message) => ParentMessage;
+  /** Header detail. Omit for language and read-only status, or pass null to hide it. */
+  meta?: string | null;
+  /** Hide the command row when the host provides its own controls. */
+  showToolbar?: boolean;
   showInspector?: boolean;
 }>;
 
@@ -51,7 +74,13 @@ export interface EditorImplementation<State, Message> {
   readonly Message: S.Schema<Message>;
   readonly init: (config: InitConfig) => State;
   readonly execute: (operation: Operation) => Message;
-  readonly update: (model: State, message: Message) => Update.ReturnWithOutMessage<State, Message, OutMessage>;
-  readonly view: <ParentMessage>(config: ViewConfig<State, Message, ParentMessage>, h: HtmlBuilder<ParentMessage>) => Html;
+  readonly update: (
+    model: State,
+    message: Message,
+  ) => Update.ReturnWithOutMessage<State, Message, OutMessage>;
+  readonly view: <ParentMessage>(
+    config: ViewConfig<State, Message, ParentMessage>,
+    h: HtmlBuilder<ParentMessage>,
+  ) => Html;
   readonly snapshot: (model: State) => EditorSnapshot;
 }

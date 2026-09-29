@@ -24,6 +24,8 @@ CodeEditor.view(
   {
     model: model.editor,
     label: "Configuration",
+    meta: "JSON · validated configuration", // Optional; null removes header detail.
+    showToolbar: true, // Optional; defaults to true.
     showInspector: false,
     toParentMessage: (message) => Message.Editor({ message }),
   },
@@ -205,10 +207,13 @@ Only the native implementation ships today.
 
 ## Current scope
 
-Tab moves focus; Ctrl/Cmd + ] and [ indent/outdent. The toolbar exposes history,
-editing, find/replace, and suggestions. Read-only documents remain selectable and
-copyable, with a visible read-only label. The optional state inspector defaults to
-visible for exploration; set `showInspector: false` in application forms.
+Tab moves focus; Ctrl/Cmd + ] and [ indent/outdent. The editable toolbar exposes
+history, editing, find/replace, and suggestions. Read-only documents remain selectable
+and copyable, with Find and Go to line in a compact toolbar. The header defaults to
+the language and read-only status; `meta` overrides it, and `meta: null` hides it.
+Set `showToolbar: false` when the host supplies its own commands. The optional state
+inspector defaults to visible for exploration; set `showInspector: false` in application
+forms.
 
 Unwrapped highlighted lines are virtualized, but the browser still lays out the
 full textarea. Wrapped mode renders all lines. Full strings, lexer scans, and

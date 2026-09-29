@@ -1,13 +1,6 @@
-import { Runtime } from 'foldkit'
+import { Runtime } from "foldkit";
 
-import {
-  Message,
-  Model,
-  init,
-  subscriptions,
-  update,
-  view,
-} from './main'
+import { Message, Model, init, subscriptions, update, view } from "./main";
 
 const application = Runtime.makeApplication({
   Model,
@@ -15,18 +8,24 @@ const application = Runtime.makeApplication({
   update,
   view,
   subscriptions,
-  container: document.getElementById('root'),
+  container: document.getElementById("root"),
   routing: {
-    onUrlRequest: request => Message.ClickedLink({ request }),
-    onUrlChange: url => Message.ChangedUrl({ url }),
+    onUrlRequest: (request) => Message.ClickedLink({ request }),
+    onUrlChange: (url) => Message.ChangedUrl({ url }),
   },
   devTools: {
     Message,
-    show: 'Development',
-    position: 'BottomRight',
+    show: "Development",
+    position: "BottomRight",
+    // The editor owns large document snapshots; recording each keystroke stalls the demo in development.
+    excludeFromHistory: ["GotCodeEditorMessage"],
   },
-  viewTransition: ({ previousModel, model }) =>
-    previousModel.revision !== model.revision,
-})
+  // Keep slow-phase warnings useful without sending the whole editor model through Vite's console bridge.
+  slow: {
+    onSlow: ({ _tag, durationMs }) =>
+      console.warn(`[foldkit] Slow ${_tag}: ${durationMs.toFixed(1)}ms`),
+  },
+  viewTransition: ({ previousModel, model }) => previousModel.revision !== model.revision,
+});
 
-Runtime.run(application)
+Runtime.run(application);
