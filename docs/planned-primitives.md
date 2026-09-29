@@ -46,6 +46,8 @@ ranges, diff lines, grid cells or rows, diagram nodes, and PDF regions. Include
 thread creation, replies, resolution, focus, and anchors that can become stale
 after edits. Keep transport, permissions, and persistence in the host app. The
 diff viewer already renders thread markers, but does not own thread interaction.
+See the [implementation plan](./anchored-review-threads-plan.md) for the first
+diff-review and data-grid slices.
 
 ## Further explorations
 
