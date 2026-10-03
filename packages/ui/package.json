@@ -64,7 +64,8 @@
     "./themes/fluent2.css": "./dist/themes/fluent2.css",
     "./themes/google.css": "./dist/themes/google.css",
     "./themes/apple.css": "./dist/themes/apple.css",
-    "./themes/polaris.css": "./dist/themes/polaris.css"
+    "./themes/polaris.css": "./dist/themes/polaris.css",
+    "./themes/roster.css": "./dist/themes/roster.css"
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",

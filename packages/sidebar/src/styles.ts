@@ -99,9 +99,10 @@ export const styles = stylex.create({
   group: { display: "grid", gap: "4px" },
   groupLabel: {
     color: "var(--muted-foreground)",
+    fontFamily: "var(--font-label)",
     fontSize: "10px",
-    fontWeight: 600,
-    letterSpacing: "0.07em",
+    fontWeight: "var(--font-label-weight, 600)",
+    letterSpacing: "var(--font-label-tracking, 0.07em)",
     minHeight: "22px",
     overflow: "hidden",
     padding: "3px 8px",

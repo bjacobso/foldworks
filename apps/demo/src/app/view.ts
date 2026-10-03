@@ -543,6 +543,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
               { value: "Google", label: "Google" },
               { value: "Apple", label: "Apple" },
               { value: "Polaris", label: "Shopify Polaris 2" },
+              { value: "Roster", label: "Roster" },
             ],
           },
           h,

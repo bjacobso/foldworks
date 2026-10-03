@@ -4,6 +4,10 @@
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial,
     sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  /* Uppercase eyebrows, group labels, and section labels. Themes may also set
+   * --font-label-weight and --font-label-tracking; when unset, each label keeps
+   * its own weight and letter spacing. */
+  --font-label: var(--font-sans);
   --radius: 0.625rem;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
