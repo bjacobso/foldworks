@@ -404,10 +404,10 @@ export const catalogStyles = stylex.create({
   sidebarGroup: { display: "grid", gap: space.xs },
   sidebarLabel: {
     color: colors.foregroundMuted,
-    fontFamily: typography.fontFamily,
+    fontFamily: typography.fontLabel,
     fontSize: "11px",
-    fontWeight: 600,
-    letterSpacing: "0.04em",
+    fontWeight: "var(--font-label-weight, 600)",
+    letterSpacing: "var(--font-label-tracking, 0.04em)",
     textTransform: "uppercase",
   },
   sidebarItem: {

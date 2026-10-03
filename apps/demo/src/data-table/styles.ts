@@ -169,8 +169,19 @@ export const styles = stylex.create({
   detailHeader: { alignItems: "center", display: "flex", justifyContent: "space-between" },
   detailTitle: { fontSize: "18px", margin: 0 },
   detailClose: { color: "var(--foldworks-ui-foreground-muted)", padding: "6px" },
-  detailCompany: { color: "var(--foldworks-ui-foreground-muted)", fontSize: "12px", marginTop: "6px" },
+  detailCompany: {
+    color: "var(--foldworks-ui-foreground-muted)",
+    fontSize: "12px",
+    marginTop: "6px",
+  },
   detailList: { display: "grid", gap: "14px", marginTop: "28px" },
-  detailLabel: { color: "var(--foldworks-ui-foreground-muted)", fontSize: "10px", fontWeight: 750, textTransform: "uppercase" },
+  detailLabel: {
+    color: "var(--foldworks-ui-foreground-muted)",
+    fontFamily: "var(--font-label)",
+    fontSize: "10px",
+    fontWeight: "var(--font-label-weight, 750)",
+    letterSpacing: "var(--font-label-tracking, normal)",
+    textTransform: "uppercase",
+  },
   detailValue: { color: "var(--foldworks-ui-foreground)", fontSize: "13px", marginTop: "3px" },
 });

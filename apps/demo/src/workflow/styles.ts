@@ -22,9 +22,10 @@ export const styles = stylex.create({
   },
   paletteLabel: {
     color: "var(--foldworks-ui-foreground-subtle)",
+    fontFamily: "var(--font-label)",
     fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "0.12em",
+    fontWeight: "var(--font-label-weight, 700)",
+    letterSpacing: "var(--font-label-tracking, 0.12em)",
     marginBottom: "10px",
     marginTop: 0,
     paddingLeft: "6px",
@@ -378,7 +379,8 @@ export const styles = stylex.create({
       default: "var(--foldworks-ui-drop-target-active-border)",
       ":hover": "var(--foldworks-ui-drop-target-active-border)",
     },
-    boxShadow: "0 0 0 7px color-mix(in oklch, var(--foldworks-ui-drop-target-active-border) 18%, transparent), var(--foldworks-ui-shadow-panel)",
+    boxShadow:
+      "0 0 0 7px color-mix(in oklch, var(--foldworks-ui-drop-target-active-border) 18%, transparent), var(--foldworks-ui-shadow-panel)",
     color: {
       default: "var(--foldworks-ui-selection-foreground)",
       ":hover": "var(--foldworks-ui-selection-foreground)",
@@ -447,7 +449,8 @@ export const styles = stylex.create({
   },
   nodeSelected: {
     borderColor: "var(--foldworks-ui-selection-border)",
-    boxShadow: "0 0 0 2px color-mix(in oklch, var(--foldworks-ui-selection-border) 24%, transparent), var(--foldworks-ui-shadow-panel)",
+    boxShadow:
+      "0 0 0 2px color-mix(in oklch, var(--foldworks-ui-selection-border) 24%, transparent), var(--foldworks-ui-shadow-panel)",
   },
   nodePreview: {
     borderColor: "var(--foldworks-ui-drop-target-active-border)",
@@ -644,9 +647,10 @@ export const styles = stylex.create({
   },
   sheetEyebrow: {
     color: "var(--foldworks-ui-selection-foreground)",
+    fontFamily: "var(--font-label)",
     fontSize: "10px",
-    fontWeight: 800,
-    letterSpacing: "0.11em",
+    fontWeight: "var(--font-label-weight, 800)",
+    letterSpacing: "var(--font-label-tracking, 0.11em)",
     marginBottom: "7px",
     marginTop: 0,
     textTransform: "uppercase",
@@ -766,11 +770,29 @@ export const styles = stylex.create({
 });
 
 export const kindStyles = stylex.create({
-  start: { backgroundColor: "var(--foldworks-ui-surface-subtle)", color: "var(--foldworks-ui-foreground-muted)" },
-  action: { backgroundColor: "var(--foldworks-ui-surface-subtle)", color: "var(--foldworks-ui-foreground-muted)" },
-  approval: { backgroundColor: "var(--foldworks-ui-info-surface)", color: "var(--foldworks-ui-info)" },
-  condition: { backgroundColor: "var(--foldworks-ui-surface-subtle)", color: "var(--foldworks-ui-foreground-muted)" },
+  start: {
+    backgroundColor: "var(--foldworks-ui-surface-subtle)",
+    color: "var(--foldworks-ui-foreground-muted)",
+  },
+  action: {
+    backgroundColor: "var(--foldworks-ui-surface-subtle)",
+    color: "var(--foldworks-ui-foreground-muted)",
+  },
+  approval: {
+    backgroundColor: "var(--foldworks-ui-info-surface)",
+    color: "var(--foldworks-ui-info)",
+  },
+  condition: {
+    backgroundColor: "var(--foldworks-ui-surface-subtle)",
+    color: "var(--foldworks-ui-foreground-muted)",
+  },
   delay: { backgroundColor: "var(--foldworks-ui-info-surface)", color: "var(--foldworks-ui-info)" },
-  switch: { backgroundColor: "var(--foldworks-ui-surface-subtle)", color: "var(--foldworks-ui-foreground-muted)" },
-  end: { backgroundColor: "var(--foldworks-ui-surface-subtle)", color: "var(--foldworks-ui-foreground-muted)" },
+  switch: {
+    backgroundColor: "var(--foldworks-ui-surface-subtle)",
+    color: "var(--foldworks-ui-foreground-muted)",
+  },
+  end: {
+    backgroundColor: "var(--foldworks-ui-surface-subtle)",
+    color: "var(--foldworks-ui-foreground-muted)",
+  },
 });

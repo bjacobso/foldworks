@@ -8,6 +8,7 @@ export const ThemeName = S.Literals([
   "Google",
   "Apple",
   "Polaris",
+  "Roster",
 ]);
 export type ThemeName = typeof ThemeName.Type;
 
@@ -31,7 +32,8 @@ const isThemeName = (value: string | null): value is ThemeName =>
   value === "Fluent2" ||
   value === "Google" ||
   value === "Apple" ||
-  value === "Polaris";
+  value === "Polaris" ||
+  value === "Roster";
 
 const isThemePreference = (value: string | null): value is ThemePreference =>
   value === "System" || value === "Light" || value === "Dark";

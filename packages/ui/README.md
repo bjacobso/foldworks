@@ -68,6 +68,7 @@ Import the base contract and the themes your application supports:
 @import "@foldworks/ui/themes/google.css";
 @import "@foldworks/ui/themes/apple.css";
 @import "@foldworks/ui/themes/polaris.css";
+@import "@foldworks/ui/themes/roster.css";
 ```
 
 For a Shadcn-only application, `@foldworks/ui/theme.css` is a convenient
@@ -92,8 +93,8 @@ Set `data-theme` and the resolved `data-mode` on a root ancestor:
 <html data-theme="shadcn" data-mode="dark" class="dark"></html>
 ```
 
-`data-theme` accepts `shadcn`, `blueprint`, `office`, `fluent2`, `google`, `apple`, or
-`polaris`.
+`data-theme` accepts `shadcn`, `blueprint`, `office`, `fluent2`, `google`, `apple`,
+`polaris`, or `roster`.
 `data-mode` accepts `light` or `dark`; the optional `.dark` class remains
 compatible with shadcn theme providers. CSS variables cascade, so the same
 attributes can theme a nested subtree. An application can define its own theme
@@ -198,7 +199,9 @@ enterprise-oriented; Office follows Fluent-like geometry; Fluent 2 maps the
 Microsoft web light and dark color, font family, radius, shadow, and motion
 tokens to Foldworks roles; Google uses tonal Material-like surfaces; Apple uses
 layered system grays and generous corners; and Polaris follows Shopify's Polaris
-2 admin palette, pill actions, and soft elevation. Compare the UI kit, Workers
+2 admin palette, pill actions, and soft elevation; and Roster pairs ink-navy
+selection with quiet gray rails, mono eyebrows, and pastel category chips, with
+a calm blue primary in dark mode. Compare the UI kit, Workers
 workbench, and workflow builder using the same controls.
 
 The Fluent 2 palette maps values from Microsoft's
@@ -226,11 +229,17 @@ largely covered by `TokenField`. Those are lower-priority Fluent wrappers until
 their distinct layouts or APIs are needed.
 
 The shared recipes expose shape and elevation variables so presets can alter
-more than color. Their base values preserve component behavior:
+more than color. Their base values preserve component behavior.
+`--font-label` defaults to `--font-sans`; the label weight and tracking
+variables are unset by default, so each eyebrow, group label, and section label
+keeps its own weight and letter spacing until a theme overrides them:
 
 | Token                                                  | Controls                |
 | ------------------------------------------------------ | ----------------------- |
 | `--font-sans`                                          | Theme typography        |
+| `--font-mono`                                          | Code and identifiers    |
+| `--font-label`                                         | Uppercase labels        |
+| `--font-label-weight` / `--font-label-tracking`        | Uppercase label style   |
 | `--radius-button` / `--radius-button-sm`               | Button geometry         |
 | `--radius-badge`                                       | Badge geometry          |
 | `--radius-panel`                                       | Panel geometry          |
