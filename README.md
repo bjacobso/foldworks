@@ -62,6 +62,16 @@ fixture and performs no provider calls or tool side effects.
 See [planned work-surface primitives](./docs/planned-primitives.md) for the
 next areas to explore beyond the current package suite.
 
+## WorldVM
+
+Foldworks is an independent project, and its packages are useful in any Foldkit
+application. It is also the UI layer planned for the developer tools of
+[WorldVM](https://worldvm.com), a TypeScript runtime and standard library for
+software that models the world, reasons about it, and acts on it. No Foldworks
+package depends on WorldVM. WorldVM-specific views belong to WorldVM; generic
+pieces they need can become Foldworks primitives. See
+[WorldVM developer tools](./docs/worldvm-devtools.md) for the proposed split.
+
 ## Dependency compatibility
 
 Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
