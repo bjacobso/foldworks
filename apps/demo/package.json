@@ -26,6 +26,7 @@
     "@foldworks/form-builder": "workspace:*",
     "@foldworks/generative-ui": "workspace:*",
     "@foldworks/history": "workspace:*",
+    "@foldworks/outliner": "workspace:*",
     "@foldworks/pdf": "workspace:*",
     "@foldworks/pdf-annotator": "workspace:*",
     "@foldworks/pdf-viewer": "workspace:*",

@@ -1,0 +1,153 @@
+import { describe, expect, it } from "vitest";
+
+import type { Action } from "./keymap";
+import { Message } from "./message";
+import { init, type Model } from "./model";
+import { item, visibleRows } from "./outline";
+import { selectedIds } from "./selectors";
+import { update } from "./update";
+
+const start = (): Model =>
+  init({
+    id: "o",
+    items: [item("a", "Alpha", [item("a1", "One"), item("a2", "Two")]), item("b", "Beta")],
+  });
+
+const press = (model: Model, action: Action, id: string, start = 0, end = start) =>
+  update(model, Message.Pressed({ action, id, start, end, goalX: 0 })).model;
+
+const texts = (model: Model) =>
+  visibleRows(model.items, model.scopeId).map((row) => `${"  ".repeat(row.depth)}${row.text}`);
+
+describe("update", () => {
+  it("splits at the caret and focuses the new row", () => {
+    const model = press(start(), "Split", "b", 2);
+    expect(texts(model)).toEqual(["Alpha", "  One", "  Two", "Be", "ta"]);
+    expect(model.focus).toEqual({ id: "o-1", start: 0, end: 0 });
+  });
+
+  it("outdents an empty last child on Return instead of adding another", () => {
+    const opened = press(start(), "Split", "a2", 3);
+    const model = press(opened, "Split", "o-1", 0);
+    expect(texts(model)).toEqual(["Alpha", "  One", "  Two", "", "Beta"]);
+  });
+
+  it("restores text and caret with undo, and coalesces typing", () => {
+    let model = update(
+      start(),
+      Message.EditedText({ id: "b", text: "Bet", start: 3, end: 3, time: 5000 }),
+    ).model;
+    model = update(
+      model,
+      Message.EditedText({ id: "b", text: "Be", start: 2, end: 2, time: 5100 }),
+    ).model;
+    model = update(
+      model,
+      Message.EditedText({ id: "b", text: "Bee", start: 3, end: 3, time: 5200 }),
+    ).model;
+    const undone = press(model, "Undo", "b", 3);
+    expect(undone.items[1]?.text).toBe("Beta");
+    expect(undone.focus?.id).toBe("b");
+    const redone = press(undone, "Redo", "b", 4);
+    expect(redone.items[1]?.text).toBe("Bee");
+  });
+
+  it("starts a new undo step after a pause in typing", () => {
+    let model = update(
+      start(),
+      Message.EditedText({ id: "b", text: "Beta!", start: 5, end: 5, time: 1000 }),
+    ).model;
+    model = update(
+      model,
+      Message.EditedText({ id: "b", text: "Beta!!", start: 6, end: 6, time: 4000 }),
+    ).model;
+    expect(press(model, "Undo", "b", 6).items[1]?.text).toBe("Beta!");
+  });
+
+  it("moves a caret that collapsing hides to its visible ancestor", () => {
+    const focused = update(start(), Message.FocusedText({ id: "a2", start: 1, end: 1 })).model;
+    const model = update(focused, Message.SetAllCollapsed({ collapsed: true })).model;
+    expect(texts(model)).toEqual(["Alpha", "Beta"]);
+    expect(model.focus).toEqual({ id: "a", start: 5, end: 5 });
+  });
+
+  it("undoes structure without refolding the outline", () => {
+    const indented = press(start(), "Indent", "b", 1);
+    expect(texts(indented)).toEqual(["Alpha", "  One", "  Two", "  Beta"]);
+    const collapsed = update(
+      indented,
+      Message.ToggledCollapsed({ id: "a", recursive: false }),
+    ).model;
+    const undone = press(collapsed, "Undo", "a", 0);
+    expect(texts(undone)).toEqual(["Alpha", "Beta"]);
+  });
+
+  it("extends from text into a row selection and indents it as a unit", () => {
+    let model = press(start(), "ExtendUp", "a2", 0);
+    expect(model.mode).toBe("Rows");
+    expect(selectedIds(model)).toEqual(["a1", "a2"]);
+    model = press(model, "ExtendDown", "a1");
+    model = press(model, "ExtendDown", "a2");
+    expect(selectedIds(model)).toEqual(["a2", "b"]);
+    model = press(model, "Indent", "b");
+    expect(texts(model)).toEqual(["Alpha", "  One", "    Two", "  Beta"]);
+  });
+
+  it("deletes a selection and selects the next row", () => {
+    let model = press(start(), "SelectRow", "a", 0);
+    model = press(model, "Delete", "a");
+    expect(texts(model)).toEqual(["Beta"]);
+    expect(model.selection).toEqual({ anchorId: "b", headId: "b" });
+  });
+
+  it("navigates rows with Finder keys", () => {
+    let model = press(start(), "SelectRow", "a1", 0);
+    model = press(model, "CollapseOrParent", "a1");
+    expect(model.selection?.headId).toBe("a");
+    model = press(model, "CollapseOrParent", "a");
+    expect(texts(model)).toEqual(["Alpha", "Beta"]);
+    model = press(model, "ExpandOrChild", "a");
+    model = press(model, "ExpandOrChild", "a");
+    expect(model.selection?.headId).toBe("a1");
+  });
+
+  it("hoists and unhoists", () => {
+    let model = press(start(), "ZoomIn", "a", 0);
+    expect(model.scopeId).toBe("a");
+    expect(texts(model)).toEqual(["One", "Two"]);
+    model = press(model, "Outdent", "a1", 0);
+    expect(texts(model)).toEqual(["One", "Two"]);
+    model = press(model, "ZoomOut", "a1", 0);
+    expect(model.scopeId).toBeNull();
+    expect(model.focus?.id).toBe("a");
+  });
+
+  it("pastes several lines as items, splitting around the caret", () => {
+    const model = update(
+      start(),
+      Message.PastedText({ id: "b", mode: "Text", start: 2, end: 2, text: "X\n\tY\nZ" }),
+    ).model;
+    expect(texts(model)).toEqual(["Alpha", "  One", "  Two", "BeX", "  Y", "Zta"]);
+    expect(model.focus).toMatchObject({ start: 1, end: 1 });
+  });
+
+  it("drops dragged rows at the target and keeps them selected", () => {
+    let model = update(start(), Message.StartedDrag({ ids: ["b"] })).model;
+    model = update(
+      model,
+      Message.MovedDrag({
+        target: { placement: { _tag: "Start", parentId: "a" }, depth: 1, afterRowId: "a" },
+      }),
+    ).model;
+    model = update(model, Message.Dropped()).model;
+    expect(texts(model)).toEqual(["Alpha", "  Beta", "  One", "  Two"]);
+    expect(model.drag).toBeNull();
+    expect(selectedIds(model)).toEqual(["b"]);
+  });
+
+  it("merges into the previous row with Backspace", () => {
+    const model = press(start(), "MergePrevious", "b", 0);
+    expect(texts(model)).toEqual(["Alpha", "  One", "  TwoBeta"]);
+    expect(model.focus).toEqual({ id: "a2", start: 3, end: 3 });
+  });
+});

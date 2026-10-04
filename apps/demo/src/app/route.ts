@@ -19,6 +19,7 @@ export type Demo =
   | "DataGrid"
   | "FormBuilder"
   | "QueryBuilder"
+  | "Outliner"
   | "PdfAnnotator"
   | "PdfViewer"
   | "UiKit";
@@ -43,6 +44,7 @@ export const AppRoute = defineRouteUnion({
     mode: S.Option(FormMode),
   },
   QueryBuilder: {},
+  Outliner: {},
   PdfAnnotator: {},
   PdfViewer: {},
   UiKit: {},
@@ -110,6 +112,8 @@ export const queryBuilderRouter = pipe(
   Route.mapTo(AppRoute.QueryBuilder),
 );
 
+export const outlinerRouter = pipe(Route.literal("outliner"), Route.mapTo(AppRoute.Outliner));
+
 export const pdfAnnotatorRouter = pipe(
   Route.literal("pdf-annotator"),
   Route.mapTo(AppRoute.PdfAnnotator),
@@ -132,6 +136,7 @@ const routeParser = Route.oneOf(
   dataGridRouter,
   formBuilderRouter,
   queryBuilderRouter,
+  outlinerRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
   uiKitRouter,
@@ -164,6 +169,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "FormBuilder";
     case "QueryBuilder":
       return "QueryBuilder";
+    case "Outliner":
+      return "Outliner";
     case "PdfAnnotator":
       return "PdfAnnotator";
     case "PdfViewer":

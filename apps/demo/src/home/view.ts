@@ -10,6 +10,7 @@ import {
   Layers3,
   ListChecks,
   ListFilter,
+  ListTree,
   Network,
   PanelLeft,
   Table2,
@@ -32,6 +33,7 @@ import {
   dataTablePath,
   dataGridPath,
   formBuilderPath,
+  outlinerRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
   queryBuilderRouter,
@@ -132,6 +134,14 @@ const packages: ReadonlyArray<Package> = [
     description: "Recursive conditions with validation and structured drag and drop.",
     href: queryBuilderRouter(),
     icon: ListFilter,
+  },
+  {
+    name: "@foldworks/outliner",
+    category: "Application primitive",
+    description:
+      "Keyboard-first outlines with natural indenting, folding, hoisting, and drag and drop.",
+    href: outlinerRouter(),
+    icon: ListTree,
   },
   {
     name: "@foldworks/form-builder",
@@ -360,6 +370,7 @@ const comparison = <Message>(h: HtmlBuilder<Message>): Html =>
               "DataTable",
               "DataGrid",
               "QueryBuilder",
+              "Outliner",
               "FormBuilder",
               "Workflow",
               "PdfAnnotator",
@@ -498,7 +509,12 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                       link("Open the Workers workbench", workbenchRouter(), "primary", h),
                       link("Try the agent playground", agentRouter(), "secondary", h),
                       link("Explore the UI system", uiKitRouter(), "secondary", h),
-                      link("View on GitHub", "https://github.com/bjacobso/foldworks", "secondary", h),
+                      link(
+                        "View on GitHub",
+                        "https://github.com/bjacobso/foldworks",
+                        "secondary",
+                        h,
+                      ),
                     ],
                   ),
                   h.div(

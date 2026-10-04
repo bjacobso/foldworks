@@ -1,0 +1,335 @@
+.fw-outliner {
+  --fw-outliner-indent: 24px;
+  --fw-outliner-line: 22px;
+  --fw-outliner-toggle: 14px;
+  --fw-outliner-handle: 16px;
+  --fw-outliner-guide: color-mix(in oklab, var(--border, #e4e4e7) 85%, transparent);
+  --fw-outliner-selection: color-mix(in oklab, var(--primary, #2563eb) 16%, transparent);
+  --fw-outliner-selection-inactive: color-mix(
+    in oklab,
+    var(--muted-foreground, #71717a) 14%,
+    transparent
+  );
+  --fw-outliner-insertion: var(--primary, #2563eb);
+  position: relative;
+  color: var(--foreground, inherit);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: var(--fw-outliner-line);
+}
+
+.fw-outliner__tree {
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  padding: 2px 0;
+}
+
+.fw-outliner__row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(var(--fw-outliner-line) + 2px);
+  padding-left: calc(var(--fw-outliner-depth, 0) * var(--fw-outliner-indent));
+  border-radius: 4px;
+  outline: none;
+  /* One hairline per ancestor, aligned under that ancestor's handle. */
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle) / 2 - 0.5px),
+    var(--fw-outliner-guide) calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle) / 2 - 0.5px)
+      calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle) / 2 + 0.5px),
+    transparent calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle) / 2 + 0.5px)
+      var(--fw-outliner-indent)
+  );
+  background-size: calc(var(--fw-outliner-depth, 0) * var(--fw-outliner-indent)) 100%;
+  background-repeat: no-repeat;
+}
+
+.fw-outliner__row[data-selected="true"] {
+  background-color: var(--fw-outliner-selection-inactive);
+}
+
+.fw-outliner:focus-within .fw-outliner__row[data-selected="true"] {
+  background-color: var(--fw-outliner-selection);
+}
+
+.fw-outliner__row[data-selected="true"]:focus {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary, #2563eb) 45%, transparent);
+}
+
+.fw-outliner__row[data-dragging="true"] {
+  opacity: 0.35;
+}
+
+.fw-outliner__toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--fw-outliner-toggle);
+  height: calc(var(--fw-outliner-line) + 2px);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground, #71717a);
+  cursor: default;
+}
+
+.fw-outliner__toggle[data-state="leaf"] {
+  visibility: hidden;
+}
+
+.fw-outliner__toggle:hover {
+  color: var(--foreground, inherit);
+}
+
+.fw-outliner__triangle {
+  width: 9px;
+  height: 9px;
+  fill: currentColor;
+  transition: transform 120ms ease;
+}
+
+.fw-outliner__toggle[data-state="expanded"] .fw-outliner__triangle {
+  transform: rotate(90deg);
+}
+
+.fw-outliner__handle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--fw-outliner-handle);
+  height: calc(var(--fw-outliner-line) + 2px);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.fw-outliner__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--foreground, #18181b) 62%, transparent);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.fw-outliner__handle:hover .fw-outliner__dot {
+  transform: scale(1.25);
+}
+
+/* A folded item keeps a halo so hidden children are never a surprise. */
+.fw-outliner__handle[data-folded="true"] .fw-outliner__dot {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--muted-foreground, #71717a) 28%, transparent);
+}
+
+.fw-outliner__check {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 5px 6px 0 2px;
+  padding: 0;
+  border: 1.5px solid color-mix(in oklab, var(--muted-foreground, #71717a) 70%, transparent);
+  border-radius: 3px;
+  background: var(--background, #fff);
+  cursor: default;
+}
+
+.fw-outliner__check[aria-checked="true"] {
+  border-color: var(--primary, #2563eb);
+  background: var(--primary, #2563eb);
+  color: var(--primary-foreground, #fff);
+}
+
+.fw-outliner__check svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fw-outliner__cell {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  margin-left: 2px;
+}
+
+.fw-outliner__text,
+.fw-outliner__mirror {
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 1px 4px;
+  border: 0;
+  font: inherit;
+  line-height: var(--fw-outliner-line);
+  letter-spacing: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fw-outliner__text {
+  resize: none;
+  overflow: hidden;
+  color: inherit;
+  background: transparent;
+  border-radius: 3px;
+  outline: none;
+  caret-color: var(--primary, currentColor);
+}
+
+.fw-outliner__mirror {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.fw-outliner[data-mode="Rows"] .fw-outliner__text,
+.fw-outliner[data-dragging="true"] .fw-outliner__text {
+  cursor: default;
+}
+
+.fw-outliner__row[data-checked="true"] .fw-outliner__text {
+  color: var(--muted-foreground, #71717a);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in oklab, var(--muted-foreground, #71717a) 70%, transparent);
+}
+
+/* The Mac insertion marker: a line with a ring at its leading end. */
+.fw-outliner__drop {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  left: calc(
+    var(--fw-outliner-drop-depth, 0) * var(--fw-outliner-indent) + var(--fw-outliner-toggle) + 2px
+  );
+  height: 2px;
+  border-radius: 1px;
+  background: var(--fw-outliner-insertion);
+  pointer-events: none;
+}
+
+.fw-outliner__drop[data-position="After"] {
+  bottom: -1px;
+}
+
+.fw-outliner__drop[data-position="Before"] {
+  top: -1px;
+}
+
+.fw-outliner__drop::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -7px;
+  width: 6px;
+  height: 6px;
+  border: 2px solid var(--fw-outliner-insertion);
+  border-radius: 50%;
+  background: var(--background, #fff);
+}
+
+.fw-outliner__crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.fw-outliner__crumbs li + li::before {
+  content: "›";
+  margin: 0 4px 0 2px;
+  color: var(--muted-foreground, #71717a);
+}
+
+.fw-outliner__crumb {
+  padding: 0 2px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--muted-foreground, #71717a);
+  font: inherit;
+  cursor: pointer;
+}
+
+.fw-outliner__crumb:hover {
+  color: var(--foreground, inherit);
+  text-decoration: underline;
+}
+
+.fw-outliner__title {
+  margin: 0 0 8px;
+  padding-left: calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle) + 6px);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.fw-outliner__add {
+  margin: 2px 0 0 calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle));
+  padding: 1px 4px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--muted-foreground, #71717a);
+  font: inherit;
+  cursor: text;
+}
+
+.fw-outliner__add:focus-visible,
+.fw-outliner__crumb:focus-visible {
+  outline: 2px solid var(--ring, #2563eb);
+  outline-offset: 1px;
+}
+
+.fw-outliner__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fw-outliner-ghost {
+  position: fixed;
+  z-index: 2147483000;
+  top: 0;
+  left: 0;
+  max-width: 280px;
+  overflow: hidden;
+  padding: 3px 10px;
+  border: 1px solid var(--border, #e4e4e7);
+  border-radius: 6px;
+  background: var(--popover, var(--background, #fff));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 14%);
+  color: var(--popover-foreground, var(--foreground, #18181b));
+  font-size: 13px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.fw-outliner-dragging,
+.fw-outliner-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fw-outliner__triangle,
+  .fw-outliner__dot {
+    transition: none;
+  }
+}

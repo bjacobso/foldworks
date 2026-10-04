@@ -32,6 +32,8 @@ accessible application interfaces with Foldkit:
   contracts. See the [architecture](./packages/code-editor/NATIVE.md).
 - [`@foldworks/query-builder`](./packages/query-builder) — configurable query
   documents, editing, validation, rendering, and rule reordering.
+- [`@foldworks/outliner`](./packages/outliner) — a keyboard-first outliner
+  with natural indenting, reordering, folding, hoisting, and drag and drop.
 - [`@foldworks/form-builder`](./packages/form-builder) — section-first form
   documents, immutable operations, registries, and drag-and-drop primitives.
 - [`@foldworks/diagram`](./packages/diagram) — compound directed-graph

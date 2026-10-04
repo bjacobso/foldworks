@@ -22,6 +22,7 @@ import { loadExample, setMode, update as updateForm } from "../form-builder/upda
 import { Message as PdfViewerMessage } from "../pdf-viewer/message";
 import { update as updatePdfViewer } from "../pdf-viewer/update";
 import { update as updateQueryBuilder } from "../query-builder/update";
+import { update as updateOutliner } from "../outliner/update";
 import { applyTheme, ThemeName } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
 import { update as updateStatechart } from "../statechart/update";
@@ -203,6 +204,13 @@ const foldQueryBuilder = Update.foldChild({
   toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
 });
 
+const foldOutliner = Update.foldChild({
+  update: updateOutliner,
+  read: (model: Model) => Option.some(model.outlinerDemo),
+  write: (model, outlinerDemo) => evo(model, { outlinerDemo: () => outlinerDemo }),
+  toParentMessage: (message) => Message.GotOutlinerDemoMessage({ message }),
+});
+
 const foldPdfAnnotator = Update.foldChild({
   update: PdfAnnotator.update,
   read: (model: Model) => Option.some(model.pdfAnnotator),
@@ -342,6 +350,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotDiffViewerDemoMessage: ({ message: childMessage }) => foldDiffViewer(model, childMessage),
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
+    GotOutlinerDemoMessage: ({ message: childMessage }) => foldOutliner(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) => foldPdfAnnotator(model, childMessage),
     GotPdfViewerDemoMessage: ({ message: childMessage }) => foldPdfViewer(model, childMessage),
     GotEditorMessage: ({ message }) => foldEditor(model, message),
