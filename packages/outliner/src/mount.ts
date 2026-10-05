@@ -401,7 +401,9 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               const target = doc.activeElement;
               if (target === null || !host.contains(target) || handleKey(event, target, true))
                 return;
-              if (!isText(target) || event.ctrlKey || event.metaKey) return;
+              // Characters go into item text or into a placeholder, never a read-only row.
+              const writable = (isText(target) && !target.readOnly) || isPlaceholderText(target);
+              if (!writable || event.ctrlKey || event.metaKey) return;
               const text = event.key === "Enter" ? "\n" : event.key.length === 1 ? event.key : "";
               const command =
                 text !== ""
