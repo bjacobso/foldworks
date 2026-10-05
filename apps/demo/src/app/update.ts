@@ -1,9 +1,11 @@
+import { update as updateDocs } from "../docs/update";
 import { Effect, Option, Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
 import { Command, Update } from "foldkit";
+import { scrollIntoViewAfterPaint } from "foldkit/dom";
 import { UrlRequest, load, pushUrl } from "foldkit/navigation";
 import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
@@ -48,6 +50,14 @@ const NavigateInternal = Command.define("NavigateInternal", {
   args: { url: S.String },
   messages: [Message.CompletedNavigateInternal],
   execute: ({ url }) => pushUrl(url).pipe(Effect.as(Message.CompletedNavigateInternal())),
+});
+
+const ScrollDocsToTop = Command.define("ScrollDocsToTop", {
+  messages: [Message.CompletedNavigateInternal],
+  execute: scrollIntoViewAfterPaint("[data-docs-page] > *", { block: "start" }).pipe(
+    Effect.ignore,
+    Effect.as(Message.CompletedNavigateInternal()),
+  ),
 });
 
 const LoadExternal = Command.define("LoadExternal", {
@@ -156,6 +166,13 @@ const foldCodeEditor = Update.foldChild({
   toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
 });
 
+const foldDocs = Update.foldChild({
+  update: updateDocs,
+  read: (model: Model) => Option.some(model.docs),
+  write: (model, docs) => ({ ...model, docs }),
+  toParentMessage: (message) => Message.GotDocsMessage({ message }),
+});
+
 const foldAgent = Update.foldChild({
   update: Agent.update,
   read: (model: Model) => Option.some(model.agent),
@@ -258,6 +275,20 @@ const foldSidebar = Update.foldChild({
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
+  if (
+    route._tag === "Docs" &&
+    (model.route._tag !== "Docs" ||
+      Option.getOrElse(model.route.package, () => "") !== Option.getOrElse(route.package, () => ""))
+  ) {
+    next = {
+      ...next,
+      docs: {
+        ...next.docs,
+        explorer: Option.getOrElse(route.package, () => "") === "ui" ? "editable-text" : "sidebar",
+        events: [],
+      },
+    };
+  }
   next = {
     ...next,
     dataTableDemo: setActiveContact(next.dataTableDemo, dataTablePersonFromRoute(route)),
@@ -345,8 +376,16 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       }),
     ChangedUrl: ({ url }) => {
       const next = applyRoute(model, urlToAppRoute(url));
-      return next.route._tag === model.route._tag ? { model: next } : enterRoute(next);
+      if (next.route._tag !== model.route._tag) return enterRoute(next);
+      const docsPage = (route: Model["route"]) =>
+        route._tag === "Docs"
+          ? `${Option.getOrElse(route.package, () => "")}/${Option.getOrElse(route.module, () => "")}`
+          : undefined;
+      const isNewDocsPage =
+        docsPage(next.route) !== undefined && docsPage(next.route) !== docsPage(model.route);
+      return isNewDocsPage ? { model: next, commands: [ScrollDocsToTop()] } : { model: next };
     },
+    GotDocsMessage: ({ message }) => foldDocs(model, message),
     GotAgentMessage: ({ message }) => foldAgent(model, message),
     GotWorkflowEditorMessage: ({ message: childMessage }) => foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),

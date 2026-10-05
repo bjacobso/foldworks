@@ -57,7 +57,10 @@ accessible application interfaces with Foldkit:
   application-owned documents.
 
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
-suite. Its `/agent` reference application demonstrates streaming assistant
+suite. Its `/docs` website generates searchable references for every public package
+and source module, with schemas, messages, source links, README guides, and
+interactive state-machine explorers. See [documentation generation](./apps/demo/docs/README.md)
+for the source pipeline and how to add reducer explorers. Its `/agent` reference application demonstrates streaming assistant
 text, tool calls and results, an interactive permission checkpoint, a model
 picker, and a prompt composer. Its `/statechart` editor builds a nested state
 machine with cycles, parallel regions, submachines, notes, and a simulator on

@@ -515,6 +515,7 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                   h.div(
                     [h.Class(className(styles.actions))],
                     [
+                      link("Read the documentation", "/docs", "primary", h),
                       link("Open the Workers workbench", workbenchRouter(), "primary", h),
                       link("Try the agent playground", agentRouter(), "secondary", h),
                       link("Explore the UI system", uiKitRouter(), "secondary", h),
