@@ -47,30 +47,45 @@ includes model selection, run status, the transcript, streamed text, tool calls,
 permission decisions, failure recovery, transcript following, and the composer.
 
 ```ts
-Agent.Chat.view({
-  model,
-  models: [
-    {
-      id: "fast-model",
-      label: "Fast model",
-      provider: "Example provider",
-      description: "Fast answers for everyday work",
-    },
-  ],
-  toParentMessage: (message) => Message.GotAgentMessage({ message }),
-  empty: {
-    title: "What can I help with?",
-    suggestion: {
-      label: "Summarize this account",
-      prompt: "Summarize this account",
+Agent.Chat.view(
+  {
+    model,
+    models: [
+      {
+        id: "fast-model",
+        label: "Fast model",
+        provider: "Example provider",
+        description: "Fast answers for everyday work",
+      },
+    ],
+    toParentMessage: (message) => Message.GotAgentMessage({ message }),
+    empty: {
+      title: "What can I help with?",
+      suggestion: {
+        label: "Summarize this account",
+        prompt: "Summarize this account",
+      },
     },
   },
-}, h)
+  h,
+);
 ```
 
 For product-specific rendering, pass `renderText` for completed assistant text
 or customize permission details with `permission.renderDetails`. The package
 does not require a Markdown parser or make assumptions about tool input.
+
+A permission checkpoint can present a proposed change for review. Render the
+change in `renderDetails`, for example with `@foldworks/ui`'s `TreeDiff`, and
+name the decision with `allowLabel` and `denyLabel`:
+
+```ts
+permission: {
+  allowLabel: "Accept",
+  denyLabel: "Discard",
+  renderDetails: (part, h) => [TreeDiff.view({ label: "Proposed change", before, after }, h)],
+},
+```
 
 Every part is also exported for custom layouts: `Agent.SessionBar`,
 `Agent.Transcript`, `Agent.ConversationTurn`, `Agent.TextResponse`,
@@ -119,15 +134,14 @@ documentation without a provider or network request.
 import { createScenario, defaultDelayFor } from "@foldworks/agent/testing";
 
 const scenario = createScenario({
-  delayFor: (event, { modelId }) =>
-    defaultDelayFor(event) * (modelId === "fast-model" ? 0.5 : 1),
+  delayFor: (event, { modelId }) => defaultDelayFor(event) * (modelId === "fast-model" ? 0.5 : 1),
   initial: (writer) => {
     writer.reasoning("I should inspect the account first.");
     writer.text("I’ll inspect the account.");
     writer.requestPermission({
       id: "update",
       name: "update_account",
-      input: "{\"status\":\"active\"}",
+      input: '{"status":"active"}',
       reason: "This changes account data.",
     });
   },

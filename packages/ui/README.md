@@ -665,7 +665,15 @@ reviewing proposed changes, and reading attributed history. Import them from
   optional evidence descriptions. It uses semantic nested lists rather than an
   interactive ARIA tree widget.
 - `ChangeSetPreview` accepts before/after values, added/removed/changed
-  consequences, notices, and application-owned action elements.
+  consequences, notices, and application-owned action elements. Its
+  `content` slot holds another view of the change, such as a `TreeDiff`;
+  `changes` and `consequences` can then be left out.
+- `TreeDiff` compares two versions of a tree whose nodes keep their ids, such
+  as an outline or a workflow, and shows only the region that changed. Nodes
+  are marked added, removed, moved, or edited; a reordering is reported with
+  the fewest moves, removed nodes stay where they were, and unchanged runs fold
+  into a count. `diffTrees`, `changedRegion`, and `summarizeDiff` expose the
+  same rows for hosts that render or count them themselves.
 - `TransactionTimeline` accepts attributed entries with timestamps, context,
   and value changes. Supply entries in the desired display order.
 

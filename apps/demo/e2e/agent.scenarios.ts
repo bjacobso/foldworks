@@ -16,11 +16,22 @@ export const agentScenarios = (
 
     const runToPermission = async (page: Page) => {
       await page.getByRole("button", { name: "Run the release checklist example" }).click();
-      await expect.poll(() => page.locator('[data-tool-call="read_file"]').getAttribute("data-tool-status"), { timeout: 5_000 })
+      await expect
+        .poll(() => page.locator('[data-tool-call="read_file"]').getAttribute("data-tool-status"), {
+          timeout: 5_000,
+        })
         .toBe("Completed");
-      await expect.poll(() => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"), { timeout: 5_000 })
+      await expect
+        .poll(
+          () => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"),
+          { timeout: 5_000 },
+        )
         .toBe("WaitingApproval");
-      await expect.poll(() => page.getByRole("group", { name: "Permission request for write_file" }).isVisible(), { timeout: 5_000 })
+      await expect
+        .poll(
+          () => page.getByRole("group", { name: "Permission request for write_file" }).isVisible(),
+          { timeout: 5_000 },
+        )
         .toBe(true);
     };
 
@@ -35,25 +46,54 @@ export const agentScenarios = (
       await runToPermission(page);
       const assistant = page.locator('[data-agent-turn="assistant"]');
       expect(await assistant.textContent()).toContain("release setup first");
-      await expect.poll(() => page.locator('[data-reasoning-status="Complete"]').count())
-        .toBe(1);
-      expect(await page.locator('[data-reasoning-status="Complete"]').textContent())
-        .toContain("inspect the project scripts");
-      expect(await page.locator('[data-tool-call="read_file"] pre').first().textContent()).toContain("package.json");
-      expect(await page.getByRole("group", { name: "Permission request for write_file" }).textContent())
-        .toContain("docs/launch-checklist.md");
+      await expect.poll(() => page.locator('[data-reasoning-status="Complete"]').count()).toBe(1);
+      expect(await page.locator('[data-reasoning-status="Complete"]').textContent()).toContain(
+        "inspect the project scripts",
+      );
+      expect(
+        await page.locator('[data-tool-call="read_file"] pre').first().textContent(),
+      ).toContain("package.json");
+      expect(
+        await page.getByRole("group", { name: "Permission request for write_file" }).textContent(),
+      ).toContain("docs/launch-checklist.md");
       await screenshot("18-agent-permission");
 
-      await page.getByRole("button", { name: "Allow once" }).click();
-      await expect.poll(() => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"), { timeout: 5_000 })
+      expect(
+        await page
+          .getByRole("region", { name: "Proposed checklist change" })
+          .locator("[data-tree-diff-row]")
+          .allTextContents(),
+      ).toEqual([
+        "Launch checklist",
+        "+Verify the build (added)",
+        "+pnpm test (added)",
+        "+pnpm typecheck (added)",
+        "+pnpm build (added)",
+        "Tag the release",
+        "~Deploy to production once checks passwas Deploy to production (edited)",
+        "Announce in #releases",
+      ]);
+      await page.getByRole("button", { name: "Accept" }).click();
+      await expect
+        .poll(
+          () => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"),
+          { timeout: 5_000 },
+        )
         .toBe("Completed");
-      await expect.poll(() => page.getByText("No real file was changed.", { exact: true }).isVisible(), { timeout: 5_000 })
+      await expect
+        .poll(() => page.getByText("No real file was changed.", { exact: true }).isVisible(), {
+          timeout: 5_000,
+        })
         .toBe(true);
-      await expect.poll(() => page.getByText("Complete", { exact: true }).first().isVisible()).toBe(true);
+      await expect
+        .poll(() => page.getByText("Complete", { exact: true }).first().isVisible())
+        .toBe(true);
       await page.getByRole("button", { name: "Copy", exact: true }).click();
-      await expect.poll(() => page.getByRole("button", { name: "Copied", exact: true }).isVisible())
+      await expect
+        .poll(() => page.getByRole("button", { name: "Copied", exact: true }).isVisible())
         .toBe(true);
-      await expect.poll(() => page.getByRole("button", { name: "Regenerate", exact: true }).isEnabled())
+      await expect
+        .poll(() => page.getByRole("button", { name: "Regenerate", exact: true }).isEnabled())
         .toBe(true);
       await screenshot("19-agent-complete");
     });
@@ -68,18 +108,32 @@ export const agentScenarios = (
       expect(await input.inputValue()).toBe("Line one\nLine two");
       await input.press("Enter");
 
-      await expect.poll(() => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"), { timeout: 5_000 })
+      await expect
+        .poll(
+          () => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"),
+          { timeout: 5_000 },
+        )
         .toBe("WaitingApproval");
-      await page.getByRole("button", { name: "Deny" }).click();
-      await expect.poll(() => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"))
+      await page.getByRole("button", { name: "Discard" }).click();
+      await expect
+        .poll(() => page.locator('[data-tool-call="write_file"]').getAttribute("data-tool-status"))
         .toBe("Denied");
-      await expect.poll(() => page.getByText(/I didn’t apply the checklist update/).isVisible(), { timeout: 5_000 }).toBe(true);
+      await expect
+        .poll(() => page.getByText(/I didn’t apply the checklist update/).isVisible(), {
+          timeout: 5_000,
+        })
+        .toBe(true);
 
       await page.getByRole("button", { name: "Reset" }).click();
-      await expect.poll(() => page.getByRole("button", { name: "Run the release checklist example" }).isVisible())
+      await expect
+        .poll(() =>
+          page.getByRole("button", { name: "Run the release checklist example" }).isVisible(),
+        )
         .toBe(true);
       await page.getByRole("button", { name: "Run the release checklist example" }).click();
-      await expect.poll(() => page.locator('[data-agent-turn="assistant"]').textContent()).toContain("release setup first");
+      await expect
+        .poll(() => page.locator('[data-agent-turn="assistant"]').textContent())
+        .toContain("release setup first");
       await page.getByRole("button", { name: "Stop" }).click();
       await expect.poll(() => page.getByText(/\(stopped\)/).isVisible()).toBe(true);
       await page.waitForTimeout(500);
@@ -87,12 +141,16 @@ export const agentScenarios = (
 
       await page.getByRole("button", { name: "Reset" }).click();
       await page.getByRole("button", { name: "Run the release checklist example" }).click();
-      await expect.poll(() => page.locator('[data-agent-turn="assistant"]').textContent()).toContain("release setup first");
+      await expect
+        .poll(() => page.locator('[data-agent-turn="assistant"]').textContent())
+        .toContain("release setup first");
       await page.getByRole("link", { name: "Home", exact: true }).click();
       await expect.poll(() => new URL(page.url()).pathname).toBe("/");
       await page.getByRole("link", { name: "Agent playground", exact: true }).click();
       await expect.poll(() => new URL(page.url()).pathname).toBe("/agent");
-      await expect.poll(() => page.getByText("Stopped", { exact: true }).first().isVisible()).toBe(true);
+      await expect
+        .poll(() => page.getByText("Stopped", { exact: true }).first().isVisible())
+        .toBe(true);
       await page.waitForTimeout(500);
       expect(await page.locator('[data-tool-status="WaitingApproval"]').count()).toBe(0);
     });
@@ -103,9 +161,15 @@ export const agentScenarios = (
       await page.goto(`${appUrl}/agent`, { waitUntil: "networkidle" });
       await page.getByLabel("Appearance").selectOption("Dark");
       await expect.poll(() => page.locator("html").getAttribute("class")).toContain("dark");
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      await expect.poll(() => page.getByRole("button", { name: "Agent model" }).isVisible()).toBe(true);
-      await expect.poll(() => page.getByRole("textbox", { name: "Message the agent" }).isVisible()).toBe(true);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      ).toBe(true);
+      await expect
+        .poll(() => page.getByRole("button", { name: "Agent model" }).isVisible())
+        .toBe(true);
+      await expect
+        .poll(() => page.getByRole("textbox", { name: "Message the agent" }).isVisible())
+        .toBe(true);
       await screenshot("20-agent-mobile-dark");
     });
   });

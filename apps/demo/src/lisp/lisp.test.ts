@@ -4,7 +4,7 @@ import { find, item, walk, type Items } from "@foldworks/outliner";
 import { analyze, decorations, diagnosticsOf } from "./analysis";
 import { propose } from "./assistant";
 import { idSource, parseSource, printOutline, readOutline } from "./codec";
-import { treeDiff } from "./diff";
+import { changedRegion, diffTrees, type TreeDiffNode } from "@foldworks/ui";
 import { evaluate, show } from "./evaluate";
 import { describeAt } from "./hover";
 import { extract, join, explode, rename, wrap } from "./refactor";
@@ -12,6 +12,17 @@ import { sampleOutline, sampleSource } from "./sample";
 import { print, read } from "./syntax";
 
 const outline = (source: string): Items => parseSource(source, [], idSource("t", []));
+
+const asTree = (items: Items): ReadonlyArray<TreeDiffNode> =>
+  items.map((node) => ({ id: node.id, label: node.text, children: asTree(node.children) }));
+
+/** The changed region of two outlines, one line per row. */
+const region = (before: Items, after: Items) =>
+  changedRegion(diffTrees(asTree(before), asTree(after))).map((row) =>
+    row._tag === "Elided"
+      ? `${"  ".repeat(row.depth)}… ${row.count}`
+      : `${"  ".repeat(row.depth)}${row.status} ${row.label}`,
+  );
 
 const byText = (items: Items, text: string) => walk(items).find((node) => node.text === text)!;
 
@@ -211,18 +222,14 @@ describe("assistant", () => {
     });
     if (followUp._tag !== "Proposal") throw new Error("expected a proposal");
     expect(analyze(followUp.proposal.items).warnings.size).toBe(0);
-    const moved = treeDiff(answer.proposal.items, followUp.proposal.items).map(
-      (row) => `${"  ".repeat(row.depth)}${row.status} ${row.text}`,
-    );
-    expect(moved).toEqual([
-      "Same workflow onboarding",
+    expect(region(answer.proposal.items, followUp.proposal.items)).toEqual([
+      "Unchanged workflow onboarding",
       "  Moved verify-identity",
-      "  Same parallel",
-      "    Same background-check",
-      "    Moved collect-i9",
+      "  Unchanged parallel",
+      "    Unchanged background-check",
       "    Removed sequence",
-      "  Same create-payroll-record",
-      "  Same activate",
+      "    Moved collect-i9",
+      "  … 2",
     ]);
     expect(printOutline([byText(followUp.proposal.items, "workflow onboarding")]).text).toBe(
       [
@@ -246,14 +253,13 @@ describe("assistant", () => {
       nextId: idSource("lisp-outline", sampleOutline),
     });
     if (answer._tag !== "Proposal") throw new Error("expected a proposal");
-    const rows = treeDiff(sampleOutline, answer.proposal.items);
-    expect(rows.map((row) => `${"  ".repeat(row.depth)}${row.status} ${row.text}`)).toEqual([
-      "Same workflow onboarding",
+    expect(region(sampleOutline, answer.proposal.items)).toEqual([
+      "Unchanged workflow onboarding",
       "  Added parallel",
       "    Moved background-check",
       "    Moved collect-i9",
-      "  Same create-payroll-record",
-      "  Same activate",
+      "  Unchanged create-payroll-record",
+      "  Unchanged activate",
     ]);
   });
 });

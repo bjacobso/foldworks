@@ -726,87 +726,11 @@
   margin-top: 10px;
 }
 
-.lisp-proposal__title {
-  margin: 0 0 6px;
-  font-weight: 600;
-}
-
-.lisp-diff {
-  overflow: auto;
+/* The structural diff reads as code inside the change preview. */
+.lisp-proposal [data-tree-diff] ul {
   max-height: 280px;
-  padding: 6px 0;
-  border: 1px solid var(--border);
-  border-radius: 7px;
+  overflow: auto;
   font-family: var(--lisp-mono);
-  font-size: 12px;
-  line-height: 20px;
-}
-
-.lisp-diff__row {
-  display: flex;
-  gap: 6px;
-  padding-right: 8px;
-  padding-left: calc(8px + var(--lisp-diff-depth, 0) * 16px);
-  white-space: nowrap;
-}
-
-.lisp-diff__marker {
-  flex: none;
-  width: 10px;
-  color: var(--muted-foreground);
-  text-align: center;
-}
-
-.lisp-diff__text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lisp-diff__row[data-status="Same"] {
-  color: var(--muted-foreground);
-}
-
-.lisp-diff__row[data-status="Added"] {
-  background: color-mix(in oklab, var(--lisp-success) 13%, transparent);
-}
-
-.lisp-diff__row[data-status="Added"] .lisp-diff__marker {
-  color: var(--lisp-success);
-}
-
-.lisp-diff__row[data-status="Removed"] {
-  background: color-mix(in oklab, var(--lisp-danger) 11%, transparent);
-  text-decoration: line-through;
-}
-
-.lisp-diff__row[data-status="Removed"] .lisp-diff__marker {
-  color: var(--lisp-danger);
-}
-
-.lisp-diff__row[data-status="Moved"] .lisp-diff__marker,
-.lisp-diff__row[data-status="Edited"] .lisp-diff__marker {
-  color: var(--primary, #2563eb);
-}
-
-.lisp-diff__row[data-status="Moved"],
-.lisp-diff__row[data-status="Edited"] {
-  background: color-mix(in oklab, var(--primary, #2563eb) 8%, transparent);
-}
-
-.lisp-proposal__notes {
-  margin: 8px 0 0;
-  padding-left: 18px;
-  font-size: 12px;
-}
-
-.lisp-proposal__notes li + li {
-  margin-top: 2px;
-}
-
-.lisp-proposal__actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
 }
 
 .lisp-guide summary {
@@ -825,15 +749,6 @@
 
 .lisp-guide li + li {
   margin-top: 4px;
-}
-
-.lisp-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 @media (max-width: 1500px) {
