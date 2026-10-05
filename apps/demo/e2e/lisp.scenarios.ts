@@ -227,7 +227,9 @@ export const lispScenarios = (
         .toBe("Acting on 2 selected rows");
       await page.getByRole("button", { name: /Run these concurrently/ }).click();
       await expect
-        .poll(() => page.locator(".lisp-diff__row").allTextContents())
+        .poll(() =>
+          page.getByRole("region", { name: "Structural diff" }).locator("li").allTextContents(),
+        )
         .toEqual([
           "workflow onboarding",
           "+parallel (added)",

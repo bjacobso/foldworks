@@ -26,6 +26,18 @@ export {
   ValueInspector,
 } from "./operational";
 export type { Consequence, ExplanationNode, TimelineEntry, ValueChange } from "./operational";
+export {
+  TreeDiff,
+  changedRegion,
+  diffTrees,
+  summarizeDiff,
+  type TreeDiffConfig,
+  type TreeDiffElidedRow,
+  type TreeDiffNode,
+  type TreeDiffNodeRow,
+  type TreeDiffRow,
+  type TreeDiffStatus,
+} from "./tree-diff";
 export { Accordion, Collapsible } from "./collections";
 export { Heading, Link, Text, VisuallyHidden } from "./content";
 export {

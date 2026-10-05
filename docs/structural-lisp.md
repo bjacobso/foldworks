@@ -127,7 +127,9 @@ Untouched rows keep their ids, so every change can be shown as a tree diff and
 undone as one step.
 
 The **Ask** panel turns a request about the selection into a proposal: a new
-tree, a diff, and the consequences found by analyzing the proposed program. It
+tree, a diff, and the consequences found by analyzing the proposed program. The
+diff is `@foldworks/ui`'s `TreeDiff` inside a `ChangeSetPreview`; the `/agent`
+demo shows the same diff in a permission checkpoint. It
 is honest about what it is. It is a local intent matcher that understands a
 handful of phrasings, labeled "Local · no model", and it never edits text.
 Accepting a proposal applies it as one undoable step.
@@ -184,7 +186,5 @@ has a use outside Lisp:
 4. **Richer values.** Vectors of maps could show as a data grid, and nested
    values as a collapsible tree. That would also serve the structured-payload
    gap in [WorldVM developer tools](./worldvm-devtools.md#gaps).
-5. **A structural diff primitive.** The proposal diff compares any two
-   outlines that share ids. Workflow and form documents are trees with stable
-   ids too, so if a second use appears it could become a primitive next to
-   `ChangeSetPreview`.
+5. **Diffs for every document.** Workflow and form documents are trees with
+   stable ids too, so `TreeDiff` can review their changes the same way.

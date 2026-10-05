@@ -13,7 +13,7 @@ import {
 } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
-import { Badge, Button, Icon } from "@foldworks/ui";
+import { Badge, Button, ChangeSetPreview, Icon, TreeDiff, type TreeDiffNode } from "@foldworks/ui";
 import { History } from "@foldworks/history";
 import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner, ancestors, find, type Items, type Row } from "@foldworks/outliner";
@@ -29,7 +29,6 @@ import {
 } from "./analysis";
 import { SUGGESTIONS } from "./assistant";
 import { printOutline } from "./codec";
-import { treeDiff } from "./diff";
 import { show } from "./evaluate";
 import { describeAt, type Description } from "./hover";
 import { slotsFor } from "./slots";
@@ -506,13 +505,13 @@ const inspector = (model: Model, analysis: Analysis, h: H): Html => {
   );
 };
 
-const diffMarker: Readonly<Record<string, string>> = {
-  Added: "+",
-  Removed: "−",
-  Moved: "→",
-  Edited: "~",
-  Same: "",
-};
+/** An outline as a tree for a structural diff. */
+export const asTree = (items: Items): ReadonlyArray<TreeDiffNode> =>
+  items.map((node) => ({
+    id: node.id,
+    label: firstLine(node.text),
+    children: asTree(node.children),
+  }));
 
 const assistant = (model: Model, h: H): Html => {
   const items = model.outline.items;
@@ -599,64 +598,44 @@ const assistant = (model: Model, h: H): Html => {
         ? []
         : [
             h.div(
-              [h.Class("lisp-proposal"), h.AriaLabel("Proposed change")],
+              [h.Class("lisp-proposal")],
               [
-                h.p([h.Class("lisp-proposal__title")], [proposal.title]),
-                h.div(
-                  [h.Class("lisp-diff"), h.Role("list"), h.AriaLabel("Structural diff")],
-                  treeDiff(items, proposal.items).map((row) =>
-                    h.div(
-                      [
-                        h.Class("lisp-diff__row"),
-                        h.Role("listitem"),
-                        h.DataAttribute("status", row.status),
-                        h.Style({ "--lisp-diff-depth": String(row.depth) }),
-                        ...(row.was === undefined ? [] : [h.Title(`was: ${row.was}`)]),
-                      ],
-                      [
-                        h.span(
-                          [h.Class("lisp-diff__marker"), h.AriaHidden(true)],
-                          [diffMarker[row.status] ?? ""],
-                        ),
-                        h.span([h.Class("lisp-diff__text")], [firstLine(row.text)]),
-                        ...(row.status === "Same"
-                          ? []
-                          : [
-                              h.span([h.Class("lisp-sr-only")], [` (${row.status.toLowerCase()})`]),
-                            ]),
-                      ],
-                    ),
-                  ),
-                ),
-                ...(proposal.notes.length === 0
-                  ? []
-                  : [
-                      h.ul(
-                        [h.Class("lisp-proposal__notes")],
-                        proposal.notes.map((note) => h.li([], [note])),
+                ChangeSetPreview.view(
+                  {
+                    label: proposal.title,
+                    basis: "A structural edit. Rows it does not touch keep their identity.",
+                    content: [
+                      TreeDiff.view(
+                        {
+                          label: "Structural diff",
+                          before: asTree(items),
+                          after: asTree(proposal.items),
+                        },
+                        h,
                       ),
-                    ]),
-                h.div(
-                  [h.Class("lisp-proposal__actions")],
-                  [
-                    h.button(
-                      [
-                        h.Id(domIds.accept),
-                        h.Class("lisp-button lisp-button--primary"),
-                        h.Type("button"),
-                        h.OnClick(Message.AcceptedProposal()),
-                      ],
-                      [h.span([h.AriaHidden(true)], ["✓ "]), "Accept"],
-                    ),
-                    h.button(
-                      [
-                        h.Class("lisp-button"),
-                        h.Type("button"),
-                        h.OnClick(Message.DiscardedProposal()),
-                      ],
-                      ["Discard"],
-                    ),
-                  ],
+                    ],
+                    notices: proposal.notes,
+                    actions: [
+                      h.button(
+                        [
+                          h.Id(domIds.accept),
+                          h.Class("lisp-button lisp-button--primary"),
+                          h.Type("button"),
+                          h.OnClick(Message.AcceptedProposal()),
+                        ],
+                        [h.span([h.AriaHidden(true)], ["✓ "]), "Accept"],
+                      ),
+                      h.button(
+                        [
+                          h.Class("lisp-button"),
+                          h.Type("button"),
+                          h.OnClick(Message.DiscardedProposal()),
+                        ],
+                        ["Discard"],
+                      ),
+                    ],
+                  },
+                  h,
                 ),
               ],
             ),
