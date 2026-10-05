@@ -1,5 +1,6 @@
 import { view as docsView, catalog as docsCatalog } from "../docs/view";
 import { docsPath } from "../docs/catalog";
+import { groupPackages, packageIcon } from "../docs/packages";
 import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
 import { Match, Option } from "effect";
 import * as stylex from "@stylexjs/stylex";
@@ -183,7 +184,8 @@ const activeAnnouncement = (model: Model): string => {
 
 const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
   const demo = demoFromRoute(model.route);
-  if (model.route._tag === "Docs")
+  if (model.route._tag === "Docs") {
+    const activePackage = model.route.package;
     return [
       {
         id: "docs",
@@ -199,20 +201,19 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
           { id: "demo-home", label: "Demos & examples", href: homeRouter(), icon: House },
         ],
       },
-      {
-        id: "docs-packages",
-        label: "Packages",
-        items: docsCatalog.map((pkg) => ({
+      ...groupPackages(docsCatalog).map((group) => ({
+        id: `docs-${group.id}`,
+        label: group.title,
+        items: group.packages.map((pkg) => ({
           id: pkg.id,
           label: pkg.id,
           href: docsPath(pkg.id),
-          icon: Braces,
-          isActive:
-            model.route._tag === "Docs" &&
-            Option.getOrElse(model.route.package, () => "") === pkg.id,
+          icon: packageIcon(pkg.id),
+          isActive: Option.getOrElse(activePackage, () => "") === pkg.id,
         })),
-      },
+      })),
     ];
+  }
   return [
     {
       id: "overview",
@@ -412,6 +413,15 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
       ? Badge.view({ label: "Saving", dot: true }, h)
       : Badge.view({ label: "Save failed", tone: "danger", dot: true }, h);
 
+const docsDescription = (model: Model): string => {
+  if (model.route._tag !== "Docs") return "";
+  const packageId = Option.getOrUndefined(model.route.package);
+  const moduleId = Option.getOrUndefined(model.route.module);
+  return packageId === undefined
+    ? `${docsCatalog.length} packages · APIs · messages · state machines`
+    : `@foldworks/${packageId}${moduleId === undefined ? "" : ` › ${moduleId}`}`;
+};
+
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   const title =
@@ -454,7 +464,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                       : "@foldworks/ui";
   const description =
     demo === "Docs"
-      ? "Source reference · Models · Messages · State machines"
+      ? docsDescription(model)
       : demo === "Editor"
         ? "Native Foldkit editing · Markdown · Custom blocks"
         : demo === "Agent"
