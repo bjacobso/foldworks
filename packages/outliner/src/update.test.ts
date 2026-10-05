@@ -253,4 +253,27 @@ describe("update", () => {
     model = update(model, Message.MovedCompletion({ delta: 1 })).model;
     expect(update(model, Message.AcceptedCompletion({})).model.items[1]?.text).toBe("Betata");
   });
+
+  it("turns a placeholder into an item, opening its parent, as one undoable step", () => {
+    const collapsed = press(start(), "Collapse", "a");
+    const filled = update(
+      collapsed,
+      Message.FilledPlaceholder({
+        parentId: "a",
+        index: 1,
+        key: "step",
+        text: "Middle",
+        offset: 3,
+      }),
+    );
+    expect(texts(filled.model)).toEqual(["Alpha", "  One", "  Middle", "  Two", "Beta"]);
+    expect(filled.model.focus).toEqual({ id: "o-1", start: 3, end: 3 });
+    expect(filled.commands).toHaveLength(1);
+    expect(texts(press(filled.model, "Undo", "o-1"))).toEqual(["Alpha", "  One", "  Two", "Beta"]);
+    const top = update(
+      start(),
+      Message.FilledPlaceholder({ parentId: null, index: 9, key: "more", text: "", offset: 0 }),
+    ).model;
+    expect(texts(top).at(-1)).toBe("");
+  });
 });

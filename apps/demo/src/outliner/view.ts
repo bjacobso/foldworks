@@ -3,7 +3,7 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 import { Button } from "@foldworks/ui";
 import { History } from "@foldworks/history";
-import { Outliner, shortcutHelp, walk } from "@foldworks/outliner";
+import { Outliner, find, shortcutHelp, walk, type Placeholder } from "@foldworks/outliner";
 
 import { decorations, describeMark, type MarkInfo } from "./mentions";
 import { Message } from "./message";
@@ -102,6 +102,12 @@ const markCard = (info: MarkInfo, h: HtmlBuilder<Message>): Html =>
     ],
   );
 
+/** Lists that invite one more entry show a placeholder at their end. */
+const OPEN_LISTS: Readonly<Record<string, Placeholder>> = {
+  Chapters: { key: "chapter", label: "chapter" },
+  "Open questions": { key: "question", label: "question" },
+};
+
 const mouseTips = (platform: Model["platform"]): ReadonlyArray<string> => {
   const option = platform === "mac" ? "⌥" : "Alt";
   const shift = platform === "mac" ? "⇧" : "Shift";
@@ -170,6 +176,13 @@ export const view = defineView<Model, Message>((model, h) => {
                       label: "Field guide outline",
                       showCheckboxes: model.showCheckboxes,
                       decorations: decorations(model.outline.items),
+                      placeholders: (parentId: string | null) => {
+                        const parent =
+                          parentId === null ? undefined : find(model.outline.items, parentId);
+                        const placeholder =
+                          parent === undefined ? undefined : OPEN_LISTS[parent.text];
+                        return placeholder === undefined ? [] : [placeholder];
+                      },
                       hover: ({ text, offset, source }) => {
                         const info = describeMark(
                           model.outline.items,

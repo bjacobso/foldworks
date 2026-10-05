@@ -133,6 +133,32 @@ matches what is typed exactly is left out, so a finished word leaves Return to
 start the next item. Accepting replaces the range as one undoable step, and
 keys typed before the caret settles are replayed after the insertion.
 
+## Placeholder rows
+
+A placeholder is a ghost child that invites the next entry, such as “+ add a
+question” at the end of a list or “+ step” in a workflow. It is not part of the
+document. The `placeholders` view input returns them for a parent, or for the
+top level when it is given the hoisted item or `null`:
+
+```ts
+placeholders: (parentId) =>
+  parentId === questionsId ? [{ key: "question", label: "question" }] : [],
+```
+
+A placeholder shows `label` after a “+”. `index` places it among the parent's
+children; the default is after the last. `text` is what a new item starts
+with, and `caret` is where the caret lands in it. Placeholders appear under
+expanded items and leaves, never under folded ones.
+
+Arrow keys move into and out of placeholders as they do between rows. Typing
+into one, pressing Return on it, or clicking its “+” sends
+`FilledPlaceholder({ parentId, index, key, text, offset })`, which creates the
+item as one undoable step and puts the caret in it; keys typed while it
+renders are replayed into it. React to the same message to do more, such as
+offering completions in the new item. Placeholders are `treeitem`s without a
+set position, and selection, drag and drop, history, and `revision` ignore
+them.
+
 `Outliner.Message.Replace({ items, announcement, coalescingKey })` applies an
 edit the host computed, such as a refactoring or text typed in another view,
 as one undoable step. Focus stays put, and replacements with the same

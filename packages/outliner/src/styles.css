@@ -367,3 +367,32 @@
     transition: none;
   }
 }
+
+/* Placeholders: ghost children that become items when chosen or typed into. */
+.fw-outliner__plus {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground, #71717a);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fw-outliner__plus:hover {
+  color: var(--foreground, inherit);
+}
+
+.fw-outliner__placeholder .fw-outliner__text::placeholder {
+  color: var(--muted-foreground, #71717a);
+  opacity: 0.75;
+}
+
+.fw-outliner__placeholder:not(:focus-within) {
+  opacity: 0.7;
+}
+
+.fw-outliner__placeholder:hover {
+  opacity: 1;
+}
