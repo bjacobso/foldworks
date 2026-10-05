@@ -36,6 +36,8 @@ describe("completion lists", () => {
     expect(track(list, "sum t", "sums t", 6)).toBeUndefined();
     expect(track(typed!, "sum to", "sum t", 5)).toEqual({ ...list, to: 5 });
     expect(track(list, "sum t", "sum ", 4)).toEqual({ ...list, to: 4 });
+    // Typing a character that repeats the next one still lands in the range.
+    expect(track(open(0, 2, items), "bal", "ball", 3)).toEqual({ ...open(0, 2, items), to: 3 });
   });
 
   it("wraps the active item and accepts it over the range", () => {

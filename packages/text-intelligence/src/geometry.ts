@@ -64,7 +64,12 @@ export const rectAtOffset = (root: Element, offset: number): DOMRect | undefined
   const doc = root.ownerDocument;
   const all = pieces(root);
   const range = doc.createRange();
-  for (const { node, start } of all) {
+  // At a boundary between pieces, measure the start of the next one: a word
+  // that begins a wrapped line sits there, not at the end of the line above.
+  const inside = all.find(
+    ({ node, start }) => offset >= start && offset < start + node.data.length,
+  );
+  for (const { node, start } of inside === undefined ? all : [inside]) {
     const length = node.data.length;
     if (offset < start || offset > start + length) continue;
     const local = offset - start;

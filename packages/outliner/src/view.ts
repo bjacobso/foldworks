@@ -104,7 +104,10 @@ const shownHover = (model: Model, inputs: ViewInputs): ShownHover | undefined =>
   );
   const worst = mostSevere(diagnostics);
   const range = answer ?? worst;
-  if (range === undefined) return undefined;
+  // Nothing to say is no popup, even for a range the host claimed.
+  if (range === undefined || (answer?.content === null && diagnostics.length === 0)) {
+    return undefined;
+  }
   const from = Math.max(0, Math.min(range.from, node.text.length));
   const to = Math.max(from, Math.min(range.to, node.text.length));
   return { id: target.id, from, to, diagnostics, content: answer?.content ?? null };

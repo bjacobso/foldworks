@@ -85,13 +85,17 @@ export const move = (completion: List, delta: number, count: number): List =>
 const change = (
   before: string,
   after: string,
+  caret: number,
 ): Readonly<{ start: number; delta: number }> | undefined => {
   if (before === after) return undefined;
   let start = 0;
   while (start < before.length && start < after.length && before[start] === after[start]) {
     start += 1;
   }
-  return { start, delta: after.length - before.length };
+  const delta = after.length - before.length;
+  // Typing a character that repeats the next one matches it, so the first
+  // difference can fall after the insertion; the caret says where it was.
+  return { start: Math.min(start, caret - Math.max(0, delta)), delta };
 };
 
 /**
@@ -105,7 +109,7 @@ export const track = (
   after: string,
   caret: number,
 ): List | undefined => {
-  const edit = change(before, after);
+  const edit = change(before, after, caret);
   if (edit === undefined) return contains(completion, caret) ? completion : undefined;
   if (edit.start < completion.from || edit.start > completion.to) return undefined;
   const next: List = {
