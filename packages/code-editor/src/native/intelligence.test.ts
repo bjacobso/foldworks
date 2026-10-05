@@ -162,7 +162,13 @@ describe("host text intelligence", () => {
       Operation.Reveal({ expected: documentVersion(model.document), range: { from: 4, to: 5 } }),
     );
     const request = result.commands![0]!.args!.request as Request;
-    expect(request).toMatchObject({ focus: false, at: 4, edits: [], selection: model.selection });
+    expect(request).toMatchObject({
+      kind: "reveal",
+      focus: false,
+      at: 4,
+      edits: [],
+      selection: model.selection,
+    });
   });
 
   it("paints host tokens and highlights, and shows hover content with problems first", () => {

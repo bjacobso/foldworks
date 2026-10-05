@@ -64,7 +64,10 @@ const anchorPopup = (
           const place = () => {
             const root = doc.querySelector(selector);
             const at = root === null ? undefined : rectAtOffset(root, offset);
-            if (root === null || at === undefined) return;
+            if (root === null || at === undefined) {
+              popup.style.visibility = "hidden";
+              return;
+            }
             // The anchor can scroll out of its own container; the popup then hides.
             const shown = visibleBounds(root);
             const inView =

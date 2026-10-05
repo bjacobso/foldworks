@@ -235,7 +235,10 @@ export const ObserveInput = Mount.defineStream("ObserveNativeEditor", {
               if (composing) return "Finish composing text before running this command.";
               if (model.options.readOnly && request.edits.length) return "The editor is read only.";
               try {
-                apply(request, request.kind, request.groupId, request.focus);
+                // A reveal only scrolls: the selection and focus stay where the user has them.
+                if (request.kind !== "reveal") {
+                  apply(request, request.kind, request.groupId, request.focus);
+                }
                 if (request.reveal) {
                   const target = request.at ?? request.selection.head;
                   const row = model.options.lineWrapping

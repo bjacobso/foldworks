@@ -200,10 +200,11 @@ its result arrives.
 tokens })` paints `{ from, to, kind }` ranges over the built-in lexer, as
   `data-kind` on `.native-token--semantic`. Common kinds such as `keyword`,
   `string`, `number`, `comment`, `type`, `function`, and `property` follow the
-  editor's palette; style others in the host. Later edits carry tokens along,
-  and drop the ones they touch, until the next batch, so highlighting does not
-  flicker while a service catches up. Tokens cover any language, including ones
-  the lexer does not know.
+  editor's palette; style others in the host. Later edits shift tokens along
+  until the next batch, so most highlighting stays put while a service catches
+  up; a token an edit touches, such as the word being typed, drops back to the
+  lexer's color until then. Tokens cover any language, including ones the lexer
+  does not know.
 - **Completion.** Ctrl+Space and the Suggest button send
   `RequestedCompletion({ version, offset })`. Answer with
   `Operation.ShowCompletions({ expected, from, to, items })`, where `from` and

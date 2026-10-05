@@ -363,9 +363,9 @@ export const update = (model: Model, message: Message): Result =>
           const caret = model.selection.head;
           if (
             !sameVersion(model, operation.expected) ||
-            operation.from < 0 ||
+            !validOffset(text, operation.from) ||
+            !validOffset(text, operation.to) ||
             operation.from > operation.to ||
-            operation.to > text.length ||
             caret < operation.from ||
             caret > operation.to
           )
@@ -403,6 +403,7 @@ export const update = (model: Model, message: Message): Result =>
           if (!sameVersion(model, operation.expected))
             return reject(model, "The document changed. Reveal against the current revision.");
           return request(model, {
+            kind: "reveal",
             focus: false,
             at: Math.max(0, Math.min(operation.range.from, model.document.text.length)),
           });

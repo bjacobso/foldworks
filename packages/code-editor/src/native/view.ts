@@ -161,7 +161,11 @@ export const view = <ParentMessage>(
           source: model.hover.source,
         }) ?? null);
   const hoverIssues = model.hover === null ? [] : diagnosticsAt(issues, model.hover.offset);
-  const hoverRange = hoverAnswer ?? mostSevere(hoverIssues);
+  // Nothing to say is no popup, even for a range the host claimed.
+  const hoverRange =
+    hoverAnswer?.content === null && hoverIssues.length === 0
+      ? undefined
+      : (hoverAnswer ?? mostSevere(hoverIssues));
   const hoverRow = hoverRange === undefined ? undefined : visibleRow(hoverRange.from);
   const highlights = config.highlights ?? [];
   const layers: Layers = {
