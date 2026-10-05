@@ -26,6 +26,8 @@ export type Program = Readonly<{
   forms: ReadonlyArray<Expr>;
   /** Syntax errors by item id. */
   errors: ReadonlyMap<string, string>;
+  /** Where each syntax error was found in its item's text. */
+  errorOffsets: ReadonlyMap<string, number>;
   /** Every item-level expression by item id. */
   exprs: ReadonlyMap<string, Expr>;
   /** Parent item id by item id, for items that are code. */
@@ -37,6 +39,7 @@ const withId = (expr: Expr, id: string): Expr => ({ ...expr, id });
 /** Reads the outline as a program. Items with syntax errors are left out and reported. */
 export const readOutline = (items: Items): Program => {
   const errors = new Map<string, string>();
+  const errorOffsets = new Map<string, number>();
   const exprs = new Map<string, Expr>();
   const parents = new Map<string, string | null>();
 
@@ -58,6 +61,7 @@ export const readOutline = (items: Items): Program => {
       parts = read(node.text, { prefix: `${node.id}#` });
     } catch (error) {
       errors.set(node.id, error instanceof ReadError ? error.message : String(error));
+      errorOffsets.set(node.id, error instanceof ReadError ? error.at : 0);
       parts = [];
     }
     const children = node.children
@@ -81,7 +85,7 @@ export const readOutline = (items: Items): Program => {
   };
 
   const forms = items.map((node) => readItem(node, null)).filter((form) => form !== null);
-  return { forms, errors, exprs, parents };
+  return { forms, errors, errorOffsets, exprs, parents };
 };
 
 /** The number of top-level expressions in a line of text, or `undefined` if it does not read. */

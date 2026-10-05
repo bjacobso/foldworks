@@ -13,6 +13,8 @@ own persistence.
 ```ts
 import { Outliner, item, parseOutline } from "@foldworks/outliner";
 import "@foldworks/outliner/styles.css";
+// For hover and suggestion popups:
+import "@foldworks/text-intelligence/styles.css";
 
 const outline = Outliner.init({
   id: "notes",
@@ -71,6 +73,37 @@ viewInputs: {
 }
 ```
 
+## Hover and diagnostics
+
+A host that knows what words mean, such as a language service or a list of
+people for mentions, can explain them. When the pointer rests on a character,
+the outliner sends `Hovered({ target: { id, offset } })` and asks the `hover`
+view input. It returns the range it describes and content built in the host's
+boundary, or `null`:
+
+```ts
+viewInputs: {
+  hover: ({ id, offset, text, source }) => {
+    const word = wordAt(text, offset);
+    return word === undefined
+      ? null
+      : { from: word.from, to: word.to, content: h.p([], [describe(word.text)]) };
+  },
+}
+```
+
+The popup anchors to the range and underlines it, and it stays while the
+pointer is on the range or inside the popup, so its links can be clicked.
+Ctrl+Shift+Space asks for the same information at the caret; `source` is then
+`"Keyboard"`, and the textarea is described by the popup until the caret moves
+or Esc dismisses it. A host with an asynchronous service starts its lookup
+when it sees `Hovered` and renders a loading state until the answer arrives.
+
+A decoration's `diagnostics` are problems with ranges of the text, in the
+shape of `@foldworks/text-intelligence`'s `Diagnostic`. They are drawn as wavy
+underlines and listed first in the hover popup, so a host that only reports
+problems gets their messages on hover without a `hover` input.
+
 `Outliner.Message.Replace({ items, announcement, coalescingKey })` applies an
 edit the host computed, such as a refactoring or text typed in another view,
 as one undoable step. Focus stays put, and replacements with the same
@@ -93,6 +126,7 @@ item's ancestors, leaves a hoist that hides it, and puts the caret at its end.
 | Esc                                        | Select the item as a row; Return edits it again       |
 | ⇧↑ · ⇧↓                                    | Extend into a row selection once the text is selected |
 | ⌘Z · ⌘⇧Z                                   | Undo · redo                                           |
+| ⌃⇧Space (Ctrl+Shift+Space)                 | Show information about the text at the caret          |
 
 ⌘ is Ctrl on Windows and Linux. While rows are selected, ↑ and ↓ move the
 selection, ← and → fold and unfold like the Finder, Space marks items done,

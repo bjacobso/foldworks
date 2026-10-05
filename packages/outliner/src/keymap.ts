@@ -30,6 +30,7 @@ export const Action = S.Literals([
   "Edit",
   "ClearSelection",
   "SelectAll",
+  "ShowInfo",
 ]);
 export type Action = typeof Action.Type;
 
@@ -41,6 +42,7 @@ const FOCUS_KEEPING: ReadonlySet<Action> = new Set([
   "Collapse",
   "Expand",
   "ToggleChecked",
+  "ShowInfo",
 ]);
 
 /**
@@ -146,6 +148,8 @@ export const resolveKey = (
 
   const { caret } = context;
   const collapsedCaret = caret.start === caret.end;
+  // Ctrl+Shift+Space on every platform, beside Ctrl+Space for suggestions.
+  if (event.key === " " && only(m, platform === "mac" ? "ctrl" : "mod", "shift")) return "ShowInfo";
   if (event.key === "Enter" && only(m)) return "Split";
   if (event.key === "Escape" && only(m)) return "SelectRow";
   if (event.key === "Backspace" && only(m, "mod", "shift")) return "Delete";
@@ -207,5 +211,9 @@ export const shortcutHelp = (platform: Platform): ReadonlyArray<ShortcutHelp> =>
     { keys: "Esc", label: "Select rows; Return to edit again" },
     { keys: `${shift}↑ · ${shift}↓`, label: "Extend the row selection" },
     { keys: `${mod}Z · ${mod}${shift}Z`, label: "Undo · redo" },
+    {
+      keys: `${platform === "mac" ? "⌃" : "Ctrl+"}${shift}Space`,
+      label: "Show information at the caret",
+    },
   ];
 };

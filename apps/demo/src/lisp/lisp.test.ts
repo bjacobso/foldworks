@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { find, item, walk, type Items } from "@foldworks/outliner";
 
-import { analyze, decorations } from "./analysis";
+import { analyze, decorations, diagnosticsOf } from "./analysis";
 import { propose } from "./assistant";
 import { idSource, parseSource, printOutline, readOutline } from "./codec";
 import { treeDiff } from "./diff";
 import { evaluate, show } from "./evaluate";
+import { describeAt } from "./hover";
 import { extract, join, explode, rename, wrap } from "./refactor";
 import { sampleOutline, sampleSource } from "./sample";
 import { print, read } from "./syntax";
@@ -253,6 +254,55 @@ describe("assistant", () => {
       "    Moved collect-i9",
       "  Same create-payroll-record",
       "  Same activate",
+    ]);
+  });
+});
+
+describe("language services for rows", () => {
+  it("describes definitions, locals, built-ins, and keywords", () => {
+    const items = sampleOutline;
+    const analysis = analyze(items);
+    const round = byText(items, "round (+ revenue tax) 2");
+    expect(describeAt(items, analysis, round.id, 10)).toMatchObject({
+      from: 9,
+      to: 16,
+      kind: "local",
+      value: { type: "number", text: "1200", count: 4 },
+    });
+    expect(describeAt(items, analysis, round.id, 1)).toMatchObject({
+      kind: "built-in",
+      usage: "(round x digits)",
+    });
+    const call = byText(items, "invoice-total 100");
+    expect(describeAt(items, analysis, call.id, 13)).toBeUndefined();
+    expect(describeAt(items, analysis, call.id, 13, true)).toMatchObject({
+      kind: "function",
+      usage: "(invoice-total revenue)",
+      summary: "Revenue plus sales tax, rounded to cents.",
+    });
+    const tax = byText(items, "def tax-rate 0.0825");
+    expect(describeAt(items, analysis, tax.id, 5)).toMatchObject({
+      kind: "definition",
+      value: { type: "number", text: "0.0825" },
+    });
+    const step = byText(items, 'defstep verify-identity {:system "Persona" :writes [:identity]}');
+    expect(describeAt(items, analysis, step.id, step.text.indexOf(":identity") + 1)).toMatchObject({
+      kind: "keyword",
+      facts: [
+        ["Written by", "verify-identity"],
+        ["Read by", "background-check, collect-i9"],
+      ],
+    });
+  });
+
+  it("places errors on the expression that raised them", () => {
+    const items: Items = [item("a", "(+ 1 tax-rat)"), item("b", "(+ 1 (")];
+    const analysis = analyze(items);
+    expect(diagnosticsOf(analysis, byText(items, "(+ 1 tax-rat)"))).toEqual([
+      { from: 5, to: 12, severity: "error", message: "tax-rat is not defined" },
+    ]);
+    expect(diagnosticsOf(analysis, byText(items, "(+ 1 ("))).toEqual([
+      { from: 5, to: 6, severity: "error", message: "Missing )" },
     ]);
   });
 });

@@ -67,6 +67,8 @@ export type Evaluation = Readonly<{
   values: ReadonlyMap<string, Observation>;
   /** Runtime errors, by the item where they were raised. */
   errors: ReadonlyMap<string, string>;
+  /** The expression that raised each item's error. */
+  errorSites: ReadonlyMap<string, string>;
   globals: ReadonlyMap<string, Value>;
   /** Named workflows, in definition order. */
   workflows: ReadonlyArray<Flow>;
@@ -457,6 +459,7 @@ export const BUILTINS: ReadonlySet<string> = new Set([
 export const evaluate = (forms: ReadonlyArray<Expr>): Evaluation => {
   const values = new Map<string, Observation>();
   const errors = new Map<string, string>();
+  const errorSites = new Map<string, string>();
   const workflows: Flow[] = [];
   const global = new Env(null);
   const natives = builtins();
@@ -525,6 +528,7 @@ export const evaluate = (forms: ReadonlyArray<Expr>): Evaluation => {
     } catch (error) {
       if (error instanceof EvalError) {
         errors.set(itemOf(error.at), error.message);
+        errorSites.set(itemOf(error.at), error.at);
       } else if (error instanceof RangeError) {
         errors.set(itemOf(form.id), "Stopped: recursion went too deep");
       } else {
@@ -782,5 +786,5 @@ export const evaluate = (forms: ReadonlyArray<Expr>): Evaluation => {
   for (const form of forms) attempt(form, global);
 
   const globals = new Map([...global.entries()].filter(([name]) => !natives.has(name)));
-  return { values, errors, globals, workflows };
+  return { values, errors, errorSites, globals, workflows };
 };

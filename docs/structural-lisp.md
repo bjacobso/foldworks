@@ -85,6 +85,11 @@ rest of the program stays as rows.
 - **Semantic highlighting.** Special forms, definitions, references to
   definitions, workflow steps, built-ins, and locals each get their own style.
   The highlighting comes from the same analysis as evaluation.
+- **Hover and problems.** Resting the pointer on a token, or pressing
+  Ctrl+Shift+Space, describes it: what it is, how to call it, its
+  documentation, and the value it last had. Errors are underlined on the
+  expression that raised them and warnings on the step they concern, and
+  their messages lead the hover.
 - **Effects.** `defstep` declares a step's system and the keys it reads and
   writes. `workflow`, `sequence`, `parallel`, and `branch` build a flow. A
   happens-before analysis warns when a step can run before the step that

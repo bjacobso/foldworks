@@ -528,6 +528,8 @@ const pressed = (
         model: { ...base, mode: "Text", selection: null },
         commands: [focusCommand(model, { _tag: "Tree" })],
       };
+    case "ShowInfo":
+      return { model: { ...base, hover: { id, offset: start, source: "Keyboard" } } };
     case "SelectAll": {
       const first = rows[0];
       const last = rows[rows.length - 1];
@@ -611,7 +613,21 @@ const textChange = (previous: string, next: string): number => {
   return previous.length - suffix;
 };
 
-export const update = (model: Model, message: Message): UpdateReturn =>
+/** Messages that leave hover information showing; anything else, such as typing, hides it. */
+const keepsHover = (message: Message): boolean =>
+  message._tag === "Hovered" ||
+  message._tag === "DismissedHover" ||
+  message._tag === "CompletedFocus" ||
+  (message._tag === "Pressed" && message.action === "ShowInfo");
+
+export const update = (model: Model, message: Message): UpdateReturn => {
+  const result = updateOutline(model, message);
+  return keepsHover(message) || result.model.hover === null
+    ? result
+    : { ...result, model: { ...result.model, hover: null } };
+};
+
+const updateOutline = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
     Pressed: ({ action, id, start, end, goalX }) => {
       const result = pressed(model, action, id, start, end, goalX);
@@ -711,6 +727,17 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       return selectRows(moved, drag.ids[0]!, drag.ids.at(-1)!);
     },
     CancelledDrag: () => ({ model: { ...model, drag: null } }),
+    Hovered: ({ target }) => {
+      const current = model.hover;
+      if (target === null) return { model: current === null ? model : { ...model, hover: null } };
+      return current !== null &&
+        current.source === "Pointer" &&
+        current.id === target.id &&
+        current.offset === target.offset
+        ? { model }
+        : { model: { ...model, hover: { ...target, source: "Pointer" } } };
+    },
+    DismissedHover: () => ({ model: model.hover === null ? model : { ...model, hover: null } }),
     Hoisted: ({ id }) => hoist(model, id),
     ClickedAdd: () => {
       const { id, nextId } = newId(model);

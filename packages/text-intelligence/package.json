@@ -1,7 +1,7 @@
 {
-  "name": "@foldworks/outliner",
+  "name": "@foldworks/text-intelligence",
   "version": "0.0.0",
-  "description": "A keyboard-first Foldkit outliner with natural indenting, reordering, collapsing, hoisting, and drag and drop.",
+  "description": "A shared vocabulary for hover, completion, semantic highlighting, and diagnostics on Foldkit text surfaces.",
   "license": "MIT",
   "author": "Ben Jacobson",
   "type": "module",
@@ -16,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bjacobso/foldworks.git",
-    "directory": "packages/outliner"
+    "directory": "packages/text-intelligence"
   },
   "homepage": "https://github.com/bjacobso/foldworks#readme",
   "bugs": {
@@ -24,10 +24,10 @@
   },
   "keywords": [
     "foldkit",
-    "outliner",
-    "outline",
-    "notes",
-    "drag-and-drop"
+    "completion",
+    "hover",
+    "diagnostics",
+    "semantic-highlighting"
   ],
   "publishConfig": {
     "access": "public",
@@ -46,10 +46,6 @@
     "prepack": "pnpm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@foldworks/history": "workspace:*",
-    "@foldworks/text-intelligence": "workspace:*"
   },
   "devDependencies": {
     "effect": "catalog:",

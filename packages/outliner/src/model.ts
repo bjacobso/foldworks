@@ -1,5 +1,6 @@
 import { Schema as S } from "effect";
 import { History } from "@foldworks/history";
+import { HoverSource } from "@foldworks/text-intelligence";
 
 import { Items, find, walk, type Items as ItemsValue } from "./outline";
 
@@ -30,6 +31,10 @@ export type Drag = typeof Drag.Type;
 export const Snapshot = S.Struct({ items: Items, focus: S.NullOr(Focus) });
 export type Snapshot = typeof Snapshot.Type;
 
+/** The text the pointer rests on, or the caret that asked for information. */
+export const HoverTarget = S.Struct({ id: S.String, offset: S.Number, source: HoverSource });
+export type HoverTarget = typeof HoverTarget.Type;
+
 export const Mode = S.Literals(["Text", "Rows"]);
 export type Mode = typeof Mode.Type;
 
@@ -42,6 +47,7 @@ export const Model = S.Struct({
   focus: S.NullOr(Focus),
   selection: S.NullOr(RowSelection),
   drag: S.NullOr(Drag),
+  hover: S.NullOr(HoverTarget),
   history: History.Schema(Snapshot),
   /** When the last keystroke changed text, for grouping typing into undo steps. */
   typedAt: S.Number,
@@ -83,6 +89,7 @@ export const init = (config: InitConfig): Model => {
     focus: null,
     selection: null,
     drag: null,
+    hover: null,
     history: History.init<Snapshot>(),
     typedAt: 0,
     nextId: counterFor(config.id, items),
@@ -96,5 +103,6 @@ export const domIds = (modelId: string) => ({
   tree: `${modelId}-tree`,
   row: (id: string) => `${modelId}-row-${id}`,
   text: (id: string) => `${modelId}-text-${id}`,
+  hover: `${modelId}-hover`,
   add: `${modelId}-add`,
 });

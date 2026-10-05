@@ -6,6 +6,7 @@ import {
   type RowDecoration,
   type TextSpan,
 } from "@foldworks/outliner";
+import type { Diagnostic } from "@foldworks/text-intelligence";
 
 import { elementCount, isComment, itemOf, readOutline, type Program } from "./codec";
 import {
@@ -28,6 +29,8 @@ export type Definition = Readonly<{ name: string; kind: DefinitionKind; itemId: 
 export type Analysis = Readonly<{
   program: Program;
   evaluation: Evaluation;
+  /** Every expression, including those inside an item's text, by id. */
+  allExprs: ReadonlyMap<string, Expr>;
   definitions: ReadonlyMap<string, Definition>;
   /** Items that refer to each defined name, in document order. */
   references: ReadonlyMap<string, ReadonlyArray<string>>;
@@ -110,9 +113,14 @@ export const analyze = (items: Items): Analysis => {
     }
   }
   const steps = [...evaluation.globals.values()].filter(isStep);
+  const allExprs = new Map<string, Expr>();
+  for (const form of program.forms) {
+    for (const expr of descendants(form)) allExprs.set(expr.id, expr);
+  }
   const analysis: Analysis = {
     program,
     evaluation,
+    allExprs,
     definitions,
     references,
     warnings: stepWarnings(evaluation, steps),
@@ -166,6 +174,39 @@ export const highlight = (text: string, analysis: Analysis): ReadonlyArray<TextS
       }
     }
   });
+};
+
+/**
+ * Problems with an item's text: a syntax error where reading stopped, a
+ * runtime error on the expression that raised it, and dataflow warnings on
+ * the whole step.
+ */
+export const diagnosticsOf = (
+  analysis: Analysis,
+  node: Pick<Item, "id" | "text">,
+): ReadonlyArray<Diagnostic> => {
+  const length = node.text.length;
+  if (length === 0) return [];
+  const whole = { from: 0, to: length };
+  const result: Diagnostic[] = [];
+  const syntax = analysis.program.errors.get(node.id);
+  if (syntax !== undefined) {
+    const at = Math.min(analysis.program.errorOffsets.get(node.id) ?? 0, length - 1);
+    result.push({ from: at, to: at + 1, severity: "error", message: syntax });
+  }
+  const runtime = analysis.evaluation.errors.get(node.id);
+  if (runtime !== undefined) {
+    const site = analysis.allExprs.get(analysis.evaluation.errorSites.get(node.id) ?? "");
+    const range =
+      site !== undefined && itemOf(site.id) === node.id && site.id !== node.id && site.end <= length
+        ? { from: site.start, to: site.end }
+        : whole;
+    result.push({ ...range, severity: "error", message: runtime });
+  }
+  for (const warning of analysis.warnings.get(node.id) ?? []) {
+    result.push({ ...whole, severity: "warning", message: warning });
+  }
+  return result;
 };
 
 export type Notation = "Outline" | "Lisp";
@@ -256,8 +297,10 @@ export const decorations = (
         : analysis.warnings.has(node.id)
           ? "warning"
           : undefined;
+    const diagnostics = diagnosticsOf(analysis, node);
     result[node.id] = {
       spans: highlight(node.text, analysis),
+      ...(diagnostics.length === 0 ? {} : { diagnostics }),
       ...(tone === undefined ? {} : { tone }),
       ...bracketed?.get(node.id),
     };

@@ -1,0 +1,149 @@
+/* Popups anchored in text, and the marks surfaces paint under their text.
+ * Colors come from the @foldworks/ui semantic tokens, with fallbacks. */
+
+.fw-text-popup {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border, #e4e4e7);
+  border-radius: 6px;
+  background: var(--popover, var(--background, #fff));
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+  color: var(--popover-foreground, var(--foreground, #18181b));
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  white-space: normal;
+}
+
+.fw-completion {
+  min-width: 200px;
+  max-width: min(420px, calc(100vw - 8px));
+  max-height: 232px;
+  overflow: auto;
+  padding: 3px;
+}
+
+.fw-completion ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fw-completion__option {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 4px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.fw-completion__option:hover {
+  background: var(--muted, #f4f4f5);
+}
+
+.fw-completion__option[aria-selected="true"] {
+  background: color-mix(in oklab, var(--primary, #2563eb) 14%, transparent);
+}
+
+.fw-completion__kind {
+  flex: none;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--muted-foreground, #71717a) 55%, transparent);
+}
+
+.fw-completion__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fw-completion__match {
+  background: none;
+  color: inherit;
+  font-weight: 600;
+}
+
+.fw-completion__detail {
+  margin-left: auto;
+  padding-left: 12px;
+  overflow: hidden;
+  color: var(--muted-foreground, #71717a);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.fw-hover {
+  max-width: min(440px, calc(100vw - 8px));
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px 10px;
+}
+
+.fw-hover__diagnostics {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fw-hover__diagnostics + .fw-hover__content {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border, #e4e4e7);
+}
+
+.fw-hover__severity {
+  font-weight: 600;
+}
+
+.fw-hover__diagnostic[data-severity="error"] .fw-hover__severity {
+  color: var(--destructive, #dc2626);
+}
+
+.fw-hover__diagnostic[data-severity="warning"] .fw-hover__severity {
+  color: var(--foldworks-ui-warning, #a16207);
+}
+
+.fw-hover__diagnostic[data-severity="info"] .fw-hover__severity,
+.fw-hover__diagnostic[data-severity="hint"] .fw-hover__severity {
+  color: var(--foldworks-ui-info, #2563eb);
+}
+
+.fw-hover__code {
+  color: var(--muted-foreground, #71717a);
+  font-size: 12px;
+}
+
+/* Painted under text: a problem's underline and the range a hover describes. */
+.fw-text-diagnostic {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: none;
+}
+
+.fw-text-diagnostic[data-severity="error"] {
+  text-decoration-color: var(--destructive, #dc2626);
+}
+
+.fw-text-diagnostic[data-severity="warning"] {
+  text-decoration-color: var(--foldworks-ui-warning, #ca8a04);
+}
+
+.fw-text-diagnostic[data-severity="info"],
+.fw-text-diagnostic[data-severity="hint"] {
+  text-decoration-color: var(--foldworks-ui-info, #2563eb);
+}
+
+.fw-text-hovered {
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--primary, #2563eb) 10%, transparent);
+}
