@@ -128,6 +128,11 @@ Refactorings act on rows, which are expressions:
 Untouched rows keep their ids, so every change can be shown as a tree diff and
 undone as one step.
 
+The outline has rules of its own. A step in a flow stays in a flow: outdenting
+or dragging it out is refused, and the insertion marker turns red while
+dragging. The Library section is shared code shown in context, so its rows are
+read only.
+
 The **Ask** panel turns a request about the selection into a proposal: a new
 tree, a diff, and the consequences found by analyzing the proposed program. The
 diff is `@foldworks/ui`'s `TreeDiff` inside a `ChangeSetPreview`; the `/agent`

@@ -22,6 +22,7 @@ import {
 } from "./source";
 import { ReadError } from "./syntax";
 import { PAGE, isStructured, valueNodes } from "./values";
+import { outlinePolicy } from "./policy";
 
 type UpdateReturn = Update.Return<Model, Message>;
 
@@ -42,12 +43,15 @@ const FocusElement = Command.define("FocusLispElement", {
     }),
 });
 
-const foldOutliner = Update.foldChild({
-  update: Outliner.update,
-  read: (model: Model) => Option.some(model.outline),
-  write: (model, outline) => evo(model, { outline: () => outline }),
-  toParentMessage: (message) => Message.GotOutlinerMessage({ message }),
-});
+/** Folds an outliner message under the outline's rules: a read-only Library, and steps that stay in flows. */
+const foldOutliner = (model: Model, message: Outliner.Message): UpdateReturn =>
+  Update.foldChild({
+    update: (outline: Outliner.Model, event: Outliner.Message) =>
+      Outliner.update(outline, event, outlinePolicy(outline.items)),
+    read: (parent: Model) => Option.some(parent.outline),
+    write: (parent, outline) => evo(parent, { outline: () => outline }),
+    toParentMessage: (event) => Message.GotOutlinerMessage({ message: event }),
+  })(model, message);
 
 /** The rows a structural action applies to: the row selection, or the row with the caret. */
 export const targetsOf = (

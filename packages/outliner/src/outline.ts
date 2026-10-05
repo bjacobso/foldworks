@@ -521,6 +521,8 @@ export type DropTarget = Readonly<{
   depth: number;
   /** The visible row the indicator follows; `null` places it above the first row. */
   afterRowId: string | null;
+  /** The host's policy refuses a drop here; releasing does nothing. */
+  refused?: boolean;
 }>;
 
 /**

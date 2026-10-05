@@ -42,6 +42,7 @@ import {
   type Items,
   type Row,
 } from "./outline";
+import { refusal, type MoveCause, type Policy } from "./policy";
 import { rowsOf, selectedIds, selectedRoots } from "./selectors";
 import { parseOutline } from "./text";
 
@@ -651,8 +652,42 @@ const keepsCompletion = (model: Model, message: Message): boolean => {
   }
 };
 
-export const update = (model: Model, message: Message): UpdateReturn => {
+const MOVES: ReadonlySet<Action> = new Set(["Indent", "Outdent", "MoveUp", "MoveDown"]);
+
+/** What a message moves, if it moves items, for checking a policy. */
+const moveOf = (
+  model: Model,
+  message: Message,
+): Readonly<{ cause: MoveCause; ids: ReadonlyArray<string> }> | undefined => {
+  if (message._tag === "Dropped") return { cause: "Drop", ids: model.drag?.ids ?? [] };
+  if (message._tag !== "Pressed" || !MOVES.has(message.action)) return undefined;
+  const ids =
+    model.mode === "Rows" && model.selection !== null ? selectedRoots(model) : [message.id];
+  return { cause: message.action as MoveCause, ids };
+};
+
+/** Leaves the document as it was and says why, keeping focus where the user is. */
+const refuse = (model: Model, message: Message, reason: string): UpdateReturn => {
+  const kept: Model = { ...model, drag: null, announcement: reason };
+  return message._tag === "Pressed" && !keepsFocus(message.action)
+    ? refocus(kept)
+    : { model: kept };
+};
+
+/**
+ * Applies a message. A `policy` can refuse moves and protect read-only items;
+ * edits a host makes with `Replace` or `Load` are not checked.
+ */
+export const update = (model: Model, message: Message, policy: Policy = {}): UpdateReturn => {
   const result = updateOutline(model, message);
+  if (
+    (policy.canMove !== undefined || policy.isReadOnly !== undefined) &&
+    message._tag !== "Replace" &&
+    message._tag !== "Load"
+  ) {
+    const reason = refusal(policy, model.items, result.model.items, moveOf(model, message));
+    if (reason !== undefined) return refuse(model, message, reason);
+  }
   const hover = keepsHover(message) ? result.model.hover : null;
   const completion = keepsCompletion(model, message) ? result.model.completion : null;
   return hover === result.model.hover && completion === result.model.completion
@@ -801,6 +836,9 @@ const updateOutline = (model: Model, message: Message): UpdateReturn =>
       const drag = model.drag;
       const cleared: Model = { ...model, drag: null };
       if (drag === null || drag.target === null) return { model: cleared };
+      if (drag.target.refused === true) {
+        return { model: { ...cleared, announcement: "Can't move there." } };
+      }
       const items = moveItems(model.items, drag.ids, drag.target.placement);
       if (items === undefined) return { model: cleared };
       const moved = commit(cleared, items, {

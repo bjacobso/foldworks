@@ -396,3 +396,30 @@
 .fw-outliner__placeholder:hover {
   opacity: 1;
 }
+
+/* A drop the host's policy refuses. */
+.fw-outliner__drop[data-refused="true"] {
+  background: repeating-linear-gradient(
+    to right,
+    var(--destructive, #dc2626) 0 6px,
+    transparent 6px 10px
+  );
+}
+
+.fw-outliner__drop[data-refused="true"]::before {
+  border-color: var(--destructive, #dc2626);
+}
+
+.fw-outliner-ghost[data-refused="true"] {
+  border-color: color-mix(in oklab, var(--destructive, #dc2626) 60%, transparent);
+  color: var(--muted-foreground, #71717a);
+  text-decoration: line-through;
+}
+
+.fw-outliner__row[data-readonly="true"] .fw-outliner__text {
+  cursor: default;
+}
+
+.fw-outliner__row[data-readonly="true"] .fw-outliner__handle {
+  cursor: default;
+}
