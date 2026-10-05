@@ -254,4 +254,3 @@ describe("update", () => {
     expect(update(model, Message.AcceptedCompletion({})).model.items[1]?.text).toBe("Betata");
   });
 });
-
