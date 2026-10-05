@@ -18,6 +18,13 @@ const SETTLE_TIMEOUT = 200;
 /** How long the pointer rests on text before asking for hover information. */
 const HOVER_DELAY = 350;
 const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock"]);
+/** Messages that change the document other than by typing. */
+const EDITS: ReadonlySet<string> = new Set([
+  "Pressed",
+  "PastedText",
+  "AcceptedCompletion",
+  "Dropped",
+]);
 /** Dispatched on the element the outline just focused, so held keys can follow. */
 export const FOCUSED_EVENT = "fw-outliner-focused";
 const FOCUSABLE =
@@ -130,7 +137,11 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             let drag: Drag | undefined;
             let press: { rowId: string; headId: string } | undefined;
             const emit = (message: SurfaceMessage) => {
-              if (!disposed) Queue.offerUnsafe(queue, message);
+              if (disposed) return;
+              // After an edit that is not typing, such as undo, the model's text is
+              // the truth, even where it matches something typed earlier.
+              if (EDITS.has(message._tag)) unacknowledged.clear();
+              Queue.offerUnsafe(queue, message);
             };
             let latest: Model | undefined = host[MODEL_PROPERTY];
             const model = (): Model | undefined => latest;
@@ -203,6 +214,8 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             ): boolean => {
               const list = model()?.completion;
               if (list === null || list === undefined || list.id !== id) return false;
+              // Only suggestions on screen take keys.
+              if (doc.getElementById(domIds(model()!.id).completion) === null) return false;
               const shown = Completion.visible(list, target.value, target.selectionEnd);
               const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
               if (shown.length === 0 || !plain) return false;
@@ -237,11 +250,16 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             };
 
             /** Resolves and dispatches a key against an element; `true` when the outline used it. */
-            const handleKey = (event: KeyInput, target: EventTarget | null): boolean => {
+            const handleKey = (
+              event: KeyInput,
+              target: EventTarget | null,
+              replayed = false,
+            ): boolean => {
               if (isText(target)) {
                 const id = rowIdOf(target);
                 if (id === undefined) return false;
-                if (completionKey(event, target, id)) return true;
+                // Held keys were typed before any suggestions could be seen.
+                if (!replayed && completionKey(event, target, id)) return true;
                 const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
                 const lines = vertical
                   ? caretLines(target)
@@ -284,7 +302,8 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
 
             const replay = (event: KeyInput) => {
               const target = doc.activeElement;
-              if (target === null || !host.contains(target) || handleKey(event, target)) return;
+              if (target === null || !host.contains(target) || handleKey(event, target, true))
+                return;
               if (!isText(target) || event.ctrlKey || event.metaKey) return;
               const text = event.key === "Enter" ? "\n" : event.key.length === 1 ? event.key : "";
               const command =
