@@ -16,39 +16,41 @@ import {
 
 import { Message } from "./message";
 import { domIds, type Model } from "./model";
-import { INDENT, MODEL_PROPERTY, Surface } from "./mount";
-import { ancestors, find, type Row } from "./outline";
+import { INDENT, MODEL_PROPERTY, POLICY_PROPERTY, Surface } from "./mount";
+import type { Policy } from "./policy";
+import { ancestors, find, walk, type Item, type Row } from "./outline";
 import { rowsOf, selectedIds } from "./selectors";
 
-export type ViewInputs = Readonly<{
-  /** Accessible name for the tree. Defaults to "Outline". */
-  label?: string;
-  /** Shows a checkbox before each item. Items can be marked done either way. */
-  showCheckboxes?: boolean;
-  /** Shows the breadcrumb trail and title while an item is hoisted. Defaults to true. */
-  showBreadcrumbs?: boolean;
-  /** Label for the button shown when the outline is empty. */
-  emptyLabel?: string;
-  /** Spell-checks item text. Defaults to true; turn it off for code. */
-  spellcheck?: boolean;
-  /** Per-item styling, keyed by item id. */
-  decorations?: Readonly<Record<string, RowDecoration>>;
-  /** Trailing content for a row, such as a value or a status. Built in the host's boundary. */
-  rowAccessory?: (row: Row) => Html | null;
-  /**
-   * Information about the text under the pointer, or at the caret after
-   * Ctrl+Shift+Space. Return the range it describes and content built in the
-   * host's boundary, or `null` for nothing. Row diagnostics at the offset are
-   * shown with it.
-   */
-  hover?: (request: HoverRequest) => Hover | null;
-  /**
-   * Ghost children for a parent, or for the top level when `parentId` is the
-   * hoisted item or `null`. They are not part of the document; choosing or
-   * typing into one creates a real item.
-   */
-  placeholders?: (parentId: string | null) => ReadonlyArray<Placeholder>;
-}>;
+export type ViewInputs = Policy &
+  Readonly<{
+    /** Accessible name for the tree. Defaults to "Outline". */
+    label?: string;
+    /** Shows a checkbox before each item. Items can be marked done either way. */
+    showCheckboxes?: boolean;
+    /** Shows the breadcrumb trail and title while an item is hoisted. Defaults to true. */
+    showBreadcrumbs?: boolean;
+    /** Label for the button shown when the outline is empty. */
+    emptyLabel?: string;
+    /** Spell-checks item text. Defaults to true; turn it off for code. */
+    spellcheck?: boolean;
+    /** Per-item styling, keyed by item id. */
+    decorations?: Readonly<Record<string, RowDecoration>>;
+    /** Trailing content for a row, such as a value or a status. Built in the host's boundary. */
+    rowAccessory?: (row: Row) => Html | null;
+    /**
+     * Information about the text under the pointer, or at the caret after
+     * Ctrl+Shift+Space. Return the range it describes and content built in the
+     * host's boundary, or `null` for nothing. Row diagnostics at the offset are
+     * shown with it.
+     */
+    hover?: (request: HoverRequest) => Hover | null;
+    /**
+     * Ghost children for a parent, or for the top level when `parentId` is the
+     * hoisted item or `null`. They are not part of the document; choosing or
+     * typing into one creates a real item.
+     */
+    placeholders?: (parentId: string | null) => ReadonlyArray<Placeholder>;
+  }>;
 
 /** A ghost child that is not part of the document, such as “add step”. */
 export type Placeholder = Readonly<{
@@ -262,6 +264,7 @@ const rowView = (
   inputs: ViewInputs,
   hover: ShownHover | undefined,
   suggestions: ShownCompletion | undefined,
+  readOnly: boolean,
   h: HtmlBuilder<Message>,
 ): Html => {
   const ids = domIds(model.id);
@@ -303,6 +306,7 @@ const rowView = (
       h.DataAttribute("selected", String(isSelected)),
       h.DataAttribute("checked", String(row.checked)),
       h.DataAttribute("dragging", String(dragged.has(row.id))),
+      ...(readOnly ? [h.DataAttribute("readonly", "true")] : []),
       ...(decoration?.tone === undefined ? [] : [h.DataAttribute("tone", decoration.tone)]),
       h.Style({ "--fw-outliner-depth": String(row.depth) }),
     ],
@@ -350,6 +354,7 @@ const rowView = (
                 h.Tabindex(-1),
                 h.AriaChecked(row.checked),
                 h.AriaLabel(`Done: ${label}`),
+                h.Disabled(readOnly),
                 h.DataAttribute("outline-control", "true"),
                 h.OnClick(Message.ToggledChecked({ id: row.id })),
               ],
@@ -375,6 +380,7 @@ const rowView = (
               h.Value(row.text),
               h.AriaLabel(`Item text, level ${row.depth + 1}`),
               h.Spellcheck(inputs.spellcheck ?? true),
+              h.Readonly(readOnly),
               h.DataAttribute("outline-text", "true"),
               ...(hover?.id === row.id ? [h.AriaDescribedBy(ids.hover)] : []),
               ...(suggestions?.id === row.id
@@ -418,6 +424,7 @@ const rowView = (
               [
                 h.Class("fw-outliner__drop"),
                 h.DataAttribute("position", indicator),
+                h.DataAttribute("refused", String(target?.refused === true)),
                 h.AriaHidden(true),
                 h.Style({ "--fw-outliner-drop-depth": String(target?.depth ?? 0) }),
               ],
@@ -540,6 +547,14 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
     ? shownCompletion(model)
     : undefined;
   const selected = new Set(model.mode === "Rows" ? selectedIds(model, rows) : []);
+  const isReadOnly = inputs.isReadOnly;
+  const locked = new Set<string>(
+    isReadOnly === undefined
+      ? []
+      : walk(model.items)
+          .filter((node: Item) => isReadOnly(node))
+          .map((node) => node.id),
+  );
   // Rows inside a dragged item travel with it, so they dim with it too.
   const dragged = new Set(model.drag?.ids ?? []);
   for (const row of rows) {
@@ -553,6 +568,11 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
       h.DataAttribute("dragging", String(model.drag !== null)),
       h.Style({ "--fw-outliner-indent": `${INDENT}px` }),
       { _tag: "Prop", key: MODEL_PROPERTY, value: model },
+      {
+        _tag: "Prop",
+        key: POLICY_PROPERTY,
+        value: { canMove: inputs.canMove, isReadOnly: inputs.isReadOnly },
+      },
       h.OnMount(Surface()),
     ],
     [
@@ -578,6 +598,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
                 inputs,
                 hover,
                 suggestions,
+                locked.has(entry.row.id),
                 h,
               ),
         ),

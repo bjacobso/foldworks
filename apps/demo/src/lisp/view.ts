@@ -4,6 +4,7 @@ import {
   ChevronsDownUp,
   CircleX,
   ChevronsUpDown,
+  Lock,
   Parentheses,
   Redo2,
   Sparkles,
@@ -39,6 +40,7 @@ import { SUGGESTIONS } from "./assistant";
 import { printOutline } from "./codec";
 import { show } from "./evaluate";
 import { describeAt, type Description } from "./hover";
+import { LIBRARY, isLocked, outlinePolicy } from "./policy";
 import { slotsFor } from "./slots";
 import { lineOf, printedFor, sourceHover } from "./source";
 import { Message, type Refactoring } from "./message";
@@ -85,6 +87,19 @@ const isLiteral = (analysis: Analysis, id: string): boolean => {
 
 /** The value, error, or warning shown at the end of a row. */
 const rowValue = (analysis: Analysis, row: Row, h: H): Html | null => {
+  if (row.text === LIBRARY) {
+    return h.span(
+      [
+        h.Class("lisp-value"),
+        h.DataAttribute("kind", "readonly"),
+        h.Title("Shared code, shown here read only"),
+      ],
+      [
+        Icon.view({ icon: Lock, size: 12 }, h),
+        h.span([h.Class("lisp-value__text")], ["read only"]),
+      ],
+    );
+  }
   const error = analysis.program.errors.get(row.id) ?? analysis.evaluation.errors.get(row.id);
   const glyph = (icon: typeof Check) => Icon.view({ icon, size: 12 }, h);
   if (error !== undefined) {
@@ -384,12 +399,14 @@ const inspector = (model: Model, analysis: Analysis, h: H): Html => {
       : documentation(items, definition.itemId);
   const path = ancestors(items, node.id);
   const targets = selection.length > 0 ? selection : [node.id];
+  // Shared code is read only here, so it offers no edits.
+  const locked = isLocked(items, node.id);
   const refactor = (refactoring: Refactoring, label: string, enabled: boolean, head = "") =>
     h.button(
       [
         h.Class("lisp-action"),
         h.Type("button"),
-        h.Disabled(!enabled),
+        h.Disabled(!enabled || locked),
         h.OnClick(Message.Refactored({ refactoring, head })),
       ],
       [label],
@@ -505,7 +522,7 @@ const inspector = (model: Model, analysis: Analysis, h: H): Html => {
             [
               h.Class("lisp-action"),
               h.Type("button"),
-              h.Disabled(parentless),
+              h.Disabled(parentless || locked),
               h.OnClick(Message.PrefilledPrompt({ text: "Extract this as " })),
             ],
             ["Extract…"],
@@ -516,6 +533,7 @@ const inspector = (model: Model, analysis: Analysis, h: H): Html => {
                   [
                     h.Class("lisp-action"),
                     h.Type("button"),
+                    h.Disabled(locked),
                     h.OnClick(Message.PrefilledPrompt({ text: `Rename ${subject} to ` })),
                   ],
                   ["Rename…"],
@@ -746,6 +764,7 @@ export const view = defineView<Model, Message>((model, h) => {
                         model: model.outline,
                         view: Outliner.view,
                         viewInputs: {
+                          ...outlinePolicy(items),
                           label: "Program",
                           decorations: decorations(items, {
                             notation: model.notation,

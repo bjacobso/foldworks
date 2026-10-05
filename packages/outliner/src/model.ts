@@ -23,6 +23,8 @@ export const DropTarget = S.Struct({
   placement: Placement,
   depth: S.Number,
   afterRowId: S.NullOr(S.String),
+  /** The host's policy refuses a drop here; releasing does nothing. */
+  refused: S.optional(S.Boolean),
 });
 
 export const Drag = S.Struct({ ids: S.Array(S.String), target: S.NullOr(DropTarget) });

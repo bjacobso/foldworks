@@ -156,7 +156,7 @@ export const lispScenarios = (
       await page.keyboard.type("let");
       await page.keyboard.press("Enter");
       await expect.poll(() => valueOf(page, "(round tax-rate 2)")).toBe("→0.08");
-      expect(await text(page, "let").count()).toBe(1);
+      await expect.poll(() => text(page, "let").count()).toBe(1);
     });
 
     it("keeps every key when typing outruns rendering", async () => {
@@ -237,6 +237,45 @@ export const lispScenarios = (
       await tree.getByRole("treeitem", { name: "Show 25 more" }).click();
       await expect.poll(async () => (await rows()).slice(-2)).toEqual(["39: 39", "Show 5 more"]);
       await screenshot("lisp-value-tree");
+    });
+
+    it("keeps steps in their flows and shared code read only", async () => {
+      const page = await start();
+      const live = () => page.locator(".lisp-ide .fw-outliner__live").textContent();
+      const before = await outline(page);
+      // Outdenting a step would take it out of the workflow.
+      await text(page, "collect-i9").click();
+      await page.keyboard.press("Shift+Tab");
+      await expect.poll(live).toBe("Can't move there.");
+      expect(await outline(page)).toEqual(before);
+
+      // Dragging it out shows a refused insertion marker, and dropping does nothing.
+      const handle = page.locator('[aria-label="collect-i9"] [data-outline-handle]');
+      const from = (await handle.boundingBox())!;
+      const to = (await text(page, "invoice-total 100").boundingBox())!;
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + 10, from.y - 10, { steps: 3 });
+      await page.mouse.move(from.x + 4, to.y + to.height - 2, { steps: 12 });
+      await expect
+        .poll(() => page.locator(".fw-outliner__drop").getAttribute("data-refused"))
+        .toBe("true");
+      await screenshot("lisp-refused-drop");
+      await page.mouse.up();
+      expect(await outline(page)).toEqual(before);
+
+      // The Library is shared code, shown in context and read only.
+      await page.locator('[aria-label="section \\"Library\\""] [data-outline-toggle]').click();
+      const cents = text(page, "defn cents [amount] (round amount 2)");
+      await cents.click();
+      await page.keyboard.press("End");
+      await page.keyboard.type("!");
+      expect(await cents.inputValue()).toBe("defn cents [amount] (round amount 2)");
+      await page.keyboard.press("Escape");
+      await page.keyboard.press("Backspace");
+      await expect.poll(live).toBe("Read-only items can't change.");
+      expect(await cents.count()).toBe(1);
+      expect(await page.getByRole("button", { name: "Unwrap" }).isDisabled()).toBe(true);
     });
 
     it("proposes a structural edit for selected rows and applies it", async () => {

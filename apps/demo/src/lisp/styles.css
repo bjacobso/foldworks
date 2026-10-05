@@ -853,3 +853,12 @@
 .lisp-ide .fw-completion__option[data-kind="keyword"] .fw-completion__kind {
   background: var(--lisp-keyword);
 }
+
+/* Shared code shown in context cannot be edited here. */
+.lisp-ide .fw-outliner__row[data-readonly="true"] .fw-outliner__mirror {
+  opacity: 0.72;
+}
+
+.lisp-value[data-kind="readonly"] {
+  color: var(--muted-foreground);
+}

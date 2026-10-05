@@ -34,6 +34,14 @@ export {
 } from "./outline";
 export { parseOutline, serializeOutline, type SerializeOptions } from "./text";
 export {
+  keepsReadOnly,
+  reparented,
+  type Move,
+  type MoveCause,
+  type Policy,
+  type Reparented,
+} from "./policy";
+export {
   Action,
   resolveKey,
   shortcutHelp,

@@ -6,7 +6,8 @@ import { caretLines } from "./caret";
 import { keepsFocus, resolveKey, type Action, type KeyInput, type Platform } from "./keymap";
 import { Message } from "./message";
 import { domIds, type Model } from "./model";
-import { dropTarget, find, roots, visibleRows, type DropTarget } from "./outline";
+import { dropTarget, find, moveItems, roots, visibleRows, type DropTarget } from "./outline";
+import { refusal, type Policy } from "./policy";
 import { selectedIds, selectedRoots } from "./selectors";
 import { serializeOutline } from "./text";
 
@@ -32,7 +33,9 @@ const FOCUSABLE =
 
 /** The view hands the latest model to the surface through this element property. */
 export const MODEL_PROPERTY = "foldworksOutliner";
-type Host = HTMLElement & { [MODEL_PROPERTY]?: Model };
+/** The host's policy, for refusing drops while dragging. */
+export const POLICY_PROPERTY = "foldworksOutlinerPolicy";
+type Host = HTMLElement & { [MODEL_PROPERTY]?: Model; [POLICY_PROPERTY]?: Policy };
 
 type SurfaceMessage = Extract<
   Message,
@@ -684,7 +687,28 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                 gap += 1;
               }
               const depth = current.depth + (current.x - current.startX) / INDENT;
-              return dropTarget(rows, current.ids, gap, depth, state.scopeId);
+              const wanted = dropTarget(rows, current.ids, gap, depth, state.scopeId);
+              const policy = host[POLICY_PROPERTY] ?? {};
+              if (policy.canMove === undefined && policy.isReadOnly === undefined) return wanted;
+              const allowed = (target: DropTarget) => {
+                const after = moveItems(state.items, current.ids, target.placement);
+                return (
+                  after === undefined ||
+                  refusal(policy, state.items, after, { cause: "Drop", ids: current.ids }) ===
+                    undefined
+                );
+              };
+              if (allowed(wanted)) return wanted;
+              // A refused depth falls back to the nearest allowed one in the same gap.
+              const deepest = Math.max(0, ...rows.map((row) => row.depth)) + 1;
+              const depths = Array.from({ length: deepest + 1 }, (_, level) => level).sort(
+                (a, b) => Math.abs(a - wanted.depth) - Math.abs(b - wanted.depth),
+              );
+              for (const level of depths) {
+                const candidate = dropTarget(rows, current.ids, gap, level, state.scopeId);
+                if (allowed(candidate)) return candidate;
+              }
+              return { ...wanted, refused: true };
             };
 
             const placeGhost = (current: Drag) => {
@@ -697,6 +721,9 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               const target = computeTarget(current);
               if (!sameTarget(target, current.target)) {
                 current.target = target;
+                if (current.ghost !== null) {
+                  current.ghost.dataset.refused = String(target?.refused === true);
+                }
                 emit(Message.MovedDrag({ target }));
               }
             };
@@ -731,6 +758,18 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               current.depth =
                 visibleRows(state.items, state.scopeId).find((row) => row.id === current.ids[0])
                   ?.depth ?? 0;
+              // Read-only items stay where they are; there is nothing to drag.
+              const isReadOnly = host[POLICY_PROPERTY]?.isReadOnly;
+              if (
+                isReadOnly !== undefined &&
+                current.ids.some((id) => {
+                  const node = find(state.items, id);
+                  return node !== undefined && isReadOnly(node);
+                })
+              ) {
+                drag = undefined;
+                return;
+              }
               current.active = true;
               const ghost = doc.createElement("div");
               ghost.className = "fw-outliner-ghost";

@@ -28,12 +28,18 @@ export const sampleSource = `; A program is an outline: every row is a form, and
     activate)
   ; Checks are live too.
   (before? onboarding collect-i9 activate)
-  (before? onboarding verify-identity collect-i9))`;
+  (before? onboarding verify-identity collect-i9))
+(section "Library"
+  ; Shared helpers, shown here read only.
+  (defn percent [rate amount] (* rate amount))
+  (defn cents [amount] (round amount 2)))`;
 
 const sample = (): Items => {
   const items = parseSource(sampleSource, [], idSource(OUTLINE_ID, []));
   return walk(items)
-    .filter((node) => node.text === 'section "Onboarding steps"')
+    .filter(
+      (node) => node.text === 'section "Onboarding steps"' || node.text === 'section "Library"',
+    )
     .reduce((current, node) => setCollapsed(current, node.id, true), items);
 };
 
