@@ -6,6 +6,7 @@ import { Sidebar } from "@foldworks/sidebar";
 
 import { Model as WorkbenchModel, init as initWorkbench } from "../workbench/model";
 import { Model as CodeEditorModel, init as initCodeEditor } from "../code-editor/model";
+import { Model as LispModel, init as initLisp } from "../lisp/model";
 import type { Snapshot } from "../workbench/domain";
 
 import type { PersistedWorkspace } from "../document-storage";
@@ -39,6 +40,7 @@ export const Model = S.Struct({
   route: AppRoute,
   agent: Agent.Model,
   codeEditor: CodeEditorModel,
+  lisp: LispModel,
   workbench: WorkbenchModel,
   workflowEditor: WorkflowEditorModel,
   statechart: StatechartModel,
@@ -72,6 +74,7 @@ export const init = (
     route,
     agent: Agent.init({ id: "foldworks-agent", selectedModel: "atlas-balanced" }),
     codeEditor: initCodeEditor(),
+    lisp: initLisp(),
     workbench: initWorkbench(workers?.snapshot, workers?.error),
     workflowEditor: initWorkflowEditor(persisted?.workflow, workflowOrientationFromRoute(route)),
     statechart: initialStatechart,

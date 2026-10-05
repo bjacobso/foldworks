@@ -12,7 +12,22 @@ export * from "./contracts";
 
 export const execute = (operation: Operation): Message => Message.Execute({ operation });
 export const snapshot = (model: Model): EditorSnapshot => ({
-  id: model.id, document: model.document, selection: model.selection,
-  options: model.options, diagnostics: model.diagnostics, status: model.status, error: model.error,
+  id: model.id,
+  document: model.document,
+  selection: model.selection,
+  options: model.options,
+  diagnostics: model.diagnostics,
+  annotations: model.annotations,
+  status: model.status,
+  error: model.error,
 });
-export const implementation = { id: "native", Model, Message, init, execute, update, view, snapshot } satisfies EditorImplementation<Model, Message>;
+export const implementation = {
+  id: "native",
+  Model,
+  Message,
+  init,
+  execute,
+  update,
+  view,
+  snapshot,
+} satisfies EditorImplementation<Model, Message>;

@@ -10,6 +10,7 @@ export type Demo =
   | "Editor"
   | "Agent"
   | "CodeEditor"
+  | "Lisp"
   | "Codebase"
   | "DiffViewer"
   | "Workbench"
@@ -31,6 +32,7 @@ export const AppRoute = defineRouteUnion({
   Editor: {},
   Agent: {},
   CodeEditor: {},
+  Lisp: {},
   Codebase: {},
   DiffViewer: {},
   Workbench: {},
@@ -68,6 +70,8 @@ export const codeEditorRouter = pipe(
   Route.literal("code-editor"),
   Route.mapTo(AppRoute.CodeEditor),
 );
+
+export const lispRouter = pipe(Route.literal("lisp"), Route.mapTo(AppRoute.Lisp));
 
 export const codebaseRouter = pipe(Route.literal("codebase"), Route.mapTo(AppRoute.Codebase));
 
@@ -128,6 +132,7 @@ const routeParser = Route.oneOf(
   codebaseRouter,
   diffViewerRouter,
   codeEditorRouter,
+  lispRouter,
   dataTableRouter,
   dataGridRouter,
   formBuilderRouter,
@@ -150,6 +155,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "Agent";
     case "CodeEditor":
       return "CodeEditor";
+    case "Lisp":
+      return "Lisp";
     case "Codebase":
       return "Codebase";
     case "DiffViewer":

@@ -9,6 +9,7 @@ import { UrlRequest } from "foldkit/navigation";
 import { Url } from "foldkit/url";
 
 import { Message as CodeEditorMessage } from "../code-editor/message";
+import { Message as LispMessage } from "../lisp/message";
 import { Message as WorkbenchMessage } from "../workbench/message";
 import { Message as DataGridMessage } from "../data-grid/message";
 import { Message as DataTableMessage } from "../data-table/message";
@@ -36,6 +37,7 @@ export const Message = defineMessageUnion({
   GotFormEditorMessage: { message: FormEditorMessage },
   GotStatechartMessage: { message: StatechartMessage },
   GotCodeEditorMessage: { message: CodeEditorMessage },
+  GotLispMessage: { message: LispMessage },
   GotWorkbenchMessage: { message: WorkbenchMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },
   GotDataTableDemoMessage: { message: DataTableMessage },

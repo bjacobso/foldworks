@@ -5,6 +5,10 @@ import { Message, type Action } from "./message";
 import { ObserveInput } from "./mount";
 import { completions, findMatches } from "./operations";
 import { lineAt, type Line } from "./tokenize";
+import { isCollection, isLisp, path, read } from "../lisp/reader";
+import type { SourcedAnnotation } from "../annotations";
+
+type Mark = Readonly<{ from: number; to: number; className: string }>;
 
 export const visibleLines = (model: Model): Readonly<{ from: number; to: number }> =>
   model.options.lineWrapping
@@ -30,7 +34,8 @@ const paintedLine = <ParentMessage>(
   line: Line,
   start: number,
   issues: readonly { from: number; to: number; severity: string }[],
-  matches: readonly { from: number; to: number }[],
+  marks: readonly Mark[],
+  annotations: readonly SourcedAnnotation[],
   h: HtmlBuilder<ParentMessage>,
 ): readonly Html[] => {
   const ends = new Set([0, line.text.length]);
@@ -38,7 +43,7 @@ const paintedLine = <ParentMessage>(
     ends.add(token.from);
     ends.add(token.to);
   }
-  for (const range of [...issues, ...matches]) {
+  for (const range of [...issues, ...marks]) {
     if (range.to >= start && range.from <= start + line.text.length) {
       ends.add(Math.max(0, range.from - start));
       ends.add(Math.min(line.text.length, range.to - start));
@@ -53,21 +58,46 @@ const paintedLine = <ParentMessage>(
     const to = positions[index + 1]!;
     const token = line.tokens.find((token) => token.from <= from && token.to > from);
     const issue = issues.find((issue) => issue.from < start + to && issue.to > start + from);
-    const match = matches.some((match) => match.from < start + to && match.to > start + from);
     const classes = [
       `native-token--${token?.kind ?? "plain"}`,
       ...(issue ? ["native-token--issue", `native-token--${issue.severity}`] : []),
-      ...(match ? ["native-token--match"] : []),
+      ...marks
+        .filter((mark) => mark.from < start + to && mark.to > start + from)
+        .map((mark) => mark.className),
     ];
     spans.push(h.span([h.Class(classes.join(" "))], [line.text.slice(from, to)]));
   });
   if (!line.text.length) spans.push(h.span([], ["\u200b"]));
+  if (annotations.length)
+    spans.push(
+      h.span(
+        [h.Class("native-editor__annotations")],
+        annotations.map((item) =>
+          h.span(
+            [
+              h.Class(
+                `native-editor__annotation native-editor__annotation--${item.tone}${item.stale ? " native-editor__annotation--stale" : ""}`,
+              ),
+            ],
+            [item.label],
+          ),
+        ),
+      ),
+    );
   return spans;
 };
 
 const languageLabel = (languageId: string): string =>
-  ({ json: "JSON", yaml: "YAML", typescript: "TypeScript", text: "Plain text" })[languageId] ??
-  languageId;
+  ({
+    json: "JSON",
+    yaml: "YAML",
+    typescript: "TypeScript",
+    text: "Plain text",
+    clojure: "Clojure",
+    scheme: "Scheme",
+    lisp: "Lisp",
+    edn: "EDN",
+  })[languageId] ?? languageId;
 
 export const view = <ParentMessage>(
   {
@@ -88,6 +118,29 @@ export const view = <ParentMessage>(
   const matches = model.search.open
     ? findMatches(model.document.text, model.search.query, model.search.caseSensitive)
     : [];
+  const lisp = isLisp(model.document.languageId);
+  // The form at the cursor is tinted and its delimiters marked, so structure reads at a glance.
+  const active = lisp
+    ? [...path(read(model.document.text).forms, model.selection.head)].reverse().find(isCollection)
+    : undefined;
+  const marks: Mark[] = [
+    ...(active
+      ? [
+          { from: active.from, to: active.to, className: "native-token--form" },
+          {
+            from: active.from,
+            to: active.from + active.open,
+            className: "native-token--delimiter",
+          },
+          ...(active.closed
+            ? [{ from: active.to - 1, to: active.to, className: "native-token--delimiter" }]
+            : []),
+        ]
+      : []),
+    ...matches.map((match) => ({ ...match, className: "native-token--match" })),
+  ];
+  const annotationRow = (item: SourcedAnnotation) =>
+    lineAt(model.starts, Math.max(item.from, item.to - 1));
   const choices = model.completion.open
     ? completions(model.document.text, model.selection)
     : { from: 0, items: [] };
@@ -129,6 +182,7 @@ export const view = <ParentMessage>(
       h.Class("native-editor"),
       h.DataAttribute("native-editor", model.id),
       h.DataAttribute("mode", model.options.theme),
+      h.DataAttribute("language", model.document.languageId),
       h.Style({ "--native-tab-size": String(model.options.tabSize) }),
     ],
     [
@@ -148,7 +202,18 @@ export const view = <ParentMessage>(
                     action("Indent", "indent"),
                     action("Outdent", "outdent"),
                     action("Toggle comment", "comment", model.document.languageId === "json"),
-                    action("Duplicate", "duplicate"),
+                    ...(lisp
+                      ? [
+                          action("Evaluate", "evaluate"),
+                          action("Expand", "expandSelection"),
+                          action("Slurp", "slurp"),
+                          action("Barf", "barf"),
+                          action("Raise", "raise"),
+                          action("Splice", "splice"),
+                          action("Wrap", "wrap"),
+                          action("Reindent", "format"),
+                        ]
+                      : [action("Duplicate", "duplicate")]),
                     button("Find / replace", Message.OpenSearch({ open: !model.search.open })),
                     button("Suggest", Message.OpenCompletion({ open: !model.completion.open })),
                     ...(model.document.languageId === "json"
@@ -263,7 +328,8 @@ export const view = <ParentMessage>(
                         line,
                         model.starts[row]!,
                         issues,
-                        model.search.open ? matches : [],
+                        marks,
+                        model.annotations.filter((item) => annotationRow(item) === row),
                         h,
                       ),
                     );
@@ -336,7 +402,13 @@ export const view = <ParentMessage>(
           ),
           h.span(
             [h.Id(`${model.id}-help`), h.Class("native-editor__help")],
-            [model.options.readOnly ? "Read only" : "Tab moves focus · Ctrl/Cmd + ] indents"],
+            [
+              model.options.readOnly
+                ? "Read only"
+                : lisp
+                  ? "Tab moves focus · Ctrl/Cmd + Enter evaluates · Alt + arrows move by form · Ctrl + Alt + arrows slurp and barf"
+                  : "Tab moves focus · Ctrl/Cmd + ] indents",
+            ],
           ),
           ...(!showToolbar || !model.options.readOnly ? [goToLine()] : []),
           h.span(

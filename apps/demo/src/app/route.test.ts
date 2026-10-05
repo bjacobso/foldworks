@@ -9,6 +9,7 @@ import {
   dataGridExampleFromRoute,
   dataGridPath,
   codeEditorRouter,
+  lispRouter,
   codebaseRouter,
   workbenchRouter,
   demoFromRoute,
@@ -52,6 +53,8 @@ describe("demo routes", () => {
     expect(dataGridExampleFromRoute(parseUrl("https://demo.test/data-grid"))).toBe("Worksheet");
     expect(codeEditorRouter()).toBe("/code-editor");
     expect(demoFromRoute(parseUrl("https://demo.test/code-editor"))).toBe("CodeEditor");
+    expect(lispRouter()).toBe("/lisp");
+    expect(demoFromRoute(parseUrl("https://demo.test/lisp"))).toBe("Lisp");
     expect(codebaseRouter()).toBe("/codebase");
     expect(demoFromRoute(parseUrl("https://demo.test/codebase"))).toBe("Codebase");
     expect(formBuilderPath("Complex", "Preview")).toBe(

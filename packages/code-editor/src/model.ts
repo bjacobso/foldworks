@@ -1,6 +1,7 @@
 import { Schema as S } from "effect";
 import { Document, Selection, normalizeText } from "./document";
 import { DiagnosticBatch } from "./diagnostics";
+import { SourcedAnnotation } from "./annotations";
 
 export const Options = S.Struct({
   readOnly: S.Boolean,
@@ -16,6 +17,7 @@ export const Model = S.Struct({
   selection: Selection,
   options: Options,
   diagnostics: S.Array(DiagnosticBatch),
+  annotations: S.Array(SourcedAnnotation),
   status: S.Literals(["Loading", "Ready", "Failed"]),
   error: S.String,
 });
@@ -26,7 +28,8 @@ export type InitConfig = Readonly<{
   text?: string;
   uri?: string;
   languageId?: string;
-}> & Partial<Options>;
+}> &
+  Partial<Options>;
 
 export const init = (config: InitConfig): Model => ({
   id: config.id,
@@ -47,6 +50,7 @@ export const init = (config: InitConfig): Model => ({
     theme: config.theme ?? "light",
   },
   diagnostics: [],
+  annotations: [],
   status: "Loading",
   error: "",
 });

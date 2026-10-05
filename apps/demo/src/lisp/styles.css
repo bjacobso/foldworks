@@ -1,0 +1,239 @@
+.lisp-demo {
+  padding: 36px;
+  overflow: auto;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.lisp-demo__intro {
+  max-width: 700px;
+  margin-bottom: 24px;
+}
+.lisp-demo__eyebrow {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+.lisp-demo__intro h1 {
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  margin: 0 0 12px;
+}
+.lisp-demo__intro > p:last-child {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+.lisp-demo__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.lisp-demo__status {
+  margin-left: auto;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.lisp-demo__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.lisp-demo__file .native-editor {
+  --native-editor-height: 600px;
+}
+.lisp-demo__repl {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 10px);
+  background: var(--card);
+  overflow: hidden;
+}
+.lisp-demo__repl-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.lisp-demo__repl-heading span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.lisp-demo__repl-heading button {
+  margin-left: auto;
+}
+/* column-reverse keeps the newest entry in view, like a terminal. */
+.lisp-demo__transcript {
+  flex: 1 1 0;
+  min-height: 260px;
+  max-height: 520px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  padding: 10px;
+}
+.lisp-demo__empty {
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: auto 8px 8px;
+}
+.lisp-demo__input {
+  border-top: 1px solid var(--border);
+  padding: 10px;
+}
+.lisp-demo__input .native-editor {
+  --native-editor-height: 88px;
+}
+.lisp-demo__input .native-editor__status {
+  display: none;
+}
+.lisp-entry {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  background: var(--background);
+  animation: lisp-entry-in 160ms ease-out;
+}
+@keyframes lisp-entry-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.lisp-entry--error {
+  border-color: color-mix(in srgb, var(--foldworks-ui-danger, #a5252c) 45%, var(--border));
+}
+.lisp-entry__header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.lisp-entry__origin {
+  flex: none;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.lisp-entry__source {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 12px/18px var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+.lisp-entry__actions {
+  flex: none;
+  display: flex;
+  gap: 2px;
+}
+.lisp-entry__action {
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.lisp-entry__action:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+.lisp-entry__action:focus-visible {
+  outline: 2px solid var(--ring);
+}
+.lisp-entry__value,
+.lisp-entry__output {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 12px/18px var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--native-property, #315ba6);
+}
+.lisp-entry__output {
+  color: var(--muted-foreground);
+  border-left: 2px solid var(--border);
+  padding-left: 8px;
+}
+.lisp-entry--var .lisp-entry__value {
+  color: var(--muted-foreground);
+}
+.lisp-entry--error .lisp-entry__value {
+  color: var(--foldworks-ui-danger, #a5252c);
+}
+.lisp-entry__table {
+  margin-top: 6px;
+  overflow-x: auto;
+}
+.lisp-entry__table table {
+  border-collapse: collapse;
+  font: 12px/18px var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+.lisp-entry__table th,
+.lisp-entry__table td {
+  text-align: left;
+  padding: 3px 12px 3px 0;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.lisp-entry__table th {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+.lisp-entry__count {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.lisp-demo__keys {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
+  gap: 6px 14px;
+  margin: 18px 0 0;
+  font-size: 12px;
+}
+.lisp-demo__keys dt {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--foreground);
+}
+.lisp-demo__keys dd {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+.lisp-demo__announcement {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin: 14px 0 0;
+}
+@media (max-width: 900px) {
+  .lisp-demo {
+    padding: 20px;
+  }
+  .lisp-demo__workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lisp-demo__file .native-editor {
+    --native-editor-height: 440px;
+  }
+  .lisp-demo__keys {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+}

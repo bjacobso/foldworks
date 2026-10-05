@@ -10,6 +10,7 @@ import { workbenchScenarios } from "./workbench.scenarios";
 import { dataGridCoverageScenarios, dataGridEditingScenarios } from "./data-grid.scenarios";
 import { statefulUiScenarios } from "./stateful-ui.scenarios";
 import { nativeEditorScenarios } from "./native-editor.scenarios";
+import { lispScenarios } from "./lisp.scenarios";
 import { workspaceScenarios } from "./workspace.scenarios";
 import { treeScenarios } from "./tree.scenarios";
 import { agentScenarios } from "./agent.scenarios";
@@ -139,6 +140,7 @@ describe.sequential("structured workflow builder", () => {
         "@foldworks/ui",
         "Document editor",
         "Code editor",
+        "Live Lisp",
         "Data table",
         "Data grid",
         "Query builder",
@@ -1618,6 +1620,7 @@ describe.sequential("structured workflow builder", () => {
   statefulUiScenarios(() => page, appUrl, screenshot);
   desktopScenarios(() => page, appUrl);
   nativeEditorScenarios(() => page, appUrl, screenshot);
+  lispScenarios(() => page, appUrl, screenshot);
   workspaceScenarios(() => page, appUrl);
   treeScenarios(() => page, appUrl);
   agentScenarios(() => page, appUrl, screenshot);

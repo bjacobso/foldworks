@@ -4,6 +4,7 @@ import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { Document, Selection, TextEdit } from "./document";
 import { DiagnosticBatch } from "./diagnostics";
+import { AnnotationBatch } from "./annotations";
 import { Options, type InitConfig, Model as BaseModel } from "./model";
 
 export {
@@ -18,6 +19,13 @@ export {
 } from "./document";
 export { Diagnostic, DiagnosticBatch, jsonValidator, type Validator } from "./diagnostics";
 export { Options, type InitConfig } from "./model";
+export {
+  Annotation,
+  AnnotationBatch,
+  SourcedAnnotation,
+  mapAnnotations,
+  validAnnotations,
+} from "./annotations";
 
 export const DocumentVersion = S.Struct({ uri: S.String, session: S.Number, revision: S.Number });
 export type DocumentVersion = typeof DocumentVersion.Type;
@@ -42,14 +50,23 @@ export const Operation = defineMessageUnion({
   SetLanguage: { languageId: S.String },
   SetOptions: Options.fields,
   SetDiagnostics: DiagnosticBatch.fields,
+  SetAnnotations: AnnotationBatch.fields,
 });
 export type Operation = typeof Operation.Type;
 export const Origin = S.Literals(["input", "external", "undo", "redo"]);
 export type Origin = typeof Origin.Type;
+export const EvaluationScope = S.Literals(["form", "document"]);
+export type EvaluationScope = typeof EvaluationScope.Type;
 export const OutMessage = defineMessageUnion({
   ChangedDocument: { document: Document, origin: Origin },
   ChangedSelection: { selection: Selection },
   RejectedOperation: { reason: S.String },
+  /** The user asked to evaluate source ranges. The host owns the runtime and may answer with annotations. */
+  RequestedEvaluation: {
+    version: DocumentVersion,
+    scope: EvaluationScope,
+    ranges: S.Array(S.Struct({ from: S.Number, to: S.Number })),
+  },
 });
 export type OutMessage = typeof OutMessage.Type;
 

@@ -341,3 +341,70 @@
   background: var(--muted, #f4f4f5);
   border-color: var(--border, #dedee3);
 }
+
+/* Lisp: quiet delimiters, a tinted form at the cursor, and inline results. */
+.native-editor:is(
+    [data-language="clojure"],
+    [data-language="clojurescript"],
+    [data-language="scheme"],
+    [data-language="lisp"],
+    [data-language="edn"]
+  )
+  .native-token--punctuation {
+  color: color-mix(in srgb, var(--foreground, #202124) 52%, transparent);
+}
+.native-token--form {
+  background: color-mix(in srgb, var(--primary, #5674c7) 8%, transparent);
+}
+.native-token--delimiter {
+  color: var(--foreground, #202124);
+  background: color-mix(in srgb, var(--primary, #5674c7) 24%, transparent);
+  border-radius: 2px;
+}
+.native-editor
+  :is(
+    .native-token--delimiter,
+    .native-token--form
+  ).native-token--punctuation.native-token--delimiter {
+  color: var(--foreground, #202124);
+}
+.native-editor__annotations {
+  position: absolute;
+  display: inline-flex;
+  gap: 12px;
+  margin-left: 20px;
+  white-space: pre;
+  font-size: 12px;
+  pointer-events: none;
+}
+.native-editor__annotation {
+  padding: 0 7px;
+  border-radius: 4px;
+  line-height: 20px;
+  margin-top: 1px;
+  color: var(--native-property);
+  background: color-mix(in srgb, var(--native-property) 10%, transparent);
+  transition: opacity 120ms ease;
+}
+.native-editor__annotation--value::before {
+  content: "⇒ ";
+  opacity: 0.7;
+}
+.native-editor__annotation--muted {
+  color: var(--muted-foreground, #686b70);
+  background: transparent;
+}
+.native-editor__annotation--error {
+  color: var(--foldworks-ui-danger, #a5252c);
+  background: color-mix(in srgb, var(--foldworks-ui-danger, #a5252c) 10%, transparent);
+}
+.native-editor__annotation--error::before {
+  content: "× ";
+}
+.native-editor__annotation--stale {
+  opacity: 0.45;
+}
+.native-editor__annotation--stale::after {
+  content: " · stale";
+  font-style: italic;
+}

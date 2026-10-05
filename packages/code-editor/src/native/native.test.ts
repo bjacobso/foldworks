@@ -8,17 +8,38 @@ import { historyPlan } from "./history";
 import { tokenize, lineStarts, lineAt } from "./tokenize";
 import { visibleLines } from "./view";
 
-const ready = (text = "", languageId = "text") => update(init({ id: "native", text, languageId }), Message.Mounted({ session: 0, lease: "test" })).model;
-const edit = (model: Model, text: string, kind = "input", time = 0) => update(model, Message.Edited({
-  session: model.document.session, lease: model.lease, baseRevision: model.document.revision,
-  edits: difference(model.document.text, text), before: model.selection,
-  selection: { anchor: text.length, head: text.length }, kind, time, groupId: 0,
-})).model;
+const ready = (text = "", languageId = "text") =>
+  update(init({ id: "native", text, languageId }), Message.Mounted({ session: 0, lease: "test" }))
+    .model;
+const edit = (model: Model, text: string, kind = "input", time = 0) =>
+  update(
+    model,
+    Message.Edited({
+      session: model.document.session,
+      lease: model.lease,
+      baseRevision: model.document.revision,
+      edits: difference(model.document.text, text),
+      before: model.selection,
+      selection: { anchor: text.length, head: text.length },
+      kind,
+      time,
+      groupId: 0,
+    }),
+  ).model;
 const travel = (model: Model, direction: "undo" | "redo") => {
   const plan = historyPlan(model, direction)!;
-  return update(model, Message.Edited({ ...plan, session: model.document.session, lease: model.lease,
-    baseRevision: model.document.revision, before: model.selection, kind: direction, time: 1000,
-  })).model;
+  return update(
+    model,
+    Message.Edited({
+      ...plan,
+      session: model.document.session,
+      lease: model.lease,
+      baseRevision: model.document.revision,
+      before: model.selection,
+      kind: direction,
+      time: 1000,
+    }),
+  ).model;
 };
 
 describe("native document and history", () => {
@@ -28,13 +49,18 @@ describe("native document and history", () => {
         const edits = difference(before, after);
         expect(applyEdits(before, edits)).toBe(after);
         expect(applyEdits(after, invert(before, edits))).toBe(before);
-        expect(edits.every((edit) => validOffset(before, edit.from) && validOffset(before, edit.to))).toBe(true);
+        expect(
+          edits.every((edit) => validOffset(before, edit.from) && validOffset(before, edit.to)),
+        ).toBe(true);
       }
     }
   });
   it("inverts disjoint replacements in their resulting coordinates", () => {
     const before = "alpha bravo charlie";
-    const edits = [{ from: 0, to: 5, insert: "A" }, { from: 12, to: 19, insert: "CCCC" }];
+    const edits = [
+      { from: 0, to: 5, insert: "A" },
+      { from: 12, to: 19, insert: "CCCC" },
+    ];
     const after = applyEdits(before, edits);
     expect(after).toBe("A bravo CCCC");
     expect(applyEdits(after, invert(before, edits))).toBe(before);
@@ -56,29 +82,63 @@ describe("native document and history", () => {
     expect(travel(branch, "undo").document.text).toBe("a");
   });
   it("groups a composition session independently of elapsed time", () => {
-    const model = edit(edit(ready(), "に", "composition:lease:1", 1), "日本", "composition:lease:1", 5000);
+    const model = edit(
+      edit(ready(), "に", "composition:lease:1", 1),
+      "日本",
+      "composition:lease:1",
+      5000,
+    );
     expect(model.past).toHaveLength(1);
     expect(travel(model, "undo").document.text).toBe("");
     expect(edit(model, "日本語", "composition:lease:2", 5001).past).toHaveLength(2);
   });
   it("rejects stale revisions and ignores messages from an old mount", () => {
     const model = edit(ready(), "new");
-    const event = Message.Edited({ session: 0, lease: "test", baseRevision: 0, edits: [{ from: 0, to: 0, insert: "old" }], before: model.selection, selection: { anchor: 0, head: 0 }, kind: "input", time: 0, groupId: 0 });
+    const event = Message.Edited({
+      session: 0,
+      lease: "test",
+      baseRevision: 0,
+      edits: [{ from: 0, to: 0, insert: "old" }],
+      before: model.selection,
+      selection: { anchor: 0, head: 0 },
+      kind: "input",
+      time: 0,
+      groupId: 0,
+    });
     expect(update(model, event).model.document.text).toBe("new");
     expect(update(model, event).outMessage?._tag).toBe("RejectedOperation");
     expect(update(model, { ...event, lease: "old" }).model).toBe(model);
   });
   it("resets document history and rejects diagnostics from previous sessions", () => {
     const model = edit(ready("{}", "json"), '{"x":1}');
-    const next = update(model, Message.ReplaceDocument({ uri: model.document.uri, text: "{}", languageId: "json" })).model;
+    const next = update(
+      model,
+      Message.ReplaceDocument({ uri: model.document.uri, text: "{}", languageId: "json" }),
+    ).model;
     expect(next.past).toHaveLength(0);
     expect(next.document.session).toBe(1);
-    expect(update(next, Message.SetDiagnostics({ ...model.document, source: "lsp", diagnostics: [{ from: 0, to: 1, severity: "error", message: "stale" }] })).model).toBe(next);
+    expect(
+      update(
+        next,
+        Message.SetDiagnostics({
+          ...model.document,
+          source: "lsp",
+          diagnostics: [{ from: 0, to: 1, severity: "error", message: "stale" }],
+        }),
+      ).model,
+    ).toBe(next);
   });
   it("validates JSON and preserves independent current diagnostic sources", () => {
     let model = ready('{"x": }', "json");
     expect(model.diagnostics[0]!.diagnostics).toHaveLength(1);
-    model = update(model, Message.SetDiagnostics({ ...model.document, source: "lsp", diagnostics: [{ from: 0, to: 1, severity: "warning", message: "example" }] })).model;
+    model = update(
+      model,
+      Message.SetDiagnostics({
+        ...model.document,
+        source: "lsp",
+        diagnostics: [{ from: 0, to: 1, severity: "warning", message: "example" }],
+      }),
+    ).model;
     expect(model.diagnostics).toHaveLength(2);
     const changed = edit(model, '{"x": true}');
     expect(changed.diagnostics.flatMap((batch) => batch.diagnostics)).toHaveLength(0);
@@ -110,10 +170,16 @@ describe("native editing commands", () => {
     const after = applyEdits(text, commented.edits);
     expect(after).toBe("  // one\n  // two");
     expect(applyEdits(after, editingPlan(after, commented.selection, "comment").edits)).toBe(text);
-    expect(applyEdits(text, editingPlan(text, { anchor: 9, head: 9 }, "deleteLine").edits)).toBe("  one");
+    expect(applyEdits(text, editingPlan(text, { anchor: 9, head: 9 }, "deleteLine").edits)).toBe(
+      "  one",
+    );
   });
   it("searches literal expressions in original UTF-16 coordinates", () => {
-    expect(findMatches("😀A.a İa", "a", false)).toEqual([{ from: 2, to: 3 }, { from: 4, to: 5 }, { from: 7, to: 8 }]);
+    expect(findMatches("😀A.a İa", "a", false)).toEqual([
+      { from: 2, to: 3 },
+      { from: 4, to: 5 },
+      { from: 7, to: 8 },
+    ]);
     expect(findMatches("a.a", ".", true)).toEqual([{ from: 1, to: 2 }]);
     expect(findMatches("anything", "", false)).toEqual([]);
     expect(findMatches("x ".repeat(1200), "x", true)).toHaveLength(1000);
@@ -121,7 +187,10 @@ describe("native editing commands", () => {
   });
   it("suggests document words and keywords from the cursor prefix", () => {
     const text = "const customWidget = 1;\ncust";
-    expect(completions(text, { anchor: text.length, head: text.length })).toEqual({ from: text.length - 4, items: ["customWidget"] });
+    expect(completions(text, { anchor: text.length, head: text.length })).toEqual({
+      from: text.length - 4,
+      items: ["customWidget"],
+    });
     expect(completions("ret", { anchor: 3, head: 3 }).items).toContain("return");
   });
 });
@@ -141,8 +210,14 @@ describe("native incremental highlighting and rendering", () => {
     expect(lines[0]!.outgoing).toBe("template");
     expect(lines[1]!.outgoing).toBe("code");
     for (const line of lines) {
-      expect(line.tokens.map((token) => line.text.slice(token.from, token.to)).join("")).toBe(line.text);
-      expect(line.tokens.every((token) => validOffset(line.text, token.from) && validOffset(line.text, token.to))).toBe(true);
+      expect(line.tokens.map((token) => line.text.slice(token.from, token.to)).join("")).toBe(
+        line.text,
+      );
+      expect(
+        line.tokens.every(
+          (token) => validOffset(line.text, token.from) && validOffset(line.text, token.to),
+        ),
+      ).toBe(true);
     }
   });
   it("computes line coordinates and renders a bounded window in large documents", () => {
@@ -152,6 +227,68 @@ describe("native incremental highlighting and rendering", () => {
     const range = visibleLines({ ...model, viewport: { top: 22012, left: 0, height: 352 } });
     expect(range.from).toBe(992);
     expect(range.to - range.from).toBeLessThan(40);
-    expect(visibleLines({ ...model, options: { ...model.options, lineWrapping: true } })).toEqual({ from: 0, to: 2000 });
+    expect(visibleLines({ ...model, options: { ...model.options, lineWrapping: true } })).toEqual({
+      from: 0,
+      to: 2000,
+    });
+  });
+});
+
+describe("native evaluation and annotations", () => {
+  it("requests evaluation of the top-level Lisp form at the cursor", () => {
+    const model = {
+      ...ready("(def a 1)\n(inc a)", "clojure"),
+      selection: { anchor: 13, head: 13 },
+    };
+    const { outMessage } = update(model, Message.Run({ action: "evaluate" }));
+    expect(outMessage).toMatchObject({
+      _tag: "RequestedEvaluation",
+      scope: "form",
+      ranges: [{ from: 10, to: 17 }],
+    });
+    const all = update(model, Message.Run({ action: "evaluateAll" })).outMessage;
+    expect(all).toMatchObject({
+      scope: "document",
+      ranges: [
+        { from: 0, to: 9 },
+        { from: 10, to: 17 },
+      ],
+    });
+  });
+  it("accepts annotations for the current revision, maps them, and marks edited ones stale", () => {
+    let model = ready("(inc 1) (dec 1)", "clojure");
+    const batch = (annotations: { from: number; to: number; label: string }[]) =>
+      Message.SetAnnotations({
+        ...model.document,
+        source: "repl",
+        annotations: annotations.map((item) => ({ ...item, tone: "value" as const, stale: false })),
+      });
+    model = update(
+      model,
+      batch([
+        { from: 0, to: 7, label: "2" },
+        { from: 8, to: 15, label: "0" },
+      ]),
+    ).model;
+    expect(model.annotations).toHaveLength(2);
+    model = edit(model, "(inc 10) (dec 1)");
+    expect(model.annotations.map(({ from, to, stale }) => ({ from, to, stale }))).toEqual([
+      { from: 0, to: 8, stale: true },
+      { from: 9, to: 16, stale: false },
+    ]);
+    const old = Message.SetAnnotations({
+      ...model.document,
+      revision: 0,
+      source: "repl",
+      annotations: [],
+    });
+    expect(update(model, old).model).toBe(model);
+  });
+  it("reports unbalanced Lisp delimiters as diagnostics", () => {
+    const model = ready("(defn f [x]\n  (inc x)", "clojure");
+    expect(model.diagnostics[0]).toMatchObject({
+      source: "reader",
+      diagnostics: [{ from: 0, to: 1, severity: "error" }],
+    });
   });
 });

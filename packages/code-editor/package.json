@@ -36,6 +36,10 @@
     "./structured": {
       "types": "./dist/structured.d.ts",
       "import": "./dist/structured.js"
+    },
+    "./lisp": {
+      "types": "./dist/lisp.d.ts",
+      "import": "./dist/lisp.js"
     }
   },
   "scripts": {

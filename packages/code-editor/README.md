@@ -88,7 +88,7 @@ Stale operations report `RejectedOperation`. Recompute against the latest snapsh
 Edits reject read-only mode and composition; finish composing before retrying.
 
 Other operations are `Focus`, `Undo`, `Redo`, `ReplaceDocument`, `SetLanguage`,
-`SetOptions`, and `SetDiagnostics`. Replacement starts a new session and clears
+`SetOptions`, `SetDiagnostics`, and `SetAnnotations`. Replacement starts a new session and clears
 history. Language changes retain history. Options control wrapping, line numbers,
 read-only mode, tab size, and theme. `ChangedDocument` includes an origin of `input`,
 `external`, `undo`, or `redo`. Loading a document or changing its language emits
@@ -102,7 +102,7 @@ pairs is rejected. Internal text uses LF; `normalizeText` converts external text
 
 ## Highlighting and validation
 
-JSON, YAML, JavaScript, and TypeScript use a small stateful lexer; unknown language IDs
+JSON, YAML, JavaScript, TypeScript, and Lisp dialects use a small stateful lexer; unknown language IDs
 fall back to plain text. This does not perform type checking or parse full JSX/TSX
 syntax. JSON syntax validation runs locally and shows squiggles and a navigable
 problems list. It does not validate JSON Schema.
@@ -181,6 +181,50 @@ return a diagnostic batch tagged with the original document version. Debouncing,
 cancellation, worker/server lifecycle, and transport belong to that integration.
 The exported `Validator` type and `jsonValidator` are engine-independent helpers;
 there is no automatic asynchronous validator runner or LSP client bundled yet.
+
+## Lisp structural editing
+
+Language IDs `clojure`, `clojurescript`, `edn`, `lisp`, and `scheme` use a
+tolerant reader instead of a line lexer alone. Every form keeps its UTF-16 range,
+and editing works on forms:
+
+- Typing `(`, `[`, `{`, or `"` inserts the pair. Typing any closer leaves the
+  enclosing form, dropping whitespace before it, as in paredit.
+- Backspace and Delete remove an empty pair together. On a delimiter of a
+  nonempty form, they step over it instead, so delimiters stay balanced.
+- Enter indents Clojure style: bodies two spaces, call arguments aligned with the
+  first argument, and data aligned with its first element. `format` reindents
+  the document.
+- Alt + Up/Down expands or shrinks the selection by form. Alt + Left/Right moves
+  over whole forms. Ctrl + Alt + Right/Left slurps or barfs. Alt + R raises,
+  Alt + S splices, and Alt + ( wraps.
+- The form at the cursor is tinted, with its delimiters marked. Reader problems
+  such as a missing `)` appear as diagnostics.
+
+Every command is an ordinary edit plan, so history, `ChangedDocument`, and hosts
+see plain text edits. The reader and plans are exported at
+`@foldworks/code-editor/lisp` for hosts and tests.
+
+## Evaluation and annotations
+
+Cmd/Ctrl + Enter (or `Run({ action: "evaluate" })`) emits
+`RequestedEvaluation({ version, scope: "form", ranges })`. For Lisp the range is the
+top-level form at the cursor. A form inside a top-level `(comment …)` block is
+evaluated on its own. Other languages send the selection or the current line.
+Shift + Cmd/Ctrl + Enter sends every top-level form with `scope: "document"`. The
+editor runs nothing itself; the host owns the runtime.
+
+Hosts answer with `SetAnnotations({ uri, session, revision, source, annotations })`,
+which replaces that source's annotations. Each annotation has a range, a `label`,
+and a `tone` of `value`, `error`, or `muted`. Its label is shown after the line
+where the range ends. As the document changes, the editor maps annotations
+through each edit. An edit inside an annotation's range marks it `stale`, and the
+label dims, so a result never silently describes changed code. Batches for an old
+revision are ignored, like diagnostics.
+
+The `/lisp` demo route pairs this with a small in-browser interpreter: live
+reloading on each edit, a REPL transcript with tables for sequences of maps, and
+transcript forms that can be added back to the file.
 
 ## Implementation boundary
 

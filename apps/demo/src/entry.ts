@@ -18,7 +18,7 @@ const application = Runtime.makeApplication({
     show: "Development",
     position: "BottomRight",
     // The editor owns large document snapshots; recording each keystroke stalls the demo in development.
-    excludeFromHistory: ["GotCodeEditorMessage"],
+    excludeFromHistory: ["GotCodeEditorMessage", "GotLispMessage"],
   },
   // Keep slow-phase warnings useful without sending the whole editor model through Vite's console bridge.
   slow: {

@@ -9,6 +9,7 @@ import { evo } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
 
 import { update as updateCodeEditor } from "../code-editor/update";
+import { update as updateLisp } from "../lisp/update";
 import { update as updateWorkbench } from "../workbench/update";
 import { update as updateDataGrid } from "../data-grid/update";
 import { setActiveContact, type Model as DataTableModel } from "../data-table/model";
@@ -152,6 +153,13 @@ const foldCodeEditor = Update.foldChild({
   read: (model: Model) => Option.some(model.codeEditor),
   write: (model, codeEditor) => ({ ...model, codeEditor }),
   toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
+});
+
+const foldLisp = Update.foldChild({
+  update: updateLisp,
+  read: (model: Model) => Option.some(model.lisp),
+  write: (model, lisp) => ({ ...model, lisp }),
+  toParentMessage: (message) => Message.GotLispMessage({ message }),
 });
 
 const foldAgent = Update.foldChild({
@@ -336,6 +344,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),
     GotStatechartMessage: ({ message: childMessage }) => foldStatechart(model, childMessage),
     GotCodeEditorMessage: ({ message }) => foldCodeEditor(model, message),
+    GotLispMessage: ({ message }) => foldLisp(model, message),
     GotWorkbenchMessage: ({ message }) => foldWorkbench(model, message),
     GotDataGridDemoMessage: ({ message: childMessage }) => foldDataGrid(model, childMessage),
     GotDataTableDemoMessage: ({ message: childMessage }) => foldDataTable(model, childMessage),
