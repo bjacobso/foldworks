@@ -132,7 +132,48 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             const emit = (message: SurfaceMessage) => {
               if (!disposed) Queue.offerUnsafe(queue, message);
             };
-            const model = (): Model | undefined => host[MODEL_PROPERTY];
+            let latest: Model | undefined = host[MODEL_PROPERTY];
+            const model = (): Model | undefined => latest;
+
+            // Typing outruns rendering. A render can carry an item's text from a
+            // few keystrokes ago, and writing it would erase what was typed since.
+            // Text sent to the model is remembered until the model has it; when a
+            // render lands behind it, the newer text and caret are put back.
+            type Typed = Readonly<{ value: string; start: number; end: number }>;
+            const unacknowledged = new Map<string, Typed[]>();
+            let composing = false;
+            const acknowledge = (next: Model) => {
+              for (const [id, typed] of unacknowledged) {
+                const text = find(next.items, id)?.text;
+                const at =
+                  text === undefined ? -1 : typed.findIndex((entry) => entry.value === text);
+                const ahead = at < 0 ? [] : typed.slice(at + 1);
+                if (ahead.length === 0) {
+                  // Caught up, or changed some other way, such as undo: the model wins.
+                  unacknowledged.delete(id);
+                  continue;
+                }
+                unacknowledged.set(id, ahead);
+                const newest = ahead[ahead.length - 1]!;
+                queueMicrotask(() => {
+                  const element = doc.getElementById(domIds(next.id).text(id));
+                  if (!(element instanceof HTMLTextAreaElement) || composing) return;
+                  if (element.value === newest.value) return;
+                  element.value = newest.value;
+                  if (doc.activeElement === element) {
+                    element.setSelectionRange(newest.start, newest.end);
+                  }
+                });
+              }
+            };
+            Object.defineProperty(host, MODEL_PROPERTY, {
+              configurable: true,
+              get: () => latest,
+              set: (next: Model) => {
+                latest = next;
+                acknowledge(next);
+              },
+            });
 
             // Actions that move focus re-render before the new caret exists. Keys
             // typed in that gap are held and replayed where focus lands.
@@ -384,6 +425,13 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               if (!isText(target)) return;
               const id = rowIdOf(target);
               if (id === undefined) return;
+              const typed = unacknowledged.get(id) ?? [];
+              typed.push({
+                value: target.value,
+                start: target.selectionStart,
+                end: target.selectionEnd,
+              });
+              unacknowledged.set(id, typed.slice(-64));
               emit(
                 Message.EditedText({
                   id,
@@ -438,6 +486,14 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               event.clipboardData.setData("text/plain", text);
               const id = model()?.selection?.headId;
               if (event.type === "cut" && id !== undefined) pressAction("Delete", id);
+            };
+
+            const compositionstart = () => {
+              composing = true;
+            };
+
+            const compositionend = () => {
+              composing = false;
             };
 
             const paste = (event: ClipboardEvent) => {
@@ -686,6 +742,8 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             const listeners: ReadonlyArray<readonly [EventTarget, string, EventListener]> = [
               [host, "keydown", keydown as EventListener],
               [host, "input", input],
+              [host, "compositionstart", compositionstart],
+              [host, "compositionend", compositionend],
               [host, "beforeinput", beforeinput as EventListener],
               [host, "focusin", focusin as EventListener],
               [host, "copy", copy as EventListener],
@@ -704,6 +762,11 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               target.addEventListener(type, listener);
             return () => {
               disposed = true;
+              Object.defineProperty(host, MODEL_PROPERTY, {
+                configurable: true,
+                writable: true,
+                value: latest,
+              });
               clearTimeout(settleTimer);
               clearTimeout(hoverTimer);
               endDrag(false);

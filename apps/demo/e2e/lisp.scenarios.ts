@@ -159,6 +159,18 @@ export const lispScenarios = (
       expect(await text(page, "let").count()).toBe(1);
     });
 
+    it("keeps every key when typing outruns rendering", async () => {
+      const page = await start();
+      await text(page, "invoice-total 100").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      // Each key re-evaluates the program and offers suggestions, so renders lag the keys.
+      await page.keyboard.type("defn twice-the-amount [x y z] (+ x y z) ; and a note");
+      await expect
+        .poll(() => page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value))
+        .toBe("defn twice-the-amount [x y z] (+ x y z) ; and a note");
+    });
+
     it("proposes a structural edit for selected rows and applies it", async () => {
       const page = await start();
       expect(await valueOf(page, "collect-i9")).toBe(
