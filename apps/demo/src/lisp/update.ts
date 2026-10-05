@@ -2,16 +2,23 @@ import { Effect, Option, Schema as S } from "effect";
 import { Command, Update } from "foldkit";
 import { afterCommit } from "foldkit/render";
 import { evo } from "foldkit/struct";
+import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner, find, selectedRoots, type Items } from "@foldworks/outliner";
 
 import { analyze } from "./analysis";
 import { propose } from "./assistant";
 import { completionsAt } from "./completion";
-import { idSource, parseSource } from "./codec";
+import { idSource, parseSource, printOutline } from "./codec";
 import { Message, type Refactoring } from "./message";
-import { domIds, type Model } from "./model";
+import { SOURCE_URI, domIds, type Model } from "./model";
 import { explode, join, raise, unwrap, wrap } from "./refactor";
 import { OUTLINE_ID } from "./sample";
+import {
+  lineOf as sourceLineOf,
+  sourceCompletions,
+  sourceDiagnostics,
+  sourceTokens,
+} from "./source";
 import { ReadError } from "./syntax";
 
 type UpdateReturn = Update.Return<Model, Message>;
@@ -127,28 +134,160 @@ const refactor = (model: Model, refactoring: Refactoring, head: string): UpdateR
   return replace(model, result, announcement);
 };
 
-const lineOf = (text: string, offset: number): number => text.slice(0, offset).split("\n").length;
+const lineNumber = (text: string, offset: number): number =>
+  text.slice(0, offset).split("\n").length;
 
-const editSource = (model: Model, text: string): UpdateReturn => {
-  const drafted = evo(model, { sourceDraft: () => text });
+/** Continues an update with an operation on the source editor, keeping the commands of both. */
+const andThenSource = (result: UpdateReturn, operation: CodeEditor.Operation): UpdateReturn => {
+  const next = foldSource(result.model, CodeEditor.execute(operation));
+  return { model: next.model, commands: [...(result.commands ?? []), ...(next.commands ?? [])] };
+};
+
+/** The smallest edit that turns one text into another. */
+const minimalEdit = (before: string, after: string) => {
+  let start = 0;
+  while (start < before.length && start < after.length && before[start] === after[start])
+    start += 1;
+  let end = 0;
+  while (
+    end < before.length - start &&
+    end < after.length - start &&
+    before[before.length - 1 - end] === after[after.length - 1 - end]
+  ) {
+    end += 1;
+  }
+  return { from: start, to: before.length - end, insert: after.slice(start, after.length - end) };
+};
+
+/**
+ * Explains a version of the source: its highlighting and its problems, from
+ * the outline's analysis. Both are tagged with the version, so a late batch is
+ * ignored.
+ */
+const annotate = (result: UpdateReturn, document: CodeEditor.Document): UpdateReturn => {
+  const items = result.model.outline.items;
+  const analysis = analyze(items);
+  const version = { uri: document.uri, session: document.session, revision: document.revision };
+  const painted = andThenSource(
+    result,
+    CodeEditor.Operation.SetSemanticTokens({
+      ...version,
+      tokens: sourceTokens(document.text, analysis),
+    }),
+  );
+  return andThenSource(
+    painted,
+    CodeEditor.Operation.SetDiagnostics({
+      ...version,
+      languageId: document.languageId,
+      source: "lisp",
+      diagnostics: sourceDiagnostics(items, analysis, document.text),
+    }),
+  );
+};
+
+/** Reads edited source back into the outline as one coalesced undo step; text that does not read leaves it. */
+const readSource = (model: Model, text: string): UpdateReturn => {
   try {
     const items = parseSource(text, model.outline.items, nextIds(model.outline.items));
-    const next = foldOutliner(
-      evo(drafted, { sourceError: () => null }),
+    return foldOutliner(
+      evo(model, { sourceError: () => null }),
       Outliner.Message.Replace({
         items,
         announcement: "Updated from source.",
         coalescingKey: "source",
       }),
     );
-    return next;
   } catch (error) {
     const message =
       error instanceof ReadError
-        ? `${error.message} on line ${lineOf(text, error.at)}`
+        ? `${error.message} on line ${lineNumber(text, error.at)}`
         : String(error);
-    return { model: evo(drafted, { sourceError: () => message }) };
+    return { model: evo(model, { sourceError: () => message }) };
   }
+};
+
+const sourceEvent = (model: Model, event: CodeEditor.OutMessage): UpdateReturn => {
+  switch (event._tag) {
+    case "ChangedDocument": {
+      const typed = event.origin !== "external";
+      const read = typed ? readSource(model, event.document.text) : { model };
+      const annotated = annotate(read, event.document);
+      // Typing a name suggests what it could be.
+      const caret = annotated.model.source.selection.head;
+      const before = event.document.text[caret - 1];
+      return event.origin === "input" &&
+        annotated.model.source.completion === null &&
+        before !== undefined &&
+        SYMBOL_CHARACTER.test(before)
+        ? offerSource(annotated, caret, false)
+        : annotated;
+    }
+    case "RequestedCompletion":
+      return offerSource({ model }, event.offset, true);
+    default:
+      return { model };
+  }
+};
+
+const offerSource = (result: UpdateReturn, caret: number, invoked: boolean): UpdateReturn => {
+  const { source, outline } = result.model;
+  const offer = sourceCompletions(
+    outline.items,
+    analyze(outline.items),
+    source.document.text,
+    caret,
+    invoked,
+  );
+  return offer === undefined
+    ? result
+    : andThenSource(
+        result,
+        CodeEditor.Operation.ShowCompletions({
+          expected: CodeEditor.documentVersion(source.document),
+          ...offer,
+        }),
+      );
+};
+
+const foldSource = Update.foldChild({
+  update: CodeEditor.update,
+  read: (model: Model) => Option.some(model.source),
+  write: (model, source) => evo(model, { source: () => source }),
+  toParentMessage: (message) => Message.GotSourceMessage({ message }),
+  foldOutMessage: (event: CodeEditor.OutMessage) => (model: Model) => sourceEvent(model, event),
+});
+
+/**
+ * Keeps the source pane on the printed outline after the outline changes,
+ * and shows the line for the row with the caret.
+ */
+const syncSource = (before: Model, result: UpdateReturn): UpdateReturn => {
+  const model = result.model;
+  if (!model.showSource) return result;
+  const printed = printOutline(model.outline.items);
+  const text = model.source.document.text;
+  const changed = model.outline.items !== before.outline.items && text !== printed.text;
+  const synced = changed
+    ? andThenSource(
+        result,
+        CodeEditor.Operation.ApplyEdits({
+          expected: CodeEditor.documentVersion(model.source.document),
+          edits: [minimalEdit(text, printed.text)],
+        }),
+      )
+    : result;
+  const focusId = targetsOf(model.outline).focusId;
+  const line = focusId === null ? undefined : sourceLineOf(model.outline.items, printed, focusId);
+  return focusId !== targetsOf(before.outline).focusId && line !== undefined && !changed
+    ? andThenSource(
+        synced,
+        CodeEditor.Operation.Reveal({
+          expected: CodeEditor.documentVersion(synced.model.source.document),
+          range: line,
+        }),
+      )
+    : synced;
 };
 
 const ask = (model: Model, prompt: string): UpdateReturn => {
@@ -181,21 +320,46 @@ const ask = (model: Model, prompt: string): UpdateReturn => {
 };
 
 export const update = (model: Model, message: Message): UpdateReturn =>
+  message._tag === "GotSourceMessage"
+    ? foldSource(model, message.message)
+    : syncSource(model, updateWorkbench(model, message));
+
+const updateWorkbench = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
     GotOutlinerMessage: ({ message: childMessage }) =>
       suggest(foldOutliner(model, childMessage), model, childMessage),
-    ToggledSource: () => ({
-      model: evo(model, {
-        showSource: (value) => !value,
-        sourceDraft: () => null,
-        sourceError: () => null,
-      }),
-    }),
+    ToggledSource: () => {
+      const toggled = evo(model, { showSource: (value) => !value, sourceError: () => null });
+      // Opening the pane starts it on the printed outline, with its own history.
+      return toggled.showSource
+        ? foldSource(
+            toggled,
+            CodeEditor.execute(
+              CodeEditor.Operation.ReplaceDocument({
+                uri: SOURCE_URI,
+                languageId: "lisp",
+                text: printOutline(model.outline.items).text,
+              }),
+            ),
+          )
+        : { model: toggled };
+    },
     ChoseNotation: ({ notation }) => ({ model: evo(model, { notation: () => notation }) }),
-    EditedSource: ({ text }) => editSource(model, text),
-    BlurredSource: () => ({
-      model: model.sourceError === null ? evo(model, { sourceDraft: () => null }) : model,
-    }),
+    GotSourceMessage: ({ message: childMessage }) => foldSource(model, childMessage),
+    BlurredSource: () => {
+      // Leaving a draft that reads prints it again in the outline's layout.
+      const printed = printOutline(model.outline.items).text;
+      const text = model.source.document.text;
+      return model.sourceError !== null || text === printed
+        ? { model }
+        : andThenSource(
+            { model },
+            CodeEditor.Operation.ApplyEdits({
+              expected: CodeEditor.documentVersion(model.source.document),
+              edits: [minimalEdit(text, printed)],
+            }),
+          );
+    },
     ChangedPrompt: ({ text }) => ({ model: evo(model, { prompt: () => text }) }),
     SubmittedPrompt: () => ask(model, model.prompt),
     ChoseSuggestion: ({ prompt }) => ask(model, prompt),

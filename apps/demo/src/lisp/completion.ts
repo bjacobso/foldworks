@@ -67,26 +67,17 @@ const libraryItems: ReadonlyArray<CompletionItem> = [
 ];
 
 /**
- * Suggestions for the symbol at the caret of an item: locals in scope first,
- * then definitions, special forms, and built-ins; or data keys after `:`.
- * Typing asks only once a word has started, and only when something new matches.
+ * What can be typed for a word: in a flow, steps and flows; after `:`, data
+ * keys; otherwise the locals around an item, definitions, special forms, and
+ * built-ins.
  */
-export const completionsAt = (
+export const candidatesFor = (
   items: Items,
   analysis: Analysis,
-  id: string,
-  caret: number,
-  invoked: boolean,
-): Offer | undefined => {
-  const node = find(items, id);
-  if (node === undefined || isComment(node.text)) return undefined;
-  const { from, word } = Completion.wordBefore(node.text, caret, SYMBOL_BEFORE);
-  const to = caret + (SYMBOL_AFTER.exec(node.text.slice(caret))?.[0].length ?? 0);
-  if (!invoked && word === "") return undefined;
-  const parentId = locate(items, id)?.parentId ?? null;
-  const parentHead = parentId === null ? undefined : headOf(find(items, parentId)?.text ?? "");
-  // Inside a flow, a row names a step or opens another flow.
-  const inFlow = parentHead !== undefined && FLOW_FORMS.has(parentHead) && from === 0;
+  word: string,
+  id: string | undefined,
+  inFlow: boolean,
+): ReadonlyArray<CompletionItem> => {
   const candidates: ReadonlyArray<CompletionItem> = inFlow
     ? [
         ...definitionItems(analysis).filter(
@@ -108,7 +99,7 @@ export const completionsAt = (
           }),
         )
       : [
-          ...localsAround(items, analysis, id).map((name) => ({
+          ...(id === undefined ? [] : localsAround(items, analysis, id)).map((name) => ({
             label: name,
             kind: "local",
             detail: "local",
@@ -116,9 +107,32 @@ export const completionsAt = (
           ...definitionItems(analysis),
           ...libraryItems,
         ];
-  const unique = candidates.filter(
+  return candidates.filter(
     (item, index) => candidates.findIndex((other) => other.label === item.label) === index,
   );
+};
+
+/**
+ * Suggestions for the symbol at the caret of an item. Typing asks only once a
+ * word has started, and only when something new matches.
+ */
+export const completionsAt = (
+  items: Items,
+  analysis: Analysis,
+  id: string,
+  caret: number,
+  invoked: boolean,
+): Offer | undefined => {
+  const node = find(items, id);
+  if (node === undefined || isComment(node.text)) return undefined;
+  const { from, word } = Completion.wordBefore(node.text, caret, SYMBOL_BEFORE);
+  const to = caret + (SYMBOL_AFTER.exec(node.text.slice(caret))?.[0].length ?? 0);
+  if (!invoked && word === "") return undefined;
+  const parentId = locate(items, id)?.parentId ?? null;
+  const parentHead = parentId === null ? undefined : headOf(find(items, parentId)?.text ?? "");
+  // Inside a flow, a row names a step or opens another flow.
+  const inFlow = parentHead !== undefined && FLOW_FORMS.has(parentHead) && from === 0;
+  const unique = candidatesFor(items, analysis, word, id, inFlow);
   const list = Completion.open(from, to, unique);
   if (!invoked && Completion.visible(list, node.text, caret).length === 0) return undefined;
   return { from, to, items: unique };

@@ -210,29 +210,34 @@
 }
 
 .lisp-token[data-kind="paren"],
-.fw-outliner__span[data-kind="paren"] {
+.fw-outliner__span[data-kind="paren"],
+.lisp-source .native-token--semantic[data-kind="paren"] {
   color: var(--muted-foreground);
 }
 
 .lisp-token[data-kind="special"],
-.fw-outliner__span[data-kind="special"] {
+.fw-outliner__span[data-kind="special"],
+.lisp-source .native-token--semantic[data-kind="special"] {
   color: var(--lisp-special);
   font-weight: 600;
 }
 
 .lisp-token[data-kind="definition"],
-.fw-outliner__span[data-kind="definition"] {
+.fw-outliner__span[data-kind="definition"],
+.lisp-source .native-token--semantic[data-kind="definition"] {
   color: var(--lisp-defined);
   font-weight: 600;
 }
 
 .lisp-token[data-kind="defined"],
-.fw-outliner__span[data-kind="defined"] {
+.fw-outliner__span[data-kind="defined"],
+.lisp-source .native-token--semantic[data-kind="defined"] {
   color: var(--lisp-defined);
 }
 
 .lisp-token[data-kind="step"],
-.fw-outliner__span[data-kind="step"] {
+.fw-outliner__span[data-kind="step"],
+.lisp-source .native-token--semantic[data-kind="step"] {
   color: var(--lisp-defined);
 }
 
@@ -245,35 +250,41 @@
 }
 
 .lisp-token[data-kind="builtin"],
-.fw-outliner__span[data-kind="builtin"] {
+.fw-outliner__span[data-kind="builtin"],
+.lisp-source .native-token--semantic[data-kind="builtin"] {
   color: var(--lisp-special);
 }
 
 .lisp-token[data-kind="keyword"],
-.fw-outliner__span[data-kind="keyword"] {
+.fw-outliner__span[data-kind="keyword"],
+.lisp-source .native-token--semantic[data-kind="keyword"] {
   color: var(--lisp-keyword);
 }
 
 .lisp-token[data-kind="string"],
-.fw-outliner__span[data-kind="string"] {
+.fw-outliner__span[data-kind="string"],
+.lisp-source .native-token--semantic[data-kind="string"] {
   color: var(--lisp-string);
 }
 
 .lisp-token[data-kind="number"],
 .lisp-token[data-kind="constant"],
 .fw-outliner__span[data-kind="number"],
-.fw-outliner__span[data-kind="constant"] {
+.fw-outliner__span[data-kind="constant"],
+.lisp-source .native-token--semantic:is([data-kind="number"], [data-kind="constant"]) {
   color: var(--lisp-number);
 }
 
 .lisp-token[data-kind="comment"],
-.fw-outliner__span[data-kind="comment"] {
+.fw-outliner__span[data-kind="comment"],
+.lisp-source .native-token--semantic[data-kind="comment"] {
   color: var(--lisp-comment);
   font-style: italic;
 }
 
 .lisp-token[data-kind="error"],
-.fw-outliner__span[data-kind="error"] {
+.fw-outliner__span[data-kind="error"],
+.lisp-source .native-token--semantic[data-kind="error"] {
   color: var(--lisp-danger);
   text-decoration: wavy underline;
 }
@@ -361,49 +372,27 @@
   color: var(--lisp-danger);
 }
 
-.lisp-source__editor {
-  display: grid;
+/* The source is a code editor that fills the pane under its header. */
+.lisp-source .native-editor {
+  --native-editor-height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
   margin: 0 8px 12px;
-}
-
-.lisp-source__input,
-.lisp-source__paint {
-  grid-area: 1 / 1;
-  box-sizing: border-box;
-  width: 100%;
-  margin: 0;
-  padding: 6px 8px;
-  border: 0;
-  font-family: var(--lisp-mono);
   font-size: 12.5px;
-  line-height: 20px;
-  letter-spacing: normal;
-  tab-size: 2;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }
 
-.lisp-source__input {
-  z-index: 1;
-  resize: none;
-  overflow: hidden;
-  border-radius: 6px;
-  background: transparent;
-  color: transparent;
-  caret-color: var(--foreground);
-  outline: none;
+.lisp-source .native-editor__surface {
+  flex: 1;
 }
 
-.lisp-source__input:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring, #2563eb) 50%, transparent);
+.lisp-source .native-editor__heading {
+  display: none;
 }
 
-.lisp-source__editor[data-invalid="true"] .lisp-source__input {
-  box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--lisp-danger) 60%, transparent);
-}
-
-.lisp-source__paint {
-  pointer-events: none;
+.lisp-source[data-invalid="true"] .native-editor {
+  border-color: color-mix(in oklab, var(--lisp-danger) 60%, transparent);
 }
 
 .lisp-code {

@@ -203,7 +203,7 @@ export const nativeEditorScenarios = (
     await input(page).fill("const customWidget = 1;\ncust");
     await input(page).press("Control+Space");
     await expect.poll(() => editor(page).getByRole("option").count()).toBe(1);
-    await editor(page).getByRole("button", { name: "customWidget", exact: true }).click();
+    await editor(page).getByRole("option", { name: "customWidget", exact: true }).click();
     await expect.poll(() => input(page).inputValue()).toBe("const customWidget = 1;\ncustomWidget");
     await input(page).fill("ret");
     await input(page).press("Control+Space");
