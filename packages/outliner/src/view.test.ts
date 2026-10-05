@@ -132,4 +132,26 @@ describe("view", () => {
     expect(Scene.attr(more, "data-index")).toEqual(Option.some("2"));
     expect(Scene.attr(more, "data-text")).toEqual(Option.some("step "));
   });
+
+  it("shows a host's view under folded items only", () => {
+    const state = init({
+      id: "o",
+      items: [
+        item("open", "Open", [item("o1", "Child")]),
+        item("shut", "Shut", [item("s1", "Hidden")], { collapsed: true }),
+        item("leaf", "Leaf"),
+      ],
+    });
+    const html = render(state, {
+      foldedView: (row) => ({
+        label: `${row.text} summary`,
+        content: h.p([], [`${row.id} has children`]),
+      }),
+    });
+    const views = Scene.findAll(html, "[data-outline-view]");
+    expect(views.map((node) => Option.getOrUndefined(Scene.attr(node, "aria-label")))).toEqual([
+      "Shut summary",
+    ]);
+    expect(Scene.textContent(views[0]!)).toBe("shut has children");
+  });
 });

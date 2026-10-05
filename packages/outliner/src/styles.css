@@ -28,6 +28,7 @@
 .fw-outliner__row {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   min-height: calc(var(--fw-outliner-line) + 2px);
   padding-left: calc(var(--fw-outliner-depth, 0) * var(--fw-outliner-indent));
@@ -422,4 +423,17 @@
 
 .fw-outliner__row[data-readonly="true"] .fw-outliner__handle {
   cursor: default;
+}
+
+/* A host's view of a folded item's children, under its row. */
+.fw-outliner__view {
+  flex-basis: 100%;
+  min-width: 0;
+  margin: 2px 0 6px calc(var(--fw-outliner-toggle) + var(--fw-outliner-handle) + 2px);
+  border-radius: 6px;
+  outline: none;
+}
+
+.fw-outliner__view:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring, #2563eb) 55%, transparent);
 }

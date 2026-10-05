@@ -175,35 +175,46 @@ viewInputs: { ...policy, label: "Program" },
 Both checks run on the document, in `update`, so they also cover messages a
 host or test dispatches directly.
 
-### Custom row views: designed, not built
+### Custom row views: folded views
 
-A host could render an item's subtree as its own view, such as a workflow as a
-diagram. The design that fits the outliner:
+A host can render a subtree as its own view, such as a workflow as a diagram.
+The first design replaced an expanded item's rows with the view and needed a
+third policy, `hasView`, so `update` would treat the item's descendants as
+hidden. A smaller design needs nothing from `update`: the view shows under a
+_folded_ item. Folded descendants are already outside the visible rows, so
+selection, drag and drop, and arrow navigation pass over them, and unfolding
+the item edits its children as rows again. Notation becomes a dial per
+subtree.
 
-- `rowView(row)` returns `{ label, content }` for items rendered this way, and
-  `policy.hasView(item)` tells `update` the same thing, because navigation,
-  selection, and drop targets must treat the item's descendants as hidden.
-- The item's own row stays, with editable text. Its children are replaced by
-  one `role="group"` region inside the treeitem, labeled by `label`. ↓ from the
-  row focuses the region; inside it the host's view handles keys; Esc returns
-  to the row; ↑ and ↓ at the region's edges continue to neighboring rows.
+- `foldedView(row)` returns `{ label, content }` for folded rows, built in the
+  host's boundary like `rowAccessory`.
+- The view is a labeled `group` inside the row. ↓ at the end of the row, or ↑
+  from the row below, focuses it; inside, its controls take the keys; Esc
+  returns to the row; ↑ and ↓ on the group itself continue to the rows around
+  it. Pointer presses, copy, and paste inside it are left to the view.
 - The view edits the subtree through `Replace`, so undo, diff, and persistence
   work unchanged.
 
-It is not built yet because no consumer needs it before the workbench exists,
-and the keyboard contract for leaving an arbitrary host view needs a real view
-to test against. The `/lisp` workflow is the intended first use.
+The `/lisp` demo draws a folded `workflow` as its flow, with each step a button
+that opens the workflow at that step.
 
 ### Virtualization: designed, not built
 
-Rows wrap, so their heights vary. The design: render the rows inside the
-scroll viewport plus overscan between two spacers, cache measured heights by
-item id with an estimate for unmeasured rows, always render the focused row and
-the drag source, and scroll a row into view before focusing it. Drop targets
-come from row geometry and would use cached positions for rows that are not
-rendered. It is deferred because the outliner's `/lisp` and notes uses stay in
-the hundreds of rows, and the cost lands mostly in the focus and drag code,
-which should not change without a large-outline workload to test it.
+Rendering is linear in visible rows. In the production `/outliner` demo, a
+keystroke reaches the next frame in about 33 ms with 250 rows, 58 ms with 500,
+100 ms with 1,000, and 170 ms with 2,000, and no keys are lost. Memoizing rows
+does not help hosts that compute decorations and accessories each render,
+which is the common case, so the fix is to render fewer rows.
+
+Rows wrap and folded views vary in height, so the design is a measured
+window: render the rows inside the scroll viewport plus overscan between two
+spacers; cache measured heights by item id in the browser, with an estimate for
+rows not yet measured; keep the window in the model so a focus command can
+widen it to include its target before focusing; and resolve drop targets above
+or below the window from the spacers. It is deferred because the
+workbench's programs are hundreds of rows, where typing stays under about
+60 ms, and the change reaches the focus, drag, and placeholder code that every
+other primitive here builds on.
 
 ## Code editor
 
@@ -281,4 +292,6 @@ Each item lands as its own pull request, with a changeset, tests, and the
 7. Outliner move validation and read-only rows
 8. Step-through with `Stepper`, documented and shown in `/lisp`
 
-Custom row views and virtualization are designed above and deferred.
+9. Folded views for custom row renderers
+
+Virtualization is designed above and deferred.
