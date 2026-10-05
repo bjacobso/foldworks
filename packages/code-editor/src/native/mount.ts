@@ -313,8 +313,11 @@ export const ObserveInput = Mount.defineStream("ObserveNativeEditor", {
               if (event.isComposing || composing || event.keyCode === 229) return;
               const mod = event.ctrlKey || event.metaKey;
               const plain = !mod && !event.altKey && !event.shiftKey;
+              // Keys pick a suggestion only while the list is on screen; its line can
+              // scroll out of the rendered window.
+              const onScreen = doc.getElementById(`${input.id}-completions`) !== null;
               const shown =
-                model.completion === null
+                model.completion === null || !onScreen
                   ? 0
                   : Completion.visible(model.completion, text, selectionOf(input).head).length;
               if (
