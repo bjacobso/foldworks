@@ -12,7 +12,7 @@ import { colors, radii, space, typography } from "./tokens.stylex.js";
 /**
  * One value in a nested structure. The host supplies nodes and decides what
  * a preview says; children can arrive later, so values may live elsewhere,
- * such as behind a handle in another process.
+ * such as behind a handle in another process. Ids are unique in the tree.
  */
 export type ValueNode = Readonly<{
   /** Stable across loads, such as a path or a handle. */
@@ -209,7 +209,10 @@ export const update = (model: Model, message: Message, config: Config): Result =
           if (row._tag !== "Value" || !opens(row.node)) return { model };
           return model.expandedIds.includes(row.node.id)
             ? go(rows[index + 1])
-            : { ...toggle(model, row.node.id, config), commands: focus(model).commands ?? [] };
+            : (() => {
+                const opened = toggle(model, row.node.id, config);
+                return { ...opened, commands: focus(opened.model).commands ?? [] };
+              })();
         case "ArrowLeft":
           if (row._tag === "Value" && model.expandedIds.includes(row.node.id))
             return toggle(model, row.node.id, config);
@@ -264,11 +267,7 @@ const styles = stylex.create({
   keyword: { color: colors.info },
   status: { color: colors.foregroundMuted, fontStyle: "italic" },
   more: {
-    padding: 0,
-    borderWidth: 0,
-    backgroundColor: "transparent",
     color: colors.primary,
-    font: "inherit",
     cursor: "pointer",
     textDecoration: { default: "none", ":hover": "underline" },
   },
@@ -367,19 +366,12 @@ export const view = <ParentMessage>(
             ...common,
             h.AriaLabel(`Show ${row.count} more`),
             h.DataAttribute("value-more", row.parentId),
-            h.OnClick(toParentMessage(Message.Activated({ id }))),
+            // The row is the control, so the tree's items hold nothing interactive.
+            h.OnClick(toParentMessage(Message.ClickedMore({ id: row.parentId }))),
           ],
           [
             h.span([...sxAttrs(h, styles.toggle), h.AriaHidden(true)], []),
-            h.button(
-              [
-                ...sxAttrs(h, styles.more),
-                h.Type("button"),
-                h.Tabindex(-1),
-                h.OnClick(toParentMessage(Message.ClickedMore({ id: row.parentId }))),
-              ],
-              [`Show ${row.count} more`],
-            ),
+            h.span(sxAttrs(h, styles.more), [`Show ${row.count} more`]),
           ],
         );
       case "Loading":

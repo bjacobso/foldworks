@@ -234,7 +234,7 @@ export const lispScenarios = (
       await tree.focus();
       await page.keyboard.press("ArrowRight");
       await expect.poll(async () => (await rows()).slice(-2)).toEqual(["19: 19", "Show 25 more"]);
-      await page.getByRole("button", { name: "Show 25 more" }).click();
+      await tree.getByRole("treeitem", { name: "Show 25 more" }).click();
       await expect.poll(async () => (await rows()).slice(-2)).toEqual(["39: 39", "Show 5 more"]);
       await screenshot("lisp-value-tree");
     });
