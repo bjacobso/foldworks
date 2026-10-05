@@ -4,7 +4,10 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 import { sxAttrs } from "./sx";
 import { colors, radii, space, typography } from "./tokens.stylex.js";
 
-/** A node of any tree whose nodes keep their ids across versions, such as an outline or a workflow. */
+/**
+ * A node of any tree whose nodes keep their ids across versions, such as an
+ * outline or a workflow. Ids are unique within each version.
+ */
 export type TreeDiffNode = Readonly<{
   id: string;
   label: string;
