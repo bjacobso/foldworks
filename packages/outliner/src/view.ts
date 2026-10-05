@@ -16,6 +16,30 @@ export type ViewInputs = Readonly<{
   showBreadcrumbs?: boolean;
   /** Label for the button shown when the outline is empty. */
   emptyLabel?: string;
+  /** Spell-checks item text. Defaults to true; turn it off for code. */
+  spellcheck?: boolean;
+  /** Per-item styling, keyed by item id. */
+  decorations?: Readonly<Record<string, RowDecoration>>;
+  /** Trailing content for a row, such as a value or a status. Built in the host's boundary. */
+  rowAccessory?: (row: Row) => Html | null;
+}>;
+
+/** A run of an item's text, painted with `data-kind` so a stylesheet can color it. */
+export type TextSpan = Readonly<{ text: string; kind?: string }>;
+
+export type RowDecoration = Readonly<{
+  /**
+   * Styled runs that spell the item's text exactly. They are painted beneath
+   * the editable text, which keeps native caret, selection, and input. Spans
+   * that no longer match the text, for example mid-keystroke, are ignored.
+   */
+  spans?: ReadonlyArray<TextSpan>;
+  /** Exposed as `data-tone` on the row, for marking errors, changes, and the like. */
+  tone?: string;
+  /** Text shown in place of the bullet. The bullet still drags and hoists. */
+  marker?: string;
+  /** Styled runs painted after the text, outside the editable value. Shown with `spans`. */
+  suffix?: ReadonlyArray<TextSpan>;
 }>;
 
 const untitled = (text: string): string => text.split("\n")[0]?.trim() || "Untitled";
@@ -47,6 +71,13 @@ const rowView = (
           ? "Before"
           : undefined;
   const label = untitled(row.text);
+  const decoration = inputs.decorations?.[row.id];
+  const spans =
+    decoration?.spans !== undefined &&
+    decoration.spans.map((span) => span.text).join("") === row.text
+      ? decoration.spans
+      : undefined;
+  const accessory = inputs.rowAccessory?.(row) ?? null;
   return h.keyed("div")(
     row.id,
     [
@@ -64,6 +95,7 @@ const rowView = (
       h.DataAttribute("selected", String(isSelected)),
       h.DataAttribute("checked", String(row.checked)),
       h.DataAttribute("dragging", String(dragged.has(row.id))),
+      ...(decoration?.tone === undefined ? [] : [h.DataAttribute("tone", decoration.tone)]),
       h.Style({ "--fw-outliner-depth": String(row.depth) }),
     ],
     [
@@ -94,7 +126,11 @@ const rowView = (
           h.DataAttribute("outline-handle", "true"),
           h.DataAttribute("folded", String(row.hasChildren && row.collapsed)),
         ],
-        [h.span([h.Class("fw-outliner__dot")], [])],
+        [
+          decoration?.marker === undefined
+            ? h.span([h.Class("fw-outliner__dot")], [])
+            : h.span([h.Class("fw-outliner__marker")], [decoration.marker]),
+        ],
       ),
       ...(inputs.showCheckboxes === true
         ? [
@@ -121,7 +157,7 @@ const rowView = (
           ]
         : []),
       h.div(
-        [h.Class("fw-outliner__cell")],
+        [h.Class("fw-outliner__cell"), h.DataAttribute("decorated", String(spans !== undefined))],
         [
           h.textarea(
             [
@@ -130,14 +166,40 @@ const rowView = (
               h.Rows(1),
               h.Value(row.text),
               h.AriaLabel(`Item text, level ${row.depth + 1}`),
-              h.Spellcheck(true),
+              h.Spellcheck(inputs.spellcheck ?? true),
               h.DataAttribute("outline-text", "true"),
             ],
             [],
           ),
-          h.div([h.Class("fw-outliner__mirror"), h.AriaHidden(true)], [`${row.text}\u200b`]),
+          h.div(
+            [h.Class("fw-outliner__mirror"), h.AriaHidden(true)],
+            spans === undefined
+              ? [`${row.text}\u200b`]
+              : [
+                  ...spans.map((span) =>
+                    h.span(
+                      [
+                        h.Class("fw-outliner__span"),
+                        ...(span.kind === undefined ? [] : [h.DataAttribute("kind", span.kind)]),
+                      ],
+                      [span.text],
+                    ),
+                  ),
+                  ...(decoration?.suffix ?? []).map((span) =>
+                    h.span(
+                      [
+                        h.Class("fw-outliner__span fw-outliner__suffix"),
+                        ...(span.kind === undefined ? [] : [h.DataAttribute("kind", span.kind)]),
+                      ],
+                      [span.text],
+                    ),
+                  ),
+                  "\u200b",
+                ],
+          ),
         ],
       ),
+      ...(accessory === null ? [] : [h.div([h.Class("fw-outliner__accessory")], [accessory])]),
       ...(indicator === undefined
         ? []
         : [

@@ -99,12 +99,15 @@ export const ancestors = (items: Items, id: string): ReadonlyArray<string> => {
   return visit(items) ? path : [];
 };
 
+/** Whether `id` is `ancestorId` or below it. A `null` ancestor contains everything. */
 export const isWithin = (items: Items, id: string, ancestorId: string | null): boolean =>
   ancestorId === null || id === ancestorId || ancestors(items, id).includes(ancestorId);
 
+/** The children of an item, or the top-level items for `null`. */
 export const childrenOf = (items: Items, parentId: string | null): Items | undefined =>
   parentId === null ? items : find(items, parentId)?.children;
 
+/** Replaces one item, sharing every untouched branch. Returns `items` itself when nothing changes. */
 export const updateItem = (items: Items, id: string, f: (node: Item) => Item): Items => {
   let changed = false;
   const next = items.map((node) => {
@@ -187,6 +190,7 @@ export const removeItems = (
   return { items: prune(items), removed };
 };
 
+/** Inserts items under a parent at an index, clamped to its children. */
 export const insertItems = (
   items: Items,
   parentId: string | null,

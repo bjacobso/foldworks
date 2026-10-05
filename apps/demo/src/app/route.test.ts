@@ -17,6 +17,7 @@ import {
   homeRouter,
   queryBuilderRouter,
   outlinerRouter,
+  lispRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
   statechartRouter,
@@ -53,6 +54,8 @@ describe("demo routes", () => {
     expect(dataGridExampleFromRoute(parseUrl("https://demo.test/data-grid"))).toBe("Worksheet");
     expect(outlinerRouter()).toBe("/outliner");
     expect(demoFromRoute(parseUrl("https://demo.test/outliner"))).toBe("Outliner");
+    expect(lispRouter()).toBe("/lisp");
+    expect(demoFromRoute(parseUrl("https://demo.test/lisp"))).toBe("Lisp");
     expect(codeEditorRouter()).toBe("/code-editor");
     expect(demoFromRoute(parseUrl("https://demo.test/code-editor"))).toBe("CodeEditor");
     expect(codebaseRouter()).toBe("/codebase");

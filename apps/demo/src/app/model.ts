@@ -23,6 +23,7 @@ import {
   initialModel as initialQueryBuilder,
 } from "../query-builder/model";
 import { Model as OutlinerDemoModel, initialModel as initialOutliner } from "../outliner/model";
+import { Model as LispModel, initialModel as initialLisp } from "../lisp/model";
 import { ThemeName, ThemePreference, type ThemeState } from "../theme";
 import { Model as PdfViewerDemoModel, initialModel as initialPdfViewer } from "../pdf-viewer/model";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
@@ -49,6 +50,7 @@ export const Model = S.Struct({
   diffViewerDemo: DiffViewerModel,
   queryBuilderDemo: QueryBuilderDemoModel,
   outlinerDemo: OutlinerDemoModel,
+  lisp: LispModel,
   pdfAnnotator: PdfAnnotator.Model,
   pdfViewerDemo: PdfViewerDemoModel,
   editor: ArticleEditor.Model,
@@ -83,6 +85,7 @@ export const init = (
     diffViewerDemo: initialDiffViewer,
     queryBuilderDemo: initialQueryBuilder,
     outlinerDemo: initialOutliner(),
+    lisp: initialLisp(),
     pdfAnnotator: PdfAnnotator.init({
       id: "foldworks-pdf-annotator",
       sampleUrl: "/foldworks-sample.pdf",

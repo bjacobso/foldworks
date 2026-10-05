@@ -8,7 +8,7 @@ diff review prototype at `/diff-viewer`.
 
 Foldkit's bidirectional router owns navigational state. The project overview
 lives at `/`; demos live at `/ui-kit`, `/editor`, `/codebase`, `/data-table`, `/data-grid`, `/query-builder`,
-`/form-builder`, `/workflow`, `/pdf-annotator`, and `/agent`. Workflow orientation and the
+`/form-builder`, `/workflow`, `/pdf-annotator`, `/lisp`, and `/agent`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,
 drag state, column widths, and in-progress document edits remain in the

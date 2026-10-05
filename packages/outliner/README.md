@@ -29,7 +29,7 @@ const imported = Outliner.init({
 
 Render `Outliner.view` through a Foldkit submodel boundary and fold its
 messages with `Outliner.update`. The view accepts `label`, `showCheckboxes`,
-`showBreadcrumbs`, and `emptyLabel`.
+`showBreadcrumbs`, `emptyLabel`, and `spellcheck`.
 
 ```ts
 h.submodel({
@@ -46,6 +46,36 @@ h.submodel({
 `Document` schema. `Outliner.Message.Load({ items })` replaces the document
 and clears history. Ids generated for new items are prefixed with the
 instance `id`, which must be unique on the page.
+
+## Decorations and host edits
+
+Hosts that give items meaning, such as tags, mentions, or code, can style the
+text without taking over editing. `decorations` maps item ids to spans that
+spell the item's text exactly; they are painted beneath a transparent
+textarea, so the caret, selection, and input stay native, and each span's
+`kind` becomes a `data-kind` for the host's stylesheet. Spans that no longer
+match the text, for example in the middle of a keystroke, are ignored. A
+decoration's `tone` becomes `data-tone` on the row. A `marker` replaces the
+bullet with text, such as a status glyph or an opening bracket, and still drags
+and hoists. A `suffix` paints styled runs after the text that are not part of
+its value, such as a count or closing brackets. `rowAccessory` builds
+trailing content for each row, in the host's boundary, so its handlers send
+the host's messages.
+
+```ts
+viewInputs: {
+  label: "Program",
+  spellcheck: false,
+  decorations: { [id]: { spans: [{ text: "defn", kind: "keyword" }, { text: " total" }], tone: "warning" } },
+  rowAccessory: (row) => h.span([], [valueOf(row.id)]),
+}
+```
+
+`Outliner.Message.Replace({ items, announcement, coalescingKey })` applies an
+edit the host computed, such as a refactoring or text typed in another view,
+as one undoable step. Focus stays put, and replacements with the same
+`coalescingKey` undo together. `Outliner.Message.Reveal({ id })` expands an
+item's ancestors, leaves a hoist that hides it, and puts the caret at its end.
 
 ## Keyboard
 
@@ -102,12 +132,14 @@ caret, and they never refold the outline.
 The DOM-independent operations are exported for hosts that edit outlines
 directly: `indent`, `outdent`, `moveUp`, `moveDown`, `moveItems`, `split`,
 `mergeIntoPrevious`, `mergeNext`, `setCollapsed`, `setAllCollapsed`,
-`expandToLevel`, `visibleRows`, and `dropTarget`. `serializeOutline` writes
+`expandToLevel`, `visibleRows`, and `dropTarget`, along with the tree helpers
+`find`, `locate`, `ancestors`, `isWithin`, `childrenOf`, `updateItem`,
+`insertItems`, and `removeItems`. `serializeOutline` writes
 Markdown lists or tab-indented text, and `parseOutline` reads either back.
 
 ## Current limits
 
-Items are plain text. There are no inline styles, notes, columns, or links,
-and there is no virtualization, so very large outlines render every visible
+Items are plain text. Decorations can color it, but the document itself has no
+inline styles, notes, columns, or links, and there is no virtualization, so very large outlines render every visible
 row. Drag and drop uses the pointer; keyboard users move items with the move
 shortcuts.

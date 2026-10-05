@@ -58,8 +58,11 @@ suite. Its `/agent` reference application demonstrates streaming assistant
 text, tool calls and results, an interactive permission checkpoint, a model
 picker, and a prompt composer. Its `/statechart` editor builds a nested state
 machine with cycles, parallel regions, submachines, notes, and a simulator on
-`@foldworks/diagram`. The agent flow is a deterministic browser-only
-fixture and performs no provider calls or tool side effects.
+`@foldworks/diagram`. Its `/lisp` exploration turns `@foldworks/outliner` into
+a structural Lisp environment where every row is a live, evaluated form; see
+[Structural Lisp](./docs/structural-lisp.md). The agent flow is a
+deterministic browser-only fixture and performs no provider calls or tool side
+effects.
 
 See [planned work-surface primitives](./docs/planned-primitives.md) for the
 next areas to explore beyond the current package suite.

@@ -17,6 +17,7 @@
 @import "./diff-viewer/styles.css";
 @import "@foldworks/outliner/styles.css";
 @import "./outliner/styles.css";
+@import "./lisp/styles.css";
 
 *,
 *::before,

@@ -150,4 +150,42 @@ describe("update", () => {
     expect(texts(model)).toEqual(["Alpha", "  One", "  TwoBeta"]);
     expect(model.focus).toEqual({ id: "a2", start: 3, end: 3 });
   });
+
+  it("replaces the document as one undoable step without moving focus", () => {
+    const focused = update(start(), Message.FocusedText({ id: "b", start: 1, end: 1 })).model;
+    const replaced = update(
+      focused,
+      Message.Replace({
+        items: [item("b", "Beta"), item("a", "Alpha", [item("a1", "One"), item("a2", "Two")])],
+        announcement: "Swapped.",
+      }),
+    );
+    expect(replaced.commands ?? []).toEqual([]);
+    expect(texts(replaced.model)).toEqual(["Beta", "Alpha", "  One", "  Two"]);
+    expect(replaced.model.focus).toEqual({ id: "b", start: 1, end: 1 });
+    expect(replaced.model.announcement).toBe("Swapped.");
+    const undone = press(replaced.model, "Undo", "b", 1);
+    expect(texts(undone)).toEqual(["Alpha", "  One", "  Two", "Beta"]);
+  });
+
+  it("coalesces replacements that share a key and drops focus on removed items", () => {
+    let model = update(start(), Message.FocusedText({ id: "a2", start: 0, end: 0 })).model;
+    for (const text of ["B", "Be"]) {
+      model = update(
+        model,
+        Message.Replace({ items: [item("b", text)], announcement: "", coalescingKey: "source" }),
+      ).model;
+    }
+    expect(model.focus).toBeNull();
+    expect(texts(press(model, "Undo", "b"))).toEqual(["Alpha", "  One", "  Two", "Beta"]);
+  });
+
+  it("reveals an item inside a collapsed parent and outside the hoisted scope", () => {
+    const collapsed = press(start(), "Collapse", "a");
+    const hoisted = update(collapsed, Message.Hoisted({ id: "b" })).model;
+    const revealed = update(hoisted, Message.Reveal({ id: "a2" }));
+    expect(revealed.model.scopeId).toBeNull();
+    expect(texts(revealed.model)).toEqual(["Alpha", "  One", "  Two", "Beta"]);
+    expect(revealed.model.focus).toEqual({ id: "a2", start: 3, end: 3 });
+  });
 });

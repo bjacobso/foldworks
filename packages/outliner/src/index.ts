@@ -4,10 +4,13 @@ export {
   Item,
   Items,
   ancestors,
+  childrenOf,
   dropTarget,
   expandToLevel,
   find,
   indent,
+  insertItems,
+  isWithin,
   item,
   locate,
   mergeIntoPrevious,
@@ -21,6 +24,7 @@ export {
   setAllCollapsed,
   setCollapsed,
   split,
+  updateItem,
   visibleRows,
   walk,
   type DropTarget,
@@ -40,3 +44,4 @@ export {
   type ShortcutHelp,
 } from "./keymap";
 export { selectedIds, selectedRoots } from "./selectors";
+export type { RowDecoration, TextSpan } from "./view";

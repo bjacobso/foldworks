@@ -1,0 +1,129 @@
+import type { Page } from "playwright";
+import { describe, expect, it } from "vitest";
+
+/** The value, warning, or error shown at the end of the row whose text is `text`. */
+const valueOf = (page: Page, text: string) =>
+  page.locator("[data-outline-row]").evaluateAll(
+    (rows, wanted) =>
+      rows
+        .find((row) => row.querySelector("textarea")?.value === wanted)
+        ?.querySelector(".fw-outliner__accessory")
+        ?.textContent?.trim() ?? null,
+    text,
+  );
+
+/** The visible outline as indented text. */
+const outline = (page: Page) =>
+  page
+    .locator("[data-outline-row]")
+    .evaluateAll((rows) =>
+      rows.map(
+        (row) =>
+          `${"  ".repeat(Number(row.getAttribute("aria-level")) - 1)}${row.querySelector("textarea")?.value ?? ""}`,
+      ),
+    );
+
+export const lispScenarios = (
+  getPage: () => Page,
+  appUrl: string,
+  screenshot: (name: string) => Promise<void>,
+) => {
+  describe("structural lisp", () => {
+    const start = async () => {
+      const page = getPage();
+      await page.goto(`${appUrl}/lisp`, { waitUntil: "networkidle" });
+      await expect.poll(() => valueOf(page, "invoice-total 100")).toBe("→108.25");
+      return page;
+    };
+    const text = (page: Page, value: string) => page.locator(`textarea:text-is("${value}")`);
+
+    it("evaluates every row as it is typed", async () => {
+      const page = await start();
+      expect(await valueOf(page, "round (+ revenue tax) 2")).toBe("→1299×4");
+      await text(page, "invoice-total 100").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Backspace");
+      await page.keyboard.press("Backspace");
+      await page.keyboard.type("50");
+      await expect.poll(() => valueOf(page, "invoice-total 150")).toBe("→162.38");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("(+ 1 tax-rat)");
+      await expect.poll(() => valueOf(page, "(+ 1 tax-rat)")).toBe("tax-rat is not defined");
+      // The rest of the section keeps running.
+      expect(await valueOf(page, "map invoice-total [40 250 1200]")).toBe("→[43.3 270.63 1299]");
+    });
+
+    it("proposes a structural edit for selected rows and applies it", async () => {
+      const page = await start();
+      expect(await valueOf(page, "collect-i9")).toBe(
+        "reads :identity, but verify-identity never runs",
+      );
+      await text(page, "background-check").click();
+      await page.keyboard.press("Escape");
+      await page.keyboard.press("Shift+ArrowDown");
+      await expect
+        .poll(() => page.locator(".lisp-assistant__context").textContent())
+        .toBe("Acting on 2 selected rows");
+      await page.getByRole("button", { name: /Run these concurrently/ }).click();
+      await expect
+        .poll(() => page.locator(".lisp-diff__row").allTextContents())
+        .toEqual([
+          "workflow onboarding",
+          "+parallel (added)",
+          "→background-check (moved)",
+          "+sequence (added)",
+          "+verify-identity (added)",
+          "→collect-i9 (moved)",
+          "create-payroll-record",
+          "activate",
+        ]);
+      await screenshot("lisp-proposal");
+      await page.getByRole("button", { name: "Accept" }).click();
+      await expect
+        .poll(() => valueOf(page, "before? onboarding verify-identity collect-i9"))
+        .toBe("true");
+      const rows = await outline(page);
+      const at = rows.findIndex((row) => row.trim() === "workflow onboarding");
+      expect(rows.slice(at, at + 6)).toEqual([
+        "  workflow onboarding",
+        "    parallel",
+        "      background-check",
+        "      sequence",
+        "        verify-identity",
+        "        collect-i9",
+      ]);
+      // Accepting is one undoable step.
+      await page.getByRole("button", { name: "Undo" }).click();
+      await expect
+        .poll(() => valueOf(page, "before? onboarding verify-identity collect-i9"))
+        .toBe("false");
+    });
+
+    it("shows the same program as Lisp and reads edits back", async () => {
+      const page = await start();
+      await text(page, "def tax-rate 0.0825").click();
+      await page.keyboard.press("Control+l");
+      const source = page.getByRole("textbox", { name: "Lisp source" });
+      await expect.poll(() => source.count()).toBe(1);
+      expect(await source.inputValue()).toContain(
+        "(defn invoice-total [revenue]\n    ; Revenue plus sales tax, rounded to cents.",
+      );
+      expect(await page.locator(".lisp-code__line[data-active='true']").textContent()).toBe(
+        "  (def tax-rate 0.0825)​",
+      );
+      const value = await source.inputValue();
+      const at = value.indexOf("0.0825");
+      await source.focus();
+      await source.evaluate((element, offset) => {
+        (element as HTMLTextAreaElement).setSelectionRange(offset, offset + 6);
+      }, at);
+      await page.keyboard.type("0.1");
+      await expect.poll(() => valueOf(page, "invoice-total 100")).toBe("→110");
+      await page.keyboard.type(" (");
+      await expect
+        .poll(() => page.locator(".lisp-source__error").textContent())
+        .toBe("Missing ) on line 2");
+      await screenshot("lisp-source");
+    });
+  });
+};

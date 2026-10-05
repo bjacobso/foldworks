@@ -28,6 +28,14 @@ export const Message = defineMessageUnion({
   ClickedRedo: {},
   /** Replaces the document and clears history, for example after loading a file. */
   Load: { items: Items },
+  /**
+   * Replaces the document as one undoable step, for edits a host makes on the
+   * outline's behalf. Focus stays where it is. Replacements that share a
+   * `coalescingKey` undo together.
+   */
+  Replace: { items: Items, announcement: S.String, coalescingKey: S.optional(S.String) },
+  /** Expands, unhoists if needed, and puts the caret at the end of an item. */
+  Reveal: { id: S.String },
   CompletedFocus: {},
 });
 export type Message = typeof Message.Type;

@@ -115,6 +115,23 @@
     box-shadow 120ms ease;
 }
 
+/* A host-supplied marker, such as an opening bracket, in place of the dot. */
+.fw-outliner__marker {
+  min-width: 6px;
+  color: var(--muted-foreground, #71717a);
+  line-height: 1;
+  text-align: center;
+  transition: color 120ms ease;
+}
+
+.fw-outliner__handle:hover .fw-outliner__marker {
+  color: var(--foreground, inherit);
+}
+
+.fw-outliner__suffix {
+  pointer-events: none;
+}
+
 .fw-outliner__handle:hover .fw-outliner__dot {
   transform: scale(1.25);
 }
@@ -188,6 +205,23 @@
 .fw-outliner__mirror {
   visibility: hidden;
   pointer-events: none;
+}
+
+/* Decorated text paints its styled spans in the mirror; the textarea keeps the caret and selection. */
+.fw-outliner__cell[data-decorated="true"] .fw-outliner__mirror {
+  visibility: visible;
+}
+
+.fw-outliner__cell[data-decorated="true"] .fw-outliner__text {
+  color: transparent;
+}
+
+.fw-outliner__accessory {
+  flex: none;
+  max-width: 45%;
+  min-height: calc(var(--fw-outliner-line) + 2px);
+  margin-left: 8px;
+  overflow: hidden;
 }
 
 .fw-outliner[data-mode="Rows"] .fw-outliner__text,

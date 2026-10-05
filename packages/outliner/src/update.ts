@@ -30,6 +30,7 @@ import {
   updateItem,
   walk,
   childrenOf,
+  isWithin,
   type Items,
   type Row,
 } from "./outline";
@@ -749,5 +750,44 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         nextId: Math.max(model.nextId, counterFor(model.id, items)),
       },
     }),
+    Replace: ({ items, announcement, coalescingKey }) => {
+      if (items === model.items) return { model };
+      const committed = commit(model, items, {
+        announcement,
+        ...(coalescingKey === undefined ? {} : { coalescingKey }),
+      });
+      const exists = (id: string) => find(items, id) !== undefined;
+      const selection = model.selection;
+      return {
+        model: {
+          ...committed,
+          scopeId: model.scopeId !== null && exists(model.scopeId) ? model.scopeId : null,
+          focus: model.focus !== null && exists(model.focus.id) ? model.focus : null,
+          ...(selection !== null && !(exists(selection.anchorId) && exists(selection.headId))
+            ? { mode: "Text" as const, selection: null }
+            : {}),
+          nextId: Math.max(model.nextId, counterFor(model.id, items)),
+        },
+      };
+    },
+    Reveal: ({ id }) => {
+      const node = find(model.items, id);
+      if (node === undefined) return { model };
+      const items = ancestors(model.items, id).reduce(
+        (nodes, ancestor) => setCollapsed(nodes, ancestor, false),
+        model.items,
+      );
+      const scopeId =
+        isWithin(items, id, model.scopeId) && id !== model.scopeId ? model.scopeId : null;
+      return editText(
+        {
+          ...model,
+          scopeId,
+          revision: items === model.items ? model.revision : model.revision + 1,
+        },
+        textFocus(id, node.text.length),
+        items,
+      );
+    },
     CompletedFocus: () => ({ model }),
   });
