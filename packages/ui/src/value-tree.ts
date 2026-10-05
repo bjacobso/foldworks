@@ -48,7 +48,12 @@ export const Message = defineMessageUnion({
 export type Message = typeof Message.Type;
 
 export const OutMessage = defineMessageUnion({
-  /** A node without loaded children was expanded. Supply its `children`. */
+  /**
+   * A node without loaded children was expanded. Supply its `children`. It is
+   * sent again if the node is reopened before they arrive, so treat it as
+   * idempotent. A node listed in `expandedIds` at `init` should come with its
+   * children.
+   */
   RequestedChildren: { id: S.String },
   /** “Show N more” was chosen. Supply more `children` and a smaller `more`. */
   RequestedMore: { id: S.String, loaded: S.Number },
@@ -172,6 +177,22 @@ const toggle = (model: Model, id: string, config: Config): Result => {
     : { model: next };
 };
 
+/**
+ * Where the active row is, after loads may have replaced it: a loading or
+ * “more” row that went away hands over to the last row under its parent.
+ */
+const activeIndex = (rows: ReadonlyArray<Row>, activeId: string | null): number => {
+  const at = rows.findIndex((row) => rowId(row) === activeId);
+  if (at >= 0 || activeId === null) return Math.max(0, at);
+  const parentId = /^(.*)::(?:more|status)$/.exec(activeId)?.[1];
+  if (parentId === undefined) return 0;
+  const parent = rows.findIndex((row) => rowId(row) === parentId);
+  if (parent < 0) return 0;
+  let last = parent;
+  while (last + 1 < rows.length && rows[last + 1]!.level > rows[parent]!.level) last += 1;
+  return last;
+};
+
 export const update = (model: Model, message: Message, config: Config): Result =>
   Message.match<Result>(message, {
     CompletedFocus: () => ({ model }),
@@ -189,10 +210,7 @@ export const update = (model: Model, message: Message, config: Config): Result =
     Navigated: ({ key }) => {
       const rows = visibleRows(model, config.nodes);
       if (rows.length === 0) return { model };
-      const index = Math.max(
-        0,
-        rows.findIndex((row) => rowId(row) === model.activeId),
-      );
+      const index = activeIndex(rows, model.activeId);
       const row = rows[index]!;
       const go = (target: Row | undefined) =>
         focus({ ...model, activeId: target === undefined ? rowId(row) : rowId(target) });
@@ -214,8 +232,10 @@ export const update = (model: Model, message: Message, config: Config): Result =
                 return { ...opened, commands: focus(opened.model).commands ?? [] };
               })();
         case "ArrowLeft":
-          if (row._tag === "Value" && model.expandedIds.includes(row.node.id))
-            return toggle(model, row.node.id, config);
+          if (row._tag === "Value" && opens(row.node) && model.expandedIds.includes(row.node.id)) {
+            const closed = toggle(model, row.node.id, config);
+            return { ...closed, commands: focus(closed.model).commands ?? [] };
+          }
           return row.parentId === null
             ? { model }
             : go(rows.find((candidate) => rowId(candidate) === row.parentId));
@@ -461,6 +481,8 @@ export const fromValue = (
       return { id, ...keyed, preview: `ƒ ${current.name || "anonymous"}`, kind: "function" };
     if (typeof current !== "object") return { id, ...keyed, preview: String(current) };
     if (seen.has(current)) return { id, ...keyed, preview: "(circular)", kind: "circular" };
+    // Map keys can print alike, so their ids use positions; other keys are unique.
+    const positional = current instanceof Map || current instanceof Set;
     const entries: ReadonlyArray<readonly [string, unknown]> = Array.isArray(current)
       ? current.map((entry, index) => [String(index), entry])
       : current instanceof Map
@@ -480,8 +502,13 @@ export const fromValue = (
     seen.add(current);
     const children = entries
       .slice(0, limit)
-      .map(([entryKey, entry]) =>
-        build(entry, `${id}/${encodeURIComponent(entryKey)}`, entryKey, depth + 1),
+      .map(([entryKey, entry], index) =>
+        build(
+          entry,
+          `${id}/${positional ? `#${index}` : encodeURIComponent(entryKey)}`,
+          entryKey,
+          depth + 1,
+        ),
       );
     seen.delete(current);
     return {

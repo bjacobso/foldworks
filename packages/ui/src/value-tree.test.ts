@@ -127,4 +127,46 @@ describe("ValueTree", () => {
       ),
     ).toBe("false");
   });
+
+  it("keeps its place when a loaded page replaces the row it was on", () => {
+    const loading: ValueNode = {
+      id: "$",
+      preview: "list · 3 entries",
+      expandable: true,
+      children: [{ id: "$/0", key: "0", preview: "a" }],
+      more: 2,
+    };
+    let model: ReturnType<typeof init> = {
+      ...init({ id: "inspector", expandedIds: ["$"] }),
+      activeId: "$::more",
+    };
+    const loaded: ValueNode = {
+      ...loading,
+      children: [
+        ...loading.children!,
+        { id: "$/1", key: "1", preview: "b" },
+        { id: "$/2", key: "2", preview: "c" },
+      ],
+      more: 0,
+    };
+    model = update(model, Message.Navigated({ key: "ArrowUp" }), { nodes: [loaded] }).model;
+    expect(model.activeId).toBe("$/1");
+  });
+
+  it("steps out of an open node that has nothing to show, and keeps Map entries apart", () => {
+    const nodes: ReadonlyArray<ValueNode> = [
+      { id: "$", preview: "{…}", children: [{ id: "$/k", key: "k", preview: "{}", children: [] }] },
+    ];
+    const model = { ...init({ id: "inspector", expandedIds: ["$", "$/k"] }), activeId: "$/k" };
+    expect(update(model, Message.Navigated({ key: "ArrowLeft" }), { nodes }).model.activeId).toBe(
+      "$",
+    );
+    const ids = fromValue(
+      new Map<unknown, number>([
+        [1, 1],
+        ["1", 2],
+      ]),
+    ).children?.map((child) => child.id);
+    expect(ids).toEqual(["$/#0", "$/#1"]);
+  });
 });
