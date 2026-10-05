@@ -841,11 +841,12 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
 
             const pointerdown = (event: PointerEvent) => {
               const target = event.target instanceof Element ? event.target : null;
-              if (target === null || event.button !== 0 || inView(target)) return;
+              if (target === null || event.button !== 0) return;
               // A press anywhere but the suggestions themselves puts them away.
               if (model()?.completion && !target.closest("[data-text-popup]")) {
                 emit(Message.DismissedCompletion());
               }
+              if (inView(target)) return;
               if (target.closest("[data-outline-control]")) {
                 // Controls act without taking focus away from the text being edited.
                 event.preventDefault();
