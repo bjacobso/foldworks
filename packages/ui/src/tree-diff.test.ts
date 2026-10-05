@@ -130,4 +130,33 @@ describe("TreeDiff view", () => {
       "+new (added)",
     ]);
   });
+
+  it("leaves the children of context rows uncounted", () => {
+    const before = [
+      node("w", "workflow", [node("a", "a", [node("a1"), node("a2")]), node("b"), node("c")]),
+    ];
+    const after = [
+      node("w", "workflow", [node("a", "a", [node("a1"), node("a2")]), node("b", "B!"), node("c")]),
+    ];
+    expect(show(changedRegion(diffTrees(before, after)))).toEqual([
+      " workflow",
+      "   a",
+      "  ~B! (was b)",
+      "   c",
+    ]);
+  });
+
+  it("counts a node that moved and was edited as both", () => {
+    const before = [node("w", "workflow", [node("b"), node("y")])];
+    const after = [node("w", "workflow", [node("y", "y", [node("b", "B!")])])];
+    const html = TreeDiff.view(
+      { label: "Change", before, after },
+      inertHtml as unknown as HtmlBuilder<never>,
+    );
+    if (html === null) throw new Error("Expected diff HTML");
+    expect(Scene.textContent(Option.getOrThrow(Scene.find(html, "p")))).toBe("1 moved · 1 edited");
+    expect(Scene.textContent(Option.getOrThrow(Scene.find(html, '[data-status="Moved"]')))).toBe(
+      "→B!was b (moved and edited)",
+    );
+  });
 });

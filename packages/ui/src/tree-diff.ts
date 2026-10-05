@@ -176,12 +176,19 @@ export const changedRegion = (
     root = chains[0]![level]!;
   }
   const kept = new Set<number>([root]);
+  // Hidden children are counted only where the change is: under the root, an
+  // ancestor of a change, or a changed node. A context sibling hides its
+  // children without a count.
+  const counted = new Set<number>([root, ...changed]);
   const siblings = new Map<number, number[]>();
   rows.forEach((_, at) =>
     siblings.set(parentOf[at]!, [...(siblings.get(parentOf[at]!) ?? []), at]),
   );
   for (const at of changed) {
-    for (const node of chain(at)) kept.add(node);
+    for (const node of chain(at)) {
+      kept.add(node);
+      counted.add(node);
+    }
     const around = siblings.get(parentOf[at]!) ?? [];
     const position = around.indexOf(at);
     for (const sibling of around.slice(Math.max(0, position - context), position + context + 1))
@@ -204,7 +211,7 @@ export const changedRegion = (
     if (kept.has(at)) {
       flush();
       result.push({ ...row, depth: row.depth - base });
-    } else if (kept.has(parentOf[at]!)) {
+    } else if (counted.has(parentOf[at]!)) {
       // A hidden sibling under a shown parent; its own descendants are hidden with it.
       if (hidden.length > 0 && parentOf[hidden[0]!] !== parentOf[at]) flush();
       hidden.push(at);
@@ -214,13 +221,17 @@ export const changedRegion = (
   return result;
 };
 
-/** How many nodes each kind of change touched. */
+/** How many nodes each kind of change touched. A node that moved and was edited counts as both. */
 export const summarizeDiff = (
   rows: ReadonlyArray<TreeDiffRow>,
 ): Readonly<Record<Exclude<TreeDiffStatus, "Unchanged">, number>> => {
   const counts = { Added: 0, Removed: 0, Moved: 0, Edited: 0 };
-  for (const row of rows)
-    if (row._tag === "Node" && row.status !== "Unchanged") counts[row.status] += 1;
+  for (const row of rows) {
+    if (row._tag !== "Node" || row.status === "Unchanged") continue;
+    counts[row.status] += 1;
+    // A node can move and be edited.
+    if (row.status === "Moved" && row.was !== undefined) counts.Edited += 1;
+  }
   return counts;
 };
 
@@ -393,7 +404,7 @@ export const TreeDiff = {
                             ? []
                             : [
                                 h.span(sxAttrs(h, styles.hidden), [
-                                  ` (${row.status.toLowerCase()})`,
+                                  ` (${row.status === "Moved" && row.was !== undefined ? "moved and edited" : row.status.toLowerCase()})`,
                                 ]),
                               ]),
                         ],
