@@ -20,6 +20,9 @@ export const Message = defineMessageUnion({
   MovedDrag: { target: S.NullOr(DropTarget) },
   Dropped: {},
   CancelledDrag: {},
+  /** The pointer rested on a character of an item's text, or left the text. */
+  Hovered: { target: S.NullOr(S.Struct({ id: S.String, offset: S.Number })) },
+  DismissedHover: {},
   Hoisted: { id: S.NullOr(S.String) },
   ClickedAdd: {},
   SetAllCollapsed: { collapsed: S.Boolean },

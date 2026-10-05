@@ -23,6 +23,30 @@ const outline = (page: Page) =>
       ),
     );
 
+/** Rests the pointer on a word in the painted text of the row whose text is `text`. */
+const pointAt = async (page: Page, text: string, word: string) => {
+  const point = await page.locator("[data-outline-mirror]").evaluateAll(
+    (mirrors, [wanted, target]) => {
+      const mirror = mirrors.find(
+        (element) => element.parentElement?.querySelector("textarea")?.value === wanted,
+      );
+      const span = [...(mirror?.querySelectorAll("span") ?? [])].find(
+        (element) => element.textContent === target,
+      );
+      const rect = span?.getBoundingClientRect();
+      return rect === undefined
+        ? null
+        : { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    },
+    [text, word] as const,
+  );
+  if (point === null) throw new Error(`No ${word} in ${text}`);
+  await page.mouse.move(point.x, point.y);
+};
+
+const hoverText = (page: Page) =>
+  page.locator(".fw-hover").evaluateAll((popups) => popups[0]?.textContent ?? null);
+
 export const lispScenarios = (
   getPage: () => Page,
   appUrl: string,
@@ -51,6 +75,53 @@ export const lispScenarios = (
       await expect.poll(() => valueOf(page, "(+ 1 tax-rat)")).toBe("tax-rat is not defined");
       // The rest of the section keeps running.
       expect(await valueOf(page, "map invoice-total [40 250 1200]")).toBe("→[43.3 270.63 1299]");
+    });
+
+    it("describes the token under the pointer or the caret", async () => {
+      const page = await start();
+      await pointAt(page, "round (+ revenue tax) 2", "revenue");
+      await expect.poll(() => hoverText(page)).toBe("revenuelocalnumber1200last of 4");
+      await screenshot("lisp-hover");
+      // Moving off the word hides it; the caret can ask for the same information.
+      await page.mouse.move(4, 4);
+      await expect.poll(() => page.locator(".fw-hover").count()).toBe(0);
+      await text(page, "invoice-total 100").click();
+      await page.mouse.move(4, 4);
+      await page.keyboard.press("Home");
+      await page.keyboard.press("Control+Shift+Space");
+      await expect
+        .poll(() => hoverText(page))
+        .toBe(
+          "invoice-totalfunction(invoice-total revenue)Revenue plus sales tax, rounded to cents.Usedin 2 rows",
+        );
+      expect(await text(page, "invoice-total 100").getAttribute("aria-describedby")).toBe(
+        "lisp-outline-hover",
+      );
+      await page.keyboard.press("Escape");
+      await expect.poll(() => page.locator(".fw-hover").count()).toBe(0);
+      // Esc dismissed the information and left the caret where it was.
+      expect(await page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value)).toBe(
+        "invoice-total 100",
+      );
+    });
+
+    it("underlines problems where they occur and explains them on hover", async () => {
+      const page = await start();
+      await pointAt(page, "collect-i9", "collect-i9");
+      await expect
+        .poll(() => hoverText(page))
+        .toBe(
+          "Warning reads :identity, but verify-identity never runscollect-i9stepSystemDocsReads:identityWrites:i9Usedin 3 rows",
+        );
+      await page.mouse.move(4, 4);
+      await text(page, "invoice-total 100").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("(+ 1 tax-rat)");
+      const squiggle = page.locator(".fw-text-diagnostic[data-severity='error']");
+      await expect.poll(() => squiggle.allTextContents()).toEqual(["tax-rat"]);
+      await pointAt(page, "(+ 1 tax-rat)", "tax-rat");
+      await expect.poll(() => hoverText(page)).toBe("Error tax-rat is not defined");
     });
 
     it("proposes a structural edit for selected rows and applies it", async () => {

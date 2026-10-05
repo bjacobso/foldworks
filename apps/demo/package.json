@@ -32,6 +32,7 @@
     "@foldworks/pdf-viewer": "workspace:*",
     "@foldworks/query-builder": "workspace:*",
     "@foldworks/sidebar": "workspace:*",
+    "@foldworks/text-intelligence": "workspace:*",
     "@foldworks/ui": "workspace:*",
     "@foldworks/workflow": "workspace:*",
     "@lucide/icons": "catalog:",

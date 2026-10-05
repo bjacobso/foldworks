@@ -234,6 +234,11 @@
 .lisp-token[data-kind="step"],
 .fw-outliner__span[data-kind="step"] {
   color: var(--lisp-defined);
+}
+
+/* Steps link to their definitions; a problem's squiggle takes precedence. */
+.lisp-token[data-kind="step"],
+.fw-outliner__span[data-kind="step"]:not(.fw-text-diagnostic) {
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--lisp-defined) 40%, transparent);
   text-underline-offset: 3px;
@@ -861,4 +866,62 @@
   .lisp-ide__side {
     position: static;
   }
+}
+
+/* Hovering a token: what it is, how to call it, and its last value. */
+.lisp-hover {
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.lisp-hover p {
+  margin: 0;
+}
+
+.lisp-hover__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.lisp-hover__title {
+  font-family: var(--lisp-mono);
+  font-weight: 600;
+}
+
+.lisp-hover__kind,
+.lisp-hover__type {
+  color: var(--muted-foreground, #71717a);
+  font-size: 12px;
+}
+
+.lisp-hover__usage,
+.lisp-hover__value code {
+  font-family: var(--lisp-mono);
+  font-size: 12px;
+}
+
+.lisp-hover__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.lisp-hover__facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.lisp-hover__facts dt {
+  color: var(--muted-foreground, #71717a);
+}
+
+.lisp-hover__facts dd {
+  margin: 0;
+  font-family: var(--lisp-mono);
 }

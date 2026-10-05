@@ -30,6 +30,7 @@ import { SUGGESTIONS } from "./assistant";
 import { printOutline } from "./codec";
 import { treeDiff } from "./diff";
 import { show } from "./evaluate";
+import { describeAt, type Description } from "./hover";
 import { Message, type Refactoring } from "./message";
 import { domIds, type Model } from "./model";
 import { explode, join, raise } from "./refactor";
@@ -113,6 +114,49 @@ const rowValue = (analysis: Analysis, row: Row, h: H): Html | null => {
     ],
   );
 };
+
+/** What hovering a token shows: what it is, how to call it, and what it last was. */
+const hoverContent = (description: Description, h: H): Html =>
+  h.div(
+    [h.Class("lisp-hover")],
+    [
+      h.p(
+        [h.Class("lisp-hover__heading")],
+        [
+          h.code([h.Class("lisp-hover__title")], [description.title]),
+          h.span([h.Class("lisp-hover__kind")], [description.kind]),
+        ],
+      ),
+      ...(description.usage === undefined
+        ? []
+        : [h.code([h.Class("lisp-hover__usage")], [description.usage])]),
+      ...(description.summary === undefined
+        ? []
+        : [h.p([h.Class("lisp-hover__summary")], [description.summary])]),
+      ...(description.value === undefined
+        ? []
+        : [
+            h.p(
+              [h.Class("lisp-hover__value")],
+              [
+                h.span([h.Class("lisp-hover__type")], [description.value.type]),
+                h.code([], [description.value.text]),
+                ...(description.value.count > 1
+                  ? [h.span([h.Class("lisp-value__count")], [`last of ${description.value.count}`])]
+                  : []),
+              ],
+            ),
+          ]),
+      ...(description.facts === undefined || description.facts.length === 0
+        ? []
+        : [
+            h.dl(
+              [h.Class("lisp-hover__facts")],
+              description.facts.flatMap(([label, value]) => [h.dt([], [label]), h.dd([], [value])]),
+            ),
+          ]),
+    ],
+  );
 
 const toolbar = (model: Model, h: H): Html => {
   const mod = model.platform === "mac" ? "⌘" : "Ctrl+";
@@ -698,6 +742,22 @@ export const view = defineView<Model, Message>((model, h) => {
                           }),
                           spellcheck: false,
                           rowAccessory: (row: Row) => rowValue(analysis, row, h),
+                          hover: ({ id, offset, source }) => {
+                            const description = describeAt(
+                              items,
+                              analysis,
+                              id,
+                              offset,
+                              source === "Keyboard",
+                            );
+                            return description === undefined
+                              ? null
+                              : {
+                                  from: description.from,
+                                  to: description.to,
+                                  content: hoverContent(description, h),
+                                };
+                          },
                         },
                         toParentMessage: outlineMessage,
                       }),

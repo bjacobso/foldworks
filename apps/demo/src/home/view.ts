@@ -18,6 +18,7 @@ import {
   FolderGit2,
   FileDiff,
   Sparkles,
+  TextCursorInput,
 } from "@lucide/icons";
 import { render } from "@foldworks/generative-ui/core";
 import { foldworksRegistry } from "@foldworks/generative-ui/foldworks";
@@ -33,6 +34,7 @@ import {
   dataTablePath,
   dataGridPath,
   formBuilderPath,
+  lispRouter,
   outlinerRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
@@ -142,6 +144,13 @@ const packages: ReadonlyArray<Package> = [
       "Keyboard-first outlines with natural indenting, folding, hoisting, and drag and drop.",
     href: outlinerRouter(),
     icon: ListTree,
+  },
+  {
+    name: "@foldworks/text-intelligence",
+    category: "Foundation",
+    description: "Hover, completion, highlighting, and diagnostics shared by text surfaces.",
+    href: lispRouter(),
+    icon: TextCursorInput,
   },
   {
     name: "@foldworks/form-builder",

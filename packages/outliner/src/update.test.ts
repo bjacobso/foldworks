@@ -188,4 +188,21 @@ describe("update", () => {
     expect(texts(revealed.model)).toEqual(["Alpha", "  One", "  Two", "Beta"]);
     expect(revealed.model.focus).toEqual({ id: "a2", start: 3, end: 3 });
   });
+
+  it("shows hover information for the pointer or the caret until something else happens", () => {
+    const pointed = update(start(), Message.Hovered({ target: { id: "b", offset: 2 } })).model;
+    expect(pointed.hover).toEqual({ id: "b", offset: 2, source: "Pointer" });
+    expect(update(pointed, Message.Hovered({ target: { id: "b", offset: 2 } })).model).toBe(
+      pointed,
+    );
+    const typed = update(
+      pointed,
+      Message.EditedText({ id: "b", text: "Betas", start: 5, end: 5, time: 1 }),
+    ).model;
+    expect(typed.hover).toBeNull();
+    const asked = press(start(), "ShowInfo", "a", 3);
+    expect(asked.hover).toEqual({ id: "a", offset: 3, source: "Keyboard" });
+    expect(update(asked, Message.DismissedHover()).model.hover).toBeNull();
+    expect(press(asked, "Collapse", "a").hover).toBeNull();
+  });
 });

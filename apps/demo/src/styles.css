@@ -16,6 +16,7 @@
 @import "@foldworks/pdf-viewer/styles.css";
 @import "./diff-viewer/styles.css";
 @import "@foldworks/outliner/styles.css";
+@import "@foldworks/text-intelligence/styles.css";
 @import "./outliner/styles.css";
 @import "./lisp/styles.css";
 

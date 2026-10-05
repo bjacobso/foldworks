@@ -1,5 +1,6 @@
 import { Effect, Queue, Stream } from "effect";
 import { Mount } from "foldkit";
+import { isOver, offsetAtPoint } from "@foldworks/text-intelligence";
 
 import { caretLines } from "./caret";
 import { keepsFocus, resolveKey, type Action, type KeyInput, type Platform } from "./keymap";
@@ -14,6 +15,8 @@ export const INDENT = 24;
 const DRAG_THRESHOLD = 4;
 const SCROLL_EDGE = 48;
 const SETTLE_TIMEOUT = 200;
+/** How long the pointer rests on text before asking for hover information. */
+const HOVER_DELAY = 350;
 const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock"]);
 /** Dispatched on the element the outline just focused, so held keys can follow. */
 export const FOCUSED_EVENT = "fw-outliner-focused";
@@ -38,7 +41,9 @@ type SurfaceMessage = Extract<
       | "StartedDrag"
       | "MovedDrag"
       | "Dropped"
-      | "CancelledDrag";
+      | "CancelledDrag"
+      | "Hovered"
+      | "DismissedHover";
   }
 >;
 
@@ -102,6 +107,8 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
     Message.MovedDrag,
     Message.Dropped,
     Message.CancelledDrag,
+    Message.Hovered,
+    Message.DismissedHover,
   ],
   execute: ({ element }) =>
     Stream.callback<SurfaceMessage>((queue) =>
@@ -198,11 +205,72 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               while (held.length > 0 && !settling) replay(held.shift()!);
             }
 
+            // Hover: the pointer rests on a character, then the host is asked about it.
+            let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+            let hoverPoint: { x: number; y: number } | undefined;
+            const hoverPopup = () => doc.getElementById(domIds(model()?.id ?? "").hover);
+            const hoveredRects = () =>
+              [...host.querySelectorAll(".fw-text-hovered")].flatMap((element) => [
+                ...element.getClientRects(),
+              ]);
+            const emitHover = (target: { id: string; offset: number } | null) => {
+              const current = model()?.hover ?? null;
+              const unchanged =
+                target === null
+                  ? // The pointer only dismisses what it asked for, not information shown for the caret.
+                    current === null || current.source === "Keyboard"
+                  : current?.source === "Pointer" &&
+                    current.id === target.id &&
+                    current.offset === target.offset;
+              if (!unchanged) emit(Message.Hovered({ target }));
+            };
+            const settleHover = () => {
+              const point = hoverPoint;
+              const under = point === undefined ? null : doc.elementFromPoint(point.x, point.y);
+              const id = isText(under) ? rowIdOf(under) : undefined;
+              const mirror = under?.parentElement?.querySelector("[data-outline-mirror]");
+              const offset =
+                point === undefined || mirror === null || mirror === undefined
+                  ? undefined
+                  : offsetAtPoint(mirror, point.x, point.y);
+              emitHover(id === undefined || offset === undefined ? null : { id, offset });
+            };
+            const trackHover = (event: PointerEvent) => {
+              if (event.pointerType === "touch") return;
+              const target = event.target instanceof Element ? event.target : null;
+              if (
+                target?.closest("[data-text-popup]") ||
+                isOver(hoveredRects(), event.clientX, event.clientY)
+              ) {
+                clearTimeout(hoverTimer);
+                return;
+              }
+              hoverPoint = { x: event.clientX, y: event.clientY };
+              clearTimeout(hoverTimer);
+              hoverTimer = setTimeout(settleHover, HOVER_DELAY);
+            };
+            const leave = () => {
+              hoverPoint = undefined;
+              clearTimeout(hoverTimer);
+              hoverTimer = setTimeout(settleHover, HOVER_DELAY);
+            };
+
             const keydown = (event: KeyboardEvent) => {
               if (drag?.active && event.key === "Escape") {
                 event.preventDefault();
                 endDrag(false);
                 return;
+              }
+              if (hoverPopup() !== null && !MODIFIER_KEYS.has(event.key)) {
+                clearTimeout(hoverTimer);
+                const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
+                if (event.key === "Escape" && plain) {
+                  event.preventDefault();
+                  emit(Message.DismissedHover());
+                  return;
+                }
+                // Information shown for the caret goes away once the caret moves on.
+                if (model()?.hover?.source === "Keyboard") emit(Message.DismissedHover());
               }
               if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
               if (settling) {
@@ -498,6 +566,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                 retarget(current);
                 return;
               }
+              if (event.buttons === 0) trackHover(event);
               if (press === undefined || (event.buttons & 1) === 0) return;
               const over = rowAt(event.clientX, event.clientY);
               if (over === undefined || over === press.headId) return;
@@ -558,6 +627,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               [host, "pointerdown", pointerdown as EventListener],
               [host, "pointermove", pointermove as EventListener],
               [host, "pointercancel", pointercancel],
+              [host, "pointerleave", leave],
               [host, "click", click as EventListener],
               [host, FOCUSED_EVENT, release],
               [doc, "pointerup", pointerup as EventListener],
@@ -568,6 +638,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             return () => {
               disposed = true;
               clearTimeout(settleTimer);
+              clearTimeout(hoverTimer);
               endDrag(false);
               for (const [target, type, listener] of listeners) {
                 target.removeEventListener(type, listener);

@@ -1,5 +1,14 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
+import {
+  HoverPopup,
+  diagnosticsAt,
+  mostSevere,
+  segments,
+  type Diagnostic,
+  type Hover,
+  type HoverSource,
+} from "@foldworks/text-intelligence";
 
 import { Message } from "./message";
 import { domIds, type Model } from "./model";
@@ -22,6 +31,21 @@ export type ViewInputs = Readonly<{
   decorations?: Readonly<Record<string, RowDecoration>>;
   /** Trailing content for a row, such as a value or a status. Built in the host's boundary. */
   rowAccessory?: (row: Row) => Html | null;
+  /**
+   * Information about the text under the pointer, or at the caret after
+   * Ctrl+Shift+Space. Return the range it describes and content built in the
+   * host's boundary, or `null` for nothing. Row diagnostics at the offset are
+   * shown with it.
+   */
+  hover?: (request: HoverRequest) => Hover | null;
+}>;
+
+/** What a hover asks about: a character of an item's text. */
+export type HoverRequest = Readonly<{
+  id: string;
+  offset: number;
+  text: string;
+  source: HoverSource;
 }>;
 
 /** A run of an item's text, painted with `data-kind` so a stylesheet can color it. */
@@ -40,7 +64,51 @@ export type RowDecoration = Readonly<{
   marker?: string;
   /** Styled runs painted after the text, outside the editable value. Shown with `spans`. */
   suffix?: ReadonlyArray<TextSpan>;
+  /** Problems with ranges of the text, underlined and shown on hover. */
+  diagnostics?: ReadonlyArray<Diagnostic>;
 }>;
+
+/** The hover being shown: its row, the range it describes, and what to say. */
+type ShownHover = Readonly<{
+  id: string;
+  from: number;
+  to: number;
+  diagnostics: ReadonlyArray<Diagnostic>;
+  content: Html | null;
+}>;
+
+const quoted = (value: string): string => `"${value.replace(/["\\]/g, "\\$&")}"`;
+
+/** Finds an item's painted text, for anchoring popups to it. */
+export const mirrorSelector = (modelId: string, id: string): string =>
+  `[data-outliner=${quoted(modelId)}] [data-outline-mirror=${quoted(id)}]`;
+
+const validDiagnostics = (
+  text: string,
+  diagnostics: ReadonlyArray<Diagnostic> | undefined,
+): ReadonlyArray<Diagnostic> =>
+  (diagnostics ?? []).filter(
+    (diagnostic) =>
+      diagnostic.from >= 0 && diagnostic.from <= diagnostic.to && diagnostic.to <= text.length,
+  );
+
+const shownHover = (model: Model, inputs: ViewInputs): ShownHover | undefined => {
+  const target = model.hover;
+  if (target === null) return undefined;
+  const node = find(model.items, target.id);
+  if (node === undefined || target.offset > node.text.length) return undefined;
+  const answer = inputs.hover?.({ ...target, text: node.text }) ?? null;
+  const diagnostics = diagnosticsAt(
+    validDiagnostics(node.text, inputs.decorations?.[target.id]?.diagnostics),
+    target.offset,
+  );
+  const worst = mostSevere(diagnostics);
+  const range = answer ?? worst;
+  if (range === undefined) return undefined;
+  const from = Math.max(0, Math.min(range.from, node.text.length));
+  const to = Math.max(from, Math.min(range.to, node.text.length));
+  return { id: target.id, from, to, diagnostics, content: answer?.content ?? null };
+};
 
 const untitled = (text: string): string => text.split("\n")[0]?.trim() || "Untitled";
 
@@ -50,6 +118,43 @@ const triangle = (h: HtmlBuilder<Message>): Html =>
     [h.path([h.Attribute("d", "M3 1.5 L8 5 L3 8.5 Z")], [])],
   );
 
+/** An item's text as styled pieces: token kinds, problem underlines, and the hovered range. */
+const paint = (
+  text: string,
+  spans: ReadonlyArray<TextSpan> | undefined,
+  diagnostics: ReadonlyArray<Diagnostic>,
+  hovered: ShownHover | undefined,
+  h: HtmlBuilder<Message>,
+): ReadonlyArray<Html> => {
+  let at = 0;
+  const tokens = (spans ?? []).map((span) => {
+    const token = { from: at, to: at + span.text.length, kind: span.kind };
+    at = token.to;
+    return token;
+  });
+  return segments(text, {
+    tokens,
+    diagnostics,
+    hovered: hovered === undefined ? [] : [hovered],
+  }).map((piece) => {
+    const kind = piece.covering.tokens[0]?.kind;
+    const problem = mostSevere(piece.covering.diagnostics);
+    const classes = [
+      "fw-outliner__span",
+      ...(problem === undefined ? [] : ["fw-text-diagnostic"]),
+      ...(piece.covering.hovered.length > 0 ? ["fw-text-hovered"] : []),
+    ];
+    return h.span(
+      [
+        h.Class(classes.join(" ")),
+        ...(kind === undefined ? [] : [h.DataAttribute("kind", kind)]),
+        ...(problem === undefined ? [] : [h.DataAttribute("severity", problem.severity)]),
+      ],
+      [piece.text],
+    );
+  });
+};
+
 const rowView = (
   model: Model,
   row: Row,
@@ -57,6 +162,7 @@ const rowView = (
   dragged: ReadonlySet<string>,
   isFirst: boolean,
   inputs: ViewInputs,
+  hover: ShownHover | undefined,
   h: HtmlBuilder<Message>,
 ): Html => {
   const ids = domIds(model.id);
@@ -77,6 +183,9 @@ const rowView = (
     decoration.spans.map((span) => span.text).join("") === row.text
       ? decoration.spans
       : undefined;
+  const diagnostics = validDiagnostics(row.text, decoration?.diagnostics);
+  const hovered = hover?.id === row.id && hover.to > hover.from ? hover : undefined;
+  const painted = spans !== undefined || diagnostics.length > 0 || hovered !== undefined;
   const accessory = inputs.rowAccessory?.(row) ?? null;
   return h.keyed("div")(
     row.id,
@@ -157,7 +266,7 @@ const rowView = (
           ]
         : []),
       h.div(
-        [h.Class("fw-outliner__cell"), h.DataAttribute("decorated", String(spans !== undefined))],
+        [h.Class("fw-outliner__cell"), h.DataAttribute("decorated", String(painted))],
         [
           h.textarea(
             [
@@ -168,34 +277,30 @@ const rowView = (
               h.AriaLabel(`Item text, level ${row.depth + 1}`),
               h.Spellcheck(inputs.spellcheck ?? true),
               h.DataAttribute("outline-text", "true"),
+              ...(hover?.id === row.id ? [h.AriaDescribedBy(domIds(model.id).hover)] : []),
             ],
             [],
           ),
           h.div(
-            [h.Class("fw-outliner__mirror"), h.AriaHidden(true)],
-            spans === undefined
-              ? [`${row.text}\u200b`]
-              : [
-                  ...spans.map((span) =>
-                    h.span(
-                      [
-                        h.Class("fw-outliner__span"),
-                        ...(span.kind === undefined ? [] : [h.DataAttribute("kind", span.kind)]),
-                      ],
-                      [span.text],
-                    ),
-                  ),
-                  ...(decoration?.suffix ?? []).map((span) =>
-                    h.span(
-                      [
-                        h.Class("fw-outliner__span fw-outliner__suffix"),
-                        ...(span.kind === undefined ? [] : [h.DataAttribute("kind", span.kind)]),
-                      ],
-                      [span.text],
-                    ),
-                  ),
-                  "\u200b",
-                ],
+            [
+              h.Class("fw-outliner__mirror"),
+              h.AriaHidden(true),
+              h.DataAttribute("outline-mirror", row.id),
+            ],
+            [
+              ...(painted ? paint(row.text, spans, diagnostics, hovered, h) : [row.text]),
+              ...(spans === undefined ? [] : (decoration?.suffix ?? [])).map((span) =>
+                h.span(
+                  [
+                    h.Class("fw-outliner__span fw-outliner__suffix"),
+                    h.DataAttribute("text-skip", "true"),
+                    ...(span.kind === undefined ? [] : [h.DataAttribute("kind", span.kind)]),
+                  ],
+                  [span.text],
+                ),
+              ),
+              h.span([h.DataAttribute("text-skip", "true")], ["\u200b"]),
+            ],
           ),
         ],
       ),
@@ -252,6 +357,9 @@ const breadcrumbs = (model: Model, h: HtmlBuilder<Message>): ReadonlyArray<Html>
 export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) => {
   const ids = domIds(model.id);
   const rows = rowsOf(model);
+  const hover = rows.some((row) => row.id === model.hover?.id)
+    ? shownHover(model, inputs)
+    : undefined;
   const selected = new Set(model.mode === "Rows" ? selectedIds(model, rows) : []);
   // Rows inside a dragged item travel with it, so they dim with it too.
   const dragged = new Set(model.drag?.ids ?? []);
@@ -279,7 +387,9 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
           h.Attribute("aria-multiselectable", "true"),
           h.Tabindex(-1),
         ],
-        rows.map((row, index) => rowView(model, row, selected, dragged, index === 0, inputs, h)),
+        rows.map((row, index) =>
+          rowView(model, row, selected, dragged, index === 0, inputs, hover, h),
+        ),
       ),
       ...(rows.length === 0
         ? [
@@ -294,6 +404,19 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
             ),
           ]
         : []),
+      ...(hover === undefined
+        ? []
+        : [
+            HoverPopup.view(
+              {
+                id: ids.hover,
+                anchor: { selector: mirrorSelector(model.id, hover.id), offset: hover.from },
+                diagnostics: hover.diagnostics,
+                content: hover.content,
+              },
+              h,
+            ),
+          ]),
       h.div([h.Class("fw-outliner__live"), h.AriaLive("polite")], [model.announcement]),
     ],
   );
