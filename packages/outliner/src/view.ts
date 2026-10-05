@@ -1,10 +1,14 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 import {
+  Completion,
+  CompletionPopup,
   HoverPopup,
   diagnosticsAt,
+  optionId,
   mostSevere,
   segments,
+  type CompletionItem,
   type Diagnostic,
   type Hover,
   type HoverSource,
@@ -121,6 +125,32 @@ const triangle = (h: HtmlBuilder<Message>): Html =>
     [h.path([h.Attribute("d", "M3 1.5 L8 5 L3 8.5 Z")], [])],
   );
 
+/** Suggestions being shown: the open list narrowed by what was typed. */
+type ShownCompletion = Readonly<{
+  id: string;
+  from: number;
+  items: ReadonlyArray<CompletionItem>;
+  index: number;
+  query: string;
+}>;
+
+const shownCompletion = (model: Model): ShownCompletion | undefined => {
+  const list = model.completion;
+  const node = list === null ? undefined : find(model.items, list.id);
+  if (list === null || node === undefined) return undefined;
+  const caret = model.focus?.id === list.id ? model.focus.end : list.to;
+  const items = Completion.visible(list, node.text, caret);
+  return items.length === 0
+    ? undefined
+    : {
+        id: list.id,
+        from: list.from,
+        items,
+        index: Math.min(list.index, items.length - 1),
+        query: Completion.query(list, node.text, caret),
+      };
+};
+
 /** An item's text as styled pieces: token kinds, problem underlines, and the hovered range. */
 const paint = (
   text: string,
@@ -166,6 +196,7 @@ const rowView = (
   isFirst: boolean,
   inputs: ViewInputs,
   hover: ShownHover | undefined,
+  suggestions: ShownCompletion | undefined,
   h: HtmlBuilder<Message>,
 ): Html => {
   const ids = domIds(model.id);
@@ -280,7 +311,14 @@ const rowView = (
               h.AriaLabel(`Item text, level ${row.depth + 1}`),
               h.Spellcheck(inputs.spellcheck ?? true),
               h.DataAttribute("outline-text", "true"),
-              ...(hover?.id === row.id ? [h.AriaDescribedBy(domIds(model.id).hover)] : []),
+              ...(hover?.id === row.id ? [h.AriaDescribedBy(ids.hover)] : []),
+              ...(suggestions?.id === row.id
+                ? [
+                    h.AriaAutocomplete("list"),
+                    h.AriaControls(ids.completion),
+                    h.AriaActiveDescendant(optionId(ids.completion, suggestions.index)),
+                  ]
+                : []),
             ],
             [],
           ),
@@ -363,6 +401,9 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
   const hover = rows.some((row) => row.id === model.hover?.id)
     ? shownHover(model, inputs)
     : undefined;
+  const suggestions = rows.some((row) => row.id === model.completion?.id)
+    ? shownCompletion(model)
+    : undefined;
   const selected = new Set(model.mode === "Rows" ? selectedIds(model, rows) : []);
   // Rows inside a dragged item travel with it, so they dim with it too.
   const dragged = new Set(model.drag?.ids ?? []);
@@ -391,7 +432,7 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
           h.Tabindex(-1),
         ],
         rows.map((row, index) =>
-          rowView(model, row, selected, dragged, index === 0, inputs, hover, h),
+          rowView(model, row, selected, dragged, index === 0, inputs, hover, suggestions, h),
         ),
       ),
       ...(rows.length === 0
@@ -407,6 +448,24 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
             ),
           ]
         : []),
+      ...(suggestions === undefined
+        ? []
+        : [
+            CompletionPopup.view(
+              {
+                id: ids.completion,
+                items: suggestions.items,
+                index: suggestions.index,
+                query: suggestions.query,
+                anchor: {
+                  selector: mirrorSelector(model.id, suggestions.id),
+                  offset: suggestions.from,
+                },
+                onChoose: (index) => Message.AcceptedCompletion({ index }),
+              },
+              h,
+            ),
+          ]),
       ...(hover === undefined
         ? []
         : [

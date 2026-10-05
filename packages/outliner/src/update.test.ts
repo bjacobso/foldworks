@@ -205,4 +205,52 @@ describe("update", () => {
     expect(update(asked, Message.DismissedHover()).model.hover).toBeNull();
     expect(press(asked, "Collapse", "a").hover).toBeNull();
   });
+
+  it("offers, narrows, and accepts suggestions as one undoable step", () => {
+    const items = [{ label: "Bear" }, { label: "Beta" }, { label: "Beehive", insert: "Beehive!" }];
+    let model = update(start(), Message.RequestedCompletion({ id: "b", start: 2, end: 2 })).model;
+    expect(model.focus).toEqual({ id: "b", start: 2, end: 2 });
+    // An offer for a range the caret is not in is ignored.
+    expect(
+      update(model, Message.ShowCompletions({ id: "b", from: 3, to: 4, items })).model.completion,
+    ).toBeNull();
+    model = update(model, Message.ShowCompletions({ id: "b", from: 0, to: 2, items })).model;
+    expect(model.completion).toEqual({ id: "b", from: 0, to: 2, items, index: 0 });
+    expect(model.announcement).toBe("3 suggestions.");
+    model = update(
+      model,
+      Message.EditedText({ id: "b", text: "Beeta", start: 3, end: 3, time: 1 }),
+    ).model;
+    expect(model.completion).toMatchObject({ from: 0, to: 3 });
+    model = update(model, Message.MovedCompletion({ delta: 1 })).model;
+    // Only "Beehive" matches "Bee", so moving wraps back to it.
+    expect(model.completion?.index).toBe(0);
+    const accepted = update(model, Message.AcceptedCompletion({ index: 0 }));
+    expect(accepted.model.items[1]?.text).toBe("Beehive!ta");
+    expect(accepted.model.focus).toEqual({ id: "b", start: 8, end: 8 });
+    expect(accepted.model.completion).toBeNull();
+    expect(accepted.commands).toHaveLength(1);
+    expect(press(accepted.model, "Undo", "b", 4).items[1]?.text).toBe("Beeta");
+  });
+
+  it("closes suggestions when nothing matches or the outline does something else", () => {
+    const items = [{ label: "Alpha" }];
+    let model = update(start(), Message.RequestedCompletion({ id: "a", start: 1, end: 1 })).model;
+    model = update(model, Message.ShowCompletions({ id: "a", from: 0, to: 1, items })).model;
+    expect(model.completion).not.toBeNull();
+    expect(press(model, "Indent", "a", 1).completion).toBeNull();
+    const typed = update(
+      model,
+      Message.EditedText({ id: "a", text: "AXlpha", start: 2, end: 2, time: 1 }),
+    ).model;
+    expect(typed.completion).toBeNull();
+  });
+
+  it("accepts the active suggestion when no index is given", () => {
+    const items = [{ label: "Bear" }, { label: "Beta" }, { label: "Bee" }];
+    let model = update(start(), Message.RequestedCompletion({ id: "b", start: 2, end: 2 })).model;
+    model = update(model, Message.ShowCompletions({ id: "b", from: 0, to: 2, items })).model;
+    model = update(model, Message.MovedCompletion({ delta: 1 })).model;
+    expect(update(model, Message.AcceptedCompletion({})).model.items[1]?.text).toBe("Betata");
+  });
 });

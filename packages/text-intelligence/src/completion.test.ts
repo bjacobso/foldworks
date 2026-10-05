@@ -26,6 +26,8 @@ describe("completion lists", () => {
       "Tally",
     ]);
     expect(visible(list, "sum t", 3)).toEqual([]);
+    // A suggestion that matches what is typed exactly adds nothing.
+    expect(visible(open(0, 5, items), "total", 5).map((item) => item.label)).toEqual(["subtotal"]);
   });
 
   it("follows typing at the end of its range and closes when an edit lands before it", () => {

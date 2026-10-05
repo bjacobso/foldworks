@@ -925,3 +925,27 @@
   margin: 0;
   font-family: var(--lisp-mono);
 }
+
+/* Suggestions use the code font, and their marks follow the syntax colors. */
+.lisp-ide .fw-completion__label {
+  font-family: var(--lisp-mono);
+}
+
+.lisp-ide .fw-completion__option[data-kind="defn"] .fw-completion__kind,
+.lisp-ide .fw-completion__option[data-kind="def"] .fw-completion__kind,
+.lisp-ide .fw-completion__option[data-kind="workflow"] .fw-completion__kind,
+.lisp-ide .fw-completion__option[data-kind="step"] .fw-completion__kind {
+  background: var(--lisp-defined);
+}
+
+.lisp-ide .fw-completion__option[data-kind="special"] .fw-completion__kind {
+  background: var(--lisp-special);
+}
+
+.lisp-ide .fw-completion__option[data-kind="local"] .fw-completion__kind {
+  border-radius: 50%;
+}
+
+.lisp-ide .fw-completion__option[data-kind="keyword"] .fw-completion__kind {
+  background: var(--lisp-keyword);
+}

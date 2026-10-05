@@ -1,5 +1,6 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+import { CompletionItem } from "@foldworks/text-intelligence";
 
 import { Action } from "./keymap";
 import { DropTarget, Mode } from "./model";
@@ -23,6 +24,25 @@ export const Message = defineMessageUnion({
   /** The pointer rested on a character of an item's text, or left the text. */
   Hovered: { target: S.NullOr(S.Struct({ id: S.String, offset: S.Number })) },
   DismissedHover: {},
+  /** Ctrl+Space in an item's text. A host answers with `ShowCompletions`. */
+  RequestedCompletion: { id: S.String, start: S.Number, end: S.Number },
+  /**
+   * Offers items that replace `from`–`to` of an item's text. Ignored unless the
+   * caret is in that item and range. An empty list closes the suggestions.
+   */
+  ShowCompletions: {
+    id: S.String,
+    from: S.Number,
+    to: S.Number,
+    items: S.Array(CompletionItem),
+  },
+  MovedCompletion: { delta: S.Number },
+  /**
+   * `index` counts the suggestions shown, after narrowing by what was typed.
+   * Omitted, the active suggestion is accepted.
+   */
+  AcceptedCompletion: { index: S.optional(S.Number) },
+  DismissedCompletion: {},
   Hoisted: { id: S.NullOr(S.String) },
   ClickedAdd: {},
   SetAllCollapsed: { collapsed: S.Boolean },

@@ -44,6 +44,9 @@ const pointAt = async (page: Page, text: string, word: string) => {
   await page.mouse.move(point.x, point.y);
 };
 
+const suggestions = (page: Page) =>
+  page.locator('.fw-completion [role="option"]').allTextContents();
+
 const hoverText = (page: Page) =>
   page.locator(".fw-hover").evaluateAll((popups) => popups[0]?.textContent ?? null);
 
@@ -122,6 +125,50 @@ export const lispScenarios = (
       await expect.poll(() => squiggle.allTextContents()).toEqual(["tax-rat"]);
       await pointAt(page, "(+ 1 tax-rat)", "tax-rat");
       await expect.poll(() => hoverText(page)).toBe("Error tax-rat is not defined");
+    });
+
+    it("suggests names as they are typed and on request", async () => {
+      const page = await start();
+      await text(page, "map invoice-total [40 250 1200]").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("inv");
+      await expect.poll(() => suggestions(page)).toEqual(["invoice-totalfunction [revenue]"]);
+      await screenshot("lisp-completion");
+      // Return accepts instead of starting a new row; typing continues after the name.
+      await page.keyboard.press("Enter");
+      await page.keyboard.type(" 5");
+      await expect.poll(() => valueOf(page, "invoice-total 5")).toBe("→5.41");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("(round ");
+      await page.keyboard.press("Control+Space");
+      await expect.poll(async () => (await suggestions(page)).length).toBeGreaterThan(20);
+      await page.keyboard.type("tax");
+      await expect.poll(() => suggestions(page)).toEqual(["tax-ratedef"]);
+      await page.keyboard.press("Escape");
+      await expect.poll(() => suggestions(page)).toEqual([]);
+      expect(await page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value)).toBe(
+        "(round tax",
+      );
+      // A finished word offers nothing, so Return starts the next row.
+      await page.keyboard.type("-rate 2)");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("let");
+      await page.keyboard.press("Enter");
+      await expect.poll(() => valueOf(page, "(round tax-rate 2)")).toBe("→0.08");
+      expect(await text(page, "let").count()).toBe(1);
+    });
+
+    it("keeps every key when typing outruns rendering", async () => {
+      const page = await start();
+      await text(page, "invoice-total 100").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      // Each key re-evaluates the program and offers suggestions, so renders lag the keys.
+      await page.keyboard.type("defn twice-the-amount [x y z] (+ x y z) ; and a note");
+      await expect
+        .poll(() => page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value))
+        .toBe("defn twice-the-amount [x y z] (+ x y z) ; and a note");
     });
 
     it("proposes a structural edit for selected rows and applies it", async () => {

@@ -205,3 +205,27 @@
     padding: 12px 8px 32px 0;
   }
 }
+
+/* Mentions and tags, painted by the host's decorations. */
+.outliner-demo .fw-outliner__span[data-kind="mention"] {
+  color: var(--foldworks-ui-info, #2563eb);
+}
+
+.outliner-demo .fw-outliner__span[data-kind="tag"] {
+  color: color-mix(in oklab, var(--foldworks-ui-success, #15803d) 85%, var(--foreground));
+}
+
+.outliner-demo__card {
+  display: grid;
+  gap: 1px;
+  min-width: 160px;
+}
+
+.outliner-demo__card span {
+  color: var(--muted-foreground, #71717a);
+  font-size: 12px;
+}
+
+.outliner-demo__card .outliner-demo__card-count {
+  margin-top: 4px;
+}

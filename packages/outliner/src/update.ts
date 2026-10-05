@@ -2,12 +2,20 @@ import { Effect, Schema as S } from "effect";
 import { Command, type Update } from "foldkit";
 import { afterCommit } from "foldkit/render";
 import { History } from "@foldworks/history";
+import { Completion } from "@foldworks/text-intelligence";
 
 import { offsetAtX } from "./caret";
 import { FOCUSED_EVENT } from "./mount";
 import { keepsFocus, type Action } from "./keymap";
 import { Message } from "./message";
-import { counterFor, domIds, type Focus, type Model, type Snapshot } from "./model";
+import {
+  counterFor,
+  domIds,
+  type Focus,
+  type Model,
+  type OpenCompletion,
+  type Snapshot,
+} from "./model";
 import {
   ancestors,
   find,
@@ -530,6 +538,9 @@ const pressed = (
       };
     case "ShowInfo":
       return { model: { ...base, hover: { id, offset: start, source: "Keyboard" } } };
+    case "Complete":
+      // The surface sends `RequestedCompletion` instead, for the host to answer.
+      return { model: base };
     case "SelectAll": {
       const first = rows[0];
       const last = rows[rows.length - 1];
@@ -620,11 +631,81 @@ const keepsHover = (message: Message): boolean =>
   message._tag === "CompletedFocus" ||
   (message._tag === "Pressed" && message.action === "ShowInfo");
 
+/** Messages that leave suggestions open. Typing narrows them instead; anything else closes them. */
+const keepsCompletion = (model: Model, message: Message): boolean => {
+  switch (message._tag) {
+    case "ShowCompletions":
+    case "RequestedCompletion":
+    case "MovedCompletion":
+    case "EditedText":
+    case "Hovered":
+    case "DismissedHover":
+    case "CompletedFocus":
+      return true;
+    case "FocusedText":
+      return message.id === model.completion?.id;
+    case "Pressed":
+      return message.action === "ShowInfo";
+    default:
+      return false;
+  }
+};
+
 export const update = (model: Model, message: Message): UpdateReturn => {
   const result = updateOutline(model, message);
-  return keepsHover(message) || result.model.hover === null
+  const hover = keepsHover(message) ? result.model.hover : null;
+  const completion = keepsCompletion(model, message) ? result.model.completion : null;
+  return hover === result.model.hover && completion === result.model.completion
     ? result
-    : { ...result, model: { ...result.model, hover: null } };
+    : { ...result, model: { ...result.model, hover, completion } };
+};
+
+/** The caret in the item suggestions are for, as far as the model knows. */
+const completionCaret = (model: Model, list: OpenCompletion): number =>
+  model.focus?.id === list.id ? model.focus.end : list.to;
+
+/** Narrows open suggestions after an item's text changed, closing them when nothing matches. */
+const narrowed = (
+  model: Model,
+  id: string,
+  before: string,
+  after: string,
+  caret: number,
+): OpenCompletion | null => {
+  const list = model.completion;
+  if (list === null || list.id !== id) return null;
+  const next = Completion.track(list, before, after, caret);
+  return next === undefined || Completion.visible(next, after, caret).length === 0
+    ? null
+    : { ...next, id };
+};
+
+const acceptCompletion = (model: Model, index: number | undefined): UpdateReturn => {
+  const list = model.completion;
+  const node = list === null ? undefined : find(model.items, list.id);
+  if (list === null || node === undefined) return { model: { ...model, completion: null } };
+  const caret = completionCaret(model, list);
+  const shown = Completion.visible(list, node.text, caret);
+  const chosen = shown[index ?? Math.min(list.index, shown.length - 1)];
+  if (chosen === undefined) return { model: { ...model, completion: null } };
+  const accepted = Completion.accept(list, node.text, chosen);
+  const items = updateItem(model.items, list.id, (current) => ({
+    ...current,
+    text: accepted.text,
+  }));
+  const committed = commit(
+    { ...model, completion: null, history: History.breakCoalescing(model.history) },
+    items,
+    {
+      before: { id: list.id, start: caret, end: caret },
+      announcement: `Inserted ${chosen.label}.`,
+    },
+  );
+  return editText(
+    { ...committed, history: History.breakCoalescing(committed.history) },
+    textFocus(list.id, accepted.caret),
+    items,
+  );
 };
 
 const updateOutline = (model: Model, message: Message): UpdateReturn =>
@@ -656,6 +737,7 @@ const updateOutline = (model: Model, message: Message): UpdateReturn =>
           focus: { id, start, end },
           mode: "Text",
           selection: null,
+          completion: narrowed(model, id, node.text, text, end),
         },
       };
     },
@@ -738,6 +820,47 @@ const updateOutline = (model: Model, message: Message): UpdateReturn =>
         : { model: { ...model, hover: { ...target, source: "Pointer" } } };
     },
     DismissedHover: () => ({ model: model.hover === null ? model : { ...model, hover: null } }),
+    RequestedCompletion: ({ id, start, end }) =>
+      find(model.items, id) === undefined
+        ? { model }
+        : { model: { ...model, mode: "Text", selection: null, focus: { id, start, end } } },
+    ShowCompletions: ({ id, from, to, items }) => {
+      const node = find(model.items, id);
+      const caret = model.focus?.id === id ? model.focus.end : undefined;
+      if (
+        node === undefined ||
+        caret === undefined ||
+        from < 0 ||
+        from > to ||
+        to > node.text.length ||
+        caret < from ||
+        caret > to
+      ) {
+        return { model };
+      }
+      const list: OpenCompletion = { id, ...Completion.open(from, to, items) };
+      const shown = Completion.visible(list, node.text, caret).length;
+      if (shown === 0) return { model: { ...model, completion: null } };
+      return {
+        model: {
+          ...model,
+          completion: list,
+          announcement:
+            model.completion === null ? `${plural(shown, "suggestion")}.` : model.announcement,
+        },
+      };
+    },
+    MovedCompletion: ({ delta }) => {
+      const list = model.completion;
+      const node = list === null ? undefined : find(model.items, list.id);
+      if (list === null || node === undefined) return { model };
+      const count = Completion.visible(list, node.text, completionCaret(model, list)).length;
+      return {
+        model: { ...model, completion: { ...Completion.move(list, delta, count), id: list.id } },
+      };
+    },
+    AcceptedCompletion: ({ index }) => acceptCompletion(model, index),
+    DismissedCompletion: () => ({ model: { ...model, completion: null } }),
     Hoisted: ({ id }) => hoist(model, id),
     ClickedAdd: () => {
       const { id, nextId } = newId(model);

@@ -2,9 +2,11 @@ import { Effect, Option, Schema as S } from "effect";
 import { Command, Update } from "foldkit";
 import { afterCommit } from "foldkit/render";
 import { evo } from "foldkit/struct";
-import { Outliner, selectedRoots, type Items } from "@foldworks/outliner";
+import { Outliner, find, selectedRoots, type Items } from "@foldworks/outliner";
 
+import { analyze } from "./analysis";
 import { propose } from "./assistant";
+import { completionsAt } from "./completion";
 import { idSource, parseSource } from "./codec";
 import { Message, type Refactoring } from "./message";
 import { domIds, type Model } from "./model";
@@ -47,6 +49,44 @@ export const targetsOf = (
 });
 
 const nextIds = (items: Items) => idSource(OUTLINE_ID, items);
+
+/** Continues an update with another outliner message, keeping the commands of both. */
+const andThen = (result: UpdateReturn, message: Outliner.Message): UpdateReturn => {
+  const next = foldOutliner(result.model, message);
+  return { model: next.model, commands: [...(result.commands ?? []), ...(next.commands ?? [])] };
+};
+
+const SYMBOL_CHARACTER = /[^\s()[\]{}";',]/u;
+
+/**
+ * Answers the outliner's request for suggestions, and offers them unasked once
+ * a word is being typed. The analysis is in-process, so the answer is part of
+ * the same update.
+ */
+const suggest = (result: UpdateReturn, before: Model, message: Outliner.Message): UpdateReturn => {
+  const outline = result.model.outline;
+  const offer = (id: string, caret: number, invoked: boolean): UpdateReturn => {
+    const found = completionsAt(outline.items, analyze(outline.items), id, caret, invoked);
+    return found === undefined
+      ? result
+      : andThen(result, Outliner.Message.ShowCompletions({ id, ...found }));
+  };
+  switch (message._tag) {
+    case "RequestedCompletion":
+      return offer(message.id, message.end, true);
+    case "EditedText": {
+      if (outline.completion !== null || message.start !== message.end) return result;
+      const previous = find(before.outline.items, message.id)?.text ?? "";
+      const typed =
+        message.text.length === previous.length + 1 ? message.text[message.end - 1] : "";
+      return typed !== undefined && SYMBOL_CHARACTER.test(typed)
+        ? offer(message.id, message.end, false)
+        : result;
+    }
+    default:
+      return result;
+  }
+};
 
 const replace = (model: Model, items: Items, announcement: string): UpdateReturn =>
   foldOutliner(model, Outliner.Message.Replace({ items, announcement }));
@@ -137,7 +177,8 @@ const ask = (model: Model, prompt: string): UpdateReturn => {
 
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
-    GotOutlinerMessage: ({ message: childMessage }) => foldOutliner(model, childMessage),
+    GotOutlinerMessage: ({ message: childMessage }) =>
+      suggest(foldOutliner(model, childMessage), model, childMessage),
     ToggledSource: () => ({
       model: evo(model, {
         showSource: (value) => !value,
