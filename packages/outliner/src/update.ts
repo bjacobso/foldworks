@@ -42,7 +42,7 @@ import {
   type Items,
   type Row,
 } from "./outline";
-import { refusal, type MoveCause, type Policy } from "./policy";
+import { refusal, reparented, type MoveCause, type Policy } from "./policy";
 import { rowsOf, selectedIds, selectedRoots } from "./selectors";
 import { parseOutline } from "./text";
 
@@ -653,39 +653,69 @@ const keepsCompletion = (model: Model, message: Message): boolean => {
 };
 
 const MOVES: ReadonlySet<Action> = new Set(["Indent", "Outdent", "MoveUp", "MoveDown"]);
+const HISTORY: ReadonlySet<string> = new Set(["ClickedUndo", "ClickedRedo"]);
 
-/** What a message moves, if it moves items, for checking a policy. */
+/**
+ * What a message moves, if it moves items, for checking a policy. Besides the
+ * move keys and drops, Return outdents an empty last child and joining items
+ * carries the joined item's children to a new parent.
+ */
 const moveOf = (
   model: Model,
   message: Message,
+  after: Items,
 ): Readonly<{ cause: MoveCause; ids: ReadonlyArray<string> }> | undefined => {
   if (message._tag === "Dropped") return { cause: "Drop", ids: model.drag?.ids ?? [] };
-  if (message._tag !== "Pressed" || !MOVES.has(message.action)) return undefined;
-  const ids =
-    model.mode === "Rows" && model.selection !== null ? selectedRoots(model) : [message.id];
-  return { cause: message.action as MoveCause, ids };
+  if (message._tag !== "Pressed") return undefined;
+  if (MOVES.has(message.action)) {
+    const ids =
+      model.mode === "Rows" && model.selection !== null ? selectedRoots(model) : [message.id];
+    return { cause: message.action as MoveCause, ids };
+  }
+  const moved = reparented(model.items, after).map((move) => move.id);
+  if (moved.length === 0) return undefined;
+  return message.action === "Split"
+    ? { cause: "Outdent", ids: roots(model.items, moved) }
+    : { cause: "Merge", ids: roots(model.items, moved) };
 };
 
-/** Leaves the document as it was and says why, keeping focus where the user is. */
+/** Leaves the document as it was and says why, keeping the caret where the key was pressed. */
 const refuse = (model: Model, message: Message, reason: string): UpdateReturn => {
-  const kept: Model = { ...model, drag: null, announcement: reason };
+  const caret =
+    message._tag === "Pressed" && model.mode === "Text"
+      ? { id: message.id, start: message.start, end: message.end }
+      : model.focus;
+  const kept: Model = {
+    ...model,
+    focus: caret,
+    drag: null,
+    hover: null,
+    completion: null,
+    announcement: reason,
+  };
   return message._tag === "Pressed" && !keepsFocus(message.action)
     ? refocus(kept)
     : { model: kept };
 };
 
 /**
- * Applies a message. A `policy` can refuse moves and protect read-only items;
- * edits a host makes with `Replace` or `Load` are not checked.
+ * Applies a message. A `policy` can refuse moves and protect read-only items.
+ * Edits a host makes with `Replace` or `Load` are not checked, and neither is
+ * undo or redo, which return to a document the outline already had.
  */
 export const update = (model: Model, message: Message, policy: Policy = {}): UpdateReturn => {
   const result = updateOutline(model, message);
+  const travels =
+    HISTORY.has(message._tag) ||
+    (message._tag === "Pressed" && (message.action === "Undo" || message.action === "Redo"));
   if (
     (policy.canMove !== undefined || policy.isReadOnly !== undefined) &&
     message._tag !== "Replace" &&
-    message._tag !== "Load"
+    message._tag !== "Load" &&
+    !travels
   ) {
-    const reason = refusal(policy, model.items, result.model.items, moveOf(model, message));
+    const move = moveOf(model, message, result.model.items);
+    const reason = refusal(policy, model.items, result.model.items, move);
     if (reason !== undefined) return refuse(model, message, reason);
   }
   const hover = keepsHover(message) ? result.model.hover : null;

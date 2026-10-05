@@ -110,4 +110,44 @@ describe("policy", () => {
       ),
     ).toBe(false);
   });
+
+  it("never blocks undo, even back past a host's read-only edit", () => {
+    const replaced = update(
+      start(),
+      Message.Replace({
+        items: [...start().items, item("lib2", "Generated", [], {})],
+        announcement: "",
+      }),
+      { ...policy, isReadOnly: (node) => locked(node.id) || node.id === "lib2" },
+    ).model;
+    const undone = update(
+      replaced,
+      Message.Pressed({ action: "Undo", id: "note", start: 0, end: 0, goalX: 0 }),
+      { ...policy, isReadOnly: (node) => locked(node.id) || node.id === "lib2" },
+    ).model;
+    expect(texts(undone)).toEqual(texts(start()));
+  });
+
+  it("checks joins that carry children to a new parent, and keeps the caret where the key was", () => {
+    const joined = init({
+      id: "o",
+      items: [
+        item("flow", "Flow", [item("s1", "Step one")]),
+        item("box", "Box", [item("s9", "Step nine")]),
+      ],
+    });
+    const merge = update(
+      joined,
+      Message.Pressed({ action: "MergePrevious", id: "box", start: 0, end: 0, goalX: 0 }),
+      policy,
+    );
+    expect(merge.model.announcement).toBe("Can't move there.");
+    expect(texts(merge.model)).toEqual(texts(joined));
+    const outdent = update(
+      start(),
+      Message.Pressed({ action: "Outdent", id: "s2", start: 3, end: 3, goalX: 0 }),
+      policy,
+    );
+    expect(outdent.model.focus).toEqual({ id: "s2", start: 3, end: 3 });
+  });
 });

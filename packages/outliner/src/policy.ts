@@ -1,6 +1,7 @@
 import { walk, type Item, type Items } from "./outline";
 
-export type MoveCause = "Indent" | "Outdent" | "MoveUp" | "MoveDown" | "Drop";
+/** `Merge` is joining an item onto the one above, which carries its children to a new parent. */
+export type MoveCause = "Indent" | "Outdent" | "MoveUp" | "MoveDown" | "Drop" | "Merge";
 
 /** A proposed move: what asked for it, the items moved, and the document before and after. */
 export type Move = Readonly<{
@@ -19,7 +20,10 @@ export type Move = Readonly<{
 export type Policy = Readonly<{
   /** Refuse a move by returning `false`. An outdent also moves the siblings it adopts. */
   canMove?: (move: Move) => boolean;
-  /** Items whose text, done state, parent, and children the user cannot change. */
+  /**
+   * Items whose text, done state, parent, and children the user cannot change.
+   * Moving an ancestor carries them along; make the ancestor read-only to pin them.
+   */
   isReadOnly?: (item: Item) => boolean;
 }>;
 

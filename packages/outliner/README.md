@@ -177,18 +177,23 @@ viewInputs: { ...policy, label: "Program" },
 
 `canMove` sees every indent, outdent, move up or down, and drop, with the
 document before and after, because an outdent also moves the siblings it
-adopts. `reparented(before, after)` lists every item whose parent changed. A
-refused key does nothing and is announced. While dragging, a refused depth
-falls back to the nearest allowed depth for the same gap; when none is
-allowed, the insertion marker and the drag ghost show the refusal and
-releasing does nothing.
+adopts. It also sees the two edits that move items as a side effect: Return
+outdenting an empty last child, and joining an item onto the one above, which
+carries its children with it (`cause: "Merge"`). `reparented(before, after)`
+lists every item whose parent changed. A refused key does nothing, leaves the
+caret where it was, and is announced. While dragging, a refused depth falls
+back to the nearest allowed depth for the same gap; when none is allowed, the
+insertion marker and the drag ghost show the refusal and releasing does
+nothing.
 
 `isReadOnly` marks items whose text, done state, parent, and children cannot
 change. Their text is a read-only textarea, so the caret, selection, copy,
 folding, and hoisting still work, and they cannot be dragged. Any edit that
 would change one, such as deleting an ancestor, joining another item onto
-it, or adopting it in an outdent, is refused as a whole and announced. Edits
-a host makes with `Replace` or `Load` are not checked.
+it, or adopting it in an outdent, is refused as a whole and announced. Moving
+an ancestor carries read-only items along; make the ancestor read-only to pin
+them. Edits a host makes with `Replace` or `Load` are not checked, and neither
+are undo and redo, which return to a document the outline already had.
 
 `Outliner.Message.Replace({ items, announcement, coalescingKey })` applies an
 edit the host computed, such as a refactoring or text typed in another view,
