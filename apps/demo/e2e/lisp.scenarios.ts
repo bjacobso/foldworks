@@ -278,6 +278,45 @@ export const lispScenarios = (
       expect(await page.getByRole("button", { name: "Unwrap" }).isDisabled()).toBe(true);
     });
 
+    it("steps through how a row evaluated", async () => {
+      const page = await start();
+      await text(page, "invoice-total 100").click();
+      await page.getByRole("button", { name: "Step through" }).click();
+      const steps = page.getByRole("navigation", { name: "Evaluation steps" });
+      const position = page.getByRole("region", { name: "Step through" }).locator(".lisp-muted");
+      await expect.poll(() => position.textContent()).toBe("Step 1 of 11");
+      expect((await steps.locator("li").allTextContents()).slice(0, 4)).toEqual([
+        "1100→ 100",
+        "2revenue→ 100",
+        "3tax-rate→ 0.0825",
+        "4(* revenue tax-rate)→ 8.25",
+      ]);
+      await page.keyboard.press("Control+l");
+      for (let step = 0; step < 6; step += 1) {
+        await page.getByRole("button", { name: "Next" }).click();
+      }
+      await expect.poll(() => position.textContent()).toBe("Step 7 of 11");
+      expect(await steps.locator('[aria-current="step"]').textContent()).toBe(
+        "7(+ revenue tax)→ 108.25",
+      );
+      // The current expression is marked in the outline and in the source.
+      await expect
+        .poll(() => page.locator('.fw-outliner__row[data-tone="step"] textarea').inputValue())
+        .toBe("round (+ revenue tax) 2");
+      await expect
+        .poll(() =>
+          page
+            .locator('.lisp-source .native-token--highlight[data-highlight="step"]')
+            .allTextContents(),
+        )
+        .toEqual(["(", "+", " ", "revenue", " ", "tax", ")"]);
+      await screenshot("lisp-step-through");
+      await steps.getByRole("button").nth(1).click();
+      await expect.poll(() => position.textContent()).toBe("Step 2 of 11");
+      await page.getByRole("button", { name: "Done" }).click();
+      await expect.poll(() => page.getByRole("region", { name: "Step through" }).count()).toBe(0);
+    });
+
     it("proposes a structural edit for selected rows and applies it", async () => {
       const page = await start();
       expect(await valueOf(page, "collect-i9")).toBe(

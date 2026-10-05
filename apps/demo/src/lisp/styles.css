@@ -862,3 +862,37 @@
 .lisp-value[data-kind="readonly"] {
   color: var(--muted-foreground);
 }
+
+/* Stepping through an evaluation: the playhead's row and expression. */
+.lisp-ide .fw-outliner__row[data-tone="step"] {
+  background-color: color-mix(in oklab, var(--primary, #2563eb) 12%, transparent);
+  box-shadow: inset 2px 0 0 var(--primary, #2563eb);
+}
+
+.lisp-source .native-token--highlight[data-highlight="step"] {
+  background: color-mix(in oklab, var(--primary, #2563eb) 24%, transparent);
+}
+
+.lisp-steps__form {
+  display: block;
+  margin-top: 6px;
+  white-space: pre-wrap;
+}
+
+.lisp-steps__controls {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0 8px;
+}
+
+.lisp-steps__list {
+  max-height: 360px;
+  overflow: auto;
+  font-family: var(--lisp-mono);
+  font-size: 12px;
+}
+
+.lisp-action--primary {
+  border-color: color-mix(in oklab, var(--primary, #2563eb) 45%, var(--border));
+  font-weight: 600;
+}

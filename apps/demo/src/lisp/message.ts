@@ -29,6 +29,10 @@ export const Message = defineMessageUnion({
   /** `head` is the form to wrap with, for `Wrap`. */
   Refactored: { refactoring: Refactoring, head: S.String },
   ClickedReference: { id: S.String },
+  /** Starts stepping through how a row's form evaluated. */
+  StartedStepping: { id: S.String },
+  SteppedTo: { index: S.Number },
+  StoppedStepping: {},
   PressedShortcut: { shortcut: Shortcut },
   CompletedFocus: {},
 });

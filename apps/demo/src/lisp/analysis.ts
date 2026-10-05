@@ -19,6 +19,7 @@ import {
   occurrences,
   type Evaluation,
   type Step,
+  type TraceStep,
 } from "./evaluate";
 import { code, descendants, tokenize, type Expr } from "./syntax";
 
@@ -207,6 +208,22 @@ export const diagnosticsOf = (
     result.push({ ...whole, severity: "warning", message: warning });
   }
   return result;
+};
+
+const traceCache = new WeakMap<Items, Map<string, ReadonlyArray<TraceStep>>>();
+
+/** The steps evaluating an item's form took, in order. Cached per document. */
+export const traceOf = (items: Items, id: string): ReadonlyArray<TraceStep> => {
+  const forItems = traceCache.get(items) ?? new Map<string, ReadonlyArray<TraceStep>>();
+  traceCache.set(items, forItems);
+  const cached = forItems.get(id);
+  if (cached !== undefined) return cached;
+  // Looking up a function is not a step a reader follows; its call is.
+  const trace = evaluate(readOutline(items).forms, { trace: id }).trace.filter(
+    (step) => !(typeof step.value === "object" && step.value !== null && step.value._tag === "Fn"),
+  );
+  forItems.set(id, trace);
+  return trace;
 };
 
 export type Notation = "Outline" | "Lisp";

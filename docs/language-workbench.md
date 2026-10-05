@@ -254,14 +254,17 @@ contracts, since they do not depend on the native implementation.
   `RequestedMore`. `ValueTree.fromValue` builds nodes from plain values for
   hosts that have them locally. This closes the structured-payload gap in
   [WorldVM developer tools](./worldvm-devtools.md#gaps).
-- **Step-through.** `Stepper` is a journey of a few steps and
-  `TransactionTimeline` is a read-only history; neither marks a current entry
-  that the reader moves. The smallest missing piece is a current entry:
-  `TransactionTimeline` gains `currentId` and `onSelect`, which mark the entry
-  with `aria-current` and make it selectable. A host steps through a trace by
-  pairing it with previous and next buttons and painting the current
-  expression with outliner decorations or code editor `highlights`. A dedicated
-  scrubber for long traces waits for a second use.
+- **Step-through.** No new component. `Stepper`, rendered vertically with
+  `onSelect`, is already a playhead: `currentStepId` marks the current step
+  with `aria-current`, the steps before it read as complete, and any step can
+  be chosen. A host pairs it with Previous and Next buttons and shows where the
+  step happened with an outliner decoration's `tone` or a code editor
+  `highlights` range. `TransactionTimeline` stays attributed history that is
+  read rather than replayed. The `/lisp` inspector steps through a row's
+  evaluation this way, and the
+  [primitives guide](../packages/ui/docs/primitives.md) documents the pattern.
+  A scrubber for traces too long to list, and steps nested by call depth, wait
+  for a trace that needs them.
 
 ## Sequence
 
@@ -276,6 +279,6 @@ Each item lands as its own pull request, with a changeset, tests, and the
 5. `TreeDiff`, the `ChangeSetPreview` slot, and agent permission labels
 6. `ValueTree`
 7. Outliner move validation and read-only rows
-8. `TransactionTimeline` current entry
+8. Step-through with `Stepper`, documented and shown in `/lisp`
 
 Custom row views and virtualization are designed above and deferred.

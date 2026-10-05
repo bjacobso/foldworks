@@ -19,16 +19,25 @@ import {
   Button,
   ChangeSetPreview,
   Icon,
+  Stepper,
   TreeDiff,
   ValueTree,
   type TreeDiffNode,
 } from "@foldworks/ui";
 import { History } from "@foldworks/history";
 import { CodeEditor } from "@foldworks/code-editor";
-import { Outliner, ancestors, find, type Items, type Row } from "@foldworks/outliner";
+import {
+  Outliner,
+  ancestors,
+  find,
+  type Items,
+  type Row,
+  type RowDecoration,
+} from "@foldworks/outliner";
 
 import {
   analyze,
+  traceOf,
   decorations,
   definedName,
   describe,
@@ -38,7 +47,8 @@ import {
 } from "./analysis";
 import { SUGGESTIONS } from "./assistant";
 import { printOutline } from "./codec";
-import { show } from "./evaluate";
+import { DEFINING_FORMS, show } from "./evaluate";
+import { print } from "./syntax";
 import { describeAt, type Description } from "./hover";
 import { LIBRARY, isLocked, outlinePolicy } from "./policy";
 import { slotsFor } from "./slots";
@@ -46,7 +56,7 @@ import { lineOf, printedFor, sourceHover } from "./source";
 import { Message, type Refactoring } from "./message";
 import { domIds, type Model } from "./model";
 import { explode, join, raise } from "./refactor";
-import { inspectedNodes, targetsOf } from "./update";
+import { inspectedNodes, stepSourceRange, targetsOf } from "./update";
 
 type H = HtmlBuilder<Message>;
 
@@ -291,7 +301,10 @@ const sourcePane = (model: Model, analysis: Analysis, focusId: string | null, h:
   const text = model.source.document.text;
   const printed = printedFor(items, text);
   const line =
-    printed === undefined || focusId === null ? undefined : lineOf(items, printed, focusId);
+    printed === undefined || focusId === null || model.stepping !== null
+      ? undefined
+      : lineOf(items, printed, focusId);
+  const stepRange = stepSourceRange(model);
   return h.section(
     [
       h.Class("lisp-source"),
@@ -320,7 +333,10 @@ const sourcePane = (model: Model, analysis: Analysis, focusId: string | null, h:
           showToolbar: false,
           showInspector: false,
           toParentMessage: (message) => Message.GotSourceMessage({ message }),
-          highlights: line === undefined ? [] : [{ ...line, kind: "focus" }],
+          highlights: [
+            ...(line === undefined ? [] : [{ ...line, kind: "focus" }]),
+            ...(stepRange === undefined ? [] : [{ ...stepRange, kind: "step" }]),
+          ],
           hover: ({ offset, source }) => {
             const description = sourceHover(items, analysis, text, offset, source === "Keyboard");
             return description === undefined
@@ -540,6 +556,18 @@ const inspector = (model: Model, analysis: Analysis, h: H): Html => {
                 ),
               ]
             : []),
+          ...(steppable(analysis, node.id)
+            ? [
+                h.button(
+                  [
+                    h.Class("lisp-action lisp-action--primary"),
+                    h.Type("button"),
+                    h.OnClick(Message.StartedStepping({ id: node.id })),
+                  ],
+                  ["Step through"],
+                ),
+              ]
+            : []),
         ],
       ),
     ],
@@ -685,6 +713,125 @@ const assistant = (model: Model, h: H): Html => {
   );
 };
 
+/** Marks the row of the expression the current step evaluated. */
+const withStep = (
+  rows: Readonly<Record<string, RowDecoration>>,
+  model: Model,
+  analysis: Analysis,
+): Readonly<Record<string, RowDecoration>> => {
+  const stepping = model.stepping;
+  const step =
+    stepping === null ? undefined : traceOf(model.outline.items, stepping.id)[stepping.index];
+  if (step === undefined) return rows;
+  const id = step.exprId.split("#")[0]!;
+  return analysis.program.exprs.has(id) || analysis.allExprs.has(step.exprId)
+    ? { ...rows, [id]: { ...rows[id], tone: "step" } }
+    : rows;
+};
+
+/** Rows whose expression can be stepped through: anything evaluated that is not a definition or a section. */
+const steppable = (analysis: Analysis, id: string): boolean => {
+  const expr = analysis.program.exprs.get(id);
+  if (expr === undefined || !analysis.evaluation.values.has(id) || expr._tag === "Comment")
+    return false;
+  const head =
+    expr._tag === "List" && expr.items[0]?._tag === "Symbol" ? expr.items[0].name : undefined;
+  return head === undefined || (!DEFINING_FORMS.has(head) && head !== "section");
+};
+
+const clip = (text: string, limit: number): string =>
+  text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
+
+/**
+ * Stepping through how a row's form evaluated, one expression at a time,
+ * with `Stepper` as the playhead. The current expression's row is marked in
+ * the outline and its range in the source.
+ */
+const stepPanel = (model: Model, analysis: Analysis, h: H): ReadonlyArray<Html> => {
+  const stepping = model.stepping;
+  if (stepping === null) return [];
+  const items = model.outline.items;
+  const trace = traceOf(items, stepping.id);
+  const index = Math.max(0, Math.min(stepping.index, trace.length - 1));
+  const form = analysis.program.exprs.get(stepping.id);
+  return [
+    h.section(
+      [h.Id(domIds.steps), h.Class("lisp-panel lisp-steps"), h.AriaLabel("Step through")],
+      [
+        h.div(
+          [h.Class("lisp-panel__heading")],
+          [
+            h.h3([h.Class("lisp-panel__title")], ["Step through"]),
+            h.span(
+              [h.Class("lisp-muted"), h.AriaLive("polite")],
+              [trace.length === 0 ? "No steps" : `Step ${index + 1} of ${trace.length}`],
+            ),
+          ],
+        ),
+        h.code(
+          [h.Class("lisp-code lisp-code--inline lisp-steps__form")],
+          [form === undefined ? "" : clip(print(form), 120)],
+        ),
+        h.div(
+          [h.Class("lisp-steps__controls"), h.Role("group"), h.AriaLabel("Step controls")],
+          [
+            Button.view(
+              {
+                label: "Previous",
+                variant: "outline",
+                size: "sm",
+                isDisabled: index === 0,
+                onClick: Message.SteppedTo({ index: index - 1 }),
+              },
+              h,
+            ),
+            Button.view(
+              {
+                label: "Next",
+                variant: "outline",
+                size: "sm",
+                isDisabled: index >= trace.length - 1,
+                onClick: Message.SteppedTo({ index: index + 1 }),
+              },
+              h,
+            ),
+            Button.view(
+              { label: "Done", variant: "ghost", size: "sm", onClick: Message.StoppedStepping() },
+              h,
+            ),
+          ],
+        ),
+        ...(trace.length === 0
+          ? []
+          : [
+              h.div(
+                [h.Class("lisp-steps__list")],
+                [
+                  Stepper.view(
+                    {
+                      steps: trace.map((step, at) => {
+                        const expr = analysis.allExprs.get(step.exprId);
+                        return {
+                          id: String(at),
+                          label: clip(expr === undefined ? step.exprId : print(expr), 56),
+                          description: `→ ${show(step.value, 56)}`,
+                        };
+                      }),
+                      currentStepId: String(index),
+                      orientation: "vertical",
+                      ariaLabel: "Evaluation steps",
+                      onSelect: (id) => Message.SteppedTo({ index: Number(id) }),
+                    },
+                    h,
+                  ),
+                ],
+              ),
+            ]),
+      ],
+    ),
+  ];
+};
+
 const guide = (model: Model, h: H): Html => {
   const mod = model.platform === "mac" ? "⌘" : "Ctrl+";
   return h.details(
@@ -766,11 +913,15 @@ export const view = defineView<Model, Message>((model, h) => {
                         viewInputs: {
                           ...outlinePolicy(items),
                           label: "Program",
-                          decorations: decorations(items, {
-                            notation: model.notation,
-                            scopeId: model.outline.scopeId,
-                            focusId,
-                          }),
+                          decorations: withStep(
+                            decorations(items, {
+                              notation: model.notation,
+                              scopeId: model.outline.scopeId,
+                              focusId,
+                            }),
+                            model,
+                            analysis,
+                          ),
                           spellcheck: false,
                           rowAccessory: (row: Row) => rowValue(analysis, row, h),
                           placeholders: (parentId: string | null) => slotsFor(items, parentId),
@@ -802,7 +953,12 @@ export const view = defineView<Model, Message>((model, h) => {
           ),
           h.aside(
             [h.Class("lisp-ide__side"), h.AriaLabel("Inspector and assistant")],
-            [inspector(model, analysis, h), assistant(model, h), guide(model, h)],
+            [
+              ...stepPanel(model, analysis, h),
+              inspector(model, analysis, h),
+              assistant(model, h),
+              guide(model, h),
+            ],
           ),
         ],
       ),

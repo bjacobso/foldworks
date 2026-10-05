@@ -110,6 +110,10 @@ rest of the program stays as rows.
   they open, as values held in another process would. It
   also shows where the name is defined, which rows use it, and the row's
   Lisp. References jump to the row and reveal it.
+- **Step through.** “Step through” in the inspector replays how a row's form
+  evaluated, one expression at a time and into the functions it called. The
+  steps are a `Stepper`; the current expression's row is marked in the outline
+  and its range in the source.
 - **Zoom.** Hoisting (⌘.) zooms into any form, and the level buttons fold the
   program to a depth. Sections read like chapters at level one and like code
   at level three.
