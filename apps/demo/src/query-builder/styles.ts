@@ -1,13 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 
-import {
-  colors,
-  motion,
-  radii,
-  shadows,
-  space,
-  typography,
-} from "@foldworks/ui/tokens.stylex";
+import { colors, motion, radii, shadows, space, typography } from "@foldworks/ui/tokens.stylex";
 
 const reveal = stylex.keyframes({
   from: { opacity: 0, transform: "translateY(10px)" },
@@ -19,7 +12,8 @@ const reducedMotion = "@media (prefers-reduced-motion: reduce)" as const;
 export const styles = stylex.create({
   viewport: {
     backgroundColor: colors.canvas,
-    backgroundImage: "radial-gradient(circle at 72% -10%, var(--foldworks-ui-brand-surface) 0, transparent 34%)",
+    backgroundImage:
+      "radial-gradient(circle at 72% -10%, var(--foldworks-ui-brand-surface) 0, transparent 34%)",
     minHeight: 0,
     overflowY: "auto",
     padding: {
@@ -49,9 +43,10 @@ export const styles = stylex.create({
   heroCopy: { display: "flex", flexDirection: "column", gap: space.sm },
   eyebrow: {
     color: colors.brandForeground,
+    fontFamily: typography.fontLabel,
     fontSize: typography.sizeXs,
-    fontWeight: typography.weightBold,
-    letterSpacing: "0.1em",
+    fontWeight: "var(--font-label-weight, 700)",
+    letterSpacing: "var(--font-label-tracking, 0.1em)",
     margin: 0,
     textTransform: "uppercase",
   },
@@ -92,7 +87,12 @@ export const styles = stylex.create({
     transitionTimingFunction: motion.easeOut,
   },
   metricAccent: { borderColor: colors.brandBorder, color: colors.brandForeground },
-  metricDot: { backgroundColor: colors.brand, borderRadius: radii.full, height: "6px", width: "6px" },
+  metricDot: {
+    backgroundColor: colors.brand,
+    borderRadius: radii.full,
+    height: "6px",
+    width: "6px",
+  },
   preview: {
     backgroundColor: colors.surface,
     borderColor: { default: colors.brandBorder, ":hover": colors.brand },
@@ -109,7 +109,8 @@ export const styles = stylex.create({
     transitionTimingFunction: motion.easeOut,
   },
   previewGlow: {
-    backgroundImage: "linear-gradient(90deg, var(--foldworks-ui-brand), color-mix(in oklch, var(--foldworks-ui-brand) 45%, var(--foldworks-ui-info)))",
+    backgroundImage:
+      "linear-gradient(90deg, var(--foldworks-ui-brand), color-mix(in oklch, var(--foldworks-ui-brand) 45%, var(--foldworks-ui-info)))",
     height: "3px",
     left: 0,
     position: "absolute",
@@ -125,9 +126,10 @@ export const styles = stylex.create({
   },
   previewLabel: {
     color: colors.foregroundSubtle,
+    fontFamily: typography.fontLabel,
     fontSize: typography.sizeXs,
-    fontWeight: typography.weightBold,
-    letterSpacing: "0.08em",
+    fontWeight: "var(--font-label-weight, 700)",
+    letterSpacing: "var(--font-label-tracking, 0.08em)",
     margin: 0,
     textTransform: "uppercase",
   },

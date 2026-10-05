@@ -1,0 +1,128 @@
+/* Roster: ink-navy selection, quiet gray rails, white cards, mono eyebrows,
+ * and pastel category chips. */
+[data-theme="roster"] {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #16173a;
+  --card: #ffffff;
+  --card-foreground: #16173a;
+  --popover: #ffffff;
+  --popover-foreground: #16173a;
+  --primary: #17183b;
+  --primary-hover: #262856;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f2f5;
+  --secondary-foreground: #2c2e4a;
+  --muted: #f5f6f7;
+  --muted-foreground: #5d6075;
+  --accent: #eef0f4;
+  --accent-foreground: #16173a;
+  --destructive: #c42b5c;
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #fde8ef;
+  --destructive-border: #f3b5c8;
+  --border: #e2e4e9;
+  --input: #d3d6de;
+  --ring: #4f5bd5;
+  --chart-1: #17183b;
+  --chart-2: #6cc644;
+  --chart-3: #e2793a;
+  --chart-4: #8a63d2;
+  --chart-5: #d94f86;
+  --sidebar: #f5f6f7;
+  --sidebar-foreground: #16173a;
+  --sidebar-primary: #17183b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9ebef;
+  --sidebar-accent-foreground: #16173a;
+  --sidebar-border: #e2e4e9;
+  --sidebar-ring: #4f5bd5;
+
+  --foldworks-ui-success: #2f7a22;
+  --foldworks-ui-success-surface: #e8f8dc;
+  --foldworks-ui-warning: #8a6400;
+  --foldworks-ui-warning-surface: #fdf3c6;
+  --foldworks-ui-info: #2b68b0;
+  --foldworks-ui-info-surface: #e5effb;
+
+  --font-sans: Inter, "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:
+    "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-label: var(--font-mono);
+  --font-label-weight: 500;
+  --font-label-tracking: 0.08em;
+  --radius: 0.5rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-button: 8px;
+  --radius-button-sm: 6px;
+  --radius-badge: 4px;
+  --radius-panel: 14px;
+  --badge-border: transparent;
+  --button-outline-surface: #ffffff;
+  --button-outline-shadow: 0 1px 2px rgb(22 23 58 / 6%);
+  --shadow-sm: 0 1px 2px rgb(22 23 58 / 5%);
+  --shadow-control: 0 1px 2px rgb(22 23 58 / 6%);
+  --shadow-interactive: 0 1px 2px rgb(22 23 58 / 6%), 0 0 0 1px rgb(22 23 58 / 2%);
+  --shadow-card: 0 1px 2px rgb(22 23 58 / 5%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 12px 40px rgb(22 23 58 / 8%);
+  --shadow-float: 0 0 0 1px rgb(22 23 58 / 6%), 0 16px 40px rgb(22 23 58 / 14%);
+  --shadow-sheet: -16px 0 48px rgb(22 23 58 / 12%);
+}
+
+/* Dark mode keeps the navy family as the canvas and uses a calm blue for
+ * primary actions and selection. */
+[data-theme="roster"][data-mode="dark"],
+[data-theme="roster"].dark {
+  color-scheme: dark;
+  --background: #0e0f22;
+  --foreground: #eceef8;
+  --card: #15162e;
+  --card-foreground: #eceef8;
+  --popover: #1b1c38;
+  --popover-foreground: #eceef8;
+  --primary: #4f6bed;
+  --primary-hover: #6580f2;
+  --primary-foreground: #ffffff;
+  --secondary: #1f2140;
+  --secondary-foreground: #dcdff0;
+  --muted: #12132a;
+  --muted-foreground: #9a9db8;
+  --accent: #24264a;
+  --accent-foreground: #eceef8;
+  --destructive: #f27aa3;
+  --destructive-foreground: #10121f;
+  --destructive-surface: #3a1228;
+  --destructive-border: #7a2950;
+  --border: #272948;
+  --input: #34375c;
+  --ring: #8c9fff;
+  --chart-1: #6f8cff;
+  --chart-2: #5cc8a8;
+  --chart-3: #f4a26b;
+  --chart-4: #b79bf2;
+  --chart-5: #f27aa3;
+  --sidebar: #12132a;
+  --sidebar-foreground: #eceef8;
+  --sidebar-primary: #4f6bed;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #24264a;
+  --sidebar-accent-foreground: #eceef8;
+  --sidebar-border: #272948;
+  --sidebar-ring: #8c9fff;
+
+  --foldworks-ui-success: #7fd49a;
+  --foldworks-ui-success-surface: #15301f;
+  --foldworks-ui-warning: #f5d36b;
+  --foldworks-ui-warning-surface: #3a2f0c;
+  --foldworks-ui-info: #8cbaf5;
+  --foldworks-ui-info-surface: #15284a;
+
+  --button-outline-surface: #1b1c38;
+  --button-outline-shadow: none;
+  --shadow-card: 0 0 0 1px rgb(255 255 255 / 3%);
+  --shadow-panel: 0 0 0 1px var(--border), 0 12px 40px rgb(0 0 0 / 36%);
+  --shadow-float: 0 0 0 1px var(--border), 0 16px 40px rgb(0 0 0 / 48%);
+  --shadow-sheet: -16px 0 48px rgb(0 0 0 / 42%);
+}

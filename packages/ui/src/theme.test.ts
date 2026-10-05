@@ -47,6 +47,7 @@ describe("theme contract", () => {
     "google",
     "apple",
     "polaris",
+    "roster",
   ] as const) {
     it(`${theme} defines every semantic token in light and dark mode`, async () => {
       const css = await readFile(resolve(import.meta.dirname, "themes", `${theme}.css`), "utf8");
@@ -97,6 +98,17 @@ describe("theme contract", () => {
     expect(css).toContain("--primary: #fcfcfc");
   });
 
+  it("maps the Roster navy, blue, and mono palette", async () => {
+    const css = await readFile(resolve(import.meta.dirname, "themes", "roster.css"), "utf8");
+
+    expect(css).toContain("--primary: #17183b");
+    expect(css).toContain("--primary: #4f6bed");
+    expect(css).toContain("--font-label: var(--font-mono)");
+    expect(css).toContain("--font-label-tracking: 0.08em");
+    expect(css).toContain("--radius-badge: 4px");
+    expect(css).toContain("--radius-panel: 14px");
+  });
+
   it("maps Fluent 2 web light and dark tokens", async () => {
     const css = await readFile(resolve(import.meta.dirname, "themes", "fluent2.css"), "utf8");
 
@@ -105,6 +117,14 @@ describe("theme contract", () => {
     expect(css).toContain("--ring: #479ef5");
     expect(css).toContain("--radius-button: 4px");
     expect(css).toContain("--duration-normal: 200ms");
+  });
+
+  it("derives label typography from the sans font by default", async () => {
+    const css = await readFile(resolve(import.meta.dirname, "base.css"), "utf8");
+
+    expect(css).toContain("--font-label: var(--font-sans)");
+    expect(css).not.toContain("--font-label-weight:");
+    expect(css).not.toContain("--font-label-tracking:");
   });
 
   it("includes a low-specificity browser reset", async () => {

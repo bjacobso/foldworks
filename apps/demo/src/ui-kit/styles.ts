@@ -47,9 +47,10 @@ export const uiKitStyles = stylex.create({
   },
   groupLabel: {
     color: "var(--foldworks-ui-foreground-muted)",
+    fontFamily: "var(--font-label)",
     fontSize: "11px",
-    fontWeight: 500,
-    letterSpacing: "0.04em",
+    fontWeight: "var(--font-label-weight, 500)",
+    letterSpacing: "var(--font-label-tracking, 0.04em)",
     margin: 0,
     textTransform: "uppercase",
   },

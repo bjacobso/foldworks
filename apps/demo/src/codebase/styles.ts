@@ -24,9 +24,10 @@ export const styles = stylex.create({
   },
   eyebrow: {
     color: colors.primary,
+    fontFamily: typography.fontLabel,
     fontSize: typography.sizeXs,
-    fontWeight: typography.weightSemibold,
-    letterSpacing: "0.09em",
+    fontWeight: "var(--font-label-weight, 600)",
+    letterSpacing: "var(--font-label-tracking, 0.09em)",
     textTransform: "uppercase",
   },
   introTitle: {
@@ -146,9 +147,10 @@ export const styles = stylex.create({
   },
   sectionLabel: {
     color: colors.foregroundMuted,
+    fontFamily: typography.fontLabel,
     fontSize: "10px",
-    fontWeight: typography.weightSemibold,
-    letterSpacing: "0.07em",
+    fontWeight: "var(--font-label-weight, 600)",
+    letterSpacing: "var(--font-label-tracking, 0.07em)",
     margin: "10px 6px 5px",
     textTransform: "uppercase",
   },
@@ -341,9 +343,10 @@ export const styles = stylex.create({
   },
   factTitle: {
     color: colors.foregroundMuted,
+    fontFamily: typography.fontLabel,
     fontSize: "10px",
-    fontWeight: typography.weightSemibold,
-    letterSpacing: "0.07em",
+    fontWeight: "var(--font-label-weight, 600)",
+    letterSpacing: "var(--font-label-tracking, 0.07em)",
     marginBottom: "5px",
     textTransform: "uppercase",
   },
