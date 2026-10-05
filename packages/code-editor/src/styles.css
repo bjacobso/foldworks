@@ -233,6 +233,57 @@
   width: 5px;
   border-bottom: 2px solid var(--foldworks-ui-danger, #a5252c);
 }
+/* Host token kinds, from SetSemanticTokens. Kinds beyond these are the host's to style. */
+.native-token--semantic:is(
+  [data-kind="keyword"],
+  [data-kind="modifier"],
+  [data-kind="special"],
+  [data-kind="macro"]
+) {
+  color: var(--native-keyword);
+}
+.native-token--semantic:is([data-kind="string"], [data-kind="regexp"]) {
+  color: var(--native-string);
+}
+.native-token--semantic:is([data-kind="number"], [data-kind="constant"]) {
+  color: var(--native-number);
+}
+.native-token--semantic[data-kind="comment"] {
+  color: var(--native-comment);
+}
+.native-token--semantic:is(
+  [data-kind="type"],
+  [data-kind="class"],
+  [data-kind="interface"],
+  [data-kind="namespace"],
+  [data-kind="definition"]
+) {
+  color: var(--native-type);
+}
+.native-token--semantic:is(
+  [data-kind="property"],
+  [data-kind="function"],
+  [data-kind="method"],
+  [data-kind="enumMember"]
+) {
+  color: var(--native-property);
+}
+.native-token--semantic:is(
+  [data-kind="variable"],
+  [data-kind="parameter"],
+  [data-kind="operator"],
+  [data-kind="plain"]
+) {
+  color: var(--foreground, #202124);
+}
+/* Ranges another view corresponds to. */
+.native-editor__line--highlighted {
+  background: color-mix(in srgb, var(--primary, #5674c7) 8%, transparent);
+}
+.native-token--highlight {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--primary, #5674c7) 14%, transparent);
+}
 .native-token--match {
   background: var(--foldworks-ui-warning-surface, #fff2bc);
   outline: 1px solid var(--foldworks-ui-warning, #975312);
@@ -261,27 +312,6 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-.native-editor__completion {
-  padding: 10px 16px;
-  border-top: 1px solid var(--border, #dedee3);
-  background: var(--popover, #fff);
-  font-size: 12px;
-}
-.native-editor__completion > span {
-  color: var(--muted-foreground, #686b70);
-}
-.native-editor__completion ul {
-  padding: 0;
-  margin: 6px 0 0;
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.native-editor__completion [aria-selected="true"] {
-  background: var(--muted, #f4f4f5);
-  border-radius: 5px;
 }
 .native-editor__problems {
   max-height: 160px;

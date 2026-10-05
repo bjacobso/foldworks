@@ -15,6 +15,7 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 import { Badge, Button, Icon } from "@foldworks/ui";
 import { History } from "@foldworks/history";
+import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner, ancestors, find, type Items, type Row } from "@foldworks/outliner";
 
 import {
@@ -32,6 +33,7 @@ import { treeDiff } from "./diff";
 import { show } from "./evaluate";
 import { describeAt, type Description } from "./hover";
 import { slotsFor } from "./slots";
+import { lineOf, printedFor, sourceHover } from "./source";
 import { Message, type Refactoring } from "./message";
 import { domIds, type Model } from "./model";
 import { explode, join, raise } from "./refactor";
@@ -257,13 +259,24 @@ const toolbar = (model: Model, h: H): Html => {
   );
 };
 
+/**
+ * The program printed as Lisp, in the code editor. The outline's analysis
+ * highlights it and explains it on hover, and the line for the row with the
+ * caret is highlighted while the source matches the outline.
+ */
 const sourcePane = (model: Model, analysis: Analysis, focusId: string | null, h: H): Html => {
-  const printed = printOutline(model.outline.items);
-  const text = model.sourceDraft ?? printed.text;
-  const active =
-    model.sourceDraft === null && focusId !== null ? printed.lines.indexOf(focusId) : -1;
+  const items = model.outline.items;
+  const text = model.source.document.text;
+  const printed = printedFor(items, text);
+  const line =
+    printed === undefined || focusId === null ? undefined : lineOf(items, printed, focusId);
   return h.section(
-    [h.Class("lisp-source"), h.AriaLabel("Lisp source")],
+    [
+      h.Class("lisp-source"),
+      h.AriaLabel("Lisp source"),
+      h.DataAttribute("invalid", String(model.sourceError !== null)),
+      h.OnFocusLeave(Message.BlurredSource()),
+    ],
     [
       h.header(
         [h.Class("lisp-source__header")],
@@ -277,31 +290,27 @@ const sourcePane = (model: Model, analysis: Analysis, focusId: string | null, h:
             : h.span([h.Class("lisp-source__error"), h.Role("status")], [model.sourceError]),
         ],
       ),
-      h.div(
-        [
-          h.Class("lisp-source__editor"),
-          h.DataAttribute("invalid", String(model.sourceError !== null)),
-        ],
-        [
-          h.textarea(
-            [
-              h.Id(domIds.source),
-              h.Class("lisp-source__input"),
-              h.Value(text),
-              h.Spellcheck(false),
-              h.AriaLabel("Lisp source"),
-              h.Attribute("autocapitalize", "off"),
-              h.Attribute("autocomplete", "off"),
-              h.OnInput((value) => Message.EditedSource({ text: value })),
-              h.OnBlur(Message.BlurredSource()),
-            ],
-            [],
-          ),
-          h.div(
-            [h.Class("lisp-source__paint lisp-code"), h.AriaHidden(true)],
-            codeLines(text, analysis, h, active),
-          ),
-        ],
+      CodeEditor.view(
+        {
+          model: model.source,
+          label: "Lisp source",
+          meta: null,
+          showToolbar: false,
+          showInspector: false,
+          toParentMessage: (message) => Message.GotSourceMessage({ message }),
+          highlights: line === undefined ? [] : [{ ...line, kind: "focus" }],
+          hover: ({ offset, source }) => {
+            const description = sourceHover(items, analysis, text, offset, source === "Keyboard");
+            return description === undefined
+              ? null
+              : {
+                  from: description.from,
+                  to: description.to,
+                  content: hoverContent(description, h),
+                };
+          },
+        },
+        h,
       ),
     ],
   );

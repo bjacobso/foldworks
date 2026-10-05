@@ -269,9 +269,44 @@ export const lispScenarios = (
       expect(await source.inputValue()).toContain(
         "(defn invoice-total [revenue]\n    ; Revenue plus sales tax, rounded to cents.",
       );
-      expect(await page.locator(".lisp-code__line[data-active='true']").textContent()).toBe(
-        "  (def tax-rate 0.0825)​",
-      );
+      // The line for the row with the caret is highlighted, and follows it.
+      const highlighted = page.locator(".lisp-source .native-editor__line--highlighted");
+      await expect.poll(() => highlighted.allTextContents()).toEqual(["  (def tax-rate 0.0825)"]);
+      await text(page, "invoice-total 100").click();
+      await expect.poll(() => highlighted.allTextContents()).toEqual(["  (invoice-total 100)"]);
+      // Highlighting comes from the outline's analysis.
+      expect(
+        await page
+          .locator(".lisp-source .native-token--semantic")
+          .evaluateAll((spans) =>
+            spans
+              .slice(0, 8)
+              .map((span) => `${(span as HTMLElement).dataset.kind}:${span.textContent}`),
+          ),
+      ).toEqual([
+        "comment:; A program is an outline: every row is a form, and indentation is nesting.",
+        "paren:(",
+        "special:section",
+        'string:"Pricing"',
+        "paren:(",
+        "special:def",
+        "definition:tax-rate",
+        "number:0.0825",
+      ]);
+      // Hovering the source explains it as the rows do.
+      const word = await page
+        .locator(".lisp-source .native-token--semantic")
+        .evaluateAll((spans) => {
+          const rect = spans
+            .find((span) => span.textContent === "tax-rate")!
+            .getBoundingClientRect();
+          return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        });
+      await page.mouse.move(word.x, word.y);
+      await expect.poll(() => hoverText(page)).toBe("tax-ratedefinitionnumber0.0825Usedin 1 row");
+      await page.mouse.move(4, 4);
+      await screenshot("lisp-source");
+
       const value = await source.inputValue();
       const at = value.indexOf("0.0825");
       await source.focus();
@@ -280,11 +315,15 @@ export const lispScenarios = (
       }, at);
       await page.keyboard.type("0.1");
       await expect.poll(() => valueOf(page, "invoice-total 100")).toBe("→110");
-      await page.keyboard.type(" (");
+      // Text that does not read leaves the outline alone and says why.
+      await page.keyboard.type(" ]");
       await expect
         .poll(() => page.locator(".lisp-source__error").textContent())
-        .toBe("Missing ) on line 2");
-      await screenshot("lisp-source");
+        .toBe("Expected ) on line 3");
+      expect(await valueOf(page, "invoice-total 100")).toBe("→110");
+      await expect
+        .poll(() => page.locator(".lisp-source .native-token--issue").allTextContents())
+        .toEqual(["]"]);
     });
   });
 };

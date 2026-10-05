@@ -1,9 +1,22 @@
 import { Mount } from "foldkit";
 import { type Html, type HtmlBuilder } from "foldkit/html";
+import {
+  Completion,
+  CompletionPopup,
+  HoverPopup,
+  diagnosticsAt,
+  mostSevere,
+  optionId,
+  segments,
+  type Diagnostic,
+  type SemanticToken,
+  type TextRange,
+} from "@foldworks/text-intelligence";
+import type { Highlight } from "../contracts";
 import type { Model } from "./model";
 import { Message, type Action } from "./message";
 import { ObserveInput } from "./mount";
-import { completions, findMatches } from "./operations";
+import { findMatches } from "./operations";
 import { lineAt, type Line } from "./tokenize";
 
 export const visibleLines = (model: Model): Readonly<{ from: number; to: number }> =>
@@ -26,60 +39,97 @@ export type ViewConfig<ParentMessage> = import("../contracts").ViewConfig<
   ParentMessage
 >;
 
+type Layers = Readonly<{
+  semantic: readonly SemanticToken[];
+  issues: readonly Diagnostic[];
+  matches: readonly TextRange[];
+  highlights: readonly Highlight[];
+  hovered: readonly TextRange[];
+}>;
+
+const touching = <Range extends TextRange>(
+  ranges: readonly Range[],
+  from: number,
+  to: number,
+): readonly Range[] => ranges.filter((range) => range.to >= from && range.from <= to);
+
+/** One line as styled pieces: lexical and host token kinds, problems, matches, highlights, and the hovered range. */
 const paintedLine = <ParentMessage>(
   line: Line,
   start: number,
-  issues: readonly { from: number; to: number; severity: string }[],
-  matches: readonly { from: number; to: number }[],
+  layers: Layers,
   h: HtmlBuilder<ParentMessage>,
 ): readonly Html[] => {
-  const ends = new Set([0, line.text.length]);
-  for (const token of line.tokens) {
-    ends.add(token.from);
-    ends.add(token.to);
-  }
-  for (const range of [...issues, ...matches]) {
-    if (range.to >= start && range.from <= start + line.text.length) {
-      ends.add(Math.max(0, range.from - start));
-      ends.add(Math.min(line.text.length, range.to - start));
-    }
-  }
-  const positions = [...ends].sort((a, b) => a - b);
-  const spans: Html[] = [];
-  positions.forEach((from, index) => {
-    if (issues.some((issue) => issue.from === issue.to && issue.from === start + from))
-      spans.push(h.span([h.Class("native-token--point-issue")], ["\u200b"]));
-    if (index === positions.length - 1) return;
-    const to = positions[index + 1]!;
-    const token = line.tokens.find((token) => token.from <= from && token.to > from);
-    const issue = issues.find((issue) => issue.from < start + to && issue.to > start + from);
-    const match = matches.some((match) => match.from < start + to && match.to > start + from);
+  const end = start + line.text.length;
+  const issues = touching(layers.issues, start, end);
+  const pieces = segments(
+    line.text,
+    {
+      lexical: line.tokens.map((token) => ({
+        from: start + token.from,
+        to: start + token.to,
+        kind: token.kind,
+      })),
+      semantic: touching(layers.semantic, start, end),
+      issues,
+      matches: touching(layers.matches, start, end),
+      highlights: touching(layers.highlights, start, end),
+      hovered: touching(layers.hovered, start, end),
+    },
+    start,
+  );
+  // An empty range marks a point, such as a missing token, with a caret-sized mark.
+  const point = (at: number): readonly Html[] =>
+    issues.some((issue) => issue.from === issue.to && issue.from === at)
+      ? [
+          h.span(
+            [h.Class("native-token--point-issue"), h.DataAttribute("text-skip", "true")],
+            ["\u200b"],
+          ),
+        ]
+      : [];
+  const spans = pieces.flatMap((piece) => {
+    const semantic = piece.covering.semantic.at(-1);
+    const issue = mostSevere(piece.covering.issues);
+    const highlight = piece.covering.highlights[0];
     const classes = [
-      `native-token--${token?.kind ?? "plain"}`,
-      ...(issue ? ["native-token--issue", `native-token--${issue.severity}`] : []),
-      ...(match ? ["native-token--match"] : []),
+      `native-token--${piece.covering.lexical[0]?.kind ?? "plain"}`,
+      ...(semantic === undefined ? [] : ["native-token--semantic"]),
+      ...(issue === undefined ? [] : ["native-token--issue", `native-token--${issue.severity}`]),
+      ...(piece.covering.matches.length > 0 ? ["native-token--match"] : []),
+      ...(highlight === undefined ? [] : ["native-token--highlight"]),
+      ...(piece.covering.hovered.length > 0 ? ["fw-text-hovered"] : []),
     ];
-    spans.push(h.span([h.Class(classes.join(" "))], [line.text.slice(from, to)]));
+    return [
+      ...point(start + piece.from),
+      h.span(
+        [
+          h.Class(classes.join(" ")),
+          ...(semantic === undefined ? [] : [h.DataAttribute("kind", semantic.kind)]),
+          ...(highlight?.kind === undefined ? [] : [h.DataAttribute("highlight", highlight.kind)]),
+        ],
+        [piece.text],
+      ),
+    ];
   });
-  if (!line.text.length) spans.push(h.span([], ["\u200b"]));
-  return spans;
+  return [
+    ...spans,
+    ...point(end),
+    ...(line.text.length ? [] : [h.span([h.DataAttribute("text-skip", "true")], ["\u200b"])]),
+  ];
 };
+
+const quoted = (value: string): string => `"${value.replace(/["\\]/g, "\\$&")}"`;
 
 const languageLabel = (languageId: string): string =>
   ({ json: "JSON", yaml: "YAML", typescript: "TypeScript", text: "Plain text" })[languageId] ??
   languageId;
 
 export const view = <ParentMessage>(
-  {
-    model,
-    label,
-    toParentMessage,
-    meta,
-    showToolbar = true,
-    showInspector = true,
-  }: ViewConfig<ParentMessage>,
+  config: ViewConfig<ParentMessage>,
   h: HtmlBuilder<ParentMessage>,
 ): Html => {
+  const { model, label, toParentMessage, meta, showToolbar = true, showInspector = true } = config;
   const { from, to } = visibleLines(model);
   const activeLine = lineAt(model.starts, model.selection.head);
   const issues = model.diagnostics.flatMap((batch) =>
@@ -88,9 +138,39 @@ export const view = <ParentMessage>(
   const matches = model.search.open
     ? findMatches(model.document.text, model.search.query, model.search.caseSensitive)
     : [];
-  const choices = model.completion.open
-    ? completions(model.document.text, model.selection)
-    : { from: 0, items: [] };
+  const text = model.document.text;
+  const caret = model.selection.head;
+  const suggestions =
+    model.completion === null ? [] : Completion.visible(model.completion, text, caret);
+  const visibleRow = (offset: number): number | undefined => {
+    const row = lineAt(model.starts, offset);
+    return row >= from && row < to ? row : undefined;
+  };
+  const anchorAt = (offset: number, row: number) => ({
+    selector: `[data-native-editor=${quoted(model.id)}] [data-native-line="${row}"]`,
+    offset: offset - model.starts[row]!,
+  });
+  const completionRow = model.completion === null ? undefined : visibleRow(model.completion.from);
+  const showsCompletion = suggestions.length > 0 && completionRow !== undefined;
+  const hoverAnswer =
+    model.hover === null
+      ? null
+      : (config.hover?.({
+          offset: model.hover.offset,
+          document: model.document,
+          source: model.hover.source,
+        }) ?? null);
+  const hoverIssues = model.hover === null ? [] : diagnosticsAt(issues, model.hover.offset);
+  const hoverRange = hoverAnswer ?? mostSevere(hoverIssues);
+  const hoverRow = hoverRange === undefined ? undefined : visibleRow(hoverRange.from);
+  const highlights = config.highlights ?? [];
+  const layers: Layers = {
+    semantic: model.tokens,
+    issues,
+    matches: model.search.open ? matches : [],
+    highlights,
+    hovered: hoverRange === undefined || hoverRange.to <= hoverRange.from ? [] : [hoverRange],
+  };
   const button = (label: string, message: Message, disabled = false): Html =>
     h.button(
       [
@@ -150,7 +230,7 @@ export const view = <ParentMessage>(
                     action("Toggle comment", "comment", model.document.languageId === "json"),
                     action("Duplicate", "duplicate"),
                     button("Find / replace", Message.OpenSearch({ open: !model.search.open })),
-                    button("Suggest", Message.OpenCompletion({ open: !model.completion.open })),
+                    button("Suggest", Message.OpenCompletion({ open: model.completion === null })),
                     ...(model.document.languageId === "json"
                       ? [action("Format JSON", "format")]
                       : []),
@@ -252,20 +332,23 @@ export const view = <ParentMessage>(
                   h.div([h.Style({ height: `${from * 22}px` })]),
                   ...model.lines.slice(from, to).map((line, index) => {
                     const row = from + index;
+                    const lineStart = model.starts[row]!;
+                    const highlight = touching(
+                      highlights,
+                      lineStart,
+                      lineStart + line.text.length,
+                    )[0];
                     return h.div(
                       [
                         h.DataAttribute("native-line", String(row)),
                         h.Class(
-                          `native-editor__line${row === activeLine ? " native-editor__line--active" : ""}`,
+                          `native-editor__line${row === activeLine ? " native-editor__line--active" : ""}${highlight === undefined ? "" : " native-editor__line--highlighted"}`,
                         ),
+                        ...(highlight?.kind === undefined
+                          ? []
+                          : [h.DataAttribute("highlight", highlight.kind)]),
                       ],
-                      paintedLine(
-                        line,
-                        model.starts[row]!,
-                        issues,
-                        model.search.open ? matches : [],
-                        h,
-                      ),
+                      paintedLine(line, lineStart, layers, h),
                     );
                   }),
                 ],
@@ -275,19 +358,26 @@ export const view = <ParentMessage>(
                   h.Id(model.id),
                   h.Class("native-editor__input"),
                   h.AriaLabel(label),
-                  h.Attribute("aria-describedby", `${model.id}-help`),
+                  h.Attribute(
+                    "aria-describedby",
+                    `${model.id}-help${hoverRow === undefined ? "" : ` ${model.id}-hover`}`,
+                  ),
                   h.Attribute("spellcheck", "false"),
                   h.Attribute("autocapitalize", "off"),
                   h.Attribute("autocomplete", "off"),
                   h.Wrap(model.options.lineWrapping ? "soft" : "off"),
                   h.Readonly(model.options.readOnly),
                   { _tag: "Prop", key: "foldkitNative", value: model },
-                  ...(model.completion.open && choices.items.length
+                  ...(showsCompletion
                     ? [
+                        h.AriaAutocomplete("list"),
                         h.Attribute("aria-controls", `${model.id}-completions`),
                         h.Attribute(
                           "aria-activedescendant",
-                          `${model.id}-choice-${model.completion.index}`,
+                          optionId(
+                            `${model.id}-completions`,
+                            Math.min(model.completion!.index, suggestions.length - 1),
+                          ),
                         ),
                       ]
                     : []),
@@ -299,34 +389,35 @@ export const view = <ParentMessage>(
           ),
         ],
       ),
-      ...(model.completion.open
+      ...(showsCompletion
         ? [
-            h.div(
-              [h.Key(`${model.id}-completion`), h.Class("native-editor__completion")],
-              [
-                h.span([], ["Suggestions · Ctrl+Space · arrows + Enter"]),
-                h.ul(
-                  [
-                    h.Id(`${model.id}-completions`),
-                    h.Role("listbox"),
-                    h.AriaLabel(`${label} suggestions`),
-                  ],
-                  choices.items.map((choice, index) =>
-                    h.li(
-                      [
-                        h.Id(`${model.id}-choice-${index}`),
-                        h.Role("option"),
-                        h.Attribute("aria-selected", String(index === model.completion.index)),
-                      ],
-                      [button(choice, Message.ChooseCompletion({ index }))],
-                    ),
-                  ),
-                ),
-                ...(choices.items.length ? [] : [h.span([], ["No matching words."])]),
-              ],
+            CompletionPopup.view(
+              {
+                id: `${model.id}-completions`,
+                items: suggestions,
+                index: Math.min(model.completion!.index, suggestions.length - 1),
+                query: Completion.query(model.completion!, text, caret),
+                label: `${label} suggestions`,
+                anchor: anchorAt(model.completion!.from, completionRow!),
+                onChoose: (index) => toParentMessage(Message.ChooseCompletion({ index })),
+              },
+              h,
             ),
           ]
         : []),
+      ...(hoverRange === undefined || hoverRow === undefined
+        ? []
+        : [
+            HoverPopup.view(
+              {
+                id: `${model.id}-hover`,
+                anchor: anchorAt(hoverRange.from, hoverRow),
+                diagnostics: hoverIssues,
+                content: hoverAnswer?.content ?? null,
+              },
+              h,
+            ),
+          ]),
       h.div(
         [h.Key(`${model.id}-status`), h.Class("native-editor__status")],
         [

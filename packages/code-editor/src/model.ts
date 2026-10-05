@@ -8,6 +8,8 @@ export const Options = S.Struct({
   lineWrapping: S.Boolean,
   tabSize: S.Number,
   theme: S.Literals(["light", "dark"]),
+  /** `words` suggests words from the document; `host` shows only items the host offers. */
+  suggestions: S.optional(S.Literals(["words", "host"])),
 });
 export type Options = typeof Options.Type;
 export const Model = S.Struct({
@@ -26,7 +28,8 @@ export type InitConfig = Readonly<{
   text?: string;
   uri?: string;
   languageId?: string;
-}> & Partial<Options>;
+}> &
+  Partial<Options>;
 
 export const init = (config: InitConfig): Model => ({
   id: config.id,
@@ -45,6 +48,7 @@ export const init = (config: InitConfig): Model => ({
     lineWrapping: config.lineWrapping ?? false,
     tabSize: Math.max(1, Math.min(8, Math.round(config.tabSize ?? 2) || 2)),
     theme: config.theme ?? "light",
+    ...(config.suggestions === undefined ? {} : { suggestions: config.suggestions }),
   },
   diagnostics: [],
   status: "Loading",

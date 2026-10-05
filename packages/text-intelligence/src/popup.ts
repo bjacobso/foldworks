@@ -17,9 +17,9 @@ export type Hover = Readonly<{ from: number; to: number; content: Html | null }>
 
 const GAP = 4;
 
-/** The part of the viewport an element can show in, inside every ancestor that clips. */
+/** The part of the viewport an element shows in, inside every ancestor that clips it. */
 const visibleBounds = (
-  element: HTMLElement,
+  element: Element,
 ): Readonly<{ top: number; bottom: number; left: number; right: number }> => {
   const view = element.ownerDocument.defaultView;
   let top = 0;
@@ -41,9 +41,11 @@ const visibleBounds = (
 
 /**
  * Positions a popup under its anchor, or above it when there is no room
- * below, and keeps it there as the page scrolls or the popup resizes. The
- * popup's offset parent is the coordinate space. A completion popup also keeps
- * focus in the text: pressing on it never moves focus, so the caret stays put.
+ * below, and keeps it there as the page scrolls or the popup resizes. Popups
+ * are fixed to the viewport, so a container that clips its content does not
+ * clip them; they hide while their anchor is scrolled out of its container.
+ * A completion popup also keeps focus in the text: pressing on it never moves
+ * focus, so the caret stays put.
  */
 const anchorPopup = (
   args: Readonly<{ selector: string; offset: number; keepFocus: boolean }>,
@@ -61,19 +63,32 @@ const anchorPopup = (
           let pending = 0;
           const place = () => {
             const root = doc.querySelector(selector);
-            const parent = popup.offsetParent ?? doc.body;
             const at = root === null ? undefined : rectAtOffset(root, offset);
-            if (at === undefined) return;
-            const bounds = visibleBounds(popup);
-            const frame = parent.getBoundingClientRect();
+            if (root === null || at === undefined) return;
+            // The anchor can scroll out of its own container; the popup then hides.
+            const shown = visibleBounds(root);
+            const inView =
+              at.bottom > shown.top &&
+              at.top < shown.bottom &&
+              at.left >= shown.left - 1 &&
+              at.left <= shown.right;
+            popup.style.visibility = inView ? "" : "hidden";
+            const viewportHeight = view?.innerHeight ?? Infinity;
+            const viewportWidth = view?.innerWidth ?? Infinity;
             const height = popup.offsetHeight;
             const width = popup.offsetWidth;
             const below = at.bottom + GAP;
-            const flip = below + height > bounds.bottom && at.top - GAP - height >= bounds.top;
+            const flip = below + height > viewportHeight && at.top - GAP - height >= 0;
             const top = flip ? at.top - GAP - height : below;
-            const left = Math.max(bounds.left + 4, Math.min(at.left, bounds.right - width - 4));
-            popup.style.left = `${left - frame.left - parent.clientLeft + parent.scrollLeft}px`;
-            popup.style.top = `${top - frame.top - parent.clientTop + parent.scrollTop}px`;
+            const left = Math.max(4, Math.min(at.left, viewportWidth - width - 4));
+            popup.style.left = `${left}px`;
+            popup.style.top = `${top}px`;
+            // A transformed ancestor contains fixed elements; correct for where it put us.
+            const placed = popup.getBoundingClientRect();
+            if (Math.abs(placed.left - left) > 0.5 || Math.abs(placed.top - top) > 0.5) {
+              popup.style.left = `${2 * left - placed.left}px`;
+              popup.style.top = `${2 * top - placed.top}px`;
+            }
             popup.dataset.placement = flip ? "Above" : "Below";
             const active = popup.querySelector<HTMLElement>('[aria-selected="true"]');
             active?.scrollIntoView({ block: "nearest" });

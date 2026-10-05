@@ -29,10 +29,12 @@ assistant can edit the same program objects instead of line ranges.
    warning that remains.
 4. Accept it, then choose “Verify identity first”. The second proposal moves
    the step, removes the now-trivial `sequence`, and clears the last warning.
-5. Press ⌘L (Ctrl+L elsewhere) to see the same program with parentheses. The
-   line for the row with the caret is highlighted. Edits to the source are
-   read back into the outline as you type; text that does not parse shows an
-   error and leaves the outline unchanged.
+5. Press ⌘L (Ctrl+L elsewhere) to see the same program with parentheses, in
+   `@foldworks/code-editor`. The outline's analysis highlights it, explains it
+   on hover, and suggests names, and the line for the row with the caret is
+   highlighted. Edits to the source are read back into the outline as you
+   type; text that does not parse is marked where reading stopped and leaves
+   the outline unchanged.
 
 Undo covers all of it: typing, refactorings, accepted proposals, and source
 edits, which coalesce into one step.

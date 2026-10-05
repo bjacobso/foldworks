@@ -255,6 +255,9 @@ importers:
 
   packages/code-editor:
     dependencies:
+      '@foldworks/text-intelligence':
+        specifier: workspace:*
+        version: link:../text-intelligence
       yaml:
         specifier: ^2.9.0
         version: 2.9.0

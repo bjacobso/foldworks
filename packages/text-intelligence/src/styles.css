@@ -2,7 +2,7 @@
  * Colors come from the @foldworks/ui semantic tokens, with fallbacks. */
 
 .fw-text-popup {
-  position: absolute;
+  position: fixed;
   z-index: 30;
   top: 0;
   left: 0;

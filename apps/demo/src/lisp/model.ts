@@ -1,4 +1,5 @@
 import { Schema as S } from "effect";
+import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner } from "@foldworks/outliner";
 
 import { Proposal, Reply } from "./assistant";
@@ -9,8 +10,8 @@ export const Model = S.Struct({
   /** Bullets and plain rows, or brackets that make the outline read as source. */
   notation: S.Literals(["Outline", "Lisp"]),
   showSource: S.Boolean,
-  /** Source text being typed, while it differs from the printed outline. */
-  sourceDraft: S.NullOr(S.String),
+  /** The program printed as Lisp. Its text is the printed outline unless it is being edited. */
+  source: CodeEditor.Model,
   sourceError: S.NullOr(S.String),
   prompt: S.String,
   proposal: S.NullOr(Proposal),
@@ -29,13 +30,21 @@ export const initialModel = (): Model => ({
   outline: Outliner.init({ id: OUTLINE_ID, items: sampleOutline }),
   notation: "Outline",
   showSource: false,
-  sourceDraft: null,
+  source: CodeEditor.init({
+    id: domIds.source,
+    uri: SOURCE_URI,
+    languageId: "lisp",
+    tabSize: 2,
+    suggestions: "host",
+  }),
   sourceError: null,
   prompt: "",
   proposal: null,
   reply: null,
   platform: detectPlatform(),
 });
+
+export const SOURCE_URI = "file:///onboarding.lisp";
 
 export const domIds = {
   prompt: "lisp-ide-prompt",

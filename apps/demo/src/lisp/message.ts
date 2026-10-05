@@ -1,5 +1,6 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner } from "@foldworks/outliner";
 
 export const Refactoring = S.Literals(["Wrap", "Unwrap", "Raise", "Join", "Explode"]);
@@ -12,7 +13,8 @@ export const Message = defineMessageUnion({
   GotOutlinerMessage: { message: Outliner.Message },
   ToggledSource: {},
   ChoseNotation: { notation: S.Literals(["Outline", "Lisp"]) },
-  EditedSource: { text: S.String },
+  GotSourceMessage: { message: CodeEditor.Message },
+  /** Focus left the source pane; a valid draft is printed again. */
   BlurredSource: {},
   ChangedPrompt: { text: S.String },
   SubmittedPrompt: {},

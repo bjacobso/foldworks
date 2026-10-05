@@ -1,8 +1,10 @@
 # @foldworks/code-editor
 
 A native Foldkit code editor with syntax highlighting, model-owned undo history,
-find/replace, word suggestions, and versioned diagnostics. The browser textarea
-handles text input and selection; Foldkit owns the editor state and highlighted UI.
+find/replace, suggestions, hover information, and versioned diagnostics. A host's
+language service can supply highlighting, hover, and completions. The browser
+textarea handles text input and selection; Foldkit owns the editor state and
+highlighted UI.
 
 ```sh
 pnpm add @foldworks/code-editor
@@ -81,8 +83,9 @@ CodeEditor.execute(
 );
 ```
 
-`ApplyEdits` is atomic and undoable. `Select({ expected, selection })` focuses and
-reveals a range. Both check the expected URI, session, and revision; commands also
+`ApplyEdits` is atomic and undoable, and leaves focus and scrolling where they
+are; send `Focus` after it to move focus. `Select({ expected, selection })` focuses
+and reveals a range. Both check the expected URI, session, and revision; commands also
 check the live input's mount identity and revision, including unacknowledged input.
 Stale operations report `RejectedOperation`. Recompute against the latest snapshot.
 Edits reject read-only mode and composition; finish composing before retrying.
@@ -182,6 +185,57 @@ cancellation, worker/server lifecycle, and transport belong to that integration.
 The exported `Validator` type and `jsonValidator` are engine-independent helpers;
 there is no automatic asynchronous validator runner or LSP client bundled yet.
 
+## Language services
+
+The editor speaks the vocabulary of
+[`@foldworks/text-intelligence`](../text-intelligence), so a language service
+written for it also serves outline rows. Import
+`@foldworks/text-intelligence/styles.css` for the suggestion and hover popups.
+Requests go out as `OutMessage`s and answers come back as operations tagged with
+the document version they were computed for, so a late answer is ignored. A
+synchronous service answers in the same update; an asynchronous one answers when
+its result arrives.
+
+- **Highlighting.** `Operation.SetSemanticTokens({ uri, session, revision,
+tokens })` paints `{ from, to, kind }` ranges over the built-in lexer, as
+  `data-kind` on `.native-token--semantic`. Common kinds such as `keyword`,
+  `string`, `number`, `comment`, `type`, `function`, and `property` follow the
+  editor's palette; style others in the host. Later edits carry tokens along,
+  and drop the ones they touch, until the next batch, so highlighting does not
+  flicker while a service catches up. Tokens cover any language, including ones
+  the lexer does not know.
+- **Completion.** Ctrl+Space and the Suggest button send
+  `RequestedCompletion({ version, offset })`. Answer with
+  `Operation.ShowCompletions({ expected, from, to, items })`, where `from` and
+  `to` are the text an item replaces. A host can also offer suggestions as it
+  sees `ChangedDocument`. The list opens at the start of the range; ↑ and ↓
+  choose, Return or Tab accept, and Esc closes it. Typing narrows it, and moving
+  the caret out of the range closes it. With the default `suggestions: "words"`
+  option the editor also suggests words from the document; set
+  `suggestions: "host"` to show only what the host offers.
+- **Hover.** When the pointer rests on a character, or Ctrl+Shift+Space asks
+  about the caret, the editor sends `Hovered({ version, offset, source })` and
+  calls the `hover` view config. It returns the range it describes and content
+  built with the parent's `h`, or `null`. Diagnostics at the offset are listed
+  first, so problems explain themselves on hover.
+- **Highlights.** `highlights: [{ from, to, kind? }]` in the view config paints
+  ranges that another view corresponds to, such as the line for a selected row,
+  with `data-highlight` set to `kind`. `Operation.Reveal({ expected, range })`
+  scrolls a range into view without moving focus or the selection.
+
+```ts
+CodeEditor.view(
+  {
+    model: model.source,
+    label: "Source",
+    toParentMessage: (message) => Message.Source({ message }),
+    highlights: selectedLine === undefined ? [] : [{ ...selectedLine, kind: "selection" }],
+    hover: ({ offset, document }) => describe(document.text, offset, h),
+  },
+  h,
+);
+```
+
 ## Implementation boundary
 
 `CodeEditor.implementation` is the native implementation of
@@ -217,8 +271,8 @@ forms.
 
 Unwrapped highlighted lines are virtualized, but the browser still lays out the
 full textarea. Wrapped mode renders all lines. Full strings, lexer scans, and
-model serialization limit large-file performance. Multi-cursor editing, semantic
-completion, LSP transport, and full international text layout remain future work.
+model serialization limit large-file performance. Multi-cursor editing, an LSP
+transport, and full international text layout remain future work.
 Real IME, screen-reader, Safari, and mobile-device checks are still needed.
 
 See [the native architecture and roadmap](./NATIVE.md) for the full-fidelity path.
