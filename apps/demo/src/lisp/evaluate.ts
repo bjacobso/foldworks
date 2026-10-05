@@ -62,6 +62,9 @@ export class EvalError extends Error {
 
 export type Observation = Readonly<{ value: Value; count: number }>;
 
+/** One evaluated expression of a traced form, in the order evaluation finished it. */
+export type TraceStep = Readonly<{ exprId: string; value: Value; depth: number }>;
+
 export type Evaluation = Readonly<{
   /** The last value of every expression, by expression id. */
   values: ReadonlyMap<string, Observation>;
@@ -72,6 +75,8 @@ export type Evaluation = Readonly<{
   globals: ReadonlyMap<string, Value>;
   /** Named workflows, in definition order. */
   workflows: ReadonlyArray<Flow>;
+  /** Every expression the traced form evaluated, including inside the functions it called. */
+  trace: ReadonlyArray<TraceStep>;
 }>;
 
 class Env {
@@ -456,7 +461,13 @@ export const BUILTINS: ReadonlySet<string> = new Set([
 ]);
 
 /** Evaluates every top-level form in order, continuing past errors. */
-export const evaluate = (forms: ReadonlyArray<Expr>): Evaluation => {
+export const evaluate = (
+  forms: ReadonlyArray<Expr>,
+  options: Readonly<{ trace?: string }> = {},
+): Evaluation => {
+  const trace: TraceStep[] = [];
+  let depth = 0;
+  let tracedFrom = -1;
   const values = new Map<string, Observation>();
   const errors = new Map<string, string>();
   const errorSites = new Map<string, string>();
@@ -518,7 +529,17 @@ export const evaluate = (forms: ReadonlyArray<Expr>): Evaluation => {
   const run = (expr: Expr, env: Env): Value => {
     budget -= 1;
     if (budget < 0) throw new EvalError("Stopped: evaluation took too long", expr.id);
-    return record(expr, evalExpr(expr, env));
+    const starts = tracedFrom < 0 && expr.id === options.trace;
+    if (starts) tracedFrom = depth;
+    depth += 1;
+    try {
+      const value = evalExpr(expr, env);
+      if (tracedFrom >= 0) trace.push({ exprId: expr.id, value, depth: depth - 1 - tracedFrom });
+      return record(expr, value);
+    } finally {
+      depth -= 1;
+      if (starts) tracedFrom = -1;
+    }
   };
 
   /** Runs a top-level form, recording an error instead of throwing. */
@@ -786,5 +807,5 @@ export const evaluate = (forms: ReadonlyArray<Expr>): Evaluation => {
   for (const form of forms) attempt(form, global);
 
   const globals = new Map([...global.entries()].filter(([name]) => !natives.has(name)));
-  return { values, errors, errorSites, globals, workflows };
+  return { values, errors, errorSites, globals, workflows, trace };
 };

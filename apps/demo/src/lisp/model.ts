@@ -18,6 +18,8 @@ export const Model = S.Struct({
   values: ValueTree.Model,
   /** How many children of each branch of the inspected value have loaded. */
   loaded: S.Record(S.String, S.Number),
+  /** Stepping through how a row's form evaluated: the row and the current step. */
+  stepping: S.NullOr(S.Struct({ id: S.String, index: S.Number })),
   prompt: S.String,
   proposal: S.NullOr(Proposal),
   reply: S.NullOr(Reply),
@@ -45,6 +47,7 @@ export const initialModel = (): Model => ({
   sourceError: null,
   values: ValueTree.init({ id: domIds.value }),
   loaded: {},
+  stepping: null,
   prompt: "",
   proposal: null,
   reply: null,
@@ -58,4 +61,5 @@ export const domIds = {
   accept: "lisp-ide-accept",
   source: "lisp-ide-source",
   value: "lisp-ide-value",
+  steps: "lisp-ide-steps",
 };

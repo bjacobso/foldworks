@@ -6,7 +6,7 @@ import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner, find, selectedRoots, type Items } from "@foldworks/outliner";
 import { ValueTree } from "@foldworks/ui";
 
-import { analyze } from "./analysis";
+import { analyze, traceOf } from "./analysis";
 import { propose } from "./assistant";
 import { completionsAt } from "./completion";
 import { idSource, parseSource, printOutline } from "./codec";
@@ -17,7 +17,9 @@ import { OUTLINE_ID } from "./sample";
 import {
   lineOf as sourceLineOf,
   sourceCompletions,
+  printedFor,
   sourceDiagnostics,
+  sourceRange,
   sourceTokens,
 } from "./source";
 import { ReadError } from "./syntax";
@@ -355,6 +357,43 @@ const foldValues = (model: Model, message: ValueTree.Message): UpdateReturn =>
       }),
   })(model, message);
 
+/** The expression a step evaluated, as a range of the source, while the source is the printed outline. */
+export const stepSourceRange = (model: Model) => {
+  const stepping = model.stepping;
+  if (stepping === null) return undefined;
+  const items = model.outline.items;
+  const step = traceOf(items, stepping.id)[stepping.index];
+  const expr = step === undefined ? undefined : analyze(items).allExprs.get(step.exprId);
+  const printed = printedFor(items, model.source.document.text);
+  if (expr === undefined || printed === undefined) return undefined;
+  const id = itemOfExpr(expr.id);
+  const text = find(items, id)?.text ?? "";
+  const range = expr.id === id ? { from: 0, to: text.length } : { from: expr.start, to: expr.end };
+  return sourceRange(items, printed, id, range);
+};
+
+const itemOfExpr = (exprId: string): string => exprId.split("#")[0]!;
+
+/** Moves to a step, and scrolls the source to its expression when the source is open. */
+const stepTo = (model: Model, index: number): UpdateReturn => {
+  const stepping = model.stepping;
+  if (stepping === null) return { model };
+  const count = traceOf(model.outline.items, stepping.id).length;
+  const next = evo(model, {
+    stepping: () => ({ ...stepping, index: Math.max(0, Math.min(index, count - 1)) }),
+  });
+  const range = next.showSource ? stepSourceRange(next) : undefined;
+  return range === undefined
+    ? { model: next }
+    : andThenSource(
+        { model: next },
+        CodeEditor.Operation.Reveal({
+          expected: CodeEditor.documentVersion(next.source.document),
+          range,
+        }),
+      );
+};
+
 /** A different row starts the inspector's value tree afresh. */
 const followInspector = (before: Model, result: UpdateReturn): UpdateReturn =>
   targetsOf(before.outline).focusId === targetsOf(result.model.outline).focusId
@@ -448,6 +487,9 @@ const updateWorkbench = (model: Model, message: Message): UpdateReturn =>
     DismissedReply: () => ({ model: evo(model, { reply: () => null }) }),
     Refactored: ({ refactoring, head }) => refactor(model, refactoring, head),
     ClickedReference: ({ id }) => foldOutliner(model, Outliner.Message.Reveal({ id })),
+    StartedStepping: ({ id }) => stepTo(evo(model, { stepping: () => ({ id, index: 0 }) }), 0),
+    SteppedTo: ({ index }) => stepTo(model, index),
+    StoppedStepping: () => ({ model: evo(model, { stepping: () => null }) }),
     PressedShortcut: ({ shortcut }) =>
       shortcut === "ToggleSource"
         ? update(model, Message.ToggledSource())
