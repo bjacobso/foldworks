@@ -52,4 +52,4 @@ export {
   type ShortcutHelp,
 } from "./keymap";
 export { selectedIds, selectedRoots } from "./selectors";
-export type { HoverRequest, Placeholder, RowDecoration, TextSpan } from "./view";
+export type { FoldedView, HoverRequest, Placeholder, RowDecoration, TextSpan } from "./view";

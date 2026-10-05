@@ -896,3 +896,83 @@
   border-color: color-mix(in oklab, var(--primary, #2563eb) 45%, var(--border));
   font-weight: 600;
 }
+
+/* A folded workflow, drawn as its flow. */
+.lisp-flow {
+  display: flex;
+  overflow-x: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--muted) 40%, var(--card));
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.lisp-flow__sequence {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lisp-flow__parallel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 6px;
+  border-left: 2px solid color-mix(in oklab, var(--primary, #2563eb) 45%, transparent);
+  border-right: 2px solid color-mix(in oklab, var(--primary, #2563eb) 45%, transparent);
+  border-radius: 6px;
+}
+
+.lisp-flow__branch {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lisp-flow__label {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.lisp-flow__arrow {
+  color: var(--muted-foreground);
+}
+
+.lisp-flow__step {
+  display: grid;
+  gap: 1px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lisp-flow__step:hover {
+  border-color: var(--lisp-defined);
+}
+
+.lisp-flow__step:focus-visible {
+  outline: 2px solid var(--ring, #2563eb);
+  outline-offset: 1px;
+}
+
+.lisp-flow__step[data-warning="true"] {
+  border-color: color-mix(in oklab, var(--lisp-warning) 60%, transparent);
+  background: color-mix(in oklab, var(--lisp-warning) 9%, var(--card));
+}
+
+.lisp-flow__name {
+  font-family: var(--lisp-mono);
+  white-space: nowrap;
+}
+
+.lisp-flow__system {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}

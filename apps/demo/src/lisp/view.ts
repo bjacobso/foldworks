@@ -49,6 +49,7 @@ import { SUGGESTIONS } from "./assistant";
 import { printOutline } from "./codec";
 import { DEFINING_FORMS, show } from "./evaluate";
 import { print } from "./syntax";
+import { flowView } from "./flow-view";
 import { describeAt, type Description } from "./hover";
 import { LIBRARY, isLocked, outlinePolicy } from "./policy";
 import { slotsFor } from "./slots";
@@ -925,6 +926,7 @@ export const view = defineView<Model, Message>((model, h) => {
                           spellcheck: false,
                           rowAccessory: (row: Row) => rowValue(analysis, row, h),
                           placeholders: (parentId: string | null) => slotsFor(items, parentId),
+                          foldedView: (row: Row) => flowView(row, analysis, h),
                           hover: ({ id, offset, source }) => {
                             const description = describeAt(
                               items,

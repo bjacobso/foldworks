@@ -159,6 +159,26 @@ offering completions in the new item. Placeholders are `treeitem`s without a
 set position, and selection, drag and drop, history, and `revision` ignore
 them.
 
+## Folded views
+
+A folded item can show a host's view of its children instead of nothing, such
+as a workflow drawn as a diagram or a list shown as a progress summary.
+`foldedView(row)` returns `{ label, content }` for folded rows; unfolding the
+item edits the children as rows again, so each subtree can choose how it reads.
+
+```ts
+foldedView: (row) =>
+  isWorkflow(row.id) ? { label: `${row.text} as a diagram`, content: diagram(row.id, h) } : null,
+```
+
+The view is a labeled group under the row. ↓ at the end of the row, or ↑ from
+the row below, moves focus to it; inside, its controls take the keys and Tab
+moves among them, and Esc returns to the row. ↑ and ↓ on the group itself
+continue to the rows around it. Pointer presses, copy, and paste inside the
+view are left to it. Its children are folded away, so selection, drag and
+drop, and arrow navigation pass over them. A view that changes the children
+does so with `Replace`, so undo and persistence work as for any host edit.
+
 ## Move rules and read-only items
 
 Hosts that give structure meaning can refuse changes. Pass the same policy to
@@ -266,6 +286,7 @@ Markdown lists or tab-indented text, and `parseOutline` reads either back.
 ## Current limits
 
 Items are plain text. Decorations can color it, but the document itself has no
-inline styles, notes, columns, or links, and there is no virtualization, so very large outlines render every visible
-row. Drag and drop uses the pointer; keyboard users move items with the move
-shortcuts.
+inline styles, notes, columns, or links. There is no virtualization, so every
+visible row renders: a keystroke takes under about 60 ms up to 500 rows and
+about 170 ms at 2,000. Drag and drop uses the pointer; keyboard users move
+items with the move shortcuts.

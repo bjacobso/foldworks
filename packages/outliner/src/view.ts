@@ -50,7 +50,16 @@ export type ViewInputs = Policy &
      * typing into one creates a real item.
      */
     placeholders?: (parentId: string | null) => ReadonlyArray<Placeholder>;
+    /**
+     * A view of a folded item's children, such as a diagram or a summary, shown
+     * under its row instead of nothing. Unfolding the item edits the children
+     * as rows again. Built in the host's boundary.
+     */
+    foldedView?: (row: Row) => FoldedView | null;
   }>;
+
+/** A host's view of a folded item's children. `label` names its group for assistive technology. */
+export type FoldedView = Readonly<{ label: string; content: Html }>;
 
 /** A ghost child that is not part of the document, such as “add step”. */
 export type Placeholder = Readonly<{
@@ -289,6 +298,7 @@ const rowView = (
   const hovered = hover?.id === row.id && hover.to > hover.from ? hover : undefined;
   const painted = spans !== undefined || diagnostics.length > 0 || hovered !== undefined;
   const accessory = inputs.rowAccessory?.(row) ?? null;
+  const folded = row.hasChildren && row.collapsed ? (inputs.foldedView?.(row) ?? null) : null;
   return h.keyed("div")(
     row.id,
     [
@@ -429,6 +439,20 @@ const rowView = (
                 h.Style({ "--fw-outliner-drop-depth": String(target?.depth ?? 0) }),
               ],
               [],
+            ),
+          ]),
+      ...(folded === null
+        ? []
+        : [
+            h.div(
+              [
+                h.Class("fw-outliner__view"),
+                h.Role("group"),
+                h.AriaLabel(folded.label),
+                h.Tabindex(-1),
+                h.DataAttribute("outline-view", row.id),
+              ],
+              [folded.content],
             ),
           ]),
     ],

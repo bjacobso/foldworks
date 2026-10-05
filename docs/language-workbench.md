@@ -119,8 +119,10 @@ offer and what:
   `from` and the caret; the popup closes when nothing matches or the caret
   leaves the range.
 - Accepting replaces the range as one undoable step and puts the caret after
-  the inserted text. Keys typed before that caret is restored are held and
-  replayed, like every other focus-moving action.
+  the inserted text. Keys accept whichever item the latest update made active.
+  Keys typed before that caret is restored are held and replayed, like every
+  other focus-moving action, and replayed keys never pick a suggestion: they
+  were typed before it could be seen.
 
 The textarea carries `aria-autocomplete`, `aria-controls`, and
 `aria-activedescendant` for the listbox, and the count is announced.
@@ -137,9 +139,10 @@ placeholders: (parentId) => [{ key: "steps", label: "add step", text: "" }];
 `index` places a placeholder among the real children; the default is last.
 Placeholders appear only under expanded parents. Arrow keys move into and out
 of them like rows. Typing into one, pressing Return on it, or clicking its
-marker sends `FilledPlaceholder({ parentId, index, key, text })`, which creates
-a real item with the placeholder's `text` plus anything typed, and puts the
-caret in it as one undoable step. Keys typed while the new item renders are
+marker sends `FilledPlaceholder({ parentId, index, key, text, offset })`,
+which creates a real item with the placeholder's `text` plus anything typed,
+and puts the caret at `offset` as one undoable step; a placeholder's `caret`
+says where typing goes in its `text`. Keys typed while the new item renders are
 held and replayed into it. A host that wants more, such as completions in the
 new item, reacts to the same message.
 
@@ -159,9 +162,12 @@ viewInputs: { ...policy, label: "Program" },
 
 - `canMove({ cause, ids, before, after })` sees the whole document before and
   after an indent, outdent, move, or drop, because an outdent also reparents
-  the siblings it adopts. `reparented(before, after)` lists every item whose
-  parent changed, which is what most rules check. A refused keyboard move does
-  nothing and is announced. While dragging, a refused depth falls back to the
+  the siblings it adopts. It also sees the edits that move items as a side
+  effect: Return outdenting an empty last child, and joining an item onto the
+  one above, which carries its children (`cause: "Merge"`).
+  `reparented(before, after)` lists every item whose parent changed, which is
+  what most rules check. A refused key does nothing, leaves the caret where it
+  was, and is announced. While dragging, a refused depth falls back to the
   nearest allowed depth for the same gap; if none is allowed, the insertion
   marker and the drag ghost show that the drop is refused, and releasing does
   nothing.
@@ -169,50 +175,64 @@ viewInputs: { ...policy, label: "Program" },
   the user cannot change. Their text is a read-only textarea, so the caret,
   selection, copy, folding, and hoisting still work. Edits that would change
   them, including deleting an ancestor, merging into them, or adopting them
-  through an outdent, are refused as a whole and announced. Host edits through
-  `Replace` and `Load` are not checked; the host is the authority.
+  through an outdent, are refused as a whole and announced. Moving an ancestor
+  carries them along. Host edits through `Replace` and `Load` are not checked;
+  the host is the authority. Undo and redo are not checked either: they return
+  to documents the outline already had, and checking them could leave history
+  stuck behind a host's read-only edit.
 
 Both checks run on the document, in `update`, so they also cover messages a
 host or test dispatches directly.
 
-### Custom row views: designed, not built
+### Custom row views: folded views
 
-A host could render an item's subtree as its own view, such as a workflow as a
-diagram. The design that fits the outliner:
+A host can render a subtree as its own view, such as a workflow as a diagram.
+The first design replaced an expanded item's rows with the view and needed a
+third policy, `hasView`, so `update` would treat the item's descendants as
+hidden. A smaller design needs nothing from `update`: the view shows under a
+_folded_ item. Folded descendants are already outside the visible rows, so
+selection, drag and drop, and arrow navigation pass over them, and unfolding
+the item edits its children as rows again. Notation becomes a dial per
+subtree.
 
-- `rowView(row)` returns `{ label, content }` for items rendered this way, and
-  `policy.hasView(item)` tells `update` the same thing, because navigation,
-  selection, and drop targets must treat the item's descendants as hidden.
-- The item's own row stays, with editable text. Its children are replaced by
-  one `role="group"` region inside the treeitem, labeled by `label`. ↓ from the
-  row focuses the region; inside it the host's view handles keys; Esc returns
-  to the row; ↑ and ↓ at the region's edges continue to neighboring rows.
+- `foldedView(row)` returns `{ label, content }` for folded rows, built in the
+  host's boundary like `rowAccessory`.
+- The view is a labeled `group` inside the row. ↓ at the end of the row, or ↑
+  from the row below, focuses it; inside, its controls take the keys; Esc
+  returns to the row; ↑ and ↓ on the group itself continue to the rows around
+  it. Pointer presses, copy, and paste inside it are left to the view.
 - The view edits the subtree through `Replace`, so undo, diff, and persistence
   work unchanged.
 
-It is not built yet because no consumer needs it before the workbench exists,
-and the keyboard contract for leaving an arbitrary host view needs a real view
-to test against. The `/lisp` workflow is the intended first use.
+The `/lisp` demo draws a folded `workflow` as its flow, with each step a button
+that opens the workflow at that step.
 
 ### Virtualization: designed, not built
 
-Rows wrap, so their heights vary. The design: render the rows inside the
-scroll viewport plus overscan between two spacers, cache measured heights by
-item id with an estimate for unmeasured rows, always render the focused row and
-the drag source, and scroll a row into view before focusing it. Drop targets
-come from row geometry and would use cached positions for rows that are not
-rendered. It is deferred because the outliner's `/lisp` and notes uses stay in
-the hundreds of rows, and the cost lands mostly in the focus and drag code,
-which should not change without a large-outline workload to test it.
+Rendering is linear in visible rows. In the production `/outliner` demo, a
+keystroke reaches the next frame in about 33 ms with 250 rows, 58 ms with 500,
+100 ms with 1,000, and 170 ms with 2,000, and no keys are lost. Memoizing rows
+does not help hosts that compute decorations and accessories each render,
+which is the common case, so the fix is to render fewer rows.
+
+Rows wrap and folded views vary in height, so the design is a measured
+window: render the rows inside the scroll viewport plus overscan between two
+spacers; cache measured heights by item id in the browser, with an estimate for
+rows not yet measured; keep the window in the model so a focus command can
+widen it to include its target before focusing; and resolve drop targets above
+or below the window from the spacers. It is deferred because the
+workbench's programs are hundreds of rows, where typing stays under about
+60 ms, and the change reaches the focus, drag, and placeholder code that every
+other primitive here builds on.
 
 ## Code editor
 
 - **Highlighting.** `Operation.SetSemanticTokens({ uri, session, revision,
 tokens })` paints token kinds over the built-in lexer, as `data-kind`. Like
   `SetDiagnostics`, a batch for another revision is ignored. Unlike
-  diagnostics, accepted tokens are mapped through later edits until the next
-  batch, so highlighting does not flicker while an asynchronous service catches
-  up. A synchronous host sends tokens in the same update as `ChangedDocument`.
+  diagnostics, accepted tokens shift with later edits until the next batch, so
+  most highlighting stays put while an asynchronous service catches up; a
+  token an edit touches drops back to the lexer's color. A synchronous host sends tokens in the same update as `ChangedDocument`.
   Tokens cover any language, so a pluggable lexer is not added: a lexer would be
   a function the serializable model cannot hold, and tokens already do its job.
 - **Hover.** `OutMessage.Hovered({ version, offset, source })`, and `hover` in
@@ -280,5 +300,26 @@ Each item lands as its own pull request, with a changeset, tests, and the
 6. `ValueTree`
 7. Outliner move validation and read-only rows
 8. Step-through with `Stepper`, documented and shown in `/lisp`
+9. Folded views for custom row renderers
 
-Custom row views and virtualization are designed above and deferred.
+Virtualization is designed above and deferred.
+
+## What a workbench host codes against
+
+- **Outline rows.** `Outliner.update(model, message, { canMove, isReadOnly })`
+  and the view inputs `decorations` (with `spans`, `diagnostics`, `tone`,
+  `marker`, `suffix`), `rowAccessory`, `hover`, `placeholders`, `foldedView`,
+  `canMove`, and `isReadOnly`. Host edits go through `Replace` and `Reveal`.
+  Watch `Hovered`, `RequestedCompletion`, `EditedText`, and
+  `FilledPlaceholder`, and answer with `ShowCompletions`.
+- **Source text.** `CodeEditor` operations `SetSemanticTokens`,
+  `SetDiagnostics`, `ShowCompletions`, `ApplyEdits`, and `Reveal`; its
+  out-messages `ChangedDocument`, `RequestedCompletion`, and `Hovered`; and the
+  view config's `hover` and `highlights`, with `suggestions: "host"`.
+- **One adapter.** A language service that produces
+  `@foldworks/text-intelligence` `SemanticToken`s, `Diagnostic`s,
+  `CompletionItem`s, and hover ranges serves both surfaces.
+- **Review and inspection.** `TreeDiff` inside `ChangeSetPreview` or an agent
+  permission checkpoint with `allowLabel` and `denyLabel`; `ValueTree` with
+  `RequestedChildren` and `RequestedMore` for values behind handles; and
+  `Stepper` with decorations or `highlights` for stepping through a trace.

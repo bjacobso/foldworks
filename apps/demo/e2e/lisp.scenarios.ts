@@ -317,6 +317,46 @@ export const lispScenarios = (
       await expect.poll(() => page.getByRole("region", { name: "Step through" }).count()).toBe(0);
     });
 
+    it("draws a folded workflow as a diagram that the keyboard can enter", async () => {
+      const page = await start();
+      await page.locator('[aria-label="workflow onboarding"] [data-outline-toggle]').click();
+      const diagram = page.getByRole("group", { name: "Workflow onboarding as a diagram" });
+      await expect
+        .poll(() => diagram.getByRole("button").allTextContents())
+        .toEqual([
+          "background-checkCheckr",
+          "collect-i9Docs",
+          "create-payroll-recordGusto",
+          "activateOkta",
+        ]);
+      await screenshot("lisp-folded-workflow");
+      const focused = () =>
+        page.evaluate(() => {
+          const element = document.activeElement as HTMLElement & { value?: string };
+          return element.getAttribute("aria-label") ?? element.textContent;
+        });
+      // ↓ from the row enters the diagram, Tab moves through its steps, and Esc returns.
+      await text(page, "workflow onboarding").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("ArrowDown");
+      expect(await focused()).toBe("Workflow onboarding as a diagram");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      expect(await focused()).toBe("collect-i9Docs");
+      await page.keyboard.press("Escape");
+      expect(await page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value)).toBe(
+        "workflow onboarding",
+      );
+      // Choosing a step opens the workflow at it.
+      await page.keyboard.press("ArrowDown");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Enter");
+      await expect
+        .poll(() => page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value))
+        .toBe("background-check");
+      expect(await diagram.count()).toBe(0);
+    });
+
     it("proposes a structural edit for selected rows and applies it", async () => {
       const page = await start();
       expect(await valueOf(page, "collect-i9")).toBe(

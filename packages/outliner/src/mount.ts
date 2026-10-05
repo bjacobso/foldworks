@@ -341,10 +341,43 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                     ? -1
                     : 0;
               if (row === null || delta === 0) return false;
+              // A folded item's view sits between its row and the next one.
+              const view = (delta > 0 ? row : neighbourOf(row, -1))?.querySelector<HTMLElement>(
+                ":scope > [data-outline-view]",
+              );
+              if (view !== null && view !== undefined) {
+                view.focus();
+                return true;
+              }
               const neighbour = neighbourOf(row, delta);
               if (neighbour?.dataset.outlinePlaceholder === undefined) return false;
               focusTextOf(neighbour, delta > 0 ? "Start" : "End");
               return true;
+            };
+
+            /**
+             * Keys in a folded item's view belong to the host's view. On the view
+             * itself, ↑ and ↓ continue to the rows around it, and Esc anywhere in
+             * it returns to its row.
+             */
+            const viewKey = (event: KeyboardEvent, view: HTMLElement) => {
+              const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
+              const row = view.closest<HTMLElement>("[data-outline-row]");
+              if (!plain || row === null || event.defaultPrevented) return;
+              if (event.key === "Escape") {
+                event.preventDefault();
+                focusTextOf(row, "End");
+                return;
+              }
+              if (event.target !== view) return;
+              if (event.key === "ArrowUp") {
+                event.preventDefault();
+                focusTextOf(row, "End");
+              } else if (event.key === "ArrowDown") {
+                event.preventDefault();
+                const below = neighbourOf(row, 1);
+                if (below !== undefined) focusTextOf(below, "Start");
+              }
             };
 
             /** Resolves and dispatches a key against an element; `true` when the outline used it. */
@@ -486,6 +519,14 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                 endDrag(false);
                 return;
               }
+              const view =
+                event.target instanceof Element
+                  ? event.target.closest<HTMLElement>("[data-outline-view]")
+                  : null;
+              if (view !== null) {
+                viewKey(event, view);
+                return;
+              }
               if (hoverPopup() !== null && !MODIFIER_KEYS.has(event.key)) {
                 clearTimeout(hoverTimer);
                 const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
@@ -613,8 +654,11 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               return nodes.length === 0 ? undefined : serializeOutline(nodes);
             };
 
+            const inView = (target: EventTarget | null): boolean =>
+              target instanceof Element && target.closest("[data-outline-view]") !== null;
+
             const copy = (event: ClipboardEvent) => {
-              if (isText(event.target)) return;
+              if (isText(event.target) || inView(event.target)) return;
               const text = selectionText();
               if (text === undefined || event.clipboardData === null) return;
               event.preventDefault();
@@ -636,8 +680,8 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               const text = event.clipboardData?.getData("text/plain") ?? "";
               if (text === "") return;
               const target = event.target;
-              // Pasting into a placeholder types into it.
-              if (isPlaceholderText(target)) return;
+              // Pasting into a placeholder types into it; a folded item's view handles its own.
+              if (isPlaceholderText(target) || inView(target)) return;
               if (isText(target)) {
                 // Single lines paste natively; several lines become several items.
                 if (!/\r|\n/.test(text.replace(/[\r\n]+$/, ""))) return;
@@ -802,6 +846,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               if (model()?.completion && !target.closest("[data-text-popup]")) {
                 emit(Message.DismissedCompletion());
               }
+              if (inView(target)) return;
               if (target.closest("[data-outline-control]")) {
                 // Controls act without taking focus away from the text being edited.
                 event.preventDefault();

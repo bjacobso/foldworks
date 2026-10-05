@@ -74,9 +74,10 @@ painted, not typed: they can never be unbalanced, and editing still happens
 one row at a time.
 
 Neither is the "real" program; the tree is. More notations fit the same
-model: a plain-language reading for people who never see code, or
-form-specific renderings, such as a workflow drawn as a diagram, while the
-rest of the program stays as rows.
+model. A folded `workflow` already draws as a diagram while the rest of the
+program stays as rows: ↓ enters it, its steps are buttons, and choosing one
+opens the workflow at that step. A plain-language reading for people who never
+see code would fit the same way.
 
 ## What is live
 
