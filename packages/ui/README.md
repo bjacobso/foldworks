@@ -646,6 +646,36 @@ Start with existing primitives. Add a new primitive only after the same visual o
 inline rename, and controlled move requests for application-owned hierarchies.
 See the [tree integration guide](docs/tree.md) for data contracts and host policies.
 
+## Value tree
+
+`ValueTree` shows nested values, such as a payload, a record, or a result, as
+a keyboard-navigable tree of keys, previews, and kinds. The host supplies
+`ValueNode`s and owns loading: a node can be `expandable` before its
+`children` exist, and expanding it sends `RequestedChildren({ id })` and shows
+“Loading…” until they arrive. A node with `more` children than it has loaded
+offers “Show N more”, which sends `RequestedMore({ id, loaded })`. Values can
+therefore live behind handles in another process. For values held locally,
+`ValueTree.fromValue(value)` builds nodes for objects, arrays, Maps, Sets, and
+primitives, with path ids and cycle protection.
+
+```ts
+ValueTree.view(
+  {
+    model: model.payload,
+    nodes: payloadNodes(model),
+    label: "Payload",
+    toParentMessage: (message) => Message.Payload({ message }),
+  },
+  h,
+);
+```
+
+Fold its updates with `ValueTree.update(tree, message, { nodes })`, passing the
+same nodes as the view, and answer its `OutMessage`s by adding children. Up and
+Down move, Right opens a branch or steps into it, Left closes it or steps out,
+and Return or Space toggles. The `/lisp` inspector loads a value's branches a
+page at a time this way.
+
 ## Workspace panes
 
 `Workspace` provides nestable horizontal and vertical splits, pointer and keyboard

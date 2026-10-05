@@ -13,6 +13,7 @@ export * as Workspace from "./workspace";
 export * as SplitView from "./split-view";
 export * as AppHeader from "./app-header";
 export * as Tree from "./tree";
+export * as ValueTree from "./value-tree";
 export * as Panel from "./panel";
 export * as SegmentedControl from "./segmented-control";
 export * as Select from "./select";

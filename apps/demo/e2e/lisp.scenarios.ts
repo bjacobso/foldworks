@@ -214,6 +214,31 @@ export const lispScenarios = (
       await expect.poll(() => valueOf(page, "twice 21")).toBe("→42");
     });
 
+    it("inspects a value as a tree that loads its branches when they open", async () => {
+      const page = await start();
+      const tree = page.getByRole("tree", { name: "Value" });
+      const rows = () =>
+        tree
+          .locator('[role="treeitem"]')
+          .evaluateAll((items) => items.map((item) => item.getAttribute("aria-label")));
+      await text(page, "map invoice-total [40 250 1200]").click();
+      await expect.poll(rows).toEqual(["[43.3 270.63 1299]"]);
+      await tree.locator('[role="treeitem"]').first().click();
+      await expect.poll(rows).toEqual(["[43.3 270.63 1299]", "0: 43.3", "1: 270.63", "2: 1299"]);
+      // A long value loads a page at a time.
+      await text(page, "map invoice-total [40 250 1200]").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("range 45");
+      await text(page, "range 45").click();
+      await tree.focus();
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(async () => (await rows()).slice(-2)).toEqual(["19: 19", "Show 25 more"]);
+      await tree.getByRole("treeitem", { name: "Show 25 more" }).click();
+      await expect.poll(async () => (await rows()).slice(-2)).toEqual(["39: 39", "Show 5 more"]);
+      await screenshot("lisp-value-tree");
+    });
+
     it("proposes a structural edit for selected rows and applies it", async () => {
       const page = await start();
       expect(await valueOf(page, "collect-i9")).toBe(
