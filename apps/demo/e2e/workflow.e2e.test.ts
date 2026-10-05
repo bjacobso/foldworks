@@ -1,3 +1,4 @@
+import { docsScenarios } from "./docs.scenarios";
 import { desktopScenarios } from "./desktop.scenarios";
 import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -132,6 +133,7 @@ describe.sequential("structured workflow builder", () => {
     await expect
       .poll(() => demoNavigation.getByRole("link").allTextContents())
       .toEqual([
+        "Documentation",
         "Home",
         "Agent playground",
         "Codebase workbench",
@@ -140,6 +142,7 @@ describe.sequential("structured workflow builder", () => {
         "@foldworks/ui",
         "Document editor",
         "Code editor",
+        "Outliner",
         "Data table",
         "Data grid",
         "Query builder",
@@ -1621,6 +1624,7 @@ describe.sequential("structured workflow builder", () => {
   nativeEditorScenarios(() => page, appUrl, screenshot);
   workspaceScenarios(() => page, appUrl);
   treeScenarios(() => page, appUrl);
+  docsScenarios(() => page, appUrl);
   agentScenarios(() => page, appUrl, screenshot);
   diffViewerScenarios(() => page, appUrl, screenshot);
   pdfViewerScenarios(() => page, appUrl, screenshot);

@@ -6,7 +6,10 @@ const documents = new Map([
   ["/docs/ui/desktop.md", resolve(import.meta.dirname, "../../packages/ui/docs/desktop.md")],
   ["/docs/ui/setup.md", resolve(import.meta.dirname, "../../packages/ui/README.md")],
   ["/docs/ui/stateful.md", resolve(import.meta.dirname, "../../packages/ui/docs/stateful.md")],
-  ["/docs/ui/capabilities.md", resolve(import.meta.dirname, "../../packages/ui/docs/capabilities.md")],
+  [
+    "/docs/ui/capabilities.md",
+    resolve(import.meta.dirname, "../../packages/ui/docs/capabilities.md"),
+  ],
   ["/docs/ui/primitives.md", resolve(import.meta.dirname, "../../packages/ui/docs/primitives.md")],
 ]);
 const index = `# Foldworks UI
@@ -18,6 +21,8 @@ const index = `# Foldworks UI
 - [Component capabilities and limitations](/docs/ui/capabilities.md)
 - [Layout and foundational primitives](/docs/ui/primitives.md)
 - [Desktop primitives and architecture](/docs/ui/desktop.md)
+- [All package and module references with state-machine explorers](/docs)
+- [Generated source catalog (JSON)](/docs/manifest.json)
 
 Use Stateful components for managed interactions and root primitives for controlled presentation.
 Forward child updates and commands with Update.foldChild. Check capabilities before assuming behavioral parity.
@@ -26,9 +31,7 @@ Forward child updates and commands with Update.foldChild. Check capabilities bef
 const readDocument = async (path: string, source: string): Promise<string> => {
   const markdown = await readFile(source, "utf8");
   // The package README lives one level above docs; its published Markdown twin does not.
-  return path === "/docs/ui/setup.md" ? markdown.replaceAll(
-    "](docs/", "](",
-  ) : markdown;
+  return path === "/docs/ui/setup.md" ? markdown.replaceAll("](docs/", "](") : markdown;
 };
 
 /** Publish the package's documentation without maintaining a second copy. */
@@ -40,15 +43,24 @@ export const uiDocs = (): Plugin => ({
       const source = documents.get(path);
       if (path !== "/llms.txt" && source === undefined) return next();
       try {
-        response.setHeader("Content-Type", source === undefined ? "text/plain; charset=utf-8" : "text/markdown; charset=utf-8");
+        response.setHeader(
+          "Content-Type",
+          source === undefined ? "text/plain; charset=utf-8" : "text/markdown; charset=utf-8",
+        );
         response.end(source === undefined ? index : await readDocument(path, source));
-      } catch (error) { next(error); }
+      } catch (error) {
+        next(error);
+      }
     });
   },
   async generateBundle() {
     this.emitFile({ type: "asset", fileName: "llms.txt", source: index });
     for (const [path, source] of documents) {
-      this.emitFile({ type: "asset", fileName: path.slice(1), source: await readDocument(path, source) });
+      this.emitFile({
+        type: "asset",
+        fileName: path.slice(1),
+        source: await readDocument(path, source),
+      });
     }
   },
 });

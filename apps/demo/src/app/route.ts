@@ -6,6 +6,7 @@ import { DataGridExample } from "../data-grid/example";
 import { FormExampleId, FormMode } from "../form-builder/model";
 
 export type Demo =
+  | "Docs"
   | "Home"
   | "Editor"
   | "Agent"
@@ -28,6 +29,7 @@ export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
 
 export const AppRoute = defineRouteUnion({
+  Docs: { package: S.Option(S.String), module: S.Option(S.String) },
   Home: {},
   Editor: {},
   Agent: {},
@@ -60,6 +62,14 @@ export const workflowRouter = pipe(
     }),
   ),
   Route.mapTo(AppRoute.Workflow),
+);
+
+export const docsRouter = pipe(
+  Route.literal("docs"),
+  Route.query(
+    S.Struct({ package: S.OptionFromOptional(S.String), module: S.OptionFromOptional(S.String) }),
+  ),
+  Route.mapTo(AppRoute.Docs),
 );
 
 export const homeRouter = pipe(Route.root, Route.mapTo(AppRoute.Home));
@@ -124,6 +134,7 @@ export const pdfViewerRouter = pipe(Route.literal("pdf-viewer"), Route.mapTo(App
 export const editorRouter = pipe(Route.literal("editor"), Route.mapTo(AppRoute.Editor));
 
 const routeParser = Route.oneOf(
+  docsRouter,
   editorRouter,
   workflowRouter,
   statechartRouter,
@@ -147,6 +158,8 @@ export const urlToAppRoute = Route.parseUrlWithFallback(routeParser, AppRoute.No
 
 export const demoFromRoute = (route: AppRoute): Demo => {
   switch (route._tag) {
+    case "Docs":
+      return "Docs";
     case "Home":
       return "Home";
     case "Editor":

@@ -1,9 +1,10 @@
-import { Schema as S } from "effect";
+import { Option, Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { ArticleEditor, initialEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
 
+import { Model as DocsModel, init as initDocs } from "../docs/model";
 import { Model as WorkbenchModel, init as initWorkbench } from "../workbench/model";
 import { Model as CodeEditorModel, init as initCodeEditor } from "../code-editor/model";
 import type { Snapshot } from "../workbench/domain";
@@ -38,6 +39,7 @@ import {
 
 export const Model = S.Struct({
   route: AppRoute,
+  docs: DocsModel,
   agent: Agent.Model,
   codeEditor: CodeEditorModel,
   workbench: WorkbenchModel,
@@ -72,6 +74,11 @@ export const init = (
   const { exampleId, mode } = formStateFromRoute(route);
   return {
     route,
+    docs: initDocs(
+      route._tag === "Docs" && Option.getOrElse(route.package, () => "") === "ui"
+        ? "editable-text"
+        : "sidebar",
+    ),
     agent: Agent.init({ id: "foldworks-agent", selectedModel: "atlas-balanced" }),
     codeEditor: initCodeEditor(),
     workbench: initWorkbench(workers?.snapshot, workers?.error),

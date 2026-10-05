@@ -3,6 +3,7 @@ import { fromString } from "foldkit/url";
 import { describe, expect, it } from "vitest";
 
 import {
+  docsRouter,
   agentRouter,
   dataTablePath,
   editorRouter,
@@ -29,6 +30,17 @@ import {
 const parseUrl = (url: string) => urlToAppRoute(Option.getOrThrow(fromString(url)));
 
 describe("demo routes", () => {
+  it("routes documentation and preserves package/module deep links", () => {
+    const path = docsRouter({ package: Option.some("ui"), module: Option.some("stateful/dialog") });
+    expect(path).toBe("/docs?package=ui&module=stateful%2Fdialog");
+    expect(demoFromRoute(parseUrl("https://demo.test/docs"))).toBe("Docs");
+    expect(parseUrl(`https://demo.test${path}`)).toEqual({
+      _tag: "Docs",
+      package: Option.some("ui"),
+      module: Option.some("stateful/dialog"),
+    });
+  });
+
   it("builds stable paths for each demo", () => {
     expect(homeRouter()).toBe("/");
     expect(editorRouter()).toBe("/editor");

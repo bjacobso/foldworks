@@ -1,5 +1,7 @@
+import { view as docsView, catalog as docsCatalog } from "../docs/view";
+import { docsPath } from "../docs/catalog";
 import { type Document, type Html, type HtmlBuilder } from "foldkit/html";
-import { Match } from "effect";
+import { Match, Option } from "effect";
 import * as stylex from "@stylexjs/stylex";
 
 import {
@@ -181,11 +183,48 @@ const activeAnnouncement = (model: Model): string => {
 
 const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> => {
   const demo = demoFromRoute(model.route);
+  if (model.route._tag === "Docs")
+    return [
+      {
+        id: "docs",
+        label: "Documentation",
+        items: [
+          {
+            id: "docs-home",
+            label: "All packages",
+            href: docsPath(),
+            icon: Blocks,
+            isActive: Option.isNone(model.route.package),
+          },
+          { id: "demo-home", label: "Demos & examples", href: homeRouter(), icon: House },
+        ],
+      },
+      {
+        id: "docs-packages",
+        label: "Packages",
+        items: docsCatalog.map((pkg) => ({
+          id: pkg.id,
+          label: pkg.id,
+          href: docsPath(pkg.id),
+          icon: Braces,
+          isActive:
+            model.route._tag === "Docs" &&
+            Option.getOrElse(model.route.package, () => "") === pkg.id,
+        })),
+      },
+    ];
   return [
     {
       id: "overview",
       label: "Overview",
       items: [
+        {
+          id: "documentation",
+          label: "Documentation",
+          href: docsPath(),
+          icon: FileText,
+          isActive: demo === "Docs",
+        },
         {
           id: "home",
           label: "Home",
@@ -376,77 +415,81 @@ const persistenceBadge = (model: Model, h: HtmlBuilder<Message>): Html =>
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
   const title =
-    demo === "Editor"
-      ? "Document editor"
-      : demo === "Agent"
-        ? "Interactive agent"
-        : demo === "CodeEditor"
-          ? "Code editor"
-          : demo === "Codebase"
-            ? "Codebase workbench"
-            : demo === "DiffViewer"
-              ? "Code review"
-              : demo === "Workbench"
-                ? "Workers workbench"
-                : demo === "Workflow"
-                  ? "Candidate workflow"
-                  : demo === "Statechart"
-                    ? "Statechart"
-                    : demo === "DataTable"
-                      ? "People"
-                      : demo === "DataGrid"
-                        ? model.dataGridDemo.example === "Coverage"
-                          ? "Coverage matrix"
-                          : "Headcount worksheet"
-                        : demo === "FormBuilder"
-                          ? model.formEditor.document.title
-                          : demo === "QueryBuilder"
-                            ? "Employee query"
-                            : demo === "Outliner"
-                              ? "Outliner"
-                              : demo === "PdfAnnotator"
-                                ? "PDF annotator"
-                                : demo === "PdfViewer"
-                                  ? "Onboarding packet review"
-                                  : demo === "Home"
-                                    ? "Foldworks"
-                                    : "@foldworks/ui";
+    demo === "Docs"
+      ? "Documentation"
+      : demo === "Editor"
+        ? "Document editor"
+        : demo === "Agent"
+          ? "Interactive agent"
+          : demo === "CodeEditor"
+            ? "Code editor"
+            : demo === "Codebase"
+              ? "Codebase workbench"
+              : demo === "DiffViewer"
+                ? "Code review"
+                : demo === "Workbench"
+                  ? "Workers workbench"
+                  : demo === "Workflow"
+                    ? "Candidate workflow"
+                    : demo === "Statechart"
+                      ? "Statechart"
+                      : demo === "DataTable"
+                        ? "People"
+                        : demo === "DataGrid"
+                          ? model.dataGridDemo.example === "Coverage"
+                            ? "Coverage matrix"
+                            : "Headcount worksheet"
+                          : demo === "FormBuilder"
+                            ? model.formEditor.document.title
+                            : demo === "QueryBuilder"
+                              ? "Employee query"
+                              : demo === "Outliner"
+                                ? "Outliner"
+                                : demo === "PdfAnnotator"
+                                  ? "PDF annotator"
+                                  : demo === "PdfViewer"
+                                    ? "Onboarding packet review"
+                                    : demo === "Home"
+                                      ? "Foldworks"
+                                      : "@foldworks/ui";
   const description =
-    demo === "Editor"
-      ? "Native Foldkit editing · Markdown · Custom blocks"
-      : demo === "Agent"
-        ? "Streaming · tool calls · human approval"
-        : demo === "CodeEditor"
-          ? "Configuration · Scripts · Syntax highlighting"
-          : demo === "Codebase"
-            ? "Living documentation · source · history · Git diffs"
-            : demo === "DiffViewer"
-              ? "Split and unified diffs · line comments · review progress"
-              : demo === "Workbench"
-                ? "Inspect · Explain · Preview · Apply · History"
-                : demo === "Workflow"
-                  ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
-                  : demo === "Statechart"
-                    ? statechartSummary(model.statechart)
-                    : demo === "DataTable"
-                      ? `${contacts.length} people · resource-first CRUD table`
-                      : demo === "DataGrid"
-                        ? model.dataGridDemo.example === "Coverage"
-                          ? `${countRows(coverageRows).toLocaleString("en-US")} rows · row groups · gap highlighting`
-                          : `${people.length} rows · cell editing · spreadsheet controls`
-                        : demo === "FormBuilder"
-                          ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
-                          : demo === "QueryBuilder"
-                            ? "Configured attributes · recursive groups · live validation"
-                            : demo === "Outliner"
-                              ? "Indent · reorder · fold · hoist · drag and drop"
-                              : demo === "PdfAnnotator"
-                                ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-                                : demo === "PdfViewer"
-                                  ? "Read-only pages · overlay hotspots · crop boxes and rotation"
-                                  : demo === "Home"
-                                    ? "Polished application primitives for Foldkit and StyleX"
-                                    : "61 application primitives · Foldkit behavior · StyleX";
+    demo === "Docs"
+      ? "Source reference · Models · Messages · State machines"
+      : demo === "Editor"
+        ? "Native Foldkit editing · Markdown · Custom blocks"
+        : demo === "Agent"
+          ? "Streaming · tool calls · human approval"
+          : demo === "CodeEditor"
+            ? "Configuration · Scripts · Syntax highlighting"
+            : demo === "Codebase"
+              ? "Living documentation · source · history · Git diffs"
+              : demo === "DiffViewer"
+                ? "Split and unified diffs · line comments · review progress"
+                : demo === "Workbench"
+                  ? "Inspect · Explain · Preview · Apply · History"
+                  : demo === "Workflow"
+                    ? `${allNodes(model.workflowEditor.document).length} nodes · structured auto-layout`
+                    : demo === "Statechart"
+                      ? statechartSummary(model.statechart)
+                      : demo === "DataTable"
+                        ? `${contacts.length} people · resource-first CRUD table`
+                        : demo === "DataGrid"
+                          ? model.dataGridDemo.example === "Coverage"
+                            ? `${countRows(coverageRows).toLocaleString("en-US")} rows · row groups · gap highlighting`
+                            : `${people.length} rows · cell editing · spreadsheet controls`
+                          : demo === "FormBuilder"
+                            ? `${model.formEditor.document.sections.length} sections · ${model.formEditor.document.actors.length} actors`
+                            : demo === "QueryBuilder"
+                              ? "Configured attributes · recursive groups · live validation"
+                              : demo === "Outliner"
+                                ? "Indent · reorder · fold · hoist · drag and drop"
+                                : demo === "PdfAnnotator"
+                                  ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
+                                  : demo === "PdfViewer"
+                                    ? "Read-only pages · overlay hotspots · crop boxes and rotation"
+                                    : demo === "Home"
+                                      ? "Polished application primitives for Foldkit and StyleX"
+                                      : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view(
     {
       title,
@@ -537,7 +580,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                           h,
                                         ),
                                       ]
-                                    : demo === "Home"
+                                    : demo === "Home" || demo === "Docs"
                                       ? []
                                       : [
                                           toolbarBadge(
@@ -594,6 +637,17 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
 
 const content = (model: Model, h: HtmlBuilder<Message>): Html => {
   const demo = demoFromRoute(model.route);
+  if (model.route._tag === "Docs")
+    return h.submodel({
+      slotId: "docs-content",
+      model: model.docs,
+      view: docsView,
+      viewInputs: {
+        packageId: Option.getOrElse(model.route.package, () => ""),
+        moduleId: Option.getOrElse(model.route.module, () => ""),
+      },
+      toParentMessage: (message) => Message.GotDocsMessage({ message }),
+    });
   if (demo === "Home") return homeView(h);
   if (demo === "Editor")
     return h.submodel({
@@ -715,6 +769,7 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
 
 const documentTitle = (demo: Demo): string =>
   Match.value(demo).pipe(
+    Match.when("Docs", () => "Documentation · Foldworks"),
     Match.when("Editor", () => "Document editor · Foldworks"),
     Match.when("Agent", () => "Interactive agent · Foldworks"),
     Match.when("CodeEditor", () => "Code editor · Foldworks"),
@@ -763,7 +818,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
                 content: content(model, h),
                 footer: {
                   title: "Application primitives",
-                  description: "Seventeen Foldworks packages",
+                  description: `${docsCatalog.length} Foldworks packages`,
                   icon: Blocks,
                 },
                 ariaLabel: "Foldworks navigation",

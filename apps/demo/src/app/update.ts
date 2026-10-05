@@ -1,3 +1,4 @@
+import { update as updateDocs } from "../docs/update";
 import { Effect, Option, Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
@@ -155,6 +156,13 @@ const foldCodeEditor = Update.foldChild({
   toParentMessage: (message) => Message.GotCodeEditorMessage({ message }),
 });
 
+const foldDocs = Update.foldChild({
+  update: updateDocs,
+  read: (model: Model) => Option.some(model.docs),
+  write: (model, docs) => ({ ...model, docs }),
+  toParentMessage: (message) => Message.GotDocsMessage({ message }),
+});
+
 const foldAgent = Update.foldChild({
   update: Agent.update,
   read: (model: Model) => Option.some(model.agent),
@@ -250,6 +258,20 @@ const foldSidebar = Update.foldChild({
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
   let next: Model = evo(model, { route: () => route });
+  if (
+    route._tag === "Docs" &&
+    (model.route._tag !== "Docs" ||
+      Option.getOrElse(model.route.package, () => "") !== Option.getOrElse(route.package, () => ""))
+  ) {
+    next = {
+      ...next,
+      docs: {
+        ...next.docs,
+        explorer: Option.getOrElse(route.package, () => "") === "ui" ? "editable-text" : "sidebar",
+        events: [],
+      },
+    };
+  }
   next = {
     ...next,
     dataTableDemo: setActiveContact(next.dataTableDemo, dataTablePersonFromRoute(route)),
@@ -339,6 +361,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       const next = applyRoute(model, urlToAppRoute(url));
       return next.route._tag === model.route._tag ? { model: next } : enterRoute(next);
     },
+    GotDocsMessage: ({ message }) => foldDocs(model, message),
     GotAgentMessage: ({ message }) => foldAgent(model, message),
     GotWorkflowEditorMessage: ({ message: childMessage }) => foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),
