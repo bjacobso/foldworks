@@ -90,4 +90,46 @@ describe("view", () => {
     );
     expect(Scene.attr(textarea, "aria-autocomplete")).toEqual(Option.some("list"));
   });
+
+  it("places placeholders among and after children, under leaves, but not under folded items", () => {
+    const state = init({
+      id: "o",
+      items: [
+        item("a", "Alpha", [item("a1", "One"), item("a2", "Two")]),
+        item("b", "Beta"),
+        item("c", "Gamma", [item("c1", "Hidden")], { collapsed: true }),
+      ],
+    });
+    const html = render(state, {
+      placeholders: (parentId) =>
+        parentId === "a"
+          ? [
+              { key: "first", label: "first step", index: 0 },
+              { key: "more", label: "add step", text: "step " },
+            ]
+          : parentId === null || parentId === "b" || parentId === "c"
+            ? [{ key: "more", label: `add to ${parentId ?? "top"}` }]
+            : [],
+    });
+    const rows = Scene.findAll(html, '[role="treeitem"]').map((node) =>
+      Option.getOrElse(Scene.attr(node, "aria-label"), () => ""),
+    );
+    expect(rows).toEqual([
+      "Alpha",
+      "Add first step",
+      "One",
+      "Two",
+      "Add add step",
+      "Beta",
+      "Add add to b",
+      "Gamma",
+      "Add add to top",
+    ]);
+    const more = Option.getOrUndefined(
+      Scene.find(html, '[data-parent="a"][data-outline-placeholder="more"]'),
+    );
+    if (more === undefined) throw new Error("Expected the placeholder");
+    expect(Scene.attr(more, "data-index")).toEqual(Option.some("2"));
+    expect(Scene.attr(more, "data-text")).toEqual(Option.some("step "));
+  });
 });

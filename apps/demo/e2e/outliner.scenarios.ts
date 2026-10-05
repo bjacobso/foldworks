@@ -210,5 +210,31 @@ export const outlinerScenarios = (
         .toBe("Sam OkaforVolunteer coordinatorOn 1 item");
       await screenshot("outliner-mention-hover");
     });
+
+    it("adds an entry by typing into a placeholder at the end of a list", async () => {
+      const page = await start();
+      const question = page.getByRole("textbox", { name: "Add question" });
+      await question.click();
+      await page.keyboard.type("Who prints the maps?");
+      await expect
+        .poll(() => slice(page, "Open questions", 4))
+        .toEqual([
+          "  Open questions",
+          "    Print run: 200 or 500?",
+          "    Who owns updates after the first season?",
+          "    Who prints the maps?",
+        ]);
+      // The placeholder stays at the end for the next one, and arrows reach it.
+      await page.keyboard.press("ArrowDown");
+      expect(await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))).toBe(
+        "Add question",
+      );
+      await page.keyboard.press("ArrowUp");
+      expect(await page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value)).toBe(
+        "Who prints the maps?",
+      );
+      await page.keyboard.press("Control+z");
+      await expect.poll(() => text(page, "Who prints the maps?").count()).toBe(0);
+    });
   });
 };

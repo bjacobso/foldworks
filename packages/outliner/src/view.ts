@@ -42,7 +42,72 @@ export type ViewInputs = Readonly<{
    * shown with it.
    */
   hover?: (request: HoverRequest) => Hover | null;
+  /**
+   * Ghost children for a parent, or for the top level when `parentId` is the
+   * hoisted item or `null`. They are not part of the document; choosing or
+   * typing into one creates a real item.
+   */
+  placeholders?: (parentId: string | null) => ReadonlyArray<Placeholder>;
 }>;
+
+/** A ghost child that is not part of the document, such as “add step”. */
+export type Placeholder = Readonly<{
+  /** Identifies the placeholder among its parent's, and comes back in `FilledPlaceholder`. */
+  key: string;
+  /** Shown in place of text, after a “+”. */
+  label: string;
+  /** The text a new item starts with. Defaults to empty. */
+  text?: string;
+  /** Where the caret lands in `text`. Defaults to its end. */
+  caret?: number;
+  /** Position among the parent's children. Defaults to after the last one. */
+  index?: number;
+}>;
+
+type Entry =
+  | Readonly<{ _tag: "Row"; row: Row; first: boolean }>
+  | Readonly<{
+      _tag: "Placeholder";
+      parentId: string | null;
+      depth: number;
+      index: number;
+      placeholder: Placeholder;
+    }>;
+
+/** Visible rows in order, with each parent's placeholders among or after its children. */
+const entriesOf = (
+  scopeId: string | null,
+  rows: ReadonlyArray<Row>,
+  placeholders: ViewInputs["placeholders"],
+): ReadonlyArray<Entry> => {
+  const first = rows[0]?.id;
+  if (placeholders === undefined) {
+    return rows.map((row) => ({ _tag: "Row", row, first: row.id === first }));
+  }
+  const children = new Map<string | null, Row[]>();
+  for (const row of rows) children.set(row.parentId, [...(children.get(row.parentId) ?? []), row]);
+  const result: Entry[] = [];
+  const emit = (parentId: string | null, depth: number) => {
+    const kids = children.get(parentId) ?? [];
+    const ghosts = placeholders(parentId).map((placeholder) => ({
+      placeholder,
+      index: Math.max(0, Math.min(placeholder.index ?? kids.length, kids.length)),
+    }));
+    const place = (index: number) => {
+      for (const ghost of ghosts) {
+        if (ghost.index === index) result.push({ _tag: "Placeholder", parentId, depth, ...ghost });
+      }
+    };
+    kids.forEach((row, index) => {
+      place(index);
+      result.push({ _tag: "Row", row, first: row.id === first });
+      if (!(row.hasChildren && row.collapsed)) emit(row.id, depth + 1);
+    });
+    place(kids.length);
+  };
+  emit(scopeId, 0);
+  return result;
+};
 
 /** What a hover asks about: a character of an item's text. */
 export type HoverRequest = Readonly<{
@@ -363,6 +428,76 @@ const rowView = (
   );
 };
 
+const placeholderView = (
+  entry: Extract<Entry, { _tag: "Placeholder" }>,
+  inputs: ViewInputs,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const { parentId, depth, index, placeholder } = entry;
+  const text = placeholder.text ?? "";
+  const caret = Math.max(0, Math.min(placeholder.caret ?? text.length, text.length));
+  const name = `Add ${placeholder.label}`;
+  return h.keyed("div")(
+    `placeholder:${parentId ?? ""}:${placeholder.key}`,
+    [
+      h.Class("fw-outliner__row fw-outliner__placeholder"),
+      h.Role("treeitem"),
+      h.Tabindex(-1),
+      h.AriaLevel(depth + 1),
+      h.AriaLabel(name),
+      h.DataAttribute("outline-placeholder", placeholder.key),
+      ...(parentId === null ? [] : [h.DataAttribute("parent", parentId)]),
+      h.DataAttribute("index", String(index)),
+      h.DataAttribute("text", text),
+      h.DataAttribute("caret", String(caret)),
+      h.Style({ "--fw-outliner-depth": String(depth) }),
+    ],
+    [
+      h.span(
+        [h.Class("fw-outliner__toggle"), h.DataAttribute("state", "leaf"), h.AriaHidden(true)],
+        [],
+      ),
+      h.button(
+        [
+          h.Class("fw-outliner__handle fw-outliner__plus"),
+          h.Type("button"),
+          h.Tabindex(-1),
+          h.AriaLabel(name),
+          h.Title(name),
+          h.DataAttribute("outline-control", "true"),
+          h.OnClick(
+            Message.FilledPlaceholder({
+              parentId,
+              index,
+              key: placeholder.key,
+              text,
+              offset: caret,
+            }),
+          ),
+        ],
+        ["+"],
+      ),
+      h.div(
+        [h.Class("fw-outliner__cell")],
+        [
+          h.textarea(
+            [
+              h.Class("fw-outliner__text"),
+              h.Rows(1),
+              h.Value(""),
+              h.Placeholder(placeholder.label),
+              h.AriaLabel(name),
+              h.Spellcheck(inputs.spellcheck ?? true),
+              h.DataAttribute("placeholder-text", "true"),
+            ],
+            [],
+          ),
+        ],
+      ),
+    ],
+  );
+};
+
 const breadcrumbs = (model: Model, h: HtmlBuilder<Message>): ReadonlyArray<Html> => {
   if (model.scopeId === null) return [];
   const scope = find(model.items, model.scopeId);
@@ -431,8 +566,20 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
           h.Attribute("aria-multiselectable", "true"),
           h.Tabindex(-1),
         ],
-        rows.map((row, index) =>
-          rowView(model, row, selected, dragged, index === 0, inputs, hover, suggestions, h),
+        entriesOf(model.scopeId, rows, inputs.placeholders).map((entry) =>
+          entry._tag === "Placeholder"
+            ? placeholderView(entry, inputs, h)
+            : rowView(
+                model,
+                entry.row,
+                selected,
+                dragged,
+                entry.first,
+                inputs,
+                hover,
+                suggestions,
+                h,
+              ),
         ),
       ),
       ...(rows.length === 0

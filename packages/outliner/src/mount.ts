@@ -54,7 +54,8 @@ type SurfaceMessage = Extract<
       | "RequestedCompletion"
       | "MovedCompletion"
       | "AcceptedCompletion"
-      | "DismissedCompletion";
+      | "DismissedCompletion"
+      | "FilledPlaceholder";
   }
 >;
 
@@ -71,6 +72,30 @@ const rowIdOf = (target: EventTarget | null): string | undefined =>
 
 const isText = (target: EventTarget | null): target is HTMLTextAreaElement =>
   target instanceof HTMLTextAreaElement && target.dataset.outlineText !== undefined;
+
+const isPlaceholderText = (target: EventTarget | null): target is HTMLTextAreaElement =>
+  target instanceof HTMLTextAreaElement && target.dataset.placeholderText !== undefined;
+
+const ROW_OR_PLACEHOLDER = "[data-outline-row], [data-outline-placeholder]";
+
+/** The row or placeholder just above or below one, in screen order. */
+const neighbourOf = (row: Element, delta: -1 | 1): HTMLElement | undefined => {
+  let at = delta > 0 ? row.nextElementSibling : row.previousElementSibling;
+  while (at !== null && !at.matches(ROW_OR_PLACEHOLDER)) {
+    at = delta > 0 ? at.nextElementSibling : at.previousElementSibling;
+  }
+  return at instanceof HTMLElement ? at : undefined;
+};
+
+/** Puts the caret at the start or end of a row's or placeholder's text. */
+const focusTextOf = (row: HTMLElement, at: "Start" | "End") => {
+  const text = row.querySelector<HTMLTextAreaElement>("textarea");
+  if (text === null) return;
+  text.focus({ preventScroll: true });
+  const offset = at === "Start" ? 0 : text.value.length;
+  text.setSelectionRange(offset, offset);
+  text.scrollIntoView({ block: "nearest", inline: "nearest" });
+};
 
 const scrollParent = (element: HTMLElement): HTMLElement | undefined => {
   for (let node = element.parentElement; node !== null; node = node.parentElement) {
@@ -124,6 +149,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
     Message.MovedCompletion,
     Message.AcceptedCompletion,
     Message.DismissedCompletion,
+    Message.FilledPlaceholder,
   ],
   execute: ({ element }) =>
     Stream.callback<SurfaceMessage>((queue) =>
@@ -255,12 +281,76 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               }
             };
 
+            /** Turns a placeholder into an item holding its text with `typed` at its caret. */
+            const fill = (row: HTMLElement, typed: string, typedCaret: number) => {
+              const template = row.dataset.text ?? "";
+              const caret = Number(row.dataset.caret ?? template.length);
+              emit(
+                Message.FilledPlaceholder({
+                  parentId: row.dataset.parent ?? null,
+                  index: Number(row.dataset.index ?? 0),
+                  key: row.dataset.outlinePlaceholder ?? "",
+                  text: template.slice(0, caret) + typed + template.slice(caret),
+                  offset: caret + typedCaret,
+                }),
+              );
+              // The new item renders before it can take keys; hold them until it does.
+              awaitFocus();
+            };
+
+            /** Placeholders move like rows and turn into items on Return. */
+            const placeholderKey = (event: KeyInput, target: HTMLTextAreaElement): boolean => {
+              const row = target.closest<HTMLElement>("[data-outline-placeholder]");
+              if (row === null) return false;
+              const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
+              if (event.key === "Tab") return true;
+              if (!plain) return false;
+              switch (event.key) {
+                case "Enter":
+                  fill(row, "", 0);
+                  return true;
+                case "ArrowUp":
+                case "ArrowLeft":
+                case "Backspace":
+                case "Escape": {
+                  const above = neighbourOf(row, -1);
+                  if (above !== undefined) focusTextOf(above, "End");
+                  return true;
+                }
+                case "ArrowDown":
+                case "ArrowRight": {
+                  const below = neighbourOf(row, 1);
+                  if (below !== undefined) focusTextOf(below, "Start");
+                  return true;
+                }
+                default:
+                  return false;
+              }
+            };
+
+            /** Arrows at the edge of a row's text step into a placeholder next to it. */
+            const intoPlaceholder = (action: Action, target: HTMLTextAreaElement): boolean => {
+              const row = target.closest<HTMLElement>("[data-outline-row]");
+              const delta =
+                action === "FocusNext" || action === "FocusNextStart"
+                  ? 1
+                  : action === "FocusPrevious" || action === "FocusPreviousEnd"
+                    ? -1
+                    : 0;
+              if (row === null || delta === 0) return false;
+              const neighbour = neighbourOf(row, delta);
+              if (neighbour?.dataset.outlinePlaceholder === undefined) return false;
+              focusTextOf(neighbour, delta > 0 ? "Start" : "End");
+              return true;
+            };
+
             /** Resolves and dispatches a key against an element; `true` when the outline used it. */
             const handleKey = (
               event: KeyInput,
               target: EventTarget | null,
               replayed = false,
             ): boolean => {
+              if (isPlaceholderText(target)) return placeholderKey(event, target);
               if (isText(target)) {
                 const id = rowIdOf(target);
                 if (id === undefined) return false;
@@ -285,6 +375,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                   platform,
                 );
                 if (action === undefined) return false;
+                if (intoPlaceholder(action, target)) return true;
                 if (action === "Complete") {
                   emit(
                     Message.RequestedCompletion({
@@ -310,7 +401,9 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               const target = doc.activeElement;
               if (target === null || !host.contains(target) || handleKey(event, target, true))
                 return;
-              if (!isText(target) || event.ctrlKey || event.metaKey) return;
+              // Characters go into item text or into a placeholder, never a read-only row.
+              const writable = (isText(target) && !target.readOnly) || isPlaceholderText(target);
+              if (!writable || event.ctrlKey || event.metaKey) return;
               const text = event.key === "Enter" ? "\n" : event.key.length === 1 ? event.key : "";
               const command =
                 text !== ""
@@ -445,8 +538,22 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               }
             };
 
+            /** Typing into a placeholder makes it an item holding what was typed. */
+            const fillFromInput = (target: HTMLTextAreaElement) => {
+              const row = target.closest<HTMLElement>("[data-outline-placeholder]");
+              const typed = target.value;
+              if (row === null || typed === "") return;
+              const caret = target.selectionEnd;
+              target.value = "";
+              fill(row, typed, caret);
+            };
+
             const input = (event: Event) => {
               const target = event.target;
+              if (isPlaceholderText(target)) {
+                if (!(event as InputEvent).isComposing) fillFromInput(target);
+                return;
+              }
               if (!isText(target)) return;
               const id = rowIdOf(target);
               if (id === undefined) return;
@@ -517,14 +624,17 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               composing = true;
             };
 
-            const compositionend = () => {
+            const compositionend = (event: CompositionEvent) => {
               composing = false;
+              if (isPlaceholderText(event.target)) fillFromInput(event.target);
             };
 
             const paste = (event: ClipboardEvent) => {
               const text = event.clipboardData?.getData("text/plain") ?? "";
               if (text === "") return;
               const target = event.target;
+              // Pasting into a placeholder types into it.
+              if (isPlaceholderText(target)) return;
               if (isText(target)) {
                 // Single lines paste natively; several lines become several items.
                 if (!/\r|\n/.test(text.replace(/[\r\n]+$/, ""))) return;
@@ -768,7 +878,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               [host, "keydown", keydown as EventListener],
               [host, "input", input],
               [host, "compositionstart", compositionstart],
-              [host, "compositionend", compositionend],
+              [host, "compositionend", compositionend as EventListener],
               [host, "beforeinput", beforeinput as EventListener],
               [host, "focusin", focusin as EventListener],
               [host, "copy", copy as EventListener],

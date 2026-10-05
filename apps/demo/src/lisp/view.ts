@@ -31,6 +31,7 @@ import { printOutline } from "./codec";
 import { treeDiff } from "./diff";
 import { show } from "./evaluate";
 import { describeAt, type Description } from "./hover";
+import { slotsFor } from "./slots";
 import { Message, type Refactoring } from "./message";
 import { domIds, type Model } from "./model";
 import { explode, join, raise } from "./refactor";
@@ -742,6 +743,7 @@ export const view = defineView<Model, Message>((model, h) => {
                           }),
                           spellcheck: false,
                           rowAccessory: (row: Row) => rowValue(analysis, row, h),
+                          placeholders: (parentId: string | null) => slotsFor(items, parentId),
                           hover: ({ id, offset, source }) => {
                             const description = describeAt(
                               items,

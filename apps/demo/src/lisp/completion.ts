@@ -1,10 +1,11 @@
-import { ancestors, find, type Items } from "@foldworks/outliner";
+import { ancestors, find, locate, type Items } from "@foldworks/outliner";
 import { Completion, type CompletionItem } from "@foldworks/text-intelligence";
 
 import type { Analysis } from "./analysis";
 import { isComment } from "./codec";
 import { DOCS } from "./docs";
 import { BUILTINS, SPECIAL_FORMS } from "./evaluate";
+import { FLOW_FORMS, headOf } from "./slots";
 import { code } from "./syntax";
 
 /** A symbol or keyword: anything up to a space, a bracket, a quote, or a comment. */
@@ -82,28 +83,39 @@ export const completionsAt = (
   const { from, word } = Completion.wordBefore(node.text, caret, SYMBOL_BEFORE);
   const to = caret + (SYMBOL_AFTER.exec(node.text.slice(caret))?.[0].length ?? 0);
   if (!invoked && word === "") return undefined;
-  const candidates: ReadonlyArray<CompletionItem> = word.startsWith(":")
-    ? [...new Set(analysis.steps.flatMap((step) => [...step.writes, ...step.reads]))].map(
-        (key) => ({
-          label: `:${key}`,
-          kind: "keyword",
-          detail: `written by ${
-            analysis.steps
-              .filter((step) => step.writes.includes(key))
-              .map((step) => step.name)
-              .join(", ") || "no step"
-          }`,
-        }),
-      )
-    : [
-        ...localsAround(items, analysis, id).map((name) => ({
-          label: name,
-          kind: "local",
-          detail: "local",
-        })),
-        ...definitionItems(analysis),
-        ...libraryItems,
-      ];
+  const parentId = locate(items, id)?.parentId ?? null;
+  const parentHead = parentId === null ? undefined : headOf(find(items, parentId)?.text ?? "");
+  // Inside a flow, a row names a step or opens another flow.
+  const inFlow = parentHead !== undefined && FLOW_FORMS.has(parentHead) && from === 0;
+  const candidates: ReadonlyArray<CompletionItem> = inFlow
+    ? [
+        ...definitionItems(analysis).filter(
+          (item) => item.kind === "step" || item.kind === "workflow",
+        ),
+        ...libraryItems.filter((item) => ["sequence", "parallel", "branch"].includes(item.label)),
+      ]
+    : word.startsWith(":")
+      ? [...new Set(analysis.steps.flatMap((step) => [...step.writes, ...step.reads]))].map(
+          (key) => ({
+            label: `:${key}`,
+            kind: "keyword",
+            detail: `written by ${
+              analysis.steps
+                .filter((step) => step.writes.includes(key))
+                .map((step) => step.name)
+                .join(", ") || "no step"
+            }`,
+          }),
+        )
+      : [
+          ...localsAround(items, analysis, id).map((name) => ({
+            label: name,
+            kind: "local",
+            detail: "local",
+          })),
+          ...definitionItems(analysis),
+          ...libraryItems,
+        ];
   const unique = candidates.filter(
     (item, index) => candidates.findIndex((other) => other.label === item.label) === index,
   );

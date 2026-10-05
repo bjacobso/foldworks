@@ -74,6 +74,11 @@ const suggest = (result: UpdateReturn, before: Model, message: Outliner.Message)
   switch (message._tag) {
     case "RequestedCompletion":
       return offer(message.id, message.end, true);
+    case "FilledPlaceholder": {
+      // A row made from a slot suggests what fits there right away.
+      const focus = outline.focus;
+      return focus === null ? result : offer(focus.id, focus.end, true);
+    }
     case "EditedText": {
       if (outline.completion !== null || message.start !== message.end) return result;
       const previous = find(before.outline.items, message.id)?.text ?? "";

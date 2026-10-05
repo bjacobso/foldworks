@@ -171,6 +171,49 @@ export const lispScenarios = (
         .toBe("defn twice-the-amount [x y z] (+ x y z) ; and a note");
     });
 
+    it("offers the parts a form is missing as placeholder rows", async () => {
+      const page = await start();
+      const placeholders = () =>
+        page
+          .locator("[data-outline-placeholder] textarea")
+          .evaluateAll((texts) => texts.map((text) => (text as HTMLTextAreaElement).placeholder));
+      // Every flow ends with a place for another step.
+      expect(await placeholders()).toEqual(["step"]);
+      await text(page, "activate").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("ArrowDown");
+      expect(await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))).toBe(
+        "Add step",
+      );
+      await page.keyboard.type("verify");
+      await expect.poll(() => suggestions(page)).toEqual(["verify-identitystep"]);
+      await screenshot("lisp-placeholder-step");
+      await page.keyboard.press("Enter");
+      await expect
+        .poll(() => valueOf(page, "collect-i9"))
+        .toBe("may read :identity before verify-identity writes it");
+      const rows = await outline(page);
+      const at = rows.findIndex((row) => row.trim() === "activate");
+      expect(rows[at + 1]).toBe("    verify-identity");
+
+      // A function without a body asks for one.
+      await text(page, "invoice-total 100").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("defn twice [x]");
+      await expect.poll(() => placeholders()).toEqual(["body", "step"]);
+      await page.keyboard.press("ArrowDown");
+      await page.keyboard.type("* x 2");
+      await page.keyboard.press("Escape");
+      await expect.poll(() => placeholders()).toEqual(["step"]);
+      await text(page, "* x 2").click();
+      await page.keyboard.press("End");
+      await page.keyboard.press("Enter");
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.type("twice 21");
+      await expect.poll(() => valueOf(page, "twice 21")).toBe("→42");
+    });
+
     it("proposes a structural edit for selected rows and applies it", async () => {
       const page = await start();
       expect(await valueOf(page, "collect-i9")).toBe(

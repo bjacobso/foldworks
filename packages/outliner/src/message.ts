@@ -36,6 +36,18 @@ export const Message = defineMessageUnion({
     to: S.Number,
     items: S.Array(CompletionItem),
   },
+  /**
+   * Typing into a placeholder, pressing Return on it, or clicking its marker.
+   * Creates an item with `text` at `index` among the parent's children and puts
+   * the caret at `offset`.
+   */
+  FilledPlaceholder: {
+    parentId: S.NullOr(S.String),
+    index: S.Number,
+    key: S.String,
+    text: S.String,
+    offset: S.Number,
+  },
   MovedCompletion: { delta: S.Number },
   /**
    * `index` counts the suggestions shown, after narrowing by what was typed.

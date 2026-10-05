@@ -93,6 +93,10 @@ rest of the program stays as rows.
 - **Completion.** Typing a name suggests the locals in scope, definitions,
   special forms, and built-ins, each with its usage; after `:` it suggests data
   keys and the step that writes them. Ctrl+Space asks at any point.
+- **Slots.** Forms describe their parts, and a row offers the ones it is
+  missing as placeholder rows: `+ body` under a function without one, `+ then`
+  and `+ else` under an `if`, and `+ step` at the end of every flow. Typing
+  into `+ step` suggests the steps and flows that fit there.
 - **Effects.** `defstep` declares a step's system and the keys it reads and
   writes. `workflow`, `sequence`, `parallel`, and `branch` build a flow. A
   happens-before analysis warns when a step can run before the step that
@@ -169,10 +173,9 @@ has a use outside Lisp:
 1. **A model behind the contract.** Define the edit-script schema, generate
    it with structured output, and confirm it with a permission checkpoint.
    The local matcher becomes a fallback and a test fixture.
-2. **Forms that declare their slots.** Let `defstep`, `workflow`, and
-   user-defined forms describe their parts. A new `workflow` row could then
-   offer placeholder children such as `+ trigger` and `+ steps`, which is
-   discoverability without parentheses.
+2. **Slots for user-defined forms.** Built-in forms describe their parts in a
+   table today. Let `defn` and user-defined forms declare theirs, so their rows
+   offer the same placeholders.
 3. **Path queries that drive the view.** "Which paths reach `activate`
    without `:i9`?" could answer by expanding and selecting exactly those
    rows, using `Reveal` and row selection.

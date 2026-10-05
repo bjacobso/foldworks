@@ -860,6 +860,19 @@ const updateOutline = (model: Model, message: Message): UpdateReturn =>
       };
     },
     AcceptedCompletion: ({ index }) => acceptCompletion(model, index),
+    FilledPlaceholder: ({ parentId, index, text, offset }) => {
+      if (parentId !== null && find(model.items, parentId) === undefined) return { model };
+      const { id, nextId } = newId(model);
+      const opened = parentId === null ? model.items : setCollapsed(model.items, parentId, false);
+      const items = insertItems(opened, parentId, index, [item(id, text)]);
+      if (items === undefined) return { model };
+      const caret = Math.max(0, Math.min(offset, text.length));
+      return editText(
+        { ...commit(model, items, { announcement: "Added an item." }), nextId },
+        textFocus(id, caret),
+        items,
+      );
+    },
     DismissedCompletion: () => ({ model: { ...model, completion: null } }),
     Hoisted: ({ id }) => hoist(model, id),
     ClickedAdd: () => {
