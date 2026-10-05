@@ -144,6 +144,8 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               Queue.offerUnsafe(queue, message);
             };
             let latest: Model | undefined = host[MODEL_PROPERTY];
+            // Suggestions the keys closed stay closed until the next render shows it.
+            let completionClosed = false;
             const model = (): Model | undefined => latest;
 
             // Typing outruns rendering. A render can carry an item's text from a
@@ -182,6 +184,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               get: () => latest,
               set: (next: Model) => {
                 latest = next;
+                completionClosed = false;
                 acknowledge(next);
               },
             });
@@ -213,7 +216,9 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               id: string,
             ): boolean => {
               const list = model()?.completion;
-              if (list === null || list === undefined || list.id !== id) return false;
+              if (completionClosed || list === null || list === undefined || list.id !== id) {
+                return false;
+              }
               // Only suggestions on screen take keys.
               if (doc.getElementById(domIds(model()!.id).completion) === null) return false;
               const shown = Completion.visible(list, target.value, target.selectionEnd);
@@ -226,14 +231,14 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                   return true;
                 case "Enter":
                 case "Tab":
-                  emit(
-                    Message.AcceptedCompletion({ index: Math.min(list.index, shown.length - 1) }),
-                  );
+                  emit(Message.AcceptedCompletion({}));
+                  completionClosed = true;
                   // Accepting moves the caret after a render; hold what is typed meanwhile.
                   awaitFocus();
                   return true;
                 case "Escape":
                   emit(Message.DismissedCompletion());
+                  completionClosed = true;
                   return true;
                 case "ArrowLeft":
                 case "ArrowRight":
@@ -243,6 +248,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                 case "PageDown":
                   // Moving the caret away from the word puts the suggestions away.
                   emit(Message.DismissedCompletion());
+                  completionClosed = true;
                   return false;
                 default:
                   return false;

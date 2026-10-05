@@ -37,8 +37,11 @@ export const Message = defineMessageUnion({
     items: S.Array(CompletionItem),
   },
   MovedCompletion: { delta: S.Number },
-  /** `index` counts the suggestions shown, after narrowing by what was typed. */
-  AcceptedCompletion: { index: S.Number },
+  /**
+   * `index` counts the suggestions shown, after narrowing by what was typed.
+   * Omitted, the active suggestion is accepted.
+   */
+  AcceptedCompletion: { index: S.optional(S.Number) },
   DismissedCompletion: {},
   Hoisted: { id: S.NullOr(S.String) },
   ClickedAdd: {},

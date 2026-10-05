@@ -245,4 +245,13 @@ describe("update", () => {
     ).model;
     expect(typed.completion).toBeNull();
   });
+
+  it("accepts the active suggestion when no index is given", () => {
+    const items = [{ label: "Bear" }, { label: "Beta" }, { label: "Bee" }];
+    let model = update(start(), Message.RequestedCompletion({ id: "b", start: 2, end: 2 })).model;
+    model = update(model, Message.ShowCompletions({ id: "b", from: 0, to: 2, items })).model;
+    model = update(model, Message.MovedCompletion({ delta: 1 })).model;
+    expect(update(model, Message.AcceptedCompletion({})).model.items[1]?.text).toBe("Betata");
+  });
 });
+

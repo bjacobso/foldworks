@@ -680,12 +680,13 @@ const narrowed = (
     : { ...next, id };
 };
 
-const acceptCompletion = (model: Model, index: number): UpdateReturn => {
+const acceptCompletion = (model: Model, index: number | undefined): UpdateReturn => {
   const list = model.completion;
   const node = list === null ? undefined : find(model.items, list.id);
   if (list === null || node === undefined) return { model: { ...model, completion: null } };
   const caret = completionCaret(model, list);
-  const chosen = Completion.visible(list, node.text, caret)[index];
+  const shown = Completion.visible(list, node.text, caret);
+  const chosen = shown[index ?? Math.min(list.index, shown.length - 1)];
   if (chosen === undefined) return { model: { ...model, completion: null } };
   const accepted = Completion.accept(list, node.text, chosen);
   const items = updateItem(model.items, list.id, (current) => ({
