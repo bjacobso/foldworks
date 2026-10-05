@@ -13,7 +13,15 @@ import {
 } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
-import { Badge, Button, ChangeSetPreview, Icon, TreeDiff, type TreeDiffNode } from "@foldworks/ui";
+import {
+  Badge,
+  Button,
+  ChangeSetPreview,
+  Icon,
+  TreeDiff,
+  ValueTree,
+  type TreeDiffNode,
+} from "@foldworks/ui";
 import { History } from "@foldworks/history";
 import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner, ancestors, find, type Items, type Row } from "@foldworks/outliner";
@@ -36,7 +44,7 @@ import { lineOf, printedFor, sourceHover } from "./source";
 import { Message, type Refactoring } from "./message";
 import { domIds, type Model } from "./model";
 import { explode, join, raise } from "./refactor";
-import { targetsOf } from "./update";
+import { inspectedNodes, targetsOf } from "./update";
 
 type H = HtmlBuilder<Message>;
 
@@ -419,7 +427,22 @@ const inspector = (model: Model, analysis: Analysis, h: H): Html => {
               ? [
                   field(
                     observed.count > 1 ? `Value · last of ${observed.count}` : "Value",
-                    [h.code([h.Class("lisp-code lisp-code--inline")], [show(observed.value, 240)])],
+                    [
+                      inspectedNodes(model).length > 0
+                        ? ValueTree.view(
+                            {
+                              model: model.values,
+                              nodes: inspectedNodes(model),
+                              label: "Value",
+                              toParentMessage: (message) => Message.GotValueMessage({ message }),
+                            },
+                            h,
+                          )
+                        : h.code(
+                            [h.Class("lisp-code lisp-code--inline")],
+                            [show(observed.value, 240)],
+                          ),
+                    ],
                     h,
                   ),
                 ]

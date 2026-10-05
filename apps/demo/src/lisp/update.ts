@@ -4,6 +4,7 @@ import { afterCommit } from "foldkit/render";
 import { evo } from "foldkit/struct";
 import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner, find, selectedRoots, type Items } from "@foldworks/outliner";
+import { ValueTree } from "@foldworks/ui";
 
 import { analyze } from "./analysis";
 import { propose } from "./assistant";
@@ -20,6 +21,7 @@ import {
   sourceTokens,
 } from "./source";
 import { ReadError } from "./syntax";
+import { PAGE, isStructured, valueNodes } from "./values";
 
 type UpdateReturn = Update.Return<Model, Message>;
 
@@ -319,10 +321,55 @@ const ask = (model: Model, prompt: string): UpdateReturn => {
   };
 };
 
+/** The value tree for the row with the caret, when its value has parts. */
+export const inspectedNodes = (model: Model): ReadonlyArray<ValueTree.ValueNode> => {
+  const { focusId } = targetsOf(model.outline);
+  const observed =
+    focusId === null ? undefined : analyze(model.outline.items).evaluation.values.get(focusId);
+  return observed === undefined || !isStructured(observed.value)
+    ? []
+    : valueNodes(observed.value, model.loaded);
+};
+
+/** Expanding a branch loads its first page of children; “more” loads the next. */
+const foldValues = (model: Model, message: ValueTree.Message): UpdateReturn =>
+  Update.foldChild({
+    update: (values: ValueTree.Model, event: ValueTree.Message) =>
+      ValueTree.update(values, event, { nodes: inspectedNodes(model) }),
+    read: (parent: Model) => Option.some(parent.values),
+    write: (parent, values) => evo(parent, { values: () => values }),
+    toParentMessage: (event) => Message.GotValueMessage({ message: event }),
+    foldOutMessage:
+      (event: ValueTree.OutMessage) =>
+      (parent: Model): UpdateReturn => ({
+        model: evo(parent, {
+          loaded: (loaded) => ({
+            ...loaded,
+            [event.id]: (event._tag === "RequestedMore" ? (loaded[event.id] ?? 0) : 0) + PAGE,
+          }),
+        }),
+      }),
+  })(model, message);
+
+/** A different row starts the inspector's value tree afresh. */
+const followInspector = (before: Model, result: UpdateReturn): UpdateReturn =>
+  targetsOf(before.outline).focusId === targetsOf(result.model.outline).focusId
+    ? result
+    : {
+        ...result,
+        model: evo(result.model, {
+          values: () => ValueTree.init({ id: domIds.value }),
+          loaded: () => ({}),
+        }),
+      };
+
 export const update = (model: Model, message: Message): UpdateReturn =>
-  message._tag === "GotSourceMessage"
-    ? foldSource(model, message.message)
-    : syncSource(model, updateWorkbench(model, message));
+  followInspector(
+    model,
+    message._tag === "GotSourceMessage"
+      ? foldSource(model, message.message)
+      : syncSource(model, updateWorkbench(model, message)),
+  );
 
 const updateWorkbench = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
@@ -346,6 +393,7 @@ const updateWorkbench = (model: Model, message: Message): UpdateReturn =>
     },
     ChoseNotation: ({ notation }) => ({ model: evo(model, { notation: () => notation }) }),
     GotSourceMessage: ({ message: childMessage }) => foldSource(model, childMessage),
+    GotValueMessage: ({ message: childMessage }) => foldValues(model, childMessage),
     BlurredSource: () => {
       // Leaving a draft that reads prints it again in the outline's layout.
       const printed = printOutline(model.outline.items).text;

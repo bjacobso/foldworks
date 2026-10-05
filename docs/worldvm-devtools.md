@@ -63,9 +63,9 @@ primitive if a second use appears; until then, build it in `apps/devtools`.
 - **Following a live stream.** `@foldworks/data-grid` virtualizes rows and
   accepts appended data, but keeping the view pinned to new rows, pausing when
   the reader scrolls away, and resuming are not documented behaviors.
-- **Structured payloads.** `CodeBlock` shows serialized JSON. A collapsible
-  value tree for nested payloads would also serve the agent and generative UI
-  demos.
+- **Structured payloads.** `CodeBlock` shows serialized JSON. `ValueTree` in
+  `@foldworks/ui` now shows nested payloads as a collapsible tree whose
+  branches can load from a handle when they open.
 - **Fact origin.** `ValueInspector` accepts a closed set of origins: `Entered`,
   `Imported`, and `Derived`. Facts that arrive through a connection may need
   another value. Widen it with a generic term, not a WorldVM one.

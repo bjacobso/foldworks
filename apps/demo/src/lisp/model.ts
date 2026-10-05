@@ -1,6 +1,7 @@
 import { Schema as S } from "effect";
 import { CodeEditor } from "@foldworks/code-editor";
 import { Outliner } from "@foldworks/outliner";
+import { ValueTree } from "@foldworks/ui";
 
 import { Proposal, Reply } from "./assistant";
 import { OUTLINE_ID, sampleOutline } from "./sample";
@@ -13,6 +14,10 @@ export const Model = S.Struct({
   /** The program printed as Lisp. Its text is the printed outline unless it is being edited. */
   source: CodeEditor.Model,
   sourceError: S.NullOr(S.String),
+  /** The inspected value, as a tree whose branches load when expanded. */
+  values: ValueTree.Model,
+  /** How many children of each branch of the inspected value have loaded. */
+  loaded: S.Record(S.String, S.Number),
   prompt: S.String,
   proposal: S.NullOr(Proposal),
   reply: S.NullOr(Reply),
@@ -38,6 +43,8 @@ export const initialModel = (): Model => ({
     suggestions: "host",
   }),
   sourceError: null,
+  values: ValueTree.init({ id: domIds.value }),
+  loaded: {},
   prompt: "",
   proposal: null,
   reply: null,
@@ -50,4 +57,5 @@ export const domIds = {
   prompt: "lisp-ide-prompt",
   accept: "lisp-ide-accept",
   source: "lisp-ide-source",
+  value: "lisp-ide-value",
 };

@@ -105,7 +105,9 @@ rest of the program stays as rows.
   writes what it reads. `before?` asks the same question as a value, so checks
   sit in the program and stay true or false as it changes.
 - **Inspector.** For the row with the caret, the inspector shows what the row
-  is, its documentation, value, warnings, and the step's system and data. It
+  is, its documentation, value, warnings, and the step's system and data. A
+  structured value is a `ValueTree` whose branches load a page at a time when
+  they open, as values held in another process would. It
   also shows where the name is defined, which rows use it, and the row's
   Lisp. References jump to the row and reveal it.
 - **Zoom.** Hoisting (⌘.) zooms into any form, and the level buttons fold the
@@ -183,8 +185,7 @@ has a use outside Lisp:
 3. **Path queries that drive the view.** "Which paths reach `activate`
    without `:i9`?" could answer by expanding and selecting exactly those
    rows, using `Reveal` and row selection.
-4. **Richer values.** Vectors of maps could show as a data grid, and nested
-   values as a collapsible tree. That would also serve the structured-payload
-   gap in [WorldVM developer tools](./worldvm-devtools.md#gaps).
+4. **Richer values.** Nested values already show as a `ValueTree` in the
+   inspector. Vectors of maps could also show as a data grid.
 5. **Diffs for every document.** Workflow and form documents are trees with
    stable ids too, so `TreeDiff` can review their changes the same way.
