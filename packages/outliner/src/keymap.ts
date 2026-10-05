@@ -31,6 +31,7 @@ export const Action = S.Literals([
   "ClearSelection",
   "SelectAll",
   "ShowInfo",
+  "Complete",
 ]);
 export type Action = typeof Action.Type;
 
@@ -43,6 +44,7 @@ const FOCUS_KEEPING: ReadonlySet<Action> = new Set([
   "Expand",
   "ToggleChecked",
   "ShowInfo",
+  "Complete",
 ]);
 
 /**
@@ -150,6 +152,7 @@ export const resolveKey = (
   const collapsedCaret = caret.start === caret.end;
   // Ctrl+Shift+Space on every platform, beside Ctrl+Space for suggestions.
   if (event.key === " " && only(m, platform === "mac" ? "ctrl" : "mod", "shift")) return "ShowInfo";
+  if (event.key === " " && only(m, platform === "mac" ? "ctrl" : "mod")) return "Complete";
   if (event.key === "Enter" && only(m)) return "Split";
   if (event.key === "Escape" && only(m)) return "SelectRow";
   if (event.key === "Backspace" && only(m, "mod", "shift")) return "Delete";

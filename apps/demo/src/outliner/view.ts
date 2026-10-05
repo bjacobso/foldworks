@@ -5,6 +5,7 @@ import { Button } from "@foldworks/ui";
 import { History } from "@foldworks/history";
 import { Outliner, shortcutHelp, walk } from "@foldworks/outliner";
 
+import { decorations, describeMark, type MarkInfo } from "./mentions";
 import { Message } from "./message";
 import type { Model } from "./model";
 
@@ -87,6 +88,20 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html =>
     ],
   );
 
+/** The card for a mention or a tag. */
+const markCard = (info: MarkInfo, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class("outliner-demo__card")],
+    [
+      h.strong([], [info.title]),
+      h.span([], [info.detail]),
+      h.span(
+        [h.Class("outliner-demo__card-count")],
+        [info.count === 1 ? "On 1 item" : `On ${info.count} items`],
+      ),
+    ],
+  );
+
 const mouseTips = (platform: Model["platform"]): ReadonlyArray<string> => {
   const option = platform === "mac" ? "⌥" : "Alt";
   const shift = platform === "mac" ? "⇧" : "Shift";
@@ -96,6 +111,7 @@ const mouseTips = (platform: Model["platform"]): ReadonlyArray<string> => {
     `${option}-click a triangle to open or close every level beneath it.`,
     `Drag across rows, or ${shift}-click, to select several.`,
     "Paste indented text or a Markdown list to add many items at once.",
+    "Type @ to mention someone on the crew, or # to tag an item. Rest the pointer on one to see who or what it is.",
   ];
 };
 
@@ -153,6 +169,18 @@ export const view = defineView<Model, Message>((model, h) => {
                     viewInputs: {
                       label: "Field guide outline",
                       showCheckboxes: model.showCheckboxes,
+                      decorations: decorations(model.outline.items),
+                      hover: ({ text, offset, source }) => {
+                        const info = describeMark(
+                          model.outline.items,
+                          text,
+                          offset,
+                          source === "Keyboard",
+                        );
+                        return info === undefined
+                          ? null
+                          : { from: info.from, to: info.to, content: markCard(info, h) };
+                      },
                     },
                     toParentMessage: outlineMessage,
                   }),

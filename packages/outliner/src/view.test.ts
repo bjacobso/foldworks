@@ -65,4 +65,29 @@ describe("view", () => {
       text(render(model({ hover: { id: "a", offset: 6, source: "Pointer" } }), inputs), "#o-hover"),
     ).toBeUndefined();
   });
+
+  it("shows suggestions narrowed by what was typed and points the text at the active one", () => {
+    const html = render(
+      model({
+        focus: { id: "a", start: 3, end: 3 },
+        completion: {
+          id: "a",
+          from: 0,
+          to: 3,
+          items: [{ label: "total" }, { label: "tax" }, { label: "totem", detail: "pole" }],
+          index: 1,
+        },
+      }),
+    );
+    expect(Scene.findAll(html, '[role="option"]').map((node) => Scene.textContent(node))).toEqual([
+      "total",
+      "totempole",
+    ]);
+    const textarea = Option.getOrUndefined(Scene.find(html, "#o-text-a"));
+    if (textarea === undefined) throw new Error("Expected the item text");
+    expect(Scene.attr(textarea, "aria-activedescendant")).toEqual(
+      Option.some("o-completion-option-1"),
+    );
+    expect(Scene.attr(textarea, "aria-autocomplete")).toEqual(Option.some("list"));
+  });
 });

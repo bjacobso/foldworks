@@ -17,6 +17,28 @@ export type Hover = Readonly<{ from: number; to: number; content: Html | null }>
 
 const GAP = 4;
 
+/** The part of the viewport an element can show in, inside every ancestor that clips. */
+const visibleBounds = (
+  element: HTMLElement,
+): Readonly<{ top: number; bottom: number; left: number; right: number }> => {
+  const view = element.ownerDocument.defaultView;
+  let top = 0;
+  let left = 0;
+  let bottom = view?.innerHeight ?? Infinity;
+  let right = view?.innerWidth ?? Infinity;
+  for (let node = element.parentElement; node !== null; node = node.parentElement) {
+    const style = view?.getComputedStyle(node);
+    if (style === undefined || `${style.overflowX}${style.overflowY}` === "visiblevisible")
+      continue;
+    const rect = node.getBoundingClientRect();
+    top = Math.max(top, rect.top);
+    left = Math.max(left, rect.left);
+    bottom = Math.min(bottom, rect.bottom);
+    right = Math.min(right, rect.right);
+  }
+  return { top, bottom, left, right };
+};
+
 /**
  * Positions a popup under its anchor, or above it when there is no room
  * below, and keeps it there as the page scrolls or the popup resizes. The
@@ -36,30 +58,29 @@ const anchorPopup = (
           const popup = element as HTMLElement;
           const doc = popup.ownerDocument;
           const view = doc.defaultView;
-          let frame = 0;
+          let pending = 0;
           const place = () => {
             const root = doc.querySelector(selector);
             const parent = popup.offsetParent ?? doc.body;
             const at = root === null ? undefined : rectAtOffset(root, offset);
             if (at === undefined) return;
-            const frameRect = parent.getBoundingClientRect();
+            const bounds = visibleBounds(popup);
+            const frame = parent.getBoundingClientRect();
             const height = popup.offsetHeight;
-            const below = at.bottom + GAP;
-            const viewportHeight = view?.innerHeight ?? Infinity;
-            const flip = below + height > viewportHeight && at.top - GAP - height > 0;
-            const top = flip ? at.top - GAP - height : below;
             const width = popup.offsetWidth;
-            const viewportWidth = view?.innerWidth ?? Infinity;
-            const left = Math.max(4, Math.min(at.left, viewportWidth - width - 4));
-            popup.style.left = `${left - frameRect.left - parent.clientLeft + parent.scrollLeft}px`;
-            popup.style.top = `${top - frameRect.top - parent.clientTop + parent.scrollTop}px`;
+            const below = at.bottom + GAP;
+            const flip = below + height > bounds.bottom && at.top - GAP - height >= bounds.top;
+            const top = flip ? at.top - GAP - height : below;
+            const left = Math.max(bounds.left + 4, Math.min(at.left, bounds.right - width - 4));
+            popup.style.left = `${left - frame.left - parent.clientLeft + parent.scrollLeft}px`;
+            popup.style.top = `${top - frame.top - parent.clientTop + parent.scrollTop}px`;
             popup.dataset.placement = flip ? "Above" : "Below";
             const active = popup.querySelector<HTMLElement>('[aria-selected="true"]');
             active?.scrollIntoView({ block: "nearest" });
           };
           const schedule = () => {
-            cancelAnimationFrame(frame);
-            frame = requestAnimationFrame(place);
+            cancelAnimationFrame(pending);
+            pending = requestAnimationFrame(place);
           };
           const press = (event: Event) => {
             if (keepFocus) event.preventDefault();
@@ -78,7 +99,7 @@ const anchorPopup = (
           popup.addEventListener("pointerdown", press);
           popup.addEventListener("mousedown", press);
           return () => {
-            cancelAnimationFrame(frame);
+            cancelAnimationFrame(pending);
             resize.disconnect();
             mutations.disconnect();
             doc.removeEventListener("scroll", schedule, { capture: true });

@@ -8,7 +8,7 @@ const source = `
     - New volunteers keep asking the same twenty questions
     - The old binder is out of date and lives in one closet
   - Chapters
-    - [x] Getting to the trailheads
+    - [x] Getting to the trailheads @maya
     - [x] What to pack
       - Water, two liters at least
       - Layers — mornings start near freezing
@@ -18,17 +18,17 @@ const source = `
       - Varied thrush
       - Pacific wren
       - Sooty grouse
-    - [ ] Leave-no-trace basics
+    - [ ] Leave-no-trace basics @ada #draft
   - Open questions
     - Print run: 200 or 500?
     - Who owns updates after the first season?
 - Volunteer day, April 12
-  - Trail crew
-  - Signage
-  - Lunch
+  - Trail crew with @maya and @sam
+  - Signage @jonah #print
+  - Lunch @priya
 - Someday
   - A night-sky chapter
-  - Audio recordings of each bird call
+  - Audio recordings of each bird call #birds
 `;
 
 const sample = (): Items => {

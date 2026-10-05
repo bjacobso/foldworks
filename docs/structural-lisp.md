@@ -90,6 +90,9 @@ rest of the program stays as rows.
   documentation, and the value it last had. Errors are underlined on the
   expression that raised them and warnings on the step they concern, and
   their messages lead the hover.
+- **Completion.** Typing a name suggests the locals in scope, definitions,
+  special forms, and built-ins, each with its usage; after `:` it suggests data
+  keys and the step that writes them. Ctrl+Space asks at any point.
 - **Effects.** `defstep` declares a step's system and the keys it reads and
   writes. `workflow`, `sequence`, `parallel`, and `branch` build a flow. A
   happens-before analysis warns when a step can run before the step that

@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 import { History } from "@foldworks/history";
-import { HoverSource } from "@foldworks/text-intelligence";
+import { Completion, HoverSource } from "@foldworks/text-intelligence";
 
 import { Items, find, walk, type Items as ItemsValue } from "./outline";
 
@@ -35,6 +35,10 @@ export type Snapshot = typeof Snapshot.Type;
 export const HoverTarget = S.Struct({ id: S.String, offset: S.Number, source: HoverSource });
 export type HoverTarget = typeof HoverTarget.Type;
 
+/** Suggestions offered for a range of one item's text. */
+export const OpenCompletion = S.Struct({ id: S.String, ...Completion.List.fields });
+export type OpenCompletion = typeof OpenCompletion.Type;
+
 export const Mode = S.Literals(["Text", "Rows"]);
 export type Mode = typeof Mode.Type;
 
@@ -48,6 +52,7 @@ export const Model = S.Struct({
   selection: S.NullOr(RowSelection),
   drag: S.NullOr(Drag),
   hover: S.NullOr(HoverTarget),
+  completion: S.NullOr(OpenCompletion),
   history: History.Schema(Snapshot),
   /** When the last keystroke changed text, for grouping typing into undo steps. */
   typedAt: S.Number,
@@ -90,6 +95,7 @@ export const init = (config: InitConfig): Model => {
     selection: null,
     drag: null,
     hover: null,
+    completion: null,
     history: History.init<Snapshot>(),
     typedAt: 0,
     nextId: counterFor(config.id, items),
@@ -104,5 +110,6 @@ export const domIds = (modelId: string) => ({
   row: (id: string) => `${modelId}-row-${id}`,
   text: (id: string) => `${modelId}-text-${id}`,
   hover: `${modelId}-hover`,
+  completion: `${modelId}-completion`,
   add: `${modelId}-add`,
 });

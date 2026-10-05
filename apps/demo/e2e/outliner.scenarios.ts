@@ -162,5 +162,53 @@ export const outlinerScenarios = (
       await expect.poll(() => page.locator(".fw-outliner__title").count()).toBe(0);
       await screenshot("outliner");
     });
+
+    it("mentions people and tags items, with suggestions and hover cards", async () => {
+      const page = await start();
+      const suggestions = () => page.locator('.fw-completion [role="option"]').allTextContents();
+      await text(page, "Reading the weather").click();
+      await page.keyboard.press("End");
+      await page.keyboard.type(" @");
+      await expect
+        .poll(() => suggestions())
+        .toEqual(["@mayaMaya Chen", "@jonahJonah Park", "@adaAda Ruiz", "@samSam Okafor"]);
+      await page.keyboard.type("j");
+      await expect.poll(() => suggestions()).toEqual(["@jonahJonah Park"]);
+      await screenshot("outliner-mention-suggestions");
+      await page.keyboard.press("Tab");
+      await page.keyboard.type("#dr");
+      await expect.poll(() => suggestions()).toEqual(["#draft"]);
+      // Keys typed right after accepting land after the inserted tag.
+      await page.keyboard.press("Enter");
+      await page.keyboard.type("!");
+      await expect
+        .poll(() => page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value))
+        .toBe("Reading the weather @jonah #draft !");
+
+      await page.getByRole("button", { name: "Expand all" }).click();
+      const restOn = async (word: string) => {
+        const pointOf = () =>
+          page.locator(".fw-outliner__span").evaluateAll((spans, wanted) => {
+            const rect = spans.find((span) => span.textContent === wanted)?.getBoundingClientRect();
+            return rect === undefined
+              ? null
+              : { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+          }, word);
+        await expect.poll(pointOf).not.toBeNull();
+        const point = (await pointOf())!;
+        await page.mouse.move(point.x, point.y);
+      };
+      await restOn("@priya");
+      await expect
+        .poll(() => page.locator(".fw-hover").textContent())
+        .toBe("Warning No one on the crew is called @priya.");
+      await page.mouse.move(4, 4);
+      await expect.poll(() => page.locator(".fw-hover").count()).toBe(0);
+      await restOn("@sam");
+      await expect
+        .poll(() => page.locator(".fw-hover").textContent())
+        .toBe("Sam OkaforVolunteer coordinatorOn 1 item");
+      await screenshot("outliner-mention-hover");
+    });
   });
 };

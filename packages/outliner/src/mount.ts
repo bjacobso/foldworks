@@ -1,6 +1,6 @@
 import { Effect, Queue, Stream } from "effect";
 import { Mount } from "foldkit";
-import { isOver, offsetAtPoint } from "@foldworks/text-intelligence";
+import { Completion, isOver, offsetAtPoint } from "@foldworks/text-intelligence";
 
 import { caretLines } from "./caret";
 import { keepsFocus, resolveKey, type Action, type KeyInput, type Platform } from "./keymap";
@@ -43,7 +43,11 @@ type SurfaceMessage = Extract<
       | "Dropped"
       | "CancelledDrag"
       | "Hovered"
-      | "DismissedHover";
+      | "DismissedHover"
+      | "RequestedCompletion"
+      | "MovedCompletion"
+      | "AcceptedCompletion"
+      | "DismissedCompletion";
   }
 >;
 
@@ -109,6 +113,10 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
     Message.CancelledDrag,
     Message.Hovered,
     Message.DismissedHover,
+    Message.RequestedCompletion,
+    Message.MovedCompletion,
+    Message.AcceptedCompletion,
+    Message.DismissedCompletion,
   ],
   execute: ({ element }) =>
     Stream.callback<SurfaceMessage>((queue) =>
@@ -143,11 +151,56 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
               if (!keepsFocus(action)) awaitFocus();
             };
 
+            /**
+             * While suggestions show for this text, they claim the keys that pick
+             * one, ahead of the key map, so Return never splits under them.
+             */
+            const completionKey = (
+              event: KeyInput,
+              target: HTMLTextAreaElement,
+              id: string,
+            ): boolean => {
+              const list = model()?.completion;
+              if (list === null || list === undefined || list.id !== id) return false;
+              const shown = Completion.visible(list, target.value, target.selectionEnd);
+              const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
+              if (shown.length === 0 || !plain) return false;
+              switch (event.key) {
+                case "ArrowDown":
+                case "ArrowUp":
+                  emit(Message.MovedCompletion({ delta: event.key === "ArrowDown" ? 1 : -1 }));
+                  return true;
+                case "Enter":
+                case "Tab":
+                  emit(
+                    Message.AcceptedCompletion({ index: Math.min(list.index, shown.length - 1) }),
+                  );
+                  // Accepting moves the caret after a render; hold what is typed meanwhile.
+                  awaitFocus();
+                  return true;
+                case "Escape":
+                  emit(Message.DismissedCompletion());
+                  return true;
+                case "ArrowLeft":
+                case "ArrowRight":
+                case "Home":
+                case "End":
+                case "PageUp":
+                case "PageDown":
+                  // Moving the caret away from the word puts the suggestions away.
+                  emit(Message.DismissedCompletion());
+                  return false;
+                default:
+                  return false;
+              }
+            };
+
             /** Resolves and dispatches a key against an element; `true` when the outline used it. */
             const handleKey = (event: KeyInput, target: EventTarget | null): boolean => {
               if (isText(target)) {
                 const id = rowIdOf(target);
                 if (id === undefined) return false;
+                if (completionKey(event, target, id)) return true;
                 const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
                 const lines = vertical
                   ? caretLines(target)
@@ -167,6 +220,16 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                   platform,
                 );
                 if (action === undefined) return false;
+                if (action === "Complete") {
+                  emit(
+                    Message.RequestedCompletion({
+                      id,
+                      start: target.selectionStart,
+                      end: target.selectionEnd,
+                    }),
+                  );
+                  return true;
+                }
                 pressAction(action, id, target.selectionStart, target.selectionEnd, lines.x);
                 return true;
               }
@@ -505,6 +568,10 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
             const pointerdown = (event: PointerEvent) => {
               const target = event.target instanceof Element ? event.target : null;
               if (target === null || event.button !== 0) return;
+              // A press anywhere but the suggestions themselves puts them away.
+              if (model()?.completion && !target.closest("[data-text-popup]")) {
+                emit(Message.DismissedCompletion());
+              }
               if (target.closest("[data-outline-control]")) {
                 // Controls act without taking focus away from the text being edited.
                 event.preventDefault();

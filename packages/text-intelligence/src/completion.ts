@@ -51,16 +51,22 @@ export const query = (completion: List, text: string, caret: number): string =>
 
 /**
  * The items to show for a text and caret, or none when the caret has left the
- * range. Surfaces show the list only while this is non-empty.
+ * range. An item whose label or insertion is exactly what is typed adds
+ * nothing and is left out, so a finished word does not hold the keys that pick
+ * a suggestion.
+ * Surfaces show the list only while this is non-empty.
  */
 export const visible = (
   completion: List,
   text: string,
   caret: number,
-): ReadonlyArray<CompletionItem> =>
-  contains(completion, caret) && completion.to <= text.length
-    ? matching(completion.items, query(completion, text, caret))
-    : [];
+): ReadonlyArray<CompletionItem> => {
+  if (!contains(completion, caret) || completion.to > text.length) return [];
+  const typed = query(completion, text, caret);
+  return matching(completion.items, typed).filter(
+    (item) => item.label !== typed && (item.insert ?? item.label) !== typed,
+  );
+};
 
 /** The active item among the visible ones. */
 export const active = (

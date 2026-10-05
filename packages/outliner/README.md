@@ -104,6 +104,35 @@ shape of `@foldworks/text-intelligence`'s `Diagnostic`. They are drawn as wavy
 underlines and listed first in the hover popup, so a host that only reports
 problems gets their messages on hover without a `hover` input.
 
+## Completion
+
+The outliner shows suggestions at the caret, and the host decides when and
+what. Ctrl+Space sends `RequestedCompletion({ id, start, end })`. The host
+answers with `ShowCompletions({ id, from, to, items })`, where `from` and `to`
+are the text the chosen item replaces and `items` are
+`@foldworks/text-intelligence` `CompletionItem`s. A host can also offer
+suggestions unasked, for example when it sees `EditedText` after an `@`:
+
+```ts
+GotOutlinerMessage: ({ message }) => {
+  const result = foldOutliner(model, message);
+  const offer = message._tag === "RequestedCompletion" ? lookUp(message.id, message.end) : undefined;
+  return offer === undefined
+    ? result
+    : foldOutliner(result.model, Outliner.Message.ShowCompletions({ id: message.id, ...offer }));
+},
+```
+
+An offer is ignored unless the caret is in that item and inside the range.
+While suggestions show, ↑ and ↓ choose one, Return or Tab accepts it, and Esc
+puts them away. Those keys are taken before the outline's own, so Return never
+splits an item under open suggestions. Typing narrows the list by the text
+between `from` and the caret; it closes when nothing matches, when the caret
+moves off the word, or when the outline does anything else. An item that
+matches what is typed exactly is left out, so a finished word leaves Return to
+start the next item. Accepting replaces the range as one undoable step, and
+keys typed before the caret settles are replayed after the insertion.
+
 `Outliner.Message.Replace({ items, announcement, coalescingKey })` applies an
 edit the host computed, such as a refactoring or text typed in another view,
 as one undoable step. Focus stays put, and replacements with the same
@@ -126,6 +155,7 @@ item's ancestors, leaves a hoist that hides it, and puts the caret at its end.
 | Esc                                        | Select the item as a row; Return edits it again       |
 | ⇧↑ · ⇧↓                                    | Extend into a row selection once the text is selected |
 | ⌘Z · ⌘⇧Z                                   | Undo · redo                                           |
+| ⌃Space (Ctrl+Space)                        | Suggest completions                                   |
 | ⌃⇧Space (Ctrl+Shift+Space)                 | Show information about the text at the caret          |
 
 ⌘ is Ctrl on Windows and Linux. While rows are selected, ↑ and ↓ move the
