@@ -8,6 +8,7 @@ const fixtures = [
   },
   { name: "stateful-floating-primitives", heading: "Stateful floating primitives", catalog: true },
   { name: "data-display-and-feedback", heading: "Data display and feedback", catalog: true },
+  { name: "loading-feedback", heading: "Loading feedback", catalog: true },
   { name: "forms-and-selection", heading: "Forms and selection", catalog: true },
   { name: "navigation", heading: "Navigation", catalog: true },
   { name: "disclosure-and-layout", heading: "Disclosure and layout", catalog: true },

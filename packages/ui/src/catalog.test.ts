@@ -43,6 +43,7 @@ const officialComponentNames = [
   "Kbd",
   "Label",
   "Legend",
+  "Loader",
   "Marker",
   "Menubar",
   "Message",

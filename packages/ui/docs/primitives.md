@@ -76,6 +76,63 @@ rapid clicks advance from the latest state.
 `TransactionTimeline` is the better fit for attributed history that is read
 rather than replayed.
 
+## Loading feedback
+
+Import `Skeleton`, `Spinner`, and `Loader` from `@foldworks/ui`. Each follows
+`view(config, h)` and accepts `attributes`, `sx`, and `slotProps` overrides.
+The application owns the loading state and replaces the view when work ends.
+
+`Skeleton.view` reserves space with optional CSS `width` and `height` values.
+Its `shape` is `rectangle` (the default, full width and 16px high), `text`
+(full width and 1em high), or `circle` (40px square). Set both dimensions for
+a different circle size. Skeletons are decorative unless given a `label`.
+Use several unlabeled skeletons inside one Loader for a card, list, or panel.
+
+`Spinner.view` accepts `size: "xs" | "sm" | "md" | "lg"` (12, 16, 24, or
+32px; default `sm`). It announces `label`, defaulting to “Loading”. Use
+`decorative: true` inside an already labeled button or status. Both Skeleton
+and Spinner pulse or rotate by default, stop under `prefers-reduced-motion`,
+and accept `isAnimated: false` for a static indicator.
+
+`Loader.view` renders one polite status with a visible label (default
+“Loading”) and a decorative spinner. Choose `layout: "block"` for centered
+panel feedback, or the default `inline` to sit beside other content. Pass
+`size` to resize its spinner. `hideLabel: true` visually hides the label while
+keeping it available to assistive technology. Its slots are `root`,
+`indicator`, `label`, and `content`.
+
+```ts
+Loader.view({ label: "Saving changes", size: "sm" }, h);
+
+Loader.view(
+  {
+    label: "Loading account",
+    hideLabel: true,
+    children: [
+      Layout.Row.view(
+        {
+          children: [
+            Skeleton.view({ shape: "circle" }, h),
+            Skeleton.view({ shape: "text", width: "60%" }, h),
+          ],
+        },
+        h,
+      ),
+      Skeleton.view({ height: "120px" }, h),
+    ],
+  },
+  h,
+);
+```
+
+Supplying `children` replaces the spinner and defaults Loader to block layout.
+These children are decorative placeholders: Loader hides the group from
+accessibility APIs and exposes a single status label. Keep interactive controls
+outside this slot. Set `aria-busy` on the surrounding content region while it
+is loading; keep the Loader status outside that busy region so announcements
+are not deferred. For measured completion, use `Progress.view` with `value`
+and `max` instead.
+
 ## Metrics and technical details
 
 `Badge` and `Tag` share neutral, muted, accent, success, warning, danger, and

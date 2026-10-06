@@ -93,8 +93,18 @@ export type {
   ToggleGroupSlot,
   ToggleSlot,
 } from "./forms";
-export { Progress, Skeleton, Sonner, Spinner, StatusMessage } from "./feedback";
-export type { ProgressConfig, ProgressSlot, ProgressTone } from "./feedback";
+export { Loader, Progress, Skeleton, Sonner, Spinner, StatusMessage } from "./feedback";
+export type {
+  LoaderConfig,
+  LoaderSlot,
+  LoadingSize,
+  ProgressConfig,
+  ProgressSlot,
+  ProgressTone,
+  SkeletonConfig,
+  SkeletonShape,
+  SpinnerConfig,
+} from "./feedback";
 export { NumberField } from "./number-field";
 export { Stepper } from "./stepper";
 export { Tag } from "./tag";

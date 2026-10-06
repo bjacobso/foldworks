@@ -11,6 +11,7 @@ import {
   type WithSlotProps,
 } from "./catalog.shared";
 import { sxAttrs } from "./sx";
+import { contentStyles } from "./primitive.styles";
 
 export type ProgressTone = "default" | "success" | "warning" | "danger" | "info";
 export type ProgressSlot = "root" | "track" | "indicator" | "caption";
@@ -84,33 +85,135 @@ const progress = <Message>(config: ProgressConfig<Message>, h: HtmlBuilder<Messa
   );
 };
 
-const skeleton = <Message>(
-  config: StyledConfig<Message> & Readonly<{ label?: string; width?: string; height?: string }>,
-  h: HtmlBuilder<Message>,
-): Html =>
-  h.div([
-    ...styledAttrs(config, h, styles.skeleton),
-    h.AriaHidden(config.label === undefined),
-    ...(config.label === undefined ? [] : [h.Role("status"), h.AriaLabel(config.label)]),
-    ...(config.width === undefined && config.height === undefined
-      ? []
-      : [
-          h.Style({
-            ...(config.width === undefined ? {} : { width: config.width }),
-            ...(config.height === undefined ? {} : { height: config.height }),
-          }),
-        ]),
-  ]);
+export type LoadingSize = "xs" | "sm" | "md" | "lg";
+export type SkeletonShape = "rectangle" | "text" | "circle";
 
-const spinner = <Message>(
-  config: StyledConfig<Message> & Readonly<{ label?: string }>,
-  h: HtmlBuilder<Message>,
-): Html =>
-  h.span([
-    ...styledAttrs(config, h, styles.spinner),
+export type SkeletonConfig<Message> = StyledConfig<Message> &
+  WithSlotProps<Message, "root"> &
+  Readonly<{
+    /** Omit for decorative placeholders; use Loader to label a group once. */
+    label?: string;
+    width?: string;
+    height?: string;
+    shape?: SkeletonShape;
+    isAnimated?: boolean;
+  }>;
+
+const skeleton = <Message>(config: SkeletonConfig<Message>, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [
+      ...rootAttrs(
+        config,
+        h,
+        styles.skeleton,
+        config.shape === "text" && styles.skeletonText,
+        config.shape === "circle" && styles.skeletonCircle,
+        config.isAnimated === false && styles.loadingStatic,
+      ),
+      h.AriaHidden(config.label === undefined),
+      ...(config.label === undefined ? [] : [h.Role("status"), h.AriaLabel(config.label)]),
+      ...(config.width === undefined && config.height === undefined
+        ? []
+        : [
+            h.Style({
+              ...(config.width === undefined ? {} : { width: config.width }),
+              ...(config.height === undefined ? {} : { height: config.height }),
+            }),
+          ]),
+    ],
+    config.label === undefined
+      ? []
+      : [h.span(sxAttrs(h, contentStyles.visuallyHidden), [config.label])],
+  );
+
+export type SpinnerConfig<Message> = StyledConfig<Message> &
+  WithSlotProps<Message, "root"> &
+  Readonly<{
+    label?: string;
+    /** Hide from accessibility APIs when a surrounding control or Loader owns the label. */
+    decorative?: boolean;
+    size?: LoadingSize;
+    isAnimated?: boolean;
+  }>;
+
+const spinnerSizes = {
+  xs: styles.spinnerXs,
+  sm: undefined,
+  md: styles.spinnerMd,
+  lg: styles.spinnerLg,
+} as const;
+
+const spinner = <Message>(config: SpinnerConfig<Message>, h: HtmlBuilder<Message>): Html =>
+  h.span(
+    [
+      ...rootAttrs(
+        config,
+        h,
+        styles.spinner,
+        spinnerSizes[config.size ?? "sm"],
+        config.isAnimated === false && styles.loadingStatic,
+      ),
+      ...(config.decorative === true
+        ? [h.AriaHidden(true)]
+        : [h.Role("status"), h.AriaLabel(config.label ?? "Loading")]),
+    ],
+    config.decorative === true
+      ? []
+      : [h.span(sxAttrs(h, contentStyles.visuallyHidden), [config.label ?? "Loading"])],
+  );
+
+export type LoaderSlot = "root" | "indicator" | "label" | "content";
+export type LoaderConfig<Message> = StyledConfig<Message> &
+  WithSlotProps<Message, LoaderSlot> &
+  Readonly<{
+    label?: string;
+    size?: LoadingSize;
+    layout?: "inline" | "block";
+    hideLabel?: boolean;
+    /** Decorative placeholders replacing the spinner. Defaults the layout to block. */
+    children?: Children;
+  }>;
+
+/** A single polite status for a spinner with text, or a composition of skeletons. */
+const loader = <Message>(config: LoaderConfig<Message>, h: HtmlBuilder<Message>): Html => {
+  const label = config.label ?? "Loading";
+  const layout = config.layout ?? (config.children === undefined ? "inline" : "block");
+  const slots = config.slotProps;
+  const attributes = [
+    ...rootAttrs(config, h, styles.loader, layout === "block" && styles.loaderBlock),
     h.Role("status"),
-    h.AriaLabel(config.label ?? "Loading"),
-  ]);
+    h.AriaLabel(label),
+    h.AriaLive("polite"),
+    h.AriaAtomic(true),
+  ];
+  const children = [
+    config.children === undefined
+      ? spinner(
+          {
+            decorative: true,
+            size: config.size ?? "sm",
+            slotProps: { root: slots?.indicator ?? {} },
+          },
+          h,
+        )
+      : h.div(
+          [...slotAttrs(slots?.content, h, styles.loaderContent), h.AriaHidden(true)],
+          config.children,
+        ),
+    h.span(
+      slotAttrs(
+        slots?.label,
+        h,
+        styles.loaderLabel,
+        config.hideLabel === true && contentStyles.visuallyHidden,
+      ),
+      [label],
+    ),
+  ];
+  return layout === "inline" && config.children === undefined
+    ? h.span(attributes, children)
+    : h.div(attributes, children);
+};
 
 export type Toast = Readonly<{
   id: string;
@@ -197,5 +300,6 @@ const message = <Message>(
 export const Progress = { view: progress } as const;
 export const Skeleton = { view: skeleton } as const;
 export const Spinner = { view: spinner } as const;
+export const Loader = { view: loader } as const;
 export const Sonner = { view: sonner } as const;
 export const StatusMessage = { view: message } as const;

@@ -215,27 +215,3 @@
   height: 160px;
   text-align: center;
 }
-
-.fk-data-table__skeleton,
-.fk-data-table__skeleton-checkbox {
-  animation: fk-data-table-pulse 1.3s ease-in-out infinite;
-  background: var(--data-table-border);
-  border-radius: 5px;
-  display: block;
-  height: 10px;
-  width: min(75%, 140px);
-}
-
-.fk-data-table__skeleton-checkbox {
-  height: 16px;
-  width: 16px;
-}
-
-@keyframes fk-data-table-pulse {
-  50% { opacity: .45; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fk-data-table__skeleton,
-  .fk-data-table__skeleton-checkbox { animation: none; }
-}

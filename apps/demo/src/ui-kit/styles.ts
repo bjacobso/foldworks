@@ -229,6 +229,8 @@ export const uiKitStyles = stylex.create({
     justifyContent: "center",
   },
   catalogSidebar: { maxWidth: "260px" },
+  catalogSkeletonDetails: { flex: 1, minWidth: 0 },
+  catalogSkeletonMedia: { marginTop: "12px" },
   catalogOverlayButtons: { alignItems: "center", display: "flex", flexWrap: "wrap", gap: "8px" },
   catalogScrollContent: { display: "grid", gap: "8px", padding: "8px" },
   catalogScrollItem: {

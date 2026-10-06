@@ -38,6 +38,7 @@ import {
   Layout,
   Legend,
   Link,
+  Loader,
   Marker,
   Menubar,
   Message as ChatMessage,
@@ -1611,6 +1612,58 @@ const metricsAndDetails = (model: Model, h: HtmlBuilder<Message>): Html =>
     true,
   );
 
+const loadingFeedback = (h: HtmlBuilder<Message>): Html =>
+  section(
+    "Loading feedback",
+    [
+      Layout.Row.view(
+        {
+          gap: "md",
+          children: [
+            Spinner.view({ label: "Extra small spinner", size: "xs" }, h),
+            Spinner.view({ label: "Small spinner", size: "sm" }, h),
+            Spinner.view({ label: "Medium spinner", size: "md" }, h),
+            Spinner.view({ label: "Large spinner", size: "lg" }, h),
+          ],
+        },
+        h,
+      ),
+      Loader.view({ label: "Syncing account", size: "md" }, h),
+      Loader.view({ label: "Loading workspace", layout: "block", size: "lg" }, h),
+      Loader.view(
+        {
+          label: "Loading profile card",
+          hideLabel: true,
+          children: [
+            Layout.Row.view(
+              {
+                gap: "md",
+                children: [
+                  Skeleton.view({ shape: "circle" }, h),
+                  Layout.Stack.view(
+                    {
+                      gap: "sm",
+                      sx: styles.catalogSkeletonDetails,
+                      children: [
+                        Skeleton.view({ shape: "text", width: "60%" }, h),
+                        Skeleton.view({ shape: "text", width: "85%" }, h),
+                      ],
+                    },
+                    h,
+                  ),
+                ],
+              },
+              h,
+            ),
+            Skeleton.view({ height: "64px", sx: styles.catalogSkeletonMedia }, h),
+          ],
+        },
+        h,
+      ),
+    ],
+    h,
+  );
+
 export const catalogView = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [h.Class(className(styles.catalogGrid)), h.DataAttribute("component-catalog", "true")],
@@ -1618,6 +1671,7 @@ export const catalogView = (model: Model, h: HtmlBuilder<Message>): Html =>
       foundations(model, h),
       statefulFoundations(model, h),
       dataDisplay(model, h),
+      loadingFeedback(h),
       forms(model, h),
       navigation(model, h),
       disclosureAndLayout(model, h),

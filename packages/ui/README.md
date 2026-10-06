@@ -18,6 +18,12 @@ actionable Tag, NumberField, Stepper, and a shared anchored-layer policy.
 DescriptionList, Stat, Legend, and CodeBlock cover structured details, metrics,
 chart keys, and read-only source.
 
+`Skeleton`, `Spinner`, and `Loader` provide shared loading feedback. Skeletons
+support rectangle, text, and circle shapes; spinners support four sizes and a
+decorative mode. Loader pairs a spinner with a label or labels a whole skeleton
+composition once. All use theme tokens and respect reduced motion. See the
+[loading examples](docs/primitives.md#loading-feedback).
+
 For interactive tabs, modal dialogs, custom selects, command palettes, menus,
 popovers, tooltips, comboboxes, and managed toast stacks, use
 the `Stateful` namespace. These styled submodels integrate models, messages,
