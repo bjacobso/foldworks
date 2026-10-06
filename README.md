@@ -67,6 +67,13 @@ machine with cycles, parallel regions, submachines, notes, and a simulator on
 `@foldworks/diagram`. The agent flow is a deterministic browser-only fixture
 and performs no provider calls or tool side effects.
 
+The `/orchestrator` reference application puts independent agent threads inside
+a human-maintained outline: attach a thread with `/agent`, fold it into a
+summary, inspect captured context, review a result, and promote it into an
+editable bullet. It runs local simulations and saves in this browser. See
+[Outline workspace](./docs/outline-workspace.md) for behavior and the primitive
+backlog discovered while building it.
+
 [Language workbench primitives](./docs/language-workbench.md) records the
 contracts a language workbench builds on: shared text intelligence for outline
 rows and the code editor, placeholder rows, structure policy, a structural tree

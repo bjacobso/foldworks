@@ -1,3 +1,4 @@
+import { Message as OrchestratorMessage } from "../orchestrator/message";
 import { Schema as S } from "effect";
 import { ActionIntent } from "@foldworks/generative-ui/core";
 import { Agent } from "@foldworks/agent";
@@ -34,6 +35,7 @@ export const Message = defineMessageUnion({
   SelectedThemeName: { name: ThemeName },
   SelectedThemePreference: { preference: ThemePreference },
   GotDocsMessage: { message: DocsMessage },
+  GotOrchestratorMessage: { message: OrchestratorMessage },
   GotAgentMessage: { message: Agent.Message },
   GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
   GotFormEditorMessage: { message: FormEditorMessage },

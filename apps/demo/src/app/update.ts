@@ -1,3 +1,4 @@
+import { update as updateOrchestrator } from "../orchestrator/update";
 import { update as updateDocs } from "../docs/update";
 import { Effect, Option, Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
@@ -170,6 +171,13 @@ const foldDocs = Update.foldChild({
   read: (model: Model) => Option.some(model.docs),
   write: (model, docs) => ({ ...model, docs }),
   toParentMessage: (message) => Message.GotDocsMessage({ message }),
+});
+
+const foldOrchestrator = Update.foldChild({
+  update: updateOrchestrator,
+  read: (model: Model) => Option.some(model.orchestrator),
+  write: (model, orchestrator) => ({ ...model, orchestrator }),
+  toParentMessage: (message) => Message.GotOrchestratorMessage({ message }),
 });
 
 const foldAgent = Update.foldChild({
@@ -378,6 +386,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       return isNewDocsPage ? { model: next, commands: [ScrollDocsToTop()] } : { model: next };
     },
     GotDocsMessage: ({ message }) => foldDocs(model, message),
+    GotOrchestratorMessage: ({ message }) => foldOrchestrator(model, message),
     GotAgentMessage: ({ message }) => foldAgent(model, message),
     GotWorkflowEditorMessage: ({ message: childMessage }) => foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),

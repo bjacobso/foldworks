@@ -1,3 +1,7 @@
+import {
+  Model as OrchestratorModel,
+  initialModel as initialOrchestrator,
+} from "../orchestrator/model";
 import { Option, Schema as S } from "effect";
 import { Agent } from "@foldworks/agent";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
@@ -41,6 +45,7 @@ export const Model = S.Struct({
   route: AppRoute,
   docs: DocsModel,
   agent: Agent.Model,
+  orchestrator: OrchestratorModel,
   codeEditor: CodeEditorModel,
   workbench: WorkbenchModel,
   workflowEditor: WorkflowEditorModel,
@@ -79,6 +84,7 @@ export const init = (
         ? "editable-text"
         : "sidebar",
     ),
+    orchestrator: initialOrchestrator(),
     agent: Agent.init({ id: "foldworks-agent", selectedModel: "atlas-balanced" }),
     codeEditor: initCodeEditor(),
     workbench: initWorkbench(workers?.snapshot, workers?.error),

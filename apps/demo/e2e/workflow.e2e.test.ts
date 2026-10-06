@@ -19,6 +19,7 @@ import { diffViewerScenarios } from "./diff-viewer.scenarios";
 import { pdfViewerScenarios } from "./pdf-viewer.scenarios";
 import { statechartScenarios } from "./statechart.scenarios";
 import { outlinerScenarios } from "./outliner.scenarios";
+import { orchestratorScenarios } from "./orchestrator.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "../../.context/demo-screenshots");
@@ -135,6 +136,7 @@ describe.sequential("structured workflow builder", () => {
       .toEqual([
         "Documentation",
         "Home",
+        "Outline workspace",
         "Agent playground",
         "Codebase workbench",
         "Diff review",
@@ -1642,5 +1644,6 @@ describe.sequential("structured workflow builder", () => {
   pdfViewerScenarios(() => page, appUrl, screenshot);
   statechartScenarios(() => page, appUrl, screenshot);
   outlinerScenarios(() => page, appUrl, screenshot);
+  orchestratorScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

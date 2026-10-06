@@ -9,6 +9,7 @@ export type Demo =
   | "Docs"
   | "Home"
   | "Editor"
+  | "Orchestrator"
   | "Agent"
   | "CodeEditor"
   | "Codebase"
@@ -33,6 +34,7 @@ export const AppRoute = defineRouteUnion({
   Home: {},
   Editor: {},
   Agent: {},
+  Orchestrator: {},
   CodeEditor: {},
   Codebase: {},
   DiffViewer: {},
@@ -88,6 +90,11 @@ export const diffViewerRouter = pipe(
   Route.mapTo(AppRoute.DiffViewer),
 );
 
+export const orchestratorRouter = pipe(
+  Route.literal("orchestrator"),
+  Route.mapTo(AppRoute.Orchestrator),
+);
+
 export const agentRouter = pipe(Route.literal("agent"), Route.mapTo(AppRoute.Agent));
 
 export const workbenchRouter = pipe(Route.literal("workbench"), Route.mapTo(AppRoute.Workbench));
@@ -139,6 +146,7 @@ const routeParser = Route.oneOf(
   workflowRouter,
   statechartRouter,
   agentRouter,
+  orchestratorRouter,
   workbenchRouter,
   codebaseRouter,
   diffViewerRouter,
@@ -164,6 +172,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "Home";
     case "Editor":
       return "Editor";
+    case "Orchestrator":
+      return "Orchestrator";
     case "Agent":
       return "Agent";
     case "CodeEditor":

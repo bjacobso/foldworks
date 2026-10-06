@@ -5,6 +5,9 @@ surface with Foldkit. This document records areas to explore. The scopes are
 proposals, not settled package APIs or implementation commitments. Promote an
 area into implementation work after testing it against a real application view.
 
+[Outline workspace](./outline-workspace.md) records a working composition and
+the primitive gaps discovered while building it.
+
 ## Current foundation and adjacent work
 
 The repository already includes application chrome, accessible controls,

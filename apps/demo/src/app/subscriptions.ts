@@ -1,3 +1,4 @@
+import { subscriptions as orchestratorSubscriptions } from "../orchestrator/subscriptions";
 import { Effect, Schema as S, Stream } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Subscription } from "foldkit";
@@ -91,6 +92,11 @@ const statechart = Subscription.lift(statechartSubscriptions)<Model, Message>({
   toParentMessage: (message) => Message.GotStatechartMessage({ message }),
 });
 
+const orchestrator = Subscription.lift(orchestratorSubscriptions)<Model, Message>({
+  toChildModel: (model) => model.orchestrator,
+  toParentMessage: (message) => Message.GotOrchestratorMessage({ message }),
+});
+
 const agent = Subscription.lift(agentSubscriptions)<Model, Message>({
   when: (model) => model.route._tag === "Agent",
   toChildModel: (model) => model.agent,
@@ -127,6 +133,7 @@ export const subscriptions = Subscription.aggregate<Model, Message>()(
   workflow,
   statechart,
   agent,
+  orchestrator,
   form,
   dataGrid,
   workbench,

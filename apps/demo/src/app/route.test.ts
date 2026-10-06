@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   docsRouter,
   agentRouter,
+  orchestratorRouter,
   dataTablePath,
   editorRouter,
   dataGridExampleFromRoute,
@@ -45,6 +46,8 @@ describe("demo routes", () => {
     expect(homeRouter()).toBe("/");
     expect(editorRouter()).toBe("/editor");
     expect(demoFromRoute(parseUrl("https://demo.test/editor"))).toBe("Editor");
+    expect(orchestratorRouter()).toBe("/orchestrator");
+    expect(demoFromRoute(parseUrl("https://demo.test/orchestrator"))).toBe("Orchestrator");
     expect(agentRouter()).toBe("/agent");
     expect(demoFromRoute(parseUrl("https://demo.test/agent"))).toBe("Agent");
     expect(workbenchRouter()).toBe("/workbench");

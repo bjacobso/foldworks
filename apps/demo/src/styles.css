@@ -18,6 +18,7 @@
 @import "@foldworks/outliner/styles.css";
 @import "@foldworks/text-intelligence/styles.css";
 @import "./outliner/styles.css";
+@import "./orchestrator/styles.css";
 
 *,
 *::before,

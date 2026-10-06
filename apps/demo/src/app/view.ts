@@ -30,6 +30,7 @@ import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
 import { Sidebar } from "@foldworks/sidebar";
 
+import { view as orchestratorView } from "../orchestrator/view";
 import { view as agentView } from "../agent/view";
 import { view as codeEditorView } from "../code-editor/view";
 import { view as codebaseView } from "../codebase/view";
@@ -51,6 +52,7 @@ import { allNodes } from "../workflow/graph";
 import {
   editorRouter,
   agentRouter,
+  orchestratorRouter,
   dataTablePath,
   dataGridPath,
   codeEditorRouter,
@@ -239,6 +241,13 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
       id: "reference-applications",
       label: "Reference applications",
       items: [
+        {
+          id: "orchestrator",
+          label: "Outline workspace",
+          href: orchestratorRouter(),
+          icon: ListTree,
+          isActive: demo === "Orchestrator",
+        },
         {
           id: "agent",
           label: "Agent playground",
@@ -455,13 +464,15 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ? "Employee query"
                               : demo === "Outliner"
                                 ? "Outliner"
-                                : demo === "PdfAnnotator"
-                                  ? "PDF annotator"
-                                  : demo === "PdfViewer"
-                                    ? "Onboarding packet review"
-                                    : demo === "Home"
-                                      ? "Foldworks"
-                                      : "@foldworks/ui";
+                                : demo === "Orchestrator"
+                                  ? "Outline workspace"
+                                  : demo === "PdfAnnotator"
+                                    ? "PDF annotator"
+                                    : demo === "PdfViewer"
+                                      ? "Onboarding packet review"
+                                      : demo === "Home"
+                                        ? "Foldworks"
+                                        : "@foldworks/ui";
   const description =
     demo === "Docs"
       ? docsDescription(model)
@@ -493,13 +504,15 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ? "Configured attributes · recursive groups · live validation"
                               : demo === "Outliner"
                                 ? "Indent · reorder · fold · hoist · drag and drop"
-                                : demo === "PdfAnnotator"
-                                  ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-                                  : demo === "PdfViewer"
-                                    ? "Read-only pages · overlay hotspots · crop boxes and rotation"
-                                    : demo === "Home"
-                                      ? "Polished application primitives for Foldkit and StyleX"
-                                      : "61 application primitives · Foldkit behavior · StyleX";
+                                : demo === "Orchestrator"
+                                  ? "Notes · threads · context · results"
+                                  : demo === "PdfAnnotator"
+                                    ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
+                                    : demo === "PdfViewer"
+                                      ? "Read-only pages · overlay hotspots · crop boxes and rotation"
+                                      : demo === "Home"
+                                        ? "Polished application primitives for Foldkit and StyleX"
+                                        : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view(
     {
       title,
@@ -666,6 +679,13 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       view: ArticleEditor.view,
       toParentMessage: (message) => Message.GotEditorMessage({ message }),
     });
+  if (demo === "Orchestrator")
+    return h.submodel({
+      slotId: "orchestrator-content",
+      model: model.orchestrator,
+      view: orchestratorView,
+      toParentMessage: (message) => Message.GotOrchestratorMessage({ message }),
+    });
   if (demo === "Agent")
     return h.submodel({
       slotId: "agent-content",
@@ -781,6 +801,7 @@ const documentTitle = (demo: Demo): string =>
   Match.value(demo).pipe(
     Match.when("Docs", () => "Documentation · Foldworks"),
     Match.when("Editor", () => "Document editor · Foldworks"),
+    Match.when("Orchestrator", () => "Outline workspace · Foldworks"),
     Match.when("Agent", () => "Interactive agent · Foldworks"),
     Match.when("CodeEditor", () => "Code editor · Foldworks"),
     Match.when("Codebase", () => "Codebase workbench · Foldworks"),
