@@ -149,7 +149,7 @@ const help = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.aside(
     [h.Class("outliner-demo__help"), h.AriaLabel("Outliner shortcuts")],
     [
-      h.h3([], ["Keyboard"]),
+      h.h3([], ["Keyboard shortcuts"]),
       h.dl(
         [],
         shortcutHelp(model.platform).flatMap(({ keys, label }) => [
@@ -157,7 +157,7 @@ const help = (model: Model, h: HtmlBuilder<Message>): Html =>
           h.dd([], [label]),
         ]),
       ),
-      h.h3([], ["Mouse"]),
+      h.h3([], ["Working with rows"]),
       h.ul(
         [],
         mouseTips(model.platform).map((tip) => h.li([], [tip])),
@@ -175,16 +175,12 @@ export const view = defineView<Model, Message>((model, h) => {
         [h.Class("outliner-demo__layout")],
         [
           h.section(
-            [h.Class("outliner-demo__window"), h.AriaLabel("Field guide outline")],
+            [h.Class("outliner-demo__document"), h.AriaLabel("Field guide outline")],
             [
               h.header(
-                [h.Class("outliner-demo__titlebar")],
+                [h.Class("outliner-demo__header")],
                 [
-                  h.span(
-                    [h.Class("outliner-demo__lights"), h.AriaHidden(true)],
-                    [h.span([], []), h.span([], []), h.span([], [])],
-                  ),
-                  h.span([h.Class("outliner-demo__name")], ["Field guide.outline"]),
+                  h.h1([h.Class("outliner-demo__name")], ["Field guide"]),
                   h.span([h.Class("outliner-demo__stats")], [`${all.length} items · ${done} done`]),
                 ],
               ),
