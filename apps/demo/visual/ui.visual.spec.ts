@@ -8,7 +8,6 @@ const fixtures = [
   },
   { name: "stateful-floating-primitives", heading: "Stateful floating primitives", catalog: true },
   { name: "data-display-and-feedback", heading: "Data display and feedback", catalog: true },
-  { name: "loading-feedback", heading: "Loading feedback", catalog: true },
   { name: "forms-and-selection", heading: "Forms and selection", catalog: true },
   { name: "navigation", heading: "Navigation", catalog: true },
   { name: "disclosure-and-layout", heading: "Disclosure and layout", catalog: true },
@@ -25,6 +24,7 @@ const fixtures = [
   { name: "panel-and-layout", heading: "Panel and Layout" },
   { name: "toolbar", heading: "Toolbar" },
   { name: "semantic-tokens", heading: "Semantic tokens" },
+  { name: "loading-feedback", heading: "Loading feedback" },
 ] as const;
 
 type Mode = "Light" | "Dark";

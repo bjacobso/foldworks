@@ -1612,7 +1612,7 @@ const metricsAndDetails = (model: Model, h: HtmlBuilder<Message>): Html =>
     true,
   );
 
-const loadingFeedback = (h: HtmlBuilder<Message>): Html =>
+export const loadingFeedbackView = (h: HtmlBuilder<Message>): Html =>
   section(
     "Loading feedback",
     [
@@ -1671,7 +1671,6 @@ export const catalogView = (model: Model, h: HtmlBuilder<Message>): Html =>
       foundations(model, h),
       statefulFoundations(model, h),
       dataDisplay(model, h),
-      loadingFeedback(h),
       forms(model, h),
       navigation(model, h),
       disclosureAndLayout(model, h),

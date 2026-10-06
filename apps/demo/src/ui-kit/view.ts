@@ -39,7 +39,7 @@ import {
 
 import { Message } from "./message";
 import type { Model } from "./model";
-import { catalogView } from "./catalog-view";
+import { catalogView, loadingFeedbackView } from "./catalog-view";
 import { financeShowcase } from "./finance-showcase";
 import { financeStyles } from "./finance-styles";
 import { className, uiKitStyles as styles } from "./styles";
@@ -1121,6 +1121,7 @@ export const uiKitView = (model: Model, h: HtmlBuilder<Message>): Html =>
               compositionPanel(h),
               toolbarPanel(h),
               tokensPanel(h),
+              loadingFeedbackView(h),
             ],
           ),
         ],
