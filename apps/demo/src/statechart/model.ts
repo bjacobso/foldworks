@@ -13,6 +13,25 @@ export const Direction = S.Literals(["Down", "Right"]);
 export type Direction = typeof Direction.Type;
 
 export const CANVAS_ID = "statechart-canvas";
+export const REPLAY_ID = "statechart-replay";
+export const REPLAY_BUTTON_ID = "statechart-replay-button";
+
+/** One step of a run: the transition taken, or null for entering the
+ *  machine, and the active leaf states it left behind. */
+export const TraceStep = S.Struct({
+  edgeId: S.NullOr(S.String),
+  configuration: S.Array(S.String),
+});
+export type TraceStep = typeof TraceStep.Type;
+
+/** Stepping back through a finished or sample run without touching the live
+ *  simulation, which resumes where it was when the replay ends. */
+export const Replay = S.Struct({
+  source: S.Literals(["Run", "Sample"]),
+  steps: S.Array(TraceStep),
+  index: S.Number,
+});
+export type Replay = typeof Replay.Type;
 
 export const Model = S.Struct({
   library: Library,
@@ -23,7 +42,9 @@ export const Model = S.Struct({
   mode: Mode,
   direction: Direction,
   configuration: S.Array(S.String),
-  log: S.Array(S.String),
+  /** Transitions fired since the simulation last started. */
+  run: S.Array(TraceStep),
+  replay: S.NullOr(Replay),
   nextId: S.Number,
   announcement: S.String,
 });
@@ -45,7 +66,8 @@ export const init = (library: Library = sampleLibrary): Model => ({
       annotations: [],
     },
   ),
-  log: [],
+  run: [],
+  replay: null,
   nextId: 1,
   announcement: "Statechart editor ready.",
 });

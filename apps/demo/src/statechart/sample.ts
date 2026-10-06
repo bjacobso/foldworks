@@ -121,3 +121,31 @@ export const sampleLibrary: Library = {
     { id: "payment", name: "Payment", document: payment },
   ],
 };
+
+/** Transitions for a recorded order, replayed when a simulation has no run of
+ *  its own yet. */
+export const sampleRuns: Readonly<Record<string, ReadonlyArray<string>>> = {
+  checkout: [
+    "t-add",
+    "t-checkout",
+    "t-next",
+    "t-back",
+    "t-next",
+    "t-pay",
+    "t-paid",
+    "t-retry-email",
+    "t-sent",
+    "t-packed",
+    "t-done",
+  ],
+  payment: [
+    "t-submit",
+    "t-poll",
+    "t-challenge",
+    "t-code",
+    "t-wrong",
+    "t-code",
+    "t-verified",
+    "t-approved",
+  ],
+};

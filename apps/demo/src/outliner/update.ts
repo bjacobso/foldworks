@@ -1,14 +1,16 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
 import { evo } from "foldkit/struct";
-import { Outliner, find } from "@foldworks/outliner";
+import { Outliner, find, updateItem } from "@foldworks/outliner";
 
 import { suggestionsAt } from "./mentions";
 import { Message } from "./message";
 import type { Model } from "./model";
+import { outlinePolicy } from "./policy";
 
 const foldOutliner = Update.foldChild({
-  update: Outliner.update,
+  update: (outline: Outliner.Model, message: Outliner.Message) =>
+    Outliner.update(outline, message, outlinePolicy(outline.items)),
   read: (model: Model) => Option.some(model.outline),
   write: (model, outline) => evo(model, { outline: () => outline }),
   toParentMessage: (message) => Message.GotOutlinerMessage({ message }),
@@ -41,9 +43,27 @@ const suggest = (result: UpdateReturn, message: Outliner.Message): UpdateReturn 
   return { model: next.model, commands: [...(result.commands ?? []), ...(next.commands ?? [])] };
 };
 
+/**
+ * Marks an item done or not from a folded checklist's summary. It goes through
+ * `Replace`, so it is one undoable step like any edit in the rows.
+ */
+const toggleDone = (model: Model, id: string): UpdateReturn => {
+  const items = model.outline.items;
+  const node = find(items, id);
+  if (node === undefined || outlinePolicy(items).isReadOnly?.(node) === true) return { model };
+  return foldOutliner(
+    model,
+    Outliner.Message.Replace({
+      items: updateItem(items, id, (current) => ({ ...current, checked: !current.checked })),
+      announcement: `Marked ${node.checked ? "not done" : "done"}.`,
+    }),
+  );
+};
+
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match(message, {
     GotOutlinerMessage: ({ message: childMessage }) =>
       suggest(foldOutliner(model, childMessage), childMessage),
     ToggledCheckboxes: () => ({ model: evo(model, { showCheckboxes: (value) => !value }) }),
+    ToggledDone: ({ id }) => toggleDone(model, id),
   });

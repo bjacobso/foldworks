@@ -64,11 +64,8 @@ for the source pipeline and how to add reducer explorers. Its `/agent` reference
 text, tool calls and results, an interactive permission checkpoint, a model
 picker, and a prompt composer. Its `/statechart` editor builds a nested state
 machine with cycles, parallel regions, submachines, notes, and a simulator on
-`@foldworks/diagram`. Its `/lisp` exploration turns `@foldworks/outliner` into
-a structural Lisp environment where every row is a live, evaluated form; see
-[Structural Lisp](./docs/structural-lisp.md). The agent flow is a
-deterministic browser-only fixture and performs no provider calls or tool side
-effects.
+`@foldworks/diagram`. The agent flow is a deterministic browser-only fixture
+and performs no provider calls or tool side effects.
 
 [Language workbench primitives](./docs/language-workbench.md) records the
 contracts a language workbench builds on: shared text intelligence for outline

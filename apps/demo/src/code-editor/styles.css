@@ -59,6 +59,110 @@
   font-size: 12px;
   margin: 16px 0;
 }
+/* The environment file's host token kinds and highlights. */
+.code-demo .native-token--semantic[data-kind="reference"] {
+  color: var(--native-keyword);
+}
+.code-demo .native-token--semantic[data-kind="unknown"] {
+  color: var(--native-comment);
+  font-style: italic;
+}
+.code-demo .native-token--highlight[data-highlight="reference"] {
+  outline: 1px solid color-mix(in srgb, var(--primary, #5674c7) 45%, transparent);
+  outline-offset: -1px;
+}
+.code-demo-hover {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.code-demo-hover p {
+  margin: 0;
+}
+.code-demo-hover__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.code-demo-hover__heading code {
+  font-weight: 600;
+}
+.code-demo-hover__heading span {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.code-demo-hover__values code + code::before {
+  content: " · ";
+  color: var(--muted-foreground);
+}
+.code-demo-settings {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding: 10px 6px;
+}
+.code-demo-settings h2 {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 4px 6px 6px;
+}
+.code-demo-settings h2:not(:first-child) {
+  margin-top: 14px;
+}
+.code-demo-settings ul {
+  display: grid;
+  gap: 1px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.code-demo-settings__entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 4px 6px;
+  text-align: left;
+  cursor: pointer;
+}
+.code-demo-settings__entry:hover {
+  background: var(--muted);
+}
+.code-demo-settings__entry:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.code-demo-settings__entry[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--primary, #5674c7) 14%, transparent);
+}
+.code-demo-settings__entry code {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.code-demo-settings__entry[data-known="false"] code {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.code-demo-settings__uses,
+.code-demo-settings__value {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.code-demo-settings__value {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 @media (max-width: 760px) {
   .code-demo {
     padding: 22px 16px;

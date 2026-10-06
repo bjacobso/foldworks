@@ -1,5 +1,6 @@
-import { Effect } from "effect";
+import { Effect, Schema as S } from "effect";
 import { Command, type Update } from "foldkit";
+import * as Dom from "foldkit/dom";
 
 import {
   addPoints,
@@ -23,6 +24,7 @@ import {
   isContainerKind,
   layoutMachine,
   operations,
+  runTransitions,
   StateKind,
   takeTransition,
   updateMachine,
@@ -31,8 +33,16 @@ import {
   type StateKind as StateKindType,
 } from "./machine";
 import { Message } from "./message";
-import { CANVAS_ID, init, type Model } from "./model";
-import { sampleLibrary } from "./sample";
+import {
+  CANVAS_ID,
+  init,
+  REPLAY_BUTTON_ID,
+  REPLAY_ID,
+  type Model,
+  type Replay,
+  type TraceStep,
+} from "./model";
+import { sampleLibrary, sampleRuns } from "./sample";
 
 type UpdateReturn = Update.Return<Model, Message>;
 
@@ -61,6 +71,22 @@ const MeasureCanvas = Command.define("MeasureStatechartCanvas", {
 });
 
 const fit = MeasureCanvas({});
+
+const FocusReplay = Command.define("FocusStatechartReplay", {
+  args: { selector: S.String },
+  messages: [Message.CompletedFocusReplay],
+  execute: ({ selector }) =>
+    Dom.focus(selector).pipe(Effect.ignore, Effect.as(Message.CompletedFocusReplay())),
+});
+
+const ScrollToReplayStep = Command.define("ScrollToStatechartReplayStep", {
+  args: {},
+  messages: [Message.CompletedScrollReplay],
+  execute: () =>
+    Dom.scrollIntoViewIfNotVisible(`#${REPLAY_ID} [aria-current="step"]`, {
+      block: "nearest",
+    }).pipe(Effect.ignore, Effect.as(Message.CompletedScrollReplay())),
+});
 
 export const currentMachineId = (model: Model): string =>
   model.path[model.path.length - 1] ?? model.library.rootMachineId;
@@ -285,23 +311,89 @@ const fire = (model: Model, edgeId: string): UpdateReturn => {
   const document = currentDocument(model);
   const edge = findEdge(document, edgeId);
   if (
+    model.replay !== null ||
     edge === undefined ||
     !enabledTransitions(document, model.configuration).some((e) => e.id === edgeId)
   ) {
     return { model };
   }
   const configuration = takeTransition(document, model.configuration, edgeId);
-  const names = configuration.map((id) => findNode(document, id)?.data.name ?? id).join(", ");
-  const event = edge.data.event || "(automatic)";
   return {
     model: {
       ...model,
       configuration,
-      log: [...model.log, `${event} → ${names}`].slice(-12),
-      announcement: `${event} fired. Active: ${names}.`,
+      run: [...model.run, { edgeId, configuration }],
+      announcement: `${eventName(document, edgeId)} fired. Active: ${stateNames(document, configuration)}.`,
     },
   };
 };
+
+// Replay -------------------------------------------------------------------
+
+export const eventName = (document: MachineDocument, edgeId: string | null): string =>
+  edgeId === null ? "Start" : findEdge(document, edgeId)?.data.event || "(automatic)";
+
+export const stateNames = (document: MachineDocument, configuration: ReadonlyArray<string>) =>
+  configuration.map((id) => findNode(document, id)?.data.name ?? id).join(", ") || "none";
+
+/** The run recorded so far, or this machine's sample run when nothing has
+ *  fired yet. Both start from entering the machine. */
+export const replayableRun = (model: Model): Pick<Replay, "source" | "steps"> | undefined => {
+  const document = currentDocument(model);
+  const configuration = initialConfiguration(document);
+  const start: TraceStep = { edgeId: null, configuration };
+  if (model.run.length > 0) return { source: "Run", steps: [start, ...model.run] };
+  const sample = sampleRuns[currentMachineId(model)];
+  const steps = sample === undefined ? [] : runTransitions(document, configuration, sample);
+  return steps.length === 0 ? undefined : { source: "Sample", steps: [start, ...steps] };
+};
+
+const stepAnnouncement = (model: Model, replay: Replay): string => {
+  const document = currentDocument(model);
+  const step = replay.steps[replay.index];
+  return step === undefined
+    ? ""
+    : `Step ${replay.index + 1} of ${replay.steps.length}: ${eventName(document, step.edgeId)}. Active: ${stateNames(document, step.configuration)}.`;
+};
+
+const startReplay = (model: Model): UpdateReturn => {
+  const run = model.mode === "Simulate" ? replayableRun(model) : undefined;
+  if (run === undefined) return { model };
+  const replay: Replay = { ...run, index: 0 };
+  return {
+    model: {
+      ...model,
+      replay,
+      canvas: Diagram.select(model.canvas, []),
+      announcement: `Replaying ${run.source === "Run" ? "this run" : "a sample run"}. ${stepAnnouncement(model, replay)}`,
+    },
+    commands: [FocusReplay({ selector: `#${REPLAY_ID}` })],
+  };
+};
+
+const selectReplayStep = (model: Model, index: number): UpdateReturn => {
+  const replay = model.replay;
+  if (replay === null) return { model };
+  const clamped = Math.max(0, Math.min(index, replay.steps.length - 1));
+  if (clamped === replay.index) return { model };
+  const next: Replay = { ...replay, index: clamped };
+  return {
+    model: { ...model, replay: next, announcement: stepAnnouncement(model, next) },
+    commands: [ScrollToReplayStep({})],
+  };
+};
+
+const stopReplay = (model: Model): UpdateReturn =>
+  model.replay === null
+    ? { model }
+    : {
+        model: {
+          ...model,
+          replay: null,
+          announcement: `Back to the live simulation. Active: ${stateNames(currentDocument(model), model.configuration)}.`,
+        },
+        commands: [FocusReplay({ selector: `#${REPLAY_BUTTON_ID}` })],
+      };
 
 const foldCanvas = (model: Model, message: Diagram.Message): UpdateReturn => {
   const result = Diagram.update(model.canvas, message);
@@ -311,7 +403,9 @@ const foldCanvas = (model: Model, message: Diagram.Message): UpdateReturn => {
   return Diagram.OutMessage.match<UpdateReturn>(out, {
     ChangedSelection: () => ({ model: next }),
     Clicked: ({ id }) =>
-      next.mode === "Simulate" && findEdge(currentDocument(next), id) !== undefined
+      next.mode === "Simulate" &&
+      next.replay === null &&
+      findEdge(currentDocument(next), id) !== undefined
         ? fire(next, id)
         : { model: next },
     MovedElements: (moved) => (next.mode === "Edit" ? moveElements(next, moved) : { model: next }),
@@ -374,7 +468,8 @@ const openMachine = (model: Model, path: ReadonlyArray<string>): UpdateReturn =>
     model: {
       ...next,
       configuration: initialConfiguration(document),
-      log: [],
+      run: [],
+      replay: null,
       history: History.breakCoalescing(model.history),
       announcement: `${findMachine(model.library, path[path.length - 1] ?? "")?.name ?? "Machine"} opened.`,
     },
@@ -473,13 +568,16 @@ const restore = (model: Model, direction: "Undo" | "Redo"): UpdateReturn => {
     findNode(document, id) !== undefined ||
     findEdge(document, id) !== undefined ||
     findAnnotation(document, id) !== undefined;
+  const isRunKnown =
+    next.configuration.every(known) &&
+    next.run.every((step) => step.edgeId === null || known(step.edgeId));
   return {
     model: {
       ...next,
       canvas: Diagram.select(next.canvas, next.canvas.selection.filter(known)),
-      configuration: next.configuration.every(known)
-        ? next.configuration
-        : initialConfiguration(document),
+      configuration: isRunKnown ? next.configuration : initialConfiguration(document),
+      run: isRunKnown ? next.run : [],
+      replay: null,
     },
   };
 };
@@ -594,7 +692,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
               ...model,
               mode,
               configuration: initialConfiguration(currentDocument(model)),
-              log: [],
+              run: [],
+              replay: null,
               canvas: Diagram.select(model.canvas, []),
               announcement:
                 mode === "Simulate"
@@ -642,10 +741,18 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       model: {
         ...model,
         configuration: initialConfiguration(currentDocument(model)),
-        log: [],
+        run: [],
+        replay: null,
         announcement: "Simulation restarted.",
       },
     }),
+    ClickedReplay: () => startReplay(model),
+    SelectedReplayStep: ({ index }) => selectReplayStep(model, index),
+    SteppedReplay: ({ by }) =>
+      model.replay === null ? { model } : selectReplayStep(model, model.replay.index + by),
+    StoppedReplay: () => stopReplay(model),
+    CompletedFocusReplay: () => ({ model }),
+    CompletedScrollReplay: () => ({ model }),
     ClickedSelectElement: ({ id }) => ({
       model: { ...model, canvas: Diagram.select(model.canvas, [id]) },
     }),

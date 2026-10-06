@@ -21,7 +21,6 @@ export type Demo =
   | "FormBuilder"
   | "QueryBuilder"
   | "Outliner"
-  | "Lisp"
   | "PdfAnnotator"
   | "PdfViewer"
   | "UiKit";
@@ -48,7 +47,6 @@ export const AppRoute = defineRouteUnion({
   },
   QueryBuilder: {},
   Outliner: {},
-  Lisp: {},
   PdfAnnotator: {},
   PdfViewer: {},
   UiKit: {},
@@ -126,8 +124,6 @@ export const queryBuilderRouter = pipe(
 
 export const outlinerRouter = pipe(Route.literal("outliner"), Route.mapTo(AppRoute.Outliner));
 
-export const lispRouter = pipe(Route.literal("lisp"), Route.mapTo(AppRoute.Lisp));
-
 export const pdfAnnotatorRouter = pipe(
   Route.literal("pdf-annotator"),
   Route.mapTo(AppRoute.PdfAnnotator),
@@ -152,7 +148,6 @@ const routeParser = Route.oneOf(
   formBuilderRouter,
   queryBuilderRouter,
   outlinerRouter,
-  lispRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
   uiKitRouter,
@@ -189,8 +184,6 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "QueryBuilder";
     case "Outliner":
       return "Outliner";
-    case "Lisp":
-      return "Lisp";
     case "PdfAnnotator":
       return "PdfAnnotator";
     case "PdfViewer":

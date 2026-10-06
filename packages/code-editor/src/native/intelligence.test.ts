@@ -217,13 +217,13 @@ describe("host text intelligence", () => {
           session: 0,
           revision: 0,
           languageId: "text",
-          source: "lisp",
+          source: "language-service",
           diagnostics: [{ from: 0, to: 1, severity: "error", message: "Nope" }],
         }),
       }),
     ).model;
     const mounted = update(reported, Message.Mounted({ session: 0, lease: "test" })).model;
-    expect(mounted.diagnostics.map((batch) => batch.source)).toEqual(["lisp", "json"]);
+    expect(mounted.diagnostics.map((batch) => batch.source)).toEqual(["language-service", "json"]);
     const edited = execute(
       mounted,
       Operation.ApplyEdits({

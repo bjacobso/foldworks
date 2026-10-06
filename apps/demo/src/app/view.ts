@@ -17,7 +17,6 @@ import {
   ListFilter,
   ListTree,
   ListChecks,
-  Parentheses,
   Monitor,
   Moon,
   Network,
@@ -44,7 +43,6 @@ import { people } from "../data-grid/rows";
 import { view as formEditorView } from "../form-builder/view";
 import { view as homeView } from "../home/view";
 import { view as outlinerView } from "../outliner/view";
-import { view as lispView } from "../lisp/view";
 import { view as pdfViewerView } from "../pdf-viewer/view";
 import { view as queryBuilderView } from "../query-builder/view";
 import { statechartSummary, view as statechartView } from "../statechart/view";
@@ -63,7 +61,6 @@ import {
   formBuilderPath,
   homeRouter,
   outlinerRouter,
-  lispRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
   queryBuilderRouter,
@@ -270,13 +267,6 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
           icon: Table2,
           isActive: demo === "Workbench",
         },
-        {
-          id: "lisp",
-          label: "Structural Lisp",
-          href: lispRouter(),
-          icon: Parentheses,
-          isActive: demo === "Lisp",
-        },
       ],
     },
     {
@@ -465,15 +455,13 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ? "Employee query"
                               : demo === "Outliner"
                                 ? "Outliner"
-                                : demo === "Lisp"
-                                  ? "Structural Lisp"
-                                  : demo === "PdfAnnotator"
-                                    ? "PDF annotator"
-                                    : demo === "PdfViewer"
-                                      ? "Onboarding packet review"
-                                      : demo === "Home"
-                                        ? "Foldworks"
-                                        : "@foldworks/ui";
+                                : demo === "PdfAnnotator"
+                                  ? "PDF annotator"
+                                  : demo === "PdfViewer"
+                                    ? "Onboarding packet review"
+                                    : demo === "Home"
+                                      ? "Foldworks"
+                                      : "@foldworks/ui";
   const description =
     demo === "Docs"
       ? docsDescription(model)
@@ -505,15 +493,13 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                               ? "Configured attributes · recursive groups · live validation"
                               : demo === "Outliner"
                                 ? "Indent · reorder · fold · hoist · drag and drop"
-                                : demo === "Lisp"
-                                  ? "The outline is the program · live values · structural edits"
-                                  : demo === "PdfAnnotator"
-                                    ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
-                                    : demo === "PdfViewer"
-                                      ? "Read-only pages · overlay hotspots · crop boxes and rotation"
-                                      : demo === "Home"
-                                        ? "Polished application primitives for Foldkit and StyleX"
-                                        : "61 application primitives · Foldkit behavior · StyleX";
+                                : demo === "PdfAnnotator"
+                                  ? `${model.pdfAnnotator.annotations.length} annotations · drag, resize, and export`
+                                  : demo === "PdfViewer"
+                                    ? "Read-only pages · overlay hotspots · crop boxes and rotation"
+                                    : demo === "Home"
+                                      ? "Polished application primitives for Foldkit and StyleX"
+                                      : "61 application primitives · Foldkit behavior · StyleX";
   return Toolbar.view(
     {
       title,
@@ -586,40 +572,33 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                       h,
                                     ),
                                   ]
-                                : demo === "Lisp"
+                                : demo === "PdfAnnotator"
                                   ? [
                                       toolbarBadge(
-                                        { label: "Exploration", tone: "info", dot: true },
+                                        {
+                                          label: "Foldkit drag + PDF export",
+                                          tone: "info",
+                                          dot: true,
+                                        },
                                         h,
                                       ),
                                     ]
-                                  : demo === "PdfAnnotator"
+                                  : demo === "PdfViewer"
                                     ? [
                                         toolbarBadge(
-                                          {
-                                            label: "Foldkit drag + PDF export",
-                                            tone: "info",
-                                            dot: true,
-                                          },
+                                          { label: "Read-only viewer", tone: "info", dot: true },
                                           h,
                                         ),
                                       ]
-                                    : demo === "PdfViewer"
-                                      ? [
+                                    : demo === "Home" || demo === "Docs"
+                                      ? []
+                                      : [
                                           toolbarBadge(
-                                            { label: "Read-only viewer", tone: "info", dot: true },
+                                            { label: "61 primitives", tone: "info", dot: true },
                                             h,
                                           ),
-                                        ]
-                                      : demo === "Home" || demo === "Docs"
-                                        ? []
-                                        : [
-                                            toolbarBadge(
-                                              { label: "61 primitives", tone: "info", dot: true },
-                                              h,
-                                            ),
-                                            toolbarBadge({ label: "StyleX + Foldkit" }, h),
-                                          ]),
+                                          toolbarBadge({ label: "StyleX + Foldkit" }, h),
+                                        ]),
         iconSelect(
           Palette,
           toolbarSelectStyles.theme,
@@ -774,14 +753,6 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       toParentMessage: (message) => Message.GotOutlinerDemoMessage({ message }),
     });
   }
-  if (demo === "Lisp") {
-    return h.submodel({
-      slotId: "lisp-content",
-      model: model.lisp,
-      view: lispView,
-      toParentMessage: (message) => Message.GotLispMessage({ message }),
-    });
-  }
   if (demo === "PdfAnnotator") {
     return h.submodel({
       slotId: "pdf-annotator-content",
@@ -821,7 +792,6 @@ const documentTitle = (demo: Demo): string =>
     Match.when("FormBuilder", () => "Form builder · Foldworks"),
     Match.when("QueryBuilder", () => "Query builder · Foldworks"),
     Match.when("Outliner", () => "Outliner · Foldworks"),
-    Match.when("Lisp", () => "Structural Lisp · Foldworks"),
     Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
     Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
     Match.when("UiKit", () => "UI components · Foldworks"),

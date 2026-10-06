@@ -2,6 +2,9 @@ import { parseOutline, setCollapsed, walk, type Items } from "@foldworks/outline
 
 export const OUTLINE_ID = "foldworks-outline";
 
+/** Quoted word for word, so the outline keeps it read only. */
+const QUOTED = "The seven principles, as Leave No Trace publishes them";
+
 const source = `
 - Spring field guide
   - Why we're writing it
@@ -19,13 +22,21 @@ const source = `
       - Pacific wren
       - Sooty grouse
     - [ ] Leave-no-trace basics @ada #draft
+      - The seven principles, as Leave No Trace publishes them
+        - Plan ahead and prepare
+        - Travel and camp on durable surfaces
+        - Dispose of waste properly
+        - Leave what you find
+        - Minimize campfire impacts
+        - Respect wildlife
+        - Be considerate of other visitors
   - Open questions
     - Print run: 200 or 500?
     - Who owns updates after the first season?
 - Volunteer day, April 12
-  - Trail crew with @maya and @sam
-  - Signage @jonah #print
-  - Lunch @priya
+  - [x] Trail crew with @maya and @sam
+  - [ ] Signage @jonah #print
+  - [ ] Lunch @priya
 - Someday
   - A night-sky chapter
   - Audio recordings of each bird call #birds
@@ -41,3 +52,5 @@ const sample = (): Items => {
 };
 
 export const sampleOutline = sample();
+
+export const QUOTED_ID = walk(sampleOutline).find((node) => node.text === QUOTED)!.id;

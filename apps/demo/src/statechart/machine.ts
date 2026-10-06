@@ -228,6 +228,23 @@ export const takeTransition = (
   return [...kept, ...entered];
 };
 
+/** Fires each transition in turn from a configuration, stopping at the first
+ *  one that is not enabled, and returns the configuration after each. */
+export const runTransitions = (
+  document: MachineDocument,
+  configuration: ReadonlyArray<string>,
+  edgeIds: ReadonlyArray<string>,
+): ReadonlyArray<Readonly<{ edgeId: string; configuration: ReadonlyArray<string> }>> => {
+  const steps: Array<Readonly<{ edgeId: string; configuration: ReadonlyArray<string> }>> = [];
+  let current = configuration;
+  for (const edgeId of edgeIds) {
+    if (!enabledTransitions(document, current).some((edge) => edge.id === edgeId)) break;
+    current = takeTransition(document, current, edgeId);
+    steps.push({ edgeId, configuration: current });
+  }
+  return steps;
+};
+
 export const isComplete = (document: MachineDocument, configuration: ReadonlyArray<string>) =>
   configuration.length > 0 &&
   configuration.every((id) => {

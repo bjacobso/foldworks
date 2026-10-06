@@ -34,7 +34,6 @@ import {
   dataTablePath,
   dataGridPath,
   formBuilderPath,
-  lispRouter,
   outlinerRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
@@ -149,7 +148,7 @@ const packages: ReadonlyArray<Package> = [
     name: "@foldworks/text-intelligence",
     category: "Foundation",
     description: "Hover, completion, highlighting, and diagnostics shared by text surfaces.",
-    href: lispRouter(),
+    href: codeEditorRouter(),
     icon: TextCursorInput,
   },
   {

@@ -5,12 +5,22 @@ into: hover, completion, highlighting, and diagnostics on text; structure
 that the language can constrain; and views for reviewing proposed changes and
 inspecting values. This note decides which of those Foldworks owns and the
 contracts it exposes. The first consumer is a Forma workbench built in the
-Forma repository. Nothing here names Forma, Lisp, or any language. Each piece
+Forma repository. The public APIs do not name Forma or any language. Each piece
 must also serve a non-language host, such as notes with tags and mentions, a
 query or configuration editor, or a form or workflow review.
 
-The `/lisp` exploration ([Structural Lisp](./structural-lisp.md)) is the proof:
-it adopts every primitive below that has an interactive surface.
+The demos prove these contracts with independent hosts:
+
+| Demo                                              | Contracts exercised                                                                                                                            |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Outliner](../apps/demo/src/outliner/)            | Mentions and tags with hover, diagnostics, completion, and placeholders; read-only quoted sections, move rules, and folded checklist summaries |
+| [Code editor](../apps/demo/src/code-editor/)      | An environment-file service supplies semantic tokens, diagnostics, hover, completions, and highlights for definitions and uses                 |
+| [Agent playground](../apps/demo/src/agent/)       | Tree edits reviewed in a permission checkpoint with Accept and Discard actions                                                                 |
+| [Workers workbench](../apps/demo/src/workbench/)  | Nested records whose branches load on expansion, with paged lists in `ValueTree`                                                               |
+| [Statechart editor](../apps/demo/src/statechart/) | A simulator run replayed with `Stepper`, with each step selecting the state it reached                                                         |
+
+Language-specific analysis, evaluation, source codecs, and refactorings belong
+in the host repository. Foldworks owns the surfaces and their contracts.
 
 ## Principles
 
@@ -24,8 +34,8 @@ it adopts every primitive below that has an interactive surface.
   This works the same whether the language service is synchronous, in a
   worker, or in another process.
 - **Synchronous hosts pay nothing for that.** A host that can answer at once
-  does so in the same update, or computes the answer in its view. The `/lisp`
-  demo analyzes in-process and never waits.
+  does so in the same update, or computes the answer in its view. The code
+  editor demo analyzes its environment file in-process and never waits.
 - **Content is the host's Html.** Hover content and custom views are built in
   the host's view with the host's messages, like `rowAccessory` today. A
   surface frames, positions, and dismisses them.
@@ -204,8 +214,8 @@ subtree.
 - The view edits the subtree through `Replace`, so undo, diff, and persistence
   work unchanged.
 
-The `/lisp` demo draws a folded `workflow` as its flow, with each step a button
-that opens the workflow at that step.
+The outliner demo draws folded checklists as progress summaries with buttons
+that toggle each entry. Expanded, a checklist goes back to rows.
 
 ### Virtualization: designed, not built
 
@@ -280,26 +290,25 @@ contracts, since they do not depend on the native implementation.
   be chosen. A host pairs it with Previous and Next buttons and shows where the
   step happened with an outliner decoration's `tone` or a code editor
   `highlights` range. `TransactionTimeline` stays attributed history that is
-  read rather than replayed. The `/lisp` inspector steps through a row's
-  evaluation this way, and the
+  read rather than replayed. The statechart simulator replays a recorded run
+  this way, selecting the state reached at each step, and the
   [primitives guide](../packages/ui/docs/primitives.md) documents the pattern.
   A scrubber for traces too long to list, and steps nested by call depth, wait
   for a trace that needs them.
 
 ## Sequence
 
-Each item lands as its own pull request, with a changeset, tests, and the
-`/lisp` adoption that proves it:
+The primitives were implemented in this order, with changesets and tests.
+The independent demos above exercise their interactive contracts:
 
 1. `@foldworks/text-intelligence`, outliner hover, and row diagnostics
 2. Outliner completion
 3. Outliner placeholder rows
-4. Code editor semantic tokens, hover, completion, and highlights; `/lisp`'s
-   source pane moves onto the code editor
+4. Code editor semantic tokens, hover, completion, and highlights
 5. `TreeDiff`, the `ChangeSetPreview` slot, and agent permission labels
 6. `ValueTree`
 7. Outliner move validation and read-only rows
-8. Step-through with `Stepper`, documented and shown in `/lisp`
+8. Step-through with `Stepper`, documented and shown in the statechart simulator
 9. Folded views for custom row renderers
 
 Virtualization is designed above and deferred.

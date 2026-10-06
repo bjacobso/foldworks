@@ -1,13 +1,23 @@
-import { ChevronsDownUp, ChevronsUpDown, Redo2, SquareCheck, Undo2 } from "@lucide/icons";
+import { ChevronsDownUp, ChevronsUpDown, Lock, Redo2, SquareCheck, Undo2 } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
-import { Button } from "@foldworks/ui";
+import { Button, Icon } from "@foldworks/ui";
 import { History } from "@foldworks/history";
-import { Outliner, find, shortcutHelp, walk, type Placeholder } from "@foldworks/outliner";
+import {
+  Outliner,
+  find,
+  shortcutHelp,
+  walk,
+  type Placeholder,
+  type Row,
+} from "@foldworks/outliner";
 
 import { decorations, describeMark, type MarkInfo } from "./mentions";
 import { Message } from "./message";
 import type { Model } from "./model";
+import { outlinePolicy } from "./policy";
+import { QUOTED_ID } from "./sample";
+import { checklistView } from "./summary";
 
 const outlineMessage = (message: Outliner.Message): Message =>
   Message.GotOutlinerMessage({ message });
@@ -102,6 +112,18 @@ const markCard = (info: MarkInfo, h: HtmlBuilder<Message>): Html =>
     ],
   );
 
+/** Says why the quoted principles can't be edited, at the end of their first row. */
+const quotedHint = (row: Row, h: HtmlBuilder<Message>): Html | null =>
+  row.id !== QUOTED_ID
+    ? null
+    : h.span(
+        [
+          h.Class("outliner-demo__quoted"),
+          h.Title("Quoted word for word from Leave No Trace, so it can't be edited here"),
+        ],
+        [Icon.view({ icon: Lock, size: 12 }, h), h.span([], ["Quoted · read only"])],
+      );
+
 /** Lists that invite one more entry show a placeholder at their end. */
 const OPEN_LISTS: Readonly<Record<string, Placeholder>> = {
   Chapters: { key: "chapter", label: "chapter" },
@@ -118,6 +140,8 @@ const mouseTips = (platform: Model["platform"]): ReadonlyArray<string> => {
     `Drag across rows, or ${shift}-click, to select several.`,
     "Paste indented text or a Markdown list to add many items at once.",
     "Type @ to mention someone on the crew, or # to tag an item. Rest the pointer on one to see who or what it is.",
+    "Fold the chapters or the volunteer day to see their progress. Click an entry there to mark it done.",
+    "Done items are signed off, so nothing can be moved into one, and the quoted principles can't be edited. A refused drop shows a dashed red marker.",
   ];
 };
 
@@ -173,9 +197,12 @@ export const view = defineView<Model, Message>((model, h) => {
                     model: model.outline,
                     view: Outliner.view,
                     viewInputs: {
+                      ...outlinePolicy(model.outline.items),
                       label: "Field guide outline",
                       showCheckboxes: model.showCheckboxes,
                       decorations: decorations(model.outline.items),
+                      rowAccessory: (row: Row) => quotedHint(row, h),
+                      foldedView: (row: Row) => checklistView(model.outline.items, row, h),
                       placeholders: (parentId: string | null) => {
                         const parent =
                           parentId === null ? undefined : find(model.outline.items, parentId);

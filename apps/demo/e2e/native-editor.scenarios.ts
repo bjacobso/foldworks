@@ -118,6 +118,69 @@ export const nativeEditorScenarios = (
     await input(page).fill(yamlSample);
     await expect.poll(() => editor(page).locator(".native-editor__problems").count()).toBe(0);
   });
+  it("native editor takes highlighting, hover, suggestions, and highlights from a host language service", async () => {
+    const page = await open();
+    await page.getByLabel("Example language").selectOption("env");
+    await expect.poll(async () => (await snapshot(page)).document.languageId).toBe("env");
+    await expect.poll(async () => (await snapshot(page)).status).toBe("Ready");
+    const kinds = (kind: string) =>
+      editor(page).locator(`.native-token--semantic[data-kind="${kind}"]`).allTextContents();
+    await expect.poll(() => kinds("unknown")).toEqual(["LOG_LEVL", "${CACHE_HOST}"]);
+    expect(await kinds("reference")).toEqual(["${RELEASE}", "${API_HOST}"]);
+    const problems = editor(page).getByRole("list", { name: "Working document problems" });
+    await expect.poll(() => problems.getByRole("button").count()).toBe(2);
+    expect(await problems.textContent()).toContain("Did you mean LOG_LEVEL?");
+
+    const text = await input(page).inputValue();
+    const reference = text.indexOf("${API_HOST}") + 3;
+    await select(page, reference, reference);
+    await input(page).press("Control+Shift+Space");
+    await expect
+      .poll(() => editor(page).locator(".fw-hover").textContent())
+      .toContain("Resolves to api.foldworks.dev");
+    await input(page).press("Escape");
+
+    const settings = page.getByRole("list", { name: "Settings in this file" });
+    const apiHost = settings.getByRole("button", { name: /^API_HOST,/ });
+    await apiHost.click();
+    await expect.poll(() => apiHost.getAttribute("aria-pressed")).toBe("true");
+    expect(
+      await editor(page)
+        .locator('.native-token--highlight[data-highlight="reference"]')
+        .allTextContents(),
+    ).toEqual(["${API_HOST}"]);
+    expect(await page.locator(".code-demo__announcement").textContent()).toBe(
+      "API_HOST is used once.",
+    );
+
+    await select(page, text.length, text.length);
+    await page.keyboard.type("LOG");
+    await expect
+      .poll(() => editor(page).getByRole("option").allTextContents())
+      .toEqual(["LOG_LEVELdebug, info, warn, or error"]);
+    await input(page).press("Enter");
+    await expect
+      .poll(() => editor(page).getByRole("option").allTextContents())
+      .toEqual(["debug", "info", "warn", "error"]);
+    await editor(page).getByRole("option", { name: "warn", exact: true }).click();
+    await expect.poll(() => input(page).inputValue()).toBe(`${text}LOG_LEVEL=warn`);
+    await page.keyboard.type("\nCACHE_URL=redis://${REG");
+    await expect.poll(() => editor(page).getByRole("option").count()).toBe(1);
+    await input(page).press("Enter");
+    await expect
+      .poll(() => input(page).inputValue())
+      .toBe(`${text}LOG_LEVEL=warn\nCACHE_URL=redis://\${REGION}`);
+    await expect.poll(() => kinds("reference")).toContain("${REGION}");
+    await page.keyboard.type("\n");
+    await input(page).press("Control+Space");
+    await expect
+      .poll(() => input(page).inputValue())
+      .toBe(`${text}LOG_LEVEL=warn\nCACHE_URL=redis://\${REGION}\n`);
+    const offered = await editor(page).getByRole("option").allTextContents();
+    expect(offered.some((option) => option.startsWith("FEATURE_EXPORT"))).toBe(true);
+    expect(offered.some((option) => option.startsWith("APP_ENV"))).toBe(false);
+    await screenshot("native-editor-language-service");
+  });
   it("native editor handles rapid typing, own undo and redo, and Unicode input", async () => {
     const page = await open();
     await page.getByLabel("Example language").selectOption("text");

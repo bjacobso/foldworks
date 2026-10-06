@@ -25,7 +25,6 @@ import { Message as PdfViewerMessage } from "../pdf-viewer/message";
 import { update as updatePdfViewer } from "../pdf-viewer/update";
 import { update as updateQueryBuilder } from "../query-builder/update";
 import { update as updateOutliner } from "../outliner/update";
-import { update as updateLisp } from "../lisp/update";
 import { applyTheme, ThemeName } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
 import { update as updateStatechart } from "../statechart/update";
@@ -222,13 +221,6 @@ const foldQueryBuilder = Update.foldChild({
   toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
 });
 
-const foldLisp = Update.foldChild({
-  update: updateLisp,
-  read: (model: Model) => Option.some(model.lisp),
-  write: (model, lisp) => evo(model, { lisp: () => lisp }),
-  toParentMessage: (message) => Message.GotLispMessage({ message }),
-});
-
 const foldOutliner = Update.foldChild({
   update: updateOutliner,
   read: (model: Model) => Option.some(model.outlinerDemo),
@@ -398,7 +390,6 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotQueryBuilderDemoMessage: ({ message: childMessage }) =>
       foldQueryBuilder(model, childMessage),
     GotOutlinerDemoMessage: ({ message: childMessage }) => foldOutliner(model, childMessage),
-    GotLispMessage: ({ message: childMessage }) => foldLisp(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) => foldPdfAnnotator(model, childMessage),
     GotPdfViewerDemoMessage: ({ message: childMessage }) => foldPdfViewer(model, childMessage),
     GotEditorMessage: ({ message }) => foldEditor(model, message),

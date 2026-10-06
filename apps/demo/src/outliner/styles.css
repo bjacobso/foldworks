@@ -229,3 +229,105 @@
 .outliner-demo__card .outliner-demo__card-count {
   margin-top: 4px;
 }
+
+/* The quoted principles: read only, with the reason at the end of their first row. */
+.outliner-demo .fw-outliner__row[data-readonly="true"] .fw-outliner__text {
+  color: color-mix(in oklab, var(--foreground) 72%, var(--muted-foreground));
+}
+
+.outliner-demo__quoted {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* A folded checklist's progress, under its row. */
+.outliner-demo__summary {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--muted) 40%, var(--card));
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.outliner-demo__progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.outliner-demo__bar {
+  flex: 0 1 160px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-foreground) 22%, transparent);
+}
+
+.outliner-demo__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--foldworks-ui-success, #15803d);
+}
+
+.outliner-demo__progress-text {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.outliner-demo__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.outliner-demo__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+}
+
+.outliner-demo__chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--muted-foreground);
+  border-radius: 50%;
+}
+
+.outliner-demo__chip[data-done="true"] {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.outliner-demo__chip[data-done="true"]::before {
+  border-color: var(--foldworks-ui-success, #15803d);
+  background: var(--foldworks-ui-success, #15803d);
+}
+
+.outliner-demo__chip:hover {
+  background: var(--accent);
+}
+
+.outliner-demo__chip:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}

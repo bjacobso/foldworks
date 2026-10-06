@@ -68,7 +68,11 @@ marks the current step with `aria-current="step"`, steps before it read as
 complete, and `onSelect` jumps to any step. Pair it with Previous and Next
 buttons, and show where the current step happened in the views beside it, for
 example with an outliner decoration's `tone` or a code editor `highlights`
-range. The `/lisp` demo steps through a row's evaluation this way.
+range. The statechart simulator demo uses this pattern to replay a run,
+showing the active states at each transition.
+The host handles arrow keys and scrolling the selected step into view. Send
+relative Previous and Next messages and resolve the index in `update`, so
+rapid clicks advance from the latest state.
 `TransactionTimeline` is the better fit for attributed history that is read
 rather than replayed.
 

@@ -1,5 +1,6 @@
 import { Schema as S } from "effect";
 import { DataGrid } from "@foldworks/data-grid";
+import { ValueTree } from "@foldworks/ui";
 import { defineMessageUnion } from "foldkit/message";
 
 import { Snapshot } from "./domain";
@@ -8,6 +9,7 @@ import { Panel } from "./model";
 export const Message = defineMessageUnion({
   CompletedFocus: {},
   GotGridMessage: { message: DataGrid.Message },
+  GotRecordMessage: { message: ValueTree.Message },
   SelectedWorker: { id: S.String, panel: Panel },
   OpenedPanel: { panel: Panel },
   ChangedState: { value: S.String },

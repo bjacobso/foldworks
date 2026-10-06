@@ -8,7 +8,8 @@ diff review prototype at `/diff-viewer`.
 
 Foldkit's bidirectional router owns navigational state. The project overview
 lives at `/`; demos live at `/ui-kit`, `/editor`, `/codebase`, `/data-table`, `/data-grid`, `/query-builder`,
-`/form-builder`, `/workflow`, `/pdf-annotator`, `/lisp`, and `/agent`. Workflow orientation and the
+`/form-builder`, `/workflow`, `/pdf-annotator`, `/agent`, `/outliner`, `/code-editor`,
+`/workbench`, and `/statechart`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,
 drag state, column widths, and in-progress document edits remain in the
@@ -147,6 +148,25 @@ apply → history loop. Changes and audit entries are saved in browser storage.
 The adapter uses illustrative local rules; it does not connect to Triplex.
 See [the reference guide and screenshots](../../docs/workbench/README.md) for
 behavior, architecture, and the focused end-to-end test command.
+
+## Workbench primitives in the demos
+
+The [language workbench guide](../../docs/language-workbench.md) describes the
+generic contracts. Try them in these existing pages:
+
+- `/outliner`: hover or complete a mention, fill a placeholder, or fold
+  Chapters or Volunteer day to use its checklist summary. The quoted principles
+  are read only, and moving a row into a completed item is refused.
+- `/code-editor`: choose **Environment file** for host-supplied highlighting,
+  diagnostics, hover, and completion. Choose a setting in the navigator to
+  highlight its definition and uses; Ctrl+Space requests suggestions.
+- `/agent`: review a proposed tree edit in a permission checkpoint with Accept
+  and Discard actions.
+- `/workbench`: open a worker's **Record** tab, expand nested branches, and load
+  another page of shifts. Saved changes appear in the record's history.
+- `/statechart`: enter **Simulate** and replay a sample or recorded run. Select
+  a step or use Previous, Next, and arrow keys to see the active states at that
+  point; Escape returns to the live simulation.
 
 The `/ui-kit` Desktop workspace demonstrates shared keyboard commands, measured
 breadcrumb/action rows, inline editing, token entry, a nested inspector, context

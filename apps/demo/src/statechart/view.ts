@@ -12,9 +12,12 @@ import {
   LayoutGrid,
   Maximize2,
   Redo2,
+  Rewind,
   RotateCcw,
   Scan,
   Square,
+  StepBack,
+  StepForward,
   StickyNote,
   Undo2,
   Workflow,
@@ -49,6 +52,7 @@ import {
   Field as UiField,
   Icon as UiIcon,
   SegmentedControl as UiSegmentedControl,
+  Stepper as UiStepper,
 } from "@foldworks/ui";
 
 import {
@@ -65,14 +69,17 @@ import {
   type StateNode,
 } from "./machine";
 import { Message } from "./message";
-import type { Model } from "./model";
+import { REPLAY_BUTTON_ID, REPLAY_ID, type Model, type Replay } from "./model";
 import { className, styles } from "./styles";
 import {
   currentDocument,
   currentMachineId,
   currentScene,
   dropContainer,
+  eventName,
   labelForKind,
+  replayableRun,
+  stateNames,
   translated,
 } from "./update";
 
@@ -89,6 +96,8 @@ type Derived = Readonly<{
     | undefined;
   active: ReadonlySet<string>;
   enabled: ReadonlySet<string>;
+  /** While replaying, the transition the current step took. */
+  taken: string | undefined;
 }>;
 
 /** Derives everything the canvas renders. While dragging, the document is
@@ -115,6 +124,8 @@ const derive = (model: Model): Derived => {
   const link = Option.getOrUndefined(Diagram.maybeConnectionPreview(model.canvas));
   const target = link === undefined ? undefined : nodeAt(baseScene, link.to);
   const simulating = model.mode === "Simulate";
+  const step = model.replay?.steps[model.replay.index];
+  const configuration = step?.configuration ?? model.configuration;
   return {
     document,
     scene,
@@ -132,10 +143,12 @@ const derive = (model: Model): Derived => {
               operations.connectionRejection(document, link.source, { nodeId: target.id }) ===
                 undefined,
           },
-    active: simulating ? activeStates(document, model.configuration) : new Set(),
-    enabled: simulating
-      ? new Set(enabledTransitions(document, model.configuration).map((edge) => edge.id))
-      : new Set(),
+    active: simulating ? activeStates(document, configuration) : new Set(),
+    enabled:
+      simulating && step === undefined
+        ? new Set(enabledTransitions(document, configuration).map((edge) => edge.id))
+        : new Set(),
+    taken: step?.edgeId ?? undefined,
   };
 };
 
@@ -195,11 +208,14 @@ const edgeLayerView = (model: Model, derived: Derived, h: HtmlBuilder<Message>):
     if (transition === undefined) return [];
     const isSelected = Diagram.isSelected(model.canvas, edge.id);
     const isEnabled = derived.enabled.has(edge.id);
+    const isTaken = derived.taken === edge.id;
+    const isDimmed = simulating && !isEnabled && !isTaken;
     const tone = className(
       styles.edgePath,
       isSelected && styles.edgeSelected,
       isEnabled && styles.edgeEnabled,
-      simulating && !isEnabled && styles.edgeDimmed,
+      isTaken && styles.edgeTaken,
+      isDimmed && styles.edgeDimmed,
     );
     const anchor = edgeAnchor(edge);
     return [
@@ -207,6 +223,7 @@ const edgeLayerView = (model: Model, derived: Derived, h: HtmlBuilder<Message>):
         h.D(edgePath(edge)),
         h.Class(tone),
         h.DataAttribute("edge-id", edge.id),
+        h.DataAttribute("taken", isTaken ? "true" : "false"),
       ]),
       h.keyed("path")(`arrow:${edge.id}`, [
         h.D(arrowHead(edge.points)),
@@ -215,7 +232,8 @@ const edgeLayerView = (model: Model, derived: Derived, h: HtmlBuilder<Message>):
             styles.edgeArrow,
             isSelected && styles.arrowSelected,
             isEnabled && styles.arrowEnabled,
-            simulating && !isEnabled && styles.edgeDimmed,
+            isTaken && styles.arrowEnabled,
+            isDimmed && styles.edgeDimmed,
           ),
         ),
       ]),
@@ -412,6 +430,7 @@ const labelView = (
   }
   const anchor = edgeAnchor(edge);
   const isEnabled = derived.enabled.has(edge.id);
+  const isTaken = derived.taken === edge.id;
   return h.keyed("div")(
     `label:${edge.id}`,
     [
@@ -420,11 +439,13 @@ const labelView = (
           styles.label,
           Diagram.isSelected(model.canvas, edge.id) && styles.labelSelected,
           isEnabled && styles.labelEnabled,
+          isTaken && styles.labelTaken,
         ),
       ),
       h.Style({ transform: `translate(${anchor.x}px, ${anchor.y}px) translate(-50%, -50%)` }),
       h.DataAttribute("transition-id", edge.id),
       h.DataAttribute("enabled", isEnabled ? "true" : "false"),
+      h.DataAttribute("taken", isTaken ? "true" : "false"),
       ...Diagram.elementAttributes(
         {
           model: model.canvas,
@@ -432,7 +453,7 @@ const labelView = (
           id: edge.id,
           anchor,
           isMovable: false,
-          label: `Transition ${transition.data.event}${isEnabled ? ", enabled. Press Enter to fire." : ""}`,
+          label: `Transition ${transition.data.event}${isEnabled ? ", enabled. Press Enter to fire." : isTaken ? ", taken in this step" : ""}`,
         },
         h,
       ),
@@ -441,7 +462,10 @@ const labelView = (
       transition.data.event,
       transition.data.guard === undefined
         ? h.empty
-        : h.span([h.Class(className(styles.guard))], [`[${transition.data.guard}]`]),
+        : h.span(
+            [h.Class(className(styles.guard, isTaken && styles.guardTaken))],
+            [`[${transition.data.guard}]`],
+          ),
     ],
   );
 };
@@ -607,7 +631,9 @@ const canvasView = (model: Model, derived: Derived, h: HtmlBuilder<Message>): Ht
             [
               model.mode === "Edit"
                 ? "Drag states into compound states · drag a handle to connect · Delete removes"
-                : "Click a highlighted transition to fire it",
+                : model.replay === null
+                  ? "Click a highlighted transition to fire it"
+                  : "Arrow keys step · Home and End jump · Esc returns to live",
             ],
           ),
         ],
@@ -628,6 +654,7 @@ const simulationView = (model: Model, derived: Derived, h: HtmlBuilder<Message>)
   const enabled = enabledTransitions(derived.document, model.configuration);
   const complete = isComplete(derived.document, model.configuration);
   const names = model.configuration.map((id) => findNode(derived.document, id)?.data.name ?? id);
+  const replayable = replayableRun(model);
   return section(
     "Simulation",
     [
@@ -666,25 +693,155 @@ const simulationView = (model: Model, derived: Derived, h: HtmlBuilder<Message>)
             ),
           ),
       ),
-      model.log.length === 0
+      model.run.length === 0
         ? h.empty
         : h.ol(
             [h.Class(className(styles.log))],
-            model.log.map((entry) => h.li([], [entry])),
+            model.run
+              .slice(-12)
+              .map((step) =>
+                h.li(
+                  [],
+                  [
+                    `${eventName(derived.document, step.edgeId)} → ${stateNames(derived.document, step.configuration)}`,
+                  ],
+                ),
+              ),
           ),
-      UiButton.view(
-        {
-          label: "Restart",
-          icon: RotateCcw,
-          variant: "outline",
-          size: "sm",
-          onClick: Message.ClickedRestartSimulation(),
-        },
-        h,
+      h.div(
+        [h.Class(className(styles.actions))],
+        [
+          UiButton.view(
+            {
+              label: "Restart",
+              icon: RotateCcw,
+              variant: "outline",
+              size: "sm",
+              onClick: Message.ClickedRestartSimulation(),
+            },
+            h,
+          ),
+          UiButton.view(
+            {
+              label: replayable?.source === "Sample" ? "Replay sample run" : "Replay run",
+              icon: Rewind,
+              variant: "outline",
+              size: "sm",
+              isDisabled: replayable === undefined,
+              onClick: Message.ClickedReplay(),
+              attributes: [h.Id(REPLAY_BUTTON_ID)],
+            },
+            h,
+          ),
+        ],
       ),
     ],
     h,
   );
+};
+
+/**
+ * Stepping through a run with `Stepper` as the playhead. The canvas shows the
+ * current step: its transition is highlighted and the states it left active
+ * are marked. The live simulation is untouched until the replay ends.
+ */
+const replayView = (replay: Replay, derived: Derived, h: HtmlBuilder<Message>): Html => {
+  const { document } = derived;
+  const last = replay.steps.length - 1;
+  return h.section(
+    [
+      h.Id(REPLAY_ID),
+      h.Class(className(styles.paletteSection, styles.replay)),
+      h.Tabindex(-1),
+      h.AriaLabel("Replay"),
+    ],
+    [
+      h.p([h.Class(className(styles.eyebrow))], ["Replay"]),
+      h.div(
+        [h.Class(className(styles.replayHeading))],
+        [
+          h.h2(
+            [h.Class(className(styles.heading))],
+            [replay.source === "Run" ? "This run" : "Sample run"],
+          ),
+          h.span(
+            [h.Class(className(styles.muted)), h.DataAttribute("replay-position", "true")],
+            [`Step ${replay.index + 1} of ${replay.steps.length}`],
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class(className(styles.actions)), h.Role("group"), h.AriaLabel("Replay controls")],
+        [
+          UiButton.view(
+            {
+              label: "Previous",
+              icon: StepBack,
+              variant: "outline",
+              size: "sm",
+              isDisabled: replay.index === 0,
+              onClick: Message.SteppedReplay({ by: -1 }),
+            },
+            h,
+          ),
+          UiButton.view(
+            {
+              label: "Next",
+              icon: StepForward,
+              variant: "outline",
+              size: "sm",
+              isDisabled: replay.index >= last,
+              onClick: Message.SteppedReplay({ by: 1 }),
+            },
+            h,
+          ),
+          UiButton.view(
+            {
+              label: "Back to live",
+              variant: "ghost",
+              size: "sm",
+              onClick: Message.StoppedReplay(),
+            },
+            h,
+          ),
+        ],
+      ),
+      UiStepper.view(
+        {
+          steps: replay.steps.map((step, index) => ({
+            id: String(index),
+            label: eventName(document, step.edgeId),
+            description: `→ ${stateNames(document, step.configuration)}`,
+          })),
+          currentStepId: String(replay.index),
+          orientation: "vertical",
+          ariaLabel: "Run steps",
+          onSelect: (id) => Message.SelectedReplayStep({ index: Number(id) }),
+        },
+        h,
+      ),
+    ],
+  );
+};
+
+/** Keys that move the replay playhead while focus is in the workspace. */
+const replayKey = (replay: Replay, key: string): Message | undefined => {
+  switch (key) {
+    case "ArrowUp":
+    case "ArrowLeft":
+      return Message.SteppedReplay({ by: -1 });
+    case "ArrowDown":
+    case "ArrowRight":
+      return Message.SteppedReplay({ by: 1 });
+    case "Home":
+      return Message.SelectedReplayStep({ index: 0 });
+    case "End":
+      return Message.SelectedReplayStep({ index: replay.steps.length - 1 });
+    case "Escape":
+      return Message.StoppedReplay();
+    default:
+      return undefined;
+  }
 };
 
 const overviewView = (model: Model, derived: Derived, h: HtmlBuilder<Message>): Html => {
@@ -973,7 +1130,14 @@ const inspectorView = (model: Model, derived: Derived, h: HtmlBuilder<Message>):
           : noteInspector(model, selected, derived, h);
   return h.aside(
     [h.Class(className(styles.inspector)), h.AriaLabel("Statechart inspector")],
-    [model.mode === "Simulate" ? simulationView(model, derived, h) : h.empty, detail],
+    [
+      model.mode !== "Simulate"
+        ? h.empty
+        : model.replay === null
+          ? simulationView(model, derived, h)
+          : replayView(model.replay, derived, h),
+      detail,
+    ],
   );
 };
 
@@ -1174,8 +1338,20 @@ export const view = defineView<Model, Message, ViewInputs>((model, inputs, h) =>
       return toolbarView(model, h);
     case "Content": {
       const derived = derive(model);
+      const replay = model.replay;
       return h.div(
-        [h.Class(className(styles.workspace))],
+        [
+          h.Class(className(styles.workspace)),
+          ...(replay === null
+            ? []
+            : [
+                h.OnKeyDownPreventDefault((key, modifiers) =>
+                  modifiers.altKey || modifiers.ctrlKey || modifiers.metaKey
+                    ? Option.none()
+                    : Option.fromNullishOr(replayKey(replay, key)),
+                ),
+              ]),
+        ],
         [canvasView(model, derived, h), inspectorView(model, derived, h)],
       );
     }

@@ -116,6 +116,10 @@ export const styles = stylex.create({
     stroke: "var(--foldworks-ui-success)",
     strokeWidth: 2.4,
   },
+  edgeTaken: {
+    stroke: "var(--foldworks-ui-success)",
+    strokeWidth: 3,
+  },
   arrowSelected: {
     fill: "var(--foldworks-ui-primary)",
   },
@@ -319,10 +323,20 @@ export const styles = stylex.create({
     borderColor: "var(--foldworks-ui-success)",
     color: "var(--foldworks-ui-success)",
   },
+  labelTaken: {
+    backgroundColor: "var(--foldworks-ui-success)",
+    borderColor: "var(--foldworks-ui-success)",
+    boxShadow: "0 0 0 3px color-mix(in oklch, var(--foldworks-ui-success) 26%, transparent)",
+    color: "var(--foldworks-ui-primary-foreground)",
+  },
   guard: {
     color: "var(--foldworks-ui-foreground-subtle)",
     fontWeight: 500,
     marginLeft: "4px",
+  },
+  guardTaken: {
+    color: "inherit",
+    opacity: 0.8,
   },
   note: {
     backgroundColor: "color-mix(in oklch, #f7d774 30%, var(--foldworks-ui-surface))",
@@ -462,6 +476,25 @@ export const styles = stylex.create({
     lineHeight: 1.6,
     margin: 0,
     paddingLeft: "16px",
+  },
+  actions: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "6px",
+  },
+  replay: {
+    borderRadius: "10px",
+    marginLeft: "-8px",
+    marginRight: "-8px",
+    marginTop: "-8px",
+    outline: focusRing,
+    padding: "8px",
+  },
+  replayHeading: {
+    alignItems: "baseline",
+    display: "flex",
+    gap: "8px",
+    justifyContent: "space-between",
   },
   stats: {
     display: "grid",

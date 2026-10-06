@@ -38,7 +38,7 @@ export const workspaceScenarios = (getPage: () => Page, appUrl: string): void =>
     await page.getByRole("button", { name: "Hide Reference", exact: true }).click();
     await expect.poll(value).toBe(0);
     await expect.poll(() => reference.isVisible()).toBe(false);
-    await expect.poll(() => handle.evaluate(el => el === document.activeElement)).toBe(true);
+    await expect.poll(() => handle.evaluate((el) => el === document.activeElement)).toBe(true);
     await page.getByRole("button", { name: "Show Reference", exact: true }).click();
     await expect.poll(value).toBe(resized);
     await expect.poll(() => reference.inputValue()).toBe("const retained = true;");
@@ -59,13 +59,20 @@ export const workspaceScenarios = (getPage: () => Page, appUrl: string): void =>
     await page.getByRole("button", { name: "Side by side", exact: true }).click();
     await page.setViewportSize({ width: 390, height: 650 });
     const workspace = page.locator('[data-workspace="code-workspace"]');
-    await expect.poll(() => workspace.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true);
-    await expect.poll(() => page.locator("body").evaluate(el => el.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect
+      .poll(() => workspace.evaluate((el) => el.scrollWidth <= el.clientWidth + 1))
+      .toBe(true);
+    await expect.poll(() => reference.inputValue()).toBe("const retained = true;");
+    await expect
+      .poll(() => page.locator("body").evaluate((el) => el.scrollWidth <= window.innerWidth))
+      .toBe(true);
   });
 
   it("workspace panes nest without coupling form structure and settings", async () => {
     const page = getPage();
-    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, { waitUntil: "networkidle" });
+    await page.goto(`${appUrl}/form-builder?example=Handoff&mode=Editor`, {
+      waitUntil: "networkidle",
+    });
     const structure = page.getByRole("separator", { name: "Structure", exact: true });
     const settings = page.getByRole("separator", { name: "Settings", exact: true });
     await structure.press("ArrowRight");
@@ -74,15 +81,25 @@ export const workspaceScenarios = (getPage: () => Page, appUrl: string): void =>
     await expect.poll(() => settings.getAttribute("aria-valuenow")).toBe("0");
     expect(await structure.getAttribute("aria-valuenow")).toBe("260");
     await structure.press("Enter");
-    await expect.poll(() => page.getByRole("button", { name: "Show Structure", exact: true }).isVisible()).toBe(true);
+    await expect
+      .poll(() => page.getByRole("button", { name: "Show Structure", exact: true }).isVisible())
+      .toBe(true);
     await page.getByRole("button", { name: "Show Structure", exact: true }).click();
     await page.getByRole("button", { name: "Show Settings", exact: true }).click();
-    await expect.poll(() => page.getByRole("complementary", { name: "Item settings" }).isVisible()).toBe(true);
+    await expect
+      .poll(() => page.getByRole("complementary", { name: "Item settings" }).isVisible())
+      .toBe(true);
     await page.setViewportSize({ width: 760, height: 500 });
-    const outline = page.locator('[data-workspace="form-outline"] > div > section').first().locator(':scope > div').last();
+    const outline = page
+      .locator('[data-workspace="form-outline"] > div > section')
+      .first()
+      .locator(":scope > div")
+      .last();
     await outline.hover();
     await page.mouse.wheel(0, 700);
-    await expect.poll(() => outline.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
-    expect(await page.locator("body").evaluate(el => el.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect.poll(() => outline.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    expect(await page.locator("body").evaluate((el) => el.scrollWidth <= window.innerWidth)).toBe(
+      true,
+    );
   });
 };

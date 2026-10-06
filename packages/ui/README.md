@@ -673,8 +673,8 @@ ValueTree.view(
 Fold its updates with `ValueTree.update(tree, message, { nodes })`, passing the
 same nodes as the view, and answer its `OutMessage`s by adding children. Up and
 Down move, Right opens a branch or steps into it, Left closes it or steps out,
-and Return or Space toggles. The `/lisp` inspector loads a value's branches a
-page at a time this way.
+and Return or Space toggles. The Workers workbench demo's Record tab loads nested branches on expansion
+and pages through long lists this way.
 
 ## Workspace panes
 

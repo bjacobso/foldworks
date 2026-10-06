@@ -19,7 +19,6 @@ import { diffViewerScenarios } from "./diff-viewer.scenarios";
 import { pdfViewerScenarios } from "./pdf-viewer.scenarios";
 import { statechartScenarios } from "./statechart.scenarios";
 import { outlinerScenarios } from "./outliner.scenarios";
-import { lispScenarios } from "./lisp.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "../../.context/demo-screenshots");
@@ -1213,6 +1212,9 @@ describe.sequential("structured workflow builder", () => {
 
     await page.locator('[data-form-page-id="handoff-about-you"]').getByRole("button").click();
 
+    await expect
+      .poll(() => page.locator('[data-form-field-id="handoff-name"]').isVisible())
+      .toBe(true);
     const fieldsBefore = await page.locator("[data-form-field-id]").count();
     await page.locator('[data-form-palette-field="date"]').click();
     await expect.poll(() => page.locator("[data-form-field-id]").count()).toBe(fieldsBefore + 1);
@@ -1337,7 +1339,7 @@ describe.sequential("structured workflow builder", () => {
           ?.height,
       }))
       .toEqual({ xs: 24, sm: 28, md: 32, lg: 36 });
-    const email = showcase.getByRole("textbox", { name: "Work email" });
+    const email = showcase.locator("#ui-kit-email");
     await expect.poll(() => email.getAttribute("aria-invalid")).toBe("true");
     await email.fill("maya@example.com");
     await expect.poll(() => email.getAttribute("aria-invalid")).toBeNull();
@@ -1355,7 +1357,9 @@ describe.sequential("structured workflow builder", () => {
     await showcase.getByLabel("Display name").fill("Avery Stone");
     await expect.poll(() => showcase.getByLabel("Display name").inputValue()).toBe("Avery Stone");
 
-    await showcase.getByLabel("Department", { exact: true }).selectOption("Operations");
+    await showcase
+      .getByRole("combobox", { name: "Department", exact: true })
+      .selectOption("Operations");
     await expect
       .poll(() => showcase.getByLabel("Compact department").inputValue())
       .toBe("Operations");
@@ -1394,8 +1398,12 @@ describe.sequential("structured workflow builder", () => {
         "Disclosure and layout",
         "Overlays, menus, and command",
         "Calendar and messages",
+        "Metrics and details",
+        "Release source",
+        "Field inspector",
+        "Journeys",
       ]);
-    await expect.poll(() => catalog.getByRole("progressbar").count()).toBe(1);
+    await expect.poll(() => catalog.getByRole("progressbar").count()).toBe(7);
     await expect.poll(() => catalog.getByRole("grid").count()).toBe(1);
     await expect.poll(() => catalog.getByRole("log", { name: "Messages" }).count()).toBe(1);
 
@@ -1408,10 +1416,13 @@ describe.sequential("structured workflow builder", () => {
     await catalog.getByRole("button", { name: "Popover", exact: true }).click();
     await expect.poll(() => page.locator("#catalog-popover-content").isVisible()).toBe(true);
 
-    await catalog.getByRole("button", { name: "Page 3", exact: true }).click();
+    const pagination = catalog.getByRole("navigation", { name: "Pagination", exact: true });
+    await pagination.getByRole("button", { name: "Page 3", exact: true }).click();
     await expect
       .poll(() =>
-        catalog.getByRole("button", { name: "Page 3", exact: true }).getAttribute("aria-current"),
+        pagination
+          .getByRole("button", { name: "Page 3", exact: true })
+          .getAttribute("aria-current"),
       )
       .toBe("page");
 
@@ -1631,6 +1642,5 @@ describe.sequential("structured workflow builder", () => {
   pdfViewerScenarios(() => page, appUrl, screenshot);
   statechartScenarios(() => page, appUrl, screenshot);
   outlinerScenarios(() => page, appUrl, screenshot);
-  lispScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
 });

@@ -14,5 +14,6 @@ export const Message = defineMessageUnion({
   ToggleWrapping: {},
   ToggleReadOnly: {},
   Save: {},
+  SelectSetting: { name: S.String },
 });
 export type Message = typeof Message.Type;

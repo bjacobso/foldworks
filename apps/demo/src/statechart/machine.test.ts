@@ -9,12 +9,13 @@ import {
   layoutMachine,
   lintMachine,
   operations,
+  runTransitions,
   takeTransition,
   type MachineDocument,
 } from "./machine";
 import { Message } from "./message";
 import { init } from "./model";
-import { sampleLibrary } from "./sample";
+import { sampleLibrary, sampleRuns } from "./sample";
 import { currentDocument, update } from "./update";
 
 const checkout = findMachine(sampleLibrary, "checkout")?.document as MachineDocument;
@@ -26,6 +27,10 @@ describe("statechart adapter", () => {
     for (const machine of sampleLibrary.machines) {
       expect(validateDocument(machine.document)).toEqual([]);
       expect(lintMachine(sampleLibrary, machine)).toEqual([]);
+      const run = sampleRuns[machine.id] ?? [];
+      expect(
+        runTransitions(machine.document, initialConfiguration(machine.document), run),
+      ).toHaveLength(run.length);
     }
   });
 
@@ -168,5 +173,44 @@ describe("statechart editor update", () => {
     expect(
       update(fired, Message.ClickedFireTransition({ edgeId: "t-paid" })).model.configuration,
     ).toEqual(["shipping"]);
+  });
+
+  it("replays the recorded run step by step and returns to the live simulation", () => {
+    const simulating = update(init(), Message.SelectedMode({ mode: "Simulate" })).model;
+    const fired = ["t-checkout", "t-next", "t-pay"].reduce(
+      (model, edgeId) => update(model, Message.ClickedFireTransition({ edgeId })).model,
+      simulating,
+    );
+    const replaying = update(fired, Message.ClickedReplay()).model;
+    expect(replaying.replay).toMatchObject({ source: "Run", index: 0 });
+    expect(replaying.replay?.steps.map((step) => step.edgeId)).toEqual([
+      null,
+      "t-checkout",
+      "t-next",
+      "t-pay",
+    ]);
+
+    const stepped = update(replaying, Message.SelectedReplayStep({ index: 2 })).model;
+    expect(stepped.replay?.steps[stepped.replay.index]?.configuration).toEqual(["billing"]);
+    expect(stepped.announcement).toBe("Step 3 of 4: NEXT. Active: Billing.");
+    expect(update(stepped, Message.SelectedReplayStep({ index: 9 })).model.replay?.index).toBe(3);
+    // Transitions cannot fire while replaying.
+    expect(
+      update(stepped, Message.ClickedFireTransition({ edgeId: "t-back" })).model.configuration,
+    ).toEqual(["payment"]);
+
+    const live = update(stepped, Message.StoppedReplay()).model;
+    expect(live.replay).toBeNull();
+    expect(live.configuration).toEqual(["payment"]);
+    expect(live.run).toHaveLength(3);
+  });
+
+  it("replays the sample run when nothing has fired", () => {
+    const simulating = update(init(), Message.SelectedMode({ mode: "Simulate" })).model;
+    const replay = update(simulating, Message.ClickedReplay()).model.replay;
+    expect(replay?.source).toBe("Sample");
+    expect(replay?.steps).toHaveLength((sampleRuns.checkout?.length ?? 0) + 1);
+    expect(replay?.steps.at(-1)?.configuration).toEqual(["complete"]);
+    expect(update(init(), Message.ClickedReplay()).model.replay).toBeNull();
   });
 });
