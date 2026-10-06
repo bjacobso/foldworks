@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
 
 export const Mark = S.Struct({
-  type: S.Literals(["bold", "italic", "strike", "code", "link"]),
+  type: S.Literals(["bold", "italic", "strike", "code", "link", "literal"]),
   value: S.String,
 });
 export type Mark = typeof Mark.Type;
@@ -44,14 +44,12 @@ export const block = (
   attrs: Readonly<Record<string, string>> = {},
   children: ReadonlyArray<Block> = [],
 ): Block => ({ id, type, content, attrs, children });
-export const plainText = (node: Block): string =>
-  node.content.map((run) => run.text).join("");
+export const plainText = (node: Block): string => node.content.map((run) => run.text).join("");
 export const caret = (id: string, offset = 0): Selection => ({
   anchor: { id, offset },
   focus: { id, offset },
 });
-export const samePoint = (a: Point, b: Point): boolean =>
-  a.id === b.id && a.offset === b.offset;
+export const samePoint = (a: Point, b: Point): boolean => a.id === b.id && a.offset === b.offset;
 export const collapsed = (selection: Selection): boolean =>
   samePoint(selection.anchor, selection.focus);
 export const walk = (nodes: ReadonlyArray<Block>): ReadonlyArray<Block> =>
@@ -68,8 +66,7 @@ export const mapBlocks = (
     const children = mapBlocks(node.children, f);
     return f(children === node.children ? node : { ...node, children });
   });
-  return mapped.length === nodes.length &&
-    mapped.every((node, index) => node === nodes[index])
+  return mapped.length === nodes.length && mapped.every((node, index) => node === nodes[index])
     ? nodes
     : mapped;
 };
@@ -79,20 +76,21 @@ export const updateBlock = (
   f: (node: Block) => Block,
 ): Document => ({
   ...document,
-  blocks: mapBlocks(document.blocks, (node) => [
-    node.id === id ? f(node) : node,
-  ]),
+  blocks: mapBlocks(document.blocks, (node) => [node.id === id ? f(node) : node]),
 });
-export const marksEqual = (
-  a: ReadonlyArray<Mark>,
-  b: ReadonlyArray<Mark>,
-): boolean => JSON.stringify(a) === JSON.stringify(b);
+export const marksEqual = (a: ReadonlyArray<Mark>, b: ReadonlyArray<Mark>): boolean =>
+  JSON.stringify(a) === JSON.stringify(b);
 export const normalizeRuns = (runs: ReadonlyArray<Run>): ReadonlyArray<Run> => {
   const result: Run[] = [];
   for (const run of runs) {
     if (!run.text) continue;
+    const inlineCode = run.marks.some((mark) => mark.type === "code");
     const marks = [
-      ...new Map(run.marks.map((mark) => [mark.type, mark])).values(),
+      ...new Map(
+        run.marks
+          .filter((mark) => !inlineCode || mark.type !== "literal")
+          .map((mark) => [mark.type, mark]),
+      ).values(),
     ].sort((a, b) => a.type.localeCompare(b.type));
     const previous = result.at(-1);
     if (previous && marksEqual(previous.marks, marks))
@@ -122,10 +120,7 @@ export const sliceRuns = (
     }),
   );
 };
-export const orderedRange = (
-  document: Document,
-  selection: Selection,
-): readonly [Point, Point] => {
+export const orderedRange = (document: Document, selection: Selection): readonly [Point, Point] => {
   const nodes = leaves(document);
   const a = nodes.findIndex((node) => node.id === selection.anchor.id);
   const b = nodes.findIndex((node) => node.id === selection.focus.id);
@@ -133,27 +128,20 @@ export const orderedRange = (
     ? [selection.anchor, selection.focus]
     : [selection.focus, selection.anchor];
 };
-export const clampSelection = (
-  document: Document,
-  selection: Selection,
-): Selection => {
+export const clampSelection = (document: Document, selection: Selection): Selection => {
   const nodes = leaves(document);
   const fallback = nodes[0]!;
   const clamp = (point: Point): Point => {
     const node = nodes.find((node) => node.id === point.id) ?? fallback;
     return {
       id: node.id,
-      offset: Math.max(
-        0,
-        Math.min(plainText(node).length, Math.floor(point.offset)),
-      ),
+      offset: Math.max(0, Math.min(plainText(node).length, Math.floor(point.offset))),
     };
   };
   return { anchor: clamp(selection.anchor), focus: clamp(selection.focus) };
 };
 export const safeUrl = (value: string): boolean =>
-  /^(https?:\/\/|mailto:|\/[^/]|#)/i.test(value) &&
-  !/[\u0000-\u0020]/.test(value);
+  /^(https?:\/\/|mailto:|\/[^/]|#)/i.test(value) && !/[\u0000-\u0020]/.test(value);
 
 export type BlockDefinition = Readonly<{
   name: string;
@@ -189,8 +177,7 @@ export const builtinBlocks: ReadonlyArray<BlockDefinition> = [
     label: "Callout",
     kind: "container",
     defaults: { tone: "info" },
-    validate: (attrs) =>
-      ["info", "warning", "success"].includes(attrs.tone ?? ""),
+    validate: (attrs) => ["info", "warning", "success"].includes(attrs.tone ?? ""),
     view: (node, h) =>
       h.select(
         [
@@ -204,33 +191,22 @@ export const builtinBlocks: ReadonlyArray<BlockDefinition> = [
           })),
         ],
         ["info", "warning", "success"].map((value) =>
-          h.option(
-            [h.Value(value)],
-            [value[0]!.toUpperCase() + value.slice(1)],
-          ),
+          h.option([h.Value(value)], [value[0]!.toUpperCase() + value.slice(1)]),
         ),
       ),
   },
   { name: "rule", label: "Divider", kind: "atom" },
 ];
-export const createRegistry = (
-  custom: ReadonlyArray<BlockDefinition> = [],
-): Registry => {
+export const createRegistry = (custom: ReadonlyArray<BlockDefinition> = []): Registry => {
   const registry = new Map<string, BlockDefinition>();
   for (const definition of [...builtinBlocks, ...custom]) {
-    if (
-      registry.has(definition.name) ||
-      !/^[a-zA-Z][a-zA-Z0-9]*$/.test(definition.name)
-    )
+    if (registry.has(definition.name) || !/^[a-zA-Z][a-zA-Z0-9]*$/.test(definition.name))
       throw new Error(`Invalid or duplicate block: ${definition.name}`);
     registry.set(definition.name, definition);
   }
   return registry;
 };
-export const validateDocument = (
-  document: Document,
-  registry: Registry,
-): string | undefined => {
+export const validateDocument = (document: Document, registry: Registry): string | undefined => {
   let count = 0;
   const ids = new Set<string>();
   if (document.version !== 1 || !document.blocks.length)
@@ -242,17 +218,12 @@ export const validateDocument = (
   ): string | undefined => {
     if (depth > 20) return "Document nesting exceeds 20 levels.";
     for (const node of nodes) {
-      if (
-        ++count > 10000 ||
-        node.content.reduce((n, run) => n + run.text.length, 0) > 1000000
-      )
+      if (++count > 10000 || node.content.reduce((n, run) => n + run.text.length, 0) > 1000000)
         return "Document exceeds editor limits.";
-      if (!node.id || ids.has(node.id))
-        return "Block IDs must be unique and nonempty.";
+      if (!node.id || ids.has(node.id)) return "Block IDs must be unique and nonempty.";
       ids.add(node.id);
       const definition = registry.get(node.type);
-      if (!definition)
-        return `Unsupported block: ${node.type}. Original content retained.`;
+      if (!definition) return `Unsupported block: ${node.type}. Original content retained.`;
       if (definition.validate && !definition.validate(node.attrs))
         return `Invalid attributes for ${node.type}.`;
       if (
@@ -263,25 +234,20 @@ export const validateDocument = (
         return `Invalid content in ${node.type}.`;
       if (definition.kind === "atom" && node.content.length)
         return "Atoms cannot contain editable text.";
-      if (
-        node.type === "codeBlock" &&
-        node.content.some((run) => run.marks.length > 0)
-      )
+      if (node.type === "codeBlock" && node.content.some((run) => run.marks.length > 0))
         return "Code blocks contain plain text without inline marks.";
       if (
         ["bulletList", "orderedList", "taskList"].includes(node.type) &&
         node.children.some((child) => child.type !== "listItem")
       )
         return "Lists must contain list items.";
-      if (
-        node.type === "listItem" &&
-        !["bulletList", "orderedList", "taskList"].includes(parent)
-      )
+      if (node.type === "listItem" && !["bulletList", "orderedList", "taskList"].includes(parent))
         return "List items must belong to a list.";
       for (const run of node.content)
         for (const mark of run.marks) {
-          if (mark.type === "link" && !safeUrl(mark.value))
-            return "Unsupported link protocol.";
+          if (mark.type === "literal" && (!/^[@#]+$/u.test(run.text) || mark.value !== ""))
+            return "Literal escape marks contain only @ or # markers.";
+          if (mark.type === "link" && !safeUrl(mark.value)) return "Unsupported link protocol.";
         }
       const error = visit(node.children, node.type, depth + 1);
       if (error) return error;

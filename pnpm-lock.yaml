@@ -363,6 +363,12 @@ importers:
 
   packages/editor:
     dependencies:
+      '@foldworks/text-intelligence':
+        specifier: workspace:*
+        version: link:../text-intelligence
+      micromark-util-decode-string:
+        specifier: ^2.0.1
+        version: 2.0.1
       remark-directive:
         specifier: ^4.0.0
         version: 4.0.0

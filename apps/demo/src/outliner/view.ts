@@ -1,3 +1,4 @@
+import { Mentions } from "@foldworks/text-intelligence";
 import { ChevronsDownUp, ChevronsUpDown, Lock, Redo2, SquareCheck, Undo2 } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
@@ -103,8 +104,7 @@ const markCard = (info: MarkInfo, h: HtmlBuilder<Message>): Html =>
   h.div(
     [h.Class("outliner-demo__card")],
     [
-      h.strong([], [info.title]),
-      h.span([], [info.detail]),
+      Mentions.descriptionView(info, h),
       h.span(
         [h.Class("outliner-demo__card-count")],
         [info.count === 1 ? "On 1 item" : `On ${info.count} items`],

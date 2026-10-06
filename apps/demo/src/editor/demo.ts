@@ -1,3 +1,4 @@
+import { referenceIntelligence } from "./references";
 import { Editor, Message, type BlockDefinition } from "@foldworks/editor";
 
 const ProjectReference: BlockDefinition = {
@@ -18,10 +19,7 @@ const ProjectReference: BlockDefinition = {
     h.div(
       [h.Class("editor-demo-project")],
       [
-        h.span(
-          [h.Class("editor-demo-project__icon"), h.AriaHidden(true)],
-          ["↗"],
-        ),
+        h.span([h.Class("editor-demo-project__icon"), h.AriaHidden(true)], ["↗"]),
         h.div(
           [],
           [
@@ -29,9 +27,7 @@ const ProjectReference: BlockDefinition = {
             h.input([
               h.AriaLabel("Project label"),
               h.Value(node.attrs.label ?? ""),
-              h.OnChange((value) =>
-                Message.Attributes({ id: node.id, key: "label", value }),
-              ),
+              h.OnChange((value) => Message.Attributes({ id: node.id, key: "label", value })),
             ]),
           ],
         ),
@@ -39,9 +35,7 @@ const ProjectReference: BlockDefinition = {
           [
             h.AriaLabel("Project status"),
             h.Value(node.attrs.status ?? "Planning"),
-            h.OnChange((value) =>
-              Message.Attributes({ id: node.id, key: "status", value }),
-            ),
+            h.OnChange((value) => Message.Attributes({ id: node.id, key: "status", value })),
           ],
           ["Planning", "In progress", "Complete"].map((value) =>
             h.option([h.Value(value)], [value]),
@@ -51,11 +45,16 @@ const ProjectReference: BlockDefinition = {
     ),
 };
 
-export const ArticleEditor = Editor.define({ blocks: [ProjectReference] });
+export const ArticleEditor = Editor.define({
+  blocks: [ProjectReference],
+  textIntelligence: referenceIntelligence,
+});
 export const initialEditor = () =>
   ArticleEditor.init({
     id: "foldworks-document-editor",
     markdown: `# The next chapter
+
+Plan the field guide with @maya and @jonah. Keep the checklist under #field-guide. Type @ or # for suggestions, Ctrl+Space to reopen, or Alt+Enter for details.
 
 Good work starts with a little space to think. This is your document—write, rearrange, and make it yours.
 

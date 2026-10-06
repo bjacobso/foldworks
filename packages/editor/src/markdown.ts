@@ -1,9 +1,12 @@
+import { decodeString } from "micromark-util-decode-string";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import remarkGfm from "remark-gfm";
 import remarkDirective from "remark-directive";
-import type { Root } from "mdast";
+import type { Root, Text } from "mdast";
+import type { Options as MarkdownOptions } from "remark-stringify";
+
 import { ensureDocument } from "./editing";
 import {
   block,
@@ -19,9 +22,16 @@ import {
   type Run,
 } from "./document";
 
+// This serializer-only node stays private; the editor does not extend consumers' mdast types.
+interface EscapedMarker {
+  type: "foldworksEscapedMarker";
+  value: string;
+}
+
 /** Structural AST subset shared by remark's standard and directive nodes. */
 interface Ast {
   type: string;
+  position?: { start: { offset?: number }; end: { offset?: number } };
   children?: Ast[];
   value?: string;
   depth?: number;
@@ -35,36 +45,70 @@ interface Ast {
   attributes?: Record<string, string | null | undefined>;
 }
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkDirective);
-const writer = unified()
-  .use(remarkStringify, { bullet: "-", fences: true, listItemIndent: "one" })
-  .use(remarkGfm)
-  .use(remarkDirective);
+type MarkdownHandler = NonNullable<NonNullable<MarkdownOptions["handlers"]>["text"]>;
+const markdownHandlers = {
+  // #tag is not a heading. Avoid manufacturing literal provenance on export.
+  text: (
+    node: Text,
+    _parent: Parameters<MarkdownHandler>[1],
+    state: Parameters<MarkdownHandler>[2],
+    info: Parameters<MarkdownHandler>[3],
+  ) =>
+    state
+      .safe(node.value, info)
+      .replace(/(\\+)#(?=[\p{L}\p{N}_])/gu, (match: string, slashes: string) =>
+        slashes.length % 2 ? `${slashes.slice(1)}#` : match,
+      ),
+  foldworksEscapedMarker: (node: EscapedMarker) =>
+    Array.from(node.value)
+      .map((marker) => `\\${marker}`)
+      .join(""),
+};
+const markdownStyle: MarkdownOptions = {
+  bullet: "-",
+  fences: true,
+  listItemIndent: "one",
+  handlers: markdownHandlers,
+};
+const writer = unified().use(remarkStringify, markdownStyle).use(remarkGfm).use(remarkDirective);
 export type CodecResult<T> = Readonly<{
   value?: T;
   diagnostics: ReadonlyArray<string>;
 }>;
 
-export const importMarkdown = (
-  source: string,
-  registry: Registry,
-): CodecResult<Document> => {
-  if (source.length > 1000000)
-    return { diagnostics: ["Markdown exceeds the 1 MB limit."] };
+export const importMarkdown = (source: string, registry: Registry): CodecResult<Document> => {
+  if (source.length > 1000000) return { diagnostics: ["Markdown exceeds the 1 MB limit."] };
   const diagnostics: string[] = [];
   let id = 0;
   const allocate = () => `md-${++id}`;
-  const inline = (
-    nodes: Ast[],
-    marks: ReadonlyArray<Mark> = [],
-  ): ReadonlyArray<Run> =>
+  const inline = (nodes: Ast[], marks: ReadonlyArray<Mark> = []): ReadonlyArray<Run> =>
     normalizeRuns(
       nodes.flatMap((node) => {
-        if (node.type === "text") return [text(node.value ?? "", marks)];
+        if (node.type === "text") {
+          const value = node.value ?? "";
+          const raw = source
+            .slice(node.position?.start.offset ?? 0, node.position?.end.offset ?? 0)
+            .replace(/\r\n?/gu, "\n");
+          if (decodeString(raw) !== value) return [text(value, marks)];
+          const result: Run[] = [];
+          let at = 0;
+          for (const match of raw.matchAll(/\\[@#]/gu)) {
+            let slashes = 1;
+            for (let index = match.index - 1; raw[index] === "\\"; index--) slashes++;
+            if (slashes % 2 === 0) continue;
+            const offset = decodeString(raw.slice(0, match.index)).length;
+            if (offset > at) result.push(text(value.slice(at, offset), marks));
+            result.push(
+              text(value.slice(offset, offset + 1), [...marks, { type: "literal", value: "" }]),
+            );
+            at = offset + 1;
+          }
+          if (at < value.length) result.push(text(value.slice(at), marks));
+          return result;
+        }
         if (node.type === "break") return [text("\n", marks)];
         if (node.type === "inlineCode")
-          return [
-            text(node.value ?? "", [...marks, { type: "code", value: "" }]),
-          ];
+          return [text(node.value ?? "", [...marks, { type: "code", value: "" }])];
         const type = (
           {
             strong: "bold",
@@ -81,9 +125,7 @@ export const importMarkdown = (
             { type, value: type === "link" ? (node.url ?? "") : "" },
           ]);
         }
-        diagnostics.push(
-          `Unsupported Markdown inline node: ${node.type}. Import cancelled.`,
-        );
+        diagnostics.push(`Unsupported Markdown inline node: ${node.type}. Import cancelled.`);
         return [];
       }),
     );
@@ -114,9 +156,7 @@ export const importMarkdown = (
             allocate(),
             node.ordered
               ? "orderedList"
-              : node.children?.some(
-                    (child) => typeof child.checked === "boolean",
-                  )
+              : node.children?.some((child) => typeof child.checked === "boolean")
                 ? "taskList"
                 : "bulletList",
             [],
@@ -140,9 +180,7 @@ export const importMarkdown = (
             !definition ||
             node.attributes?.version !== "1"
           ) {
-            diagnostics.push(
-              `Unknown or unsupported directive: ${node.name}. Import cancelled.`,
-            );
+            diagnostics.push(`Unknown or unsupported directive: ${node.name}. Import cancelled.`);
             return block(allocate());
           }
           const attrs = Object.fromEntries(
@@ -152,19 +190,12 @@ export const importMarkdown = (
           );
           if (definition.kind === "text") {
             const paragraphs = node.children ?? [];
-            if (
-              paragraphs.some((child) => child.type !== "paragraph") ||
-              paragraphs.length > 1
-            )
-              diagnostics.push(
-                `Custom text block ${name} requires a single paragraph.`,
-              );
-            return block(
-              allocate(),
-              name,
-              inline(paragraphs[0]?.children ?? []),
-              { ...definition.defaults, ...attrs },
-            );
+            if (paragraphs.some((child) => child.type !== "paragraph") || paragraphs.length > 1)
+              diagnostics.push(`Custom text block ${name} requires a single paragraph.`);
+            return block(allocate(), name, inline(paragraphs[0]?.children ?? []), {
+              ...definition.defaults,
+              ...attrs,
+            });
           }
           const nested = definition.kind === "container" ? children() : [];
           return block(
@@ -172,15 +203,11 @@ export const importMarkdown = (
             name,
             [],
             { ...definition.defaults, ...attrs },
-            definition.kind === "container" && !nested.length
-              ? [block(allocate())]
-              : nested,
+            definition.kind === "container" && !nested.length ? [block(allocate())] : nested,
           );
         }
         default:
-          diagnostics.push(
-            `Unsupported Markdown block: ${node.type}. Import cancelled.`,
-          );
+          diagnostics.push(`Unsupported Markdown block: ${node.type}. Import cancelled.`);
           return block(allocate());
       }
     });
@@ -201,11 +228,26 @@ export const importMarkdown = (
     return diagnostics.length ? { diagnostics } : { value, diagnostics };
   } catch (error) {
     return {
-      diagnostics: [
-        error instanceof Error ? error.message : "Could not parse Markdown.",
-      ],
+      diagnostics: [error instanceof Error ? error.message : "Could not parse Markdown."],
     };
   }
+};
+
+// Literal provenance may split a marked run. Join adjacent Markdown wrappers so
+// the writer does not emit ambiguous sequences such as **\\@****maya**.
+const mergeInline = (nodes: ReadonlyArray<Ast>): Ast[] => {
+  const result: Ast[] = [];
+  for (const node of nodes) {
+    const previous = result.at(-1);
+    if (
+      previous?.type === node.type &&
+      ["strong", "emphasis", "delete", "link"].includes(node.type) &&
+      previous.url === node.url
+    ) {
+      previous.children = mergeInline([...(previous.children ?? []), ...(node.children ?? [])]);
+    } else result.push(node.children ? { ...node, children: mergeInline(node.children) } : node);
+  }
+  return result;
 };
 
 export const exportMarkdown = (
@@ -216,31 +258,35 @@ export const exportMarkdown = (
 ): CodecResult<string> => {
   const diagnostics: string[] = [];
   const inline = (runs: ReadonlyArray<Run>): Ast[] =>
-    runs.flatMap((run) =>
-      run.text.split("\n").flatMap((value, index) => {
-        let node: Ast = {
-          type: run.marks.some((mark) => mark.type === "code")
-            ? "inlineCode"
-            : "text",
-          value,
-        };
-        for (const mark of [...run.marks].reverse()) {
-          if (mark.type !== "code")
-            node = {
-              type: (
-                {
-                  bold: "strong",
-                  italic: "emphasis",
-                  strike: "delete",
-                  link: "link",
-                } as const
-              )[mark.type],
-              children: [node],
-              ...(mark.type === "link" ? { url: mark.value } : {}),
-            };
-        }
-        return [...(index ? [{ type: "break" }] : []), node];
-      }),
+    mergeInline(
+      normalizeRuns(runs).flatMap((run) =>
+        run.text.split("\n").flatMap((value, index) => {
+          let node: Ast = {
+            type: run.marks.some((mark) => mark.type === "literal")
+              ? "foldworksEscapedMarker"
+              : run.marks.some((mark) => mark.type === "code")
+                ? "inlineCode"
+                : "text",
+            value,
+          };
+          for (const mark of [...run.marks].reverse()) {
+            if (mark.type !== "code" && mark.type !== "literal")
+              node = {
+                type: (
+                  {
+                    bold: "strong",
+                    italic: "emphasis",
+                    strike: "delete",
+                    link: "link",
+                  } as const
+                )[mark.type],
+                children: [node],
+                ...(mark.type === "link" ? { url: mark.value } : {}),
+              };
+          }
+          return [...(index ? [{ type: "break" }] : []), node];
+        }),
+      ),
     );
   const blocks = (nodes: ReadonlyArray<Block>): Ast[] =>
     nodes.map((node) => {
@@ -272,8 +318,7 @@ export const exportMarkdown = (
             start: Number(node.attrs.start ?? 1),
             children: node.children.map((item) => ({
               type: "listItem",
-              checked:
-                node.type === "taskList" ? item.attrs.checked === "true" : null,
+              checked: node.type === "taskList" ? item.attrs.checked === "true" : null,
               children: blocks(item.children),
             })),
           };
@@ -294,19 +339,13 @@ export const exportMarkdown = (
                   children: [
                     {
                       type: "text",
-                      value:
-                        definition.portable?.(node) ??
-                        node.attrs.label ??
-                        definition.label,
+                      value: definition.portable?.(node) ?? node.attrs.label ?? definition.label,
                     },
                   ],
                 };
           }
           return {
-            type:
-              definition.kind === "atom"
-                ? "leafDirective"
-                : "containerDirective",
+            type: definition.kind === "atom" ? "leafDirective" : "containerDirective",
             name: `foldworks-${node.type}`,
             attributes: { ...node.attrs, version: "1" },
             children:
@@ -325,9 +364,7 @@ export const exportMarkdown = (
     return { value: writer.stringify(ast as unknown as Root), diagnostics };
   } catch (error) {
     return {
-      diagnostics: [
-        error instanceof Error ? error.message : "Could not export Markdown.",
-      ],
+      diagnostics: [error instanceof Error ? error.message : "Could not export Markdown."],
     };
   }
 };

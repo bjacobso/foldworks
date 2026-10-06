@@ -34,7 +34,8 @@ accessible application interfaces with Foldkit:
   documents, editing, validation, rendering, and rule reordering.
 - [`@foldworks/outliner`](./packages/outliner) — a keyboard-first outliner
   with natural indenting, reordering, folding, hoisting, and drag and drop.
-- [`@foldworks/text-intelligence`](./packages/text-intelligence) — the shared
+- [`@foldworks/text-intelligence`](./packages/text-intelligence) — reusable host-provided
+  `@mentions` and `#tags`, plus the shared
   vocabulary and popups for hover, completion, highlighting, and diagnostics
   on text surfaces.
 - [`@foldworks/form-builder`](./packages/form-builder) — section-first form
@@ -242,3 +243,7 @@ Give the deployment token only these Cloudflare permissions:
 
 Desktop command definitions live in `@foldworks/keyboard`; UI compositions and
 package-boundary decisions are documented in [Desktop primitives](packages/ui/docs/desktop.md).
+
+The outliner and native Markdown editor share plain-text mentions and tags. See
+the [design and adapter contract](./docs/mentions-and-tags.md) for host lookup,
+syntax exclusions, stable identity, and persistence.

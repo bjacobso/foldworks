@@ -211,6 +211,91 @@ export const outlinerScenarios = (
       await screenshot("outliner-mention-hover");
     });
 
+    it("replaces a whole mention at a middle caret, preserves delimiters, and undoes acceptance", async () => {
+      const page = await start();
+      const row = text(page, "Reading the weather");
+      await row.fill("Check @mystery, next");
+      const input = text(page, "Check @mystery, next");
+      await input.evaluate((element: HTMLTextAreaElement) => {
+        element.focus();
+        element.setSelectionRange(8, 8);
+        element.dispatchEvent(new Event("select", { bubbles: true }));
+      });
+      await page.keyboard.press("Control+Space");
+      await expect
+        .poll(() => page.locator('.fw-completion [role="option"]').allTextContents())
+        .toEqual(["@mayaMaya Chen"]);
+      await page.keyboard.press("Tab");
+      await page.keyboard.type("!");
+      await expect
+        .poll(() => page.evaluate(() => (document.activeElement as HTMLTextAreaElement).value))
+        .toBe("Check @maya!, next");
+      await page.keyboard.press("Control+z");
+      await page.keyboard.press("Control+z");
+      await expect.poll(() => text(page, "Check @mystery, next").count()).toBe(1);
+      await page.keyboard.press("Control+Shift+z");
+      await expect.poll(() => text(page, "Check @maya, next").count()).toBe(1);
+    });
+
+    it("waits for committed composition before offering a mention", async () => {
+      const page = await start();
+      await text(page, "Reading the weather").fill("Invite @");
+      const input = text(page, "Invite @");
+      await expect.poll(() => page.getByRole("listbox").count()).toBe(1);
+      await input.evaluate((element) =>
+        element.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })),
+      );
+      await expect.poll(() => page.getByRole("listbox").count()).toBe(0);
+      await input.evaluate((element: HTMLTextAreaElement) => {
+        element.value = "Invite @jo";
+        element.setSelectionRange(10, 10);
+        element.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            isComposing: true,
+            inputType: "insertCompositionText",
+            data: "jo",
+          }),
+        );
+      });
+      expect(await page.getByRole("listbox").count()).toBe(0);
+      await input.evaluate((element) =>
+        element.dispatchEvent(
+          new CompositionEvent("compositionend", { bubbles: true, data: "jo" }),
+        ),
+      );
+      await expect
+        .poll(() => page.locator('.fw-completion [role="option"]').allTextContents())
+        .toEqual(["@jonahJonah Park"]);
+      await page.keyboard.press("Enter");
+      await expect.poll(() => text(page, "Invite @jonah ").count()).toBe(1);
+      await page.keyboard.press("Control+z");
+      await expect.poll(() => text(page, "Invite @jo").count()).toBe(1);
+    });
+
+    it("keeps reference popups visible in desktop, dark, and mobile inline layouts", async () => {
+      const page = await start();
+      for (const variant of ["desktop", "dark", "mobile"] as const) {
+        await page.setViewportSize(
+          variant === "mobile" ? { width: 390, height: 844 } : { width: 1440, height: 1100 },
+        );
+        await page.emulateMedia({ colorScheme: variant === "dark" ? "dark" : "light" });
+        const input = text(page, "Reading the weather");
+        await input.click();
+        await page.keyboard.press("End");
+        await page.keyboard.type(" @");
+        await expect.poll(() => page.getByRole("listbox").isVisible()).toBe(true);
+        const bounds = await page.locator(".fw-completion").boundingBox();
+        expect(bounds!.x).toBeGreaterThanOrEqual(0);
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(variant === "mobile" ? 390 : 1440);
+        await screenshot(`outliner-references-${variant}`);
+        await page.keyboard.press("Escape");
+        await page.keyboard.press("Backspace");
+        await page.keyboard.press("Backspace");
+        await expect.poll(() => text(page, "Reading the weather").count()).toBe(1);
+      }
+    });
+
     it("adds an entry by typing into a placeholder at the end of a list", async () => {
       const page = await start();
       const question = page.getByRole("textbox", { name: "Add question" });

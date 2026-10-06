@@ -32,9 +32,10 @@ export const matching = (
   items: ReadonlyArray<CompletionItem>,
   query: string,
 ): ReadonlyArray<CompletionItem> => {
-  const wanted = query.toLowerCase();
+  const wanted = query.normalize("NFC").toLowerCase();
   if (wanted === "") return items;
-  const key = (item: CompletionItem) => (item.filterText ?? item.label).toLowerCase();
+  const key = (item: CompletionItem) =>
+    (item.filterText ?? item.label).normalize("NFC").toLowerCase();
   return [
     ...items.filter((item) => key(item).startsWith(wanted)),
     ...items.filter((item) => !key(item).startsWith(wanted) && key(item).includes(wanted)),
@@ -64,7 +65,8 @@ export const visible = (
   if (!contains(completion, caret) || completion.to > text.length) return [];
   const typed = query(completion, text, caret);
   return matching(completion.items, typed).filter(
-    (item) => item.label !== typed && (item.insert ?? item.label) !== typed,
+    (item) =>
+      caret < completion.to || (item.label !== typed && (item.insert ?? item.label) !== typed),
   );
 };
 

@@ -21,3 +21,5 @@ export {
   type Hover,
   type HoverPopupConfig,
 } from "./popup";
+
+export * as Mentions from "./mentions";

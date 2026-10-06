@@ -1,3 +1,5 @@
+import { segments, offsetAtPoint, optionId, mostSevere } from "@foldworks/text-intelligence";
+import type { TextIntelligence } from "./intelligence";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import {
   collapsed,
@@ -21,20 +23,13 @@ import { mountBlockView } from "./node-view";
 
 const EVENT = "foldworks-editor-message";
 const surfaces = new WeakMap<Element, Surface>();
-const equal = (a: unknown, b: unknown) =>
-  JSON.stringify(a) === JSON.stringify(b);
+const equal = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const domLength = (node: Node): number => {
   if (node.nodeType === 3) return node.textContent?.length ?? 0;
-  if (
-    node instanceof HTMLElement &&
-    (node.contentEditable === "false" || node.dataset.placeholder)
-  )
+  if (node instanceof HTMLElement && (node.contentEditable === "false" || node.dataset.placeholder))
     return 0;
   if (node.nodeName === "BR") return 1;
-  return Array.from(node.childNodes).reduce(
-    (sum, child) => sum + domLength(child),
-    0,
-  );
+  return Array.from(node.childNodes).reduce((sum, child) => sum + domLength(child), 0);
 };
 const offsetIn = (root: Node, target: Node, offset: number): number => {
   if (root === target)
@@ -45,47 +40,55 @@ const offsetIn = (root: Node, target: Node, offset: number): number => {
           .reduce((sum, child) => sum + domLength(child), 0);
   let result = 0;
   for (const child of Array.from(root.childNodes)) {
-    if (child === target || child.contains(target))
-      return result + offsetIn(child, target, offset);
+    if (child === target || child.contains(target)) return result + offsetIn(child, target, offset);
     result += domLength(child);
   }
   return result;
 };
 const domPoint = (root: Node, offset: number): readonly [Node, number] => {
-  if (root.nodeType === 3)
-    return [root, Math.min(offset, root.textContent?.length ?? 0)];
+  if (root.nodeType === 3) return [root, Math.min(offset, root.textContent?.length ?? 0)];
   for (const [index, child] of Array.from(root.childNodes).entries()) {
     const length = domLength(child);
-    if (child.nodeName === "BR" && offset <= length)
-      return [root, index + (offset > 0 ? 1 : 0)];
+    if (child.nodeName === "BR" && offset <= length) return [root, index + (offset > 0 ? 1 : 0)];
     if (offset <= length && length > 0) return domPoint(child, offset);
     offset -= length;
   }
   return [root, root.childNodes.length];
 };
-const readRuns = (
-  root: Node,
-  marks: ReadonlyArray<Mark> = [],
-): ReadonlyArray<Run> =>
+const readRuns = (root: Node, marks: ReadonlyArray<Mark> = []): ReadonlyArray<Run> =>
   normalizeRuns(
     Array.from(root.childNodes).flatMap((node) => {
-      if (node.nodeType === 3) return [text(node.textContent ?? "", marks)];
-      if (!(node instanceof HTMLElement) || node.contentEditable === "false")
-        return [];
-      if (node.tagName === "BR")
-        return node.dataset.placeholder ? [] : [text("\n", marks)];
-      const type = (
-        {
-          STRONG: "bold",
-          B: "bold",
-          EM: "italic",
-          I: "italic",
-          S: "strike",
-          DEL: "strike",
-          CODE: "code",
-          A: "link",
-        } as Record<string, Mark["type"]>
-      )[node.tagName];
+      if (node.nodeType === 3) {
+        const value = node.textContent ?? "";
+        if (!marks.some((mark) => mark.type === "literal")) return [text(value, marks)];
+        // Native composition can extend a literal span; new letters are ordinary text.
+        return value
+          .split(/([@#]+)/u)
+          .filter(Boolean)
+          .map((part) =>
+            text(
+              part,
+              /^[@#]+$/u.test(part) ? marks : marks.filter((mark) => mark.type !== "literal"),
+            ),
+          );
+      }
+      if (!(node instanceof HTMLElement) || node.contentEditable === "false") return [];
+      if (node.tagName === "BR") return node.dataset.placeholder ? [] : [text("\n", marks)];
+      const type =
+        node.dataset.editorLiteral === "true"
+          ? "literal"
+          : (
+              {
+                STRONG: "bold",
+                B: "bold",
+                EM: "italic",
+                I: "italic",
+                S: "strike",
+                DEL: "strike",
+                CODE: "code",
+                A: "link",
+              } as Record<string, Mark["type"]>
+            )[node.tagName];
       const value = node.getAttribute("href") ?? "";
       return readRuns(
         node,
@@ -122,19 +125,18 @@ class Surface {
     private host: HTMLElement,
     model: Model,
     private registry: Registry,
+    private intelligence?: TextIntelligence,
   ) {
     this.model = model;
     this.render(false);
-    const listen = (
-      target: EventTarget,
-      event: string,
-      handler: (event: any) => void,
-    ) => target.addEventListener(event, handler, { signal: this.abort.signal });
+    const listen = (target: EventTarget, event: string, handler: (event: any) => void) =>
+      target.addEventListener(event, handler, { signal: this.abort.signal });
     listen(host, "beforeinput", (event: InputEvent) => this.beforeInput(event));
     listen(host, "input", () => {
       if (!this.composing) this.reconcile();
     });
     listen(host, "compositionstart", () => {
+      this.send(Message.DismissedIntelligence(), false);
       const point = this.selection()?.anchor;
       if (point) {
         this.composing = true;
@@ -152,22 +154,32 @@ class Surface {
       if (selection && !equal(selection, this.model.selection))
         this.send(Message.Selected({ selection }), false);
     });
+    listen(host, "mousemove", (event: MouseEvent) => {
+      const body = (event.target as Element).closest<HTMLElement>("[data-text-id]");
+      if (!body || !this.intelligence?.hover || this.composing) return;
+      const offset = offsetAtPoint(body, event.clientX, event.clientY);
+      if (
+        offset !== undefined &&
+        (this.model.hover?.id !== body.dataset.textId || this.model.hover?.offset !== offset)
+      )
+        this.send(
+          Message.HoveredText({ id: body.dataset.textId!, offset, source: "Pointer" }),
+          false,
+        );
+    });
+    listen(host, "mouseleave", () => this.send(Message.DismissedHover(), false));
+    listen(host, "focusout", () => this.send(Message.DismissedIntelligence(), false));
     listen(host, "keydown", (event: KeyboardEvent) => this.keydown(event));
     listen(host, "click", (event: MouseEvent) => this.click(event));
     const closeOutsideActions = (event: Event) => {
       const controls = this.blockActions
-        ? this.nodes
-            .get(this.blockActions)
-            ?.dom.querySelector(".fw-editor__block-tools")
+        ? this.nodes.get(this.blockActions)?.dom.querySelector(".fw-editor__block-tools")
         : undefined;
-      if (controls && !controls.contains(event.target as Node))
-        this.setBlockActions();
+      if (controls && !controls.contains(event.target as Node)) this.setBlockActions();
     };
     listen(document, "pointerdown", closeOutsideActions);
     listen(document, "focusin", closeOutsideActions);
-    listen(host.closest(".fw-editor") ?? host, "scroll", () =>
-      this.positionBlockActions(),
-    );
+    listen(host.closest(".fw-editor") ?? host, "scroll", () => this.positionBlockActions());
     listen(window, "resize", () => this.positionBlockActions());
     listen(host, "paste", (event: ClipboardEvent) => {
       if (!this.model.editable) return;
@@ -178,9 +190,7 @@ class Surface {
     listen(host, "copy", (event: ClipboardEvent) => this.copy(event, false));
     listen(host, "cut", (event: ClipboardEvent) => this.copy(event, true));
     listen(host, "dragstart", (event: DragEvent) => {
-      const handle = (event.target as HTMLElement).closest<HTMLElement>(
-        "[data-drag-block]",
-      );
+      const handle = (event.target as HTMLElement).closest<HTMLElement>("[data-drag-block]");
       if (!this.model.editable || !handle) {
         event.preventDefault();
         return;
@@ -195,13 +205,10 @@ class Surface {
       if (!this.dragged) return;
       event.preventDefault();
       this.clearDrop();
-      const target = (event.target as HTMLElement).closest<HTMLElement>(
-        "[data-top-block]",
-      );
+      const target = (event.target as HTMLElement).closest<HTMLElement>("[data-top-block]");
       if (target && target.dataset.topBlock !== this.dragged)
         target.dataset.drop =
-          event.clientY <
-          target.getBoundingClientRect().top + target.offsetHeight / 2
+          event.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2
             ? "before"
             : "after";
       const rect = host.getBoundingClientRect();
@@ -249,7 +256,7 @@ class Surface {
     if (this.destroyed) return;
     // Foldkit updates synchronously and renders on the next frame. Project the same
     // pure reducer immediately so a second native event reads current DOM/ranges.
-    const next = reduce(this.model, message, this.registry);
+    const next = reduce(this.model, message, this.registry, this.intelligence);
     this.model = next;
     this.render(focus);
     this.host.dispatchEvent(new CustomEvent(EVENT, { detail: message }));
@@ -273,9 +280,7 @@ class Surface {
       (this.model.linkOpen && !model.linkOpen) ||
       (this.model.sourceOpen && !model.sourceOpen);
     this.model = model;
-    this.render(
-      changed && model.editable && !model.sourceOpen && !model.linkOpen,
-    );
+    this.render(changed && model.editable && !model.sourceOpen && !model.linkOpen);
   }
   private selection(): Selection | undefined {
     const selection = document.getSelection();
@@ -319,17 +324,8 @@ class Surface {
     );
   }
   private beforeInput(event: InputEvent) {
-    if (
-      !this.model.editable ||
-      this.composing ||
-      event.isComposing ||
-      !event.cancelable
-    )
-      return;
-    const kinds: Record<
-      string,
-      "text" | "split" | "break" | "backward" | "forward"
-    > = {
+    if (!this.model.editable || this.composing || event.isComposing || !event.cancelable) return;
+    const kinds: Record<string, "text" | "split" | "break" | "backward" | "forward"> = {
       insertText: "text",
       insertReplacementText: "text",
       insertParagraph: "split",
@@ -337,14 +333,9 @@ class Surface {
       deleteContentBackward: "backward",
       deleteContentForward: "forward",
     };
-    if (
-      event.inputType === "historyUndo" ||
-      event.inputType === "historyRedo"
-    ) {
+    if (event.inputType === "historyUndo" || event.inputType === "historyRedo") {
       event.preventDefault();
-      this.send(
-        event.inputType === "historyUndo" ? Message.Undo() : Message.Redo(),
-      );
+      this.send(event.inputType === "historyUndo" ? Message.Undo() : Message.Redo());
       return;
     }
     const kind = kinds[event.inputType];
@@ -385,10 +376,49 @@ class Surface {
     if (
       this.composing ||
       event.isComposing ||
-      !this.model.editable ||
       (event.target as HTMLElement).closest('[contenteditable="false"]')
     )
       return;
+    const currentSelection = this.selection();
+    if (currentSelection && !equal(currentSelection, this.model.selection))
+      this.send(Message.Selected({ selection: currentSelection }), false);
+    if (event.altKey && event.key === "Enter") {
+      event.preventDefault();
+      const point = (this.selection() ?? this.model.selection).anchor;
+      this.send(
+        Message.HoveredText({ id: point.id, offset: point.offset, source: "Keyboard" }),
+        false,
+      );
+      return;
+    }
+    if (event.key === "Escape" && this.model.hover) {
+      event.preventDefault();
+      this.send(Message.DismissedHover(), false);
+      return;
+    }
+    if (!this.model.editable) return;
+    const list = this.model.completion;
+    if (list && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      if (["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+        event.preventDefault();
+        if (event.key === "Escape") this.send(Message.DismissedIntelligence());
+        else if (event.key === "ArrowDown" || event.key === "ArrowUp")
+          this.send(Message.MovedCompletion({ delta: event.key === "ArrowDown" ? 1 : -1 }));
+        else
+          this.send(
+            Message.AcceptedCompletion({
+              index: list.index,
+              expectedRevision: this.model.revision,
+            }),
+          );
+        return;
+      }
+    }
+    if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey && event.key === " ") {
+      event.preventDefault();
+      this.send(Message.RequestedCompletion());
+      return;
+    }
     if ((event.metaKey || event.ctrlKey) && !event.altKey) {
       const key = event.key.toLowerCase();
       if (key === "a") {
@@ -413,9 +443,7 @@ class Surface {
       const mark = ({ b: "bold", i: "italic", k: "link" } as const)[key as "b"];
       if (key === "z" || key === "y") {
         event.preventDefault();
-        this.send(
-          key === "y" || event.shiftKey ? Message.Redo() : Message.Undo(),
-        );
+        this.send(key === "y" || event.shiftKey ? Message.Redo() : Message.Undo());
         return;
       }
       if (mark) {
@@ -433,9 +461,7 @@ class Surface {
         this.send(Message.ToggleSlash());
       }
     }
-    const activeLeaf = this.nodes.get(
-      (this.selection() ?? this.model.selection).anchor.id,
-    )?.body;
+    const activeLeaf = this.nodes.get((this.selection() ?? this.model.selection).anchor.id)?.body;
     if (event.key === "Tab" && activeLeaf?.closest("li")) {
       event.preventDefault();
       this.send(Message.Indent({ outdent: event.shiftKey }));
@@ -455,10 +481,7 @@ class Surface {
     if (handle && this.model.editable) {
       event.preventDefault();
       const id = handle.dataset.dragBlock;
-      this.setBlockActions(
-        this.blockActions === id ? undefined : id,
-        event.detail === 0,
-      );
+      this.setBlockActions(this.blockActions === id ? undefined : id, event.detail === 0);
       return;
     }
     const control = element.closest<HTMLButtonElement>("[data-block-action]");
@@ -469,10 +492,8 @@ class Surface {
       this.setBlockActions();
       if (action === "up" || action === "down")
         this.send(Message.Move({ id, direction: action }), false);
-      else if (action === "duplicate")
-        this.send(Message.Duplicate({ id }), false);
-      else if (action === "delete")
-        this.send(Message.DeleteBlock({ id }), false);
+      else if (action === "duplicate") this.send(Message.Duplicate({ id }), false);
+      else if (action === "delete") this.send(Message.DeleteBlock({ id }), false);
       const nextHandle = this.nodes
         .get(id)
         ?.dom.querySelector<HTMLButtonElement>("[data-drag-block]");
@@ -555,27 +576,19 @@ class Surface {
     if (this.blockActions && this.blockActions !== id) {
       const previous = this.nodes.get(this.blockActions)?.dom;
       previous?.removeAttribute("data-actions-open");
-      previous
-        ?.querySelector("[data-drag-block]")
-        ?.setAttribute("aria-expanded", "false");
-      const panel = previous?.querySelector<HTMLElement>(
-        ".fw-editor__block-actions",
-      );
+      previous?.querySelector("[data-drag-block]")?.setAttribute("aria-expanded", "false");
+      const panel = previous?.querySelector<HTMLElement>(".fw-editor__block-actions");
       if (panel) panel.hidden = true;
     }
     this.blockActions = id;
     if (!id) return;
     const record = this.nodes.get(id);
-    const panel = record?.dom.querySelector<HTMLElement>(
-      ".fw-editor__block-actions",
-    );
+    const panel = record?.dom.querySelector<HTMLElement>(".fw-editor__block-actions");
     if (!record || !panel || !this.model.editable) {
       this.setBlockActions();
       return;
     }
-    const index = this.model.document.blocks.findIndex(
-      (node) => node.id === id,
-    );
+    const index = this.model.document.blocks.findIndex((node) => node.id === id);
     const label = `${this.registry.get(record.node.type)!.label} · Block ${index + 1}`;
     const title = panel.querySelector("strong")!;
     if (title.textContent !== label) title.textContent = label;
@@ -587,16 +600,11 @@ class Surface {
     ).slice(0, 80);
     if (preview.textContent !== description) preview.textContent = description;
     panel.setAttribute("aria-label", `${label} actions`);
-    panel.querySelector<HTMLButtonElement>(
-      '[data-block-action="up"]',
-    )!.disabled = index === 0;
-    panel.querySelector<HTMLButtonElement>(
-      '[data-block-action="down"]',
-    )!.disabled = index === this.model.document.blocks.length - 1;
+    panel.querySelector<HTMLButtonElement>('[data-block-action="up"]')!.disabled = index === 0;
+    panel.querySelector<HTMLButtonElement>('[data-block-action="down"]')!.disabled =
+      index === this.model.document.blocks.length - 1;
     record.dom.setAttribute("data-actions-open", "true");
-    record.dom
-      .querySelector("[data-drag-block]")
-      ?.setAttribute("aria-expanded", "true");
+    record.dom.querySelector("[data-drag-block]")?.setAttribute("aria-expanded", "true");
     panel.hidden = false;
     if (this.selectionMenu) this.selectionMenu.hidden = true;
     this.positionBlockActions();
@@ -608,21 +616,14 @@ class Surface {
   private positionBlockActions() {
     if (!this.blockActions) return;
     const block = this.nodes.get(this.blockActions)?.dom;
-    const controls = block?.querySelector<HTMLElement>(
-      ".fw-editor__block-tools",
-    );
-    const panel = controls?.querySelector<HTMLElement>(
-      ".fw-editor__block-actions",
-    );
+    const controls = block?.querySelector<HTMLElement>(".fw-editor__block-tools");
+    const panel = controls?.querySelector<HTMLElement>(".fw-editor__block-actions");
     if (!controls || !panel) return;
     const editor = this.host.closest(".fw-editor");
     const frame = editor?.getBoundingClientRect();
-    const toolbar = editor
-      ?.querySelector(".fw-editor__toolbar")
-      ?.getBoundingClientRect();
+    const toolbar = editor?.querySelector(".fw-editor__toolbar")?.getBoundingClientRect();
     const top = Math.max(0, frame?.top ?? 0, toolbar?.bottom ?? 0) + 8;
-    const bottom =
-      Math.min(window.innerHeight, frame?.bottom ?? window.innerHeight) - 8;
+    const bottom = Math.min(window.innerHeight, frame?.bottom ?? window.innerHeight) - 8;
     const anchor = controls.getBoundingClientRect();
     if (anchor.bottom < top || anchor.top > bottom) {
       this.setBlockActions();
@@ -641,14 +642,16 @@ class Surface {
       this.host.setAttribute("aria-readonly", String(!this.model.editable));
       this.renderedEditable = this.model.editable;
     }
-    const seen = new Set(
-      walk(this.model.document.blocks).map((node) => node.id),
-    );
-    const renderNodes = (
-      parent: HTMLElement,
-      blocks: ReadonlyArray<Block>,
-      top = false,
-    ) => {
+    const list = this.model.completion;
+    const listId = `${this.model.id}-completion`;
+    const attribute = (name: string, value?: string) =>
+      value === undefined ? this.host.removeAttribute(name) : this.host.setAttribute(name, value);
+    attribute("aria-autocomplete", this.intelligence?.complete ? "list" : undefined);
+    attribute("aria-controls", list ? listId : undefined);
+    attribute("aria-expanded", this.intelligence?.complete ? String(list !== null) : undefined);
+    attribute("aria-activedescendant", list ? optionId(listId, list.index) : undefined);
+    const seen = new Set(walk(this.model.document.blocks).map((node) => node.id));
+    const renderNodes = (parent: HTMLElement, blocks: ReadonlyArray<Block>, top = false) => {
       const desired = new Set(blocks.map((node) => node.id));
       for (const [index, node] of blocks.entries()) {
         let record = this.nodes.get(node.id);
@@ -671,9 +674,7 @@ class Surface {
         }
         if (!record) {
           const definition = this.registry.get(node.type)!;
-          const dom = document.createElement(
-            node.type === "listItem" ? "li" : "div",
-          );
+          const dom = document.createElement(node.type === "listItem" ? "li" : "div");
           dom.className = `fw-editor__block fw-editor__block--${node.type}`;
           dom.dataset.blockId = node.id;
           if (top) {
@@ -685,20 +686,14 @@ class Surface {
             grip.type = "button";
             grip.draggable = true;
             grip.dataset.dragBlock = node.id;
-            const icon = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "svg",
-            );
+            const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             icon.setAttribute("viewBox", "0 0 16 16");
             icon.setAttribute("width", "16");
             icon.setAttribute("height", "16");
             icon.setAttribute("aria-hidden", "true");
             for (const x of [5, 11])
               for (const y of [4, 8, 12]) {
-                const dot = document.createElementNS(
-                  "http://www.w3.org/2000/svg",
-                  "circle",
-                );
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 dot.setAttribute("cx", String(x));
                 dot.setAttribute("cy", String(y));
                 dot.setAttribute("r", "1");
@@ -706,10 +701,7 @@ class Surface {
                 icon.append(dot);
               }
             grip.append(icon);
-            grip.setAttribute(
-              "aria-label",
-              `${definition.label} block actions`,
-            );
+            grip.setAttribute("aria-label", `${definition.label} block actions`);
             grip.setAttribute("aria-expanded", "false");
             grip.title = `Click for ${definition.label.toLowerCase()} actions; drag to move`;
             controls.append(grip);
@@ -717,10 +709,7 @@ class Surface {
             panel.className = "fw-editor__block-actions";
             panel.hidden = true;
             panel.setAttribute("role", "group");
-            panel.append(
-              document.createElement("strong"),
-              document.createElement("p"),
-            );
+            panel.append(document.createElement("strong"), document.createElement("p"));
             for (const [action, label] of [
               ["up", "Move up"],
               ["down", "Move down"],
@@ -772,10 +761,7 @@ class Surface {
           if (definition.kind === "atom") {
             body.contentEditable = "false";
             if (!definition.view)
-              body.textContent =
-                node.type === "rule"
-                  ? ""
-                  : (node.attrs.label ?? definition.label);
+              body.textContent = node.type === "rule" ? "" : (node.attrs.label ?? definition.label);
             if (node.type === "rule") body.append(document.createElement("hr"));
           }
           dom.append(body);
@@ -793,9 +779,7 @@ class Surface {
           record.node = node;
         }
         record.dom.dataset.tone = node.attrs.tone ?? "";
-        const custom = record.dom.querySelector<HTMLElement>(
-          ":scope > .fw-editor__custom",
-        );
+        const custom = record.dom.querySelector<HTMLElement>(":scope > .fw-editor__custom");
         if (custom) custom.inert = !this.model.editable;
         if (
           node.type === "heading" &&
@@ -808,15 +792,12 @@ class Surface {
           record.body.replaceWith(replacement);
           record.body = replacement;
         }
-        if (node.type === "orderedList")
-          record.body.setAttribute("start", node.attrs.start ?? "1");
+        if (node.type === "orderedList") record.body.setAttribute("start", node.attrs.start ?? "1");
         if (node.type === "listItem") {
           const isTask = parent
             .closest("[data-block-id]")
             ?.classList.contains("fw-editor__block--taskList");
-          let check = record.dom.querySelector<HTMLButtonElement>(
-            ":scope > [data-task-id]",
-          );
+          let check = record.dom.querySelector<HTMLButtonElement>(":scope > [data-task-id]");
           if (!isTask && check) {
             check.remove();
             check = null;
@@ -832,17 +813,12 @@ class Surface {
           }
           if (check) {
             check.textContent = node.attrs.checked === "true" ? "☑" : "☐";
-            check.setAttribute(
-              "aria-checked",
-              String(node.attrs.checked === "true"),
-            );
+            check.setAttribute("aria-checked", String(node.attrs.checked === "true"));
             check.disabled = !this.model.editable;
           }
         }
         record.dom
-          .querySelectorAll<HTMLButtonElement>(
-            ":scope > .fw-editor__block-tools button",
-          )
+          .querySelectorAll<HTMLButtonElement>(":scope > .fw-editor__block-tools button")
           .forEach((button) => (button.disabled = !this.model.editable));
         if (parent.children[index] !== record.dom)
           parent.insertBefore(record.dom, parent.children[index] ?? null);
@@ -864,13 +840,21 @@ class Surface {
         record.dom.remove();
         this.nodes.delete(id);
       }
+    if (this.intelligence?.analyze)
+      for (const [id, record] of this.nodes) {
+        const hovered = this.model.hover;
+        record.body.querySelectorAll<HTMLElement>(".fw-editor__text-token").forEach((span) => {
+          span.classList.toggle(
+            "fw-text-hovered",
+            hovered?.id === id &&
+              Number(span.dataset.from) <= hovered.offset &&
+              (hovered.offset < Number(span.dataset.to) ||
+                (hovered.source === "Keyboard" && hovered.offset === Number(span.dataset.to))),
+          );
+        });
+      }
     if (this.blockActions) this.setBlockActions(this.blockActions);
-    if (
-      focus &&
-      this.model.editable &&
-      !this.model.sourceOpen &&
-      !this.model.linkOpen
-    )
+    if (focus && this.model.editable && !this.model.sourceOpen && !this.model.linkOpen)
       this.restoreSelection();
     this.renderSelectionMenu();
     this.nativeDirty = false;
@@ -883,27 +867,17 @@ class Surface {
       menu.className = "fw-editor__selection-tools";
       menu.setAttribute("role", "toolbar");
       menu.setAttribute("aria-label", "Selection formatting");
-      for (const type of [
-        "bold",
-        "italic",
-        "strike",
-        "code",
-        "link",
-      ] as const) {
+      for (const type of ["bold", "italic", "strike", "code", "link"] as const) {
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = type[0]!.toUpperCase() + type.slice(1);
         button.setAttribute("aria-label", `${type} selection`);
-        button.addEventListener(
-          "mousedown",
-          (event) => event.preventDefault(),
-          { signal: this.abort.signal },
-        );
-        button.addEventListener(
-          "click",
-          () => this.send(Message.Format({ type })),
-          { signal: this.abort.signal },
-        );
+        button.addEventListener("mousedown", (event) => event.preventDefault(), {
+          signal: this.abort.signal,
+        });
+        button.addEventListener("click", () => this.send(Message.Format({ type })), {
+          signal: this.abort.signal,
+        });
         menu.append(button);
       }
       this.host.parentElement.append(menu);
@@ -934,25 +908,51 @@ class Surface {
   private patchText(record: Rendered, node: Block) {
     if (!record.body.dataset.textId) return;
     const fragment = document.createDocumentFragment();
+    const analysis = this.intelligence?.analyze?.(node, this.model.document);
+    let offset = 0;
     for (const run of node.content) {
-      let leaf: Node = document.createTextNode(run.text);
-      for (const mark of [...run.marks].reverse()) {
-        const el = document.createElement(
-          (
-            {
-              bold: "strong",
-              italic: "em",
-              strike: "s",
-              code: "code",
-              link: "a",
-            } as const
-          )[mark.type],
-        );
-        if (mark.type === "link") el.setAttribute("href", mark.value);
-        el.append(leaf);
-        leaf = el;
+      for (const part of segments(
+        run.text,
+        { tokens: analysis?.tokens ?? [], diagnostics: analysis?.diagnostics ?? [] },
+        offset,
+      )) {
+        let leaf: Node = document.createTextNode(part.text);
+        if (part.covering.tokens.length || part.covering.diagnostics.length) {
+          const span = document.createElement("span");
+          span.className = "fw-editor__text-token";
+          const token = part.covering.tokens[0];
+          if (token) span.dataset.kind = token.kind;
+          const diagnostic = mostSevere(part.covering.diagnostics);
+          span.dataset.from = String(token?.from ?? diagnostic?.from ?? offset + part.from);
+          span.dataset.to = String(token?.to ?? diagnostic?.to ?? offset + part.to);
+          if (diagnostic) {
+            span.classList.add("fw-text-diagnostic");
+            span.dataset.severity = diagnostic.severity;
+          }
+          span.append(leaf);
+          leaf = span;
+        }
+        for (const mark of [...run.marks].reverse()) {
+          const el = document.createElement(
+            (
+              {
+                bold: "strong",
+                italic: "em",
+                strike: "s",
+                code: "code",
+                link: "a",
+                literal: "span",
+              } as const
+            )[mark.type],
+          );
+          if (mark.type === "literal") el.dataset.editorLiteral = "true";
+          if (mark.type === "link") el.setAttribute("href", mark.value);
+          el.append(leaf);
+          leaf = el;
+        }
+        fragment.append(leaf);
       }
-      fragment.append(leaf);
+      offset += run.text.length;
     }
     if (!plainText(node)) {
       const br = document.createElement("br");
@@ -986,7 +986,25 @@ export const contentView = (
   registry: Registry,
   h: HtmlBuilder<Message>,
   label = "Document content",
+  intelligence?: TextIntelligence,
 ): Html => {
+  const hoveredNode = model.hover && find(model.document, model.hover.id);
+  const info =
+    hoveredNode && model.hover
+      ? intelligence?.hover?.(
+          hoveredNode,
+          model.document,
+          model.hover.offset,
+          model.hover.source,
+          h,
+        )
+      : undefined;
+  const hasProblems =
+    hoveredNode && model.hover
+      ? (intelligence?.analyze?.(hoveredNode, model.document).diagnostics ?? []).some(
+          (problem) => problem.from <= model.hover!.offset && model.hover!.offset < problem.to,
+        )
+      : false;
   const vnode = h.div(
     [
       h.Key(model.id),
@@ -994,6 +1012,7 @@ export const contentView = (
       h.Role("textbox"),
       h.AriaLabel(label),
       h.Attribute("aria-multiline", "true"),
+      ...(info || hasProblems ? [h.AriaDescribedBy(`${model.id}-hover`)] : []),
       h.Spellcheck(true),
       h.Tabindex(0),
       {
@@ -1012,11 +1031,10 @@ export const contentView = (
       hook: {
         insert: (node) => {
           if (node.elm instanceof HTMLElement)
-            surfaces.set(node.elm, new Surface(node.elm, model, registry));
+            surfaces.set(node.elm, new Surface(node.elm, model, registry, intelligence));
         },
         postpatch: (_old, node) => {
-          if (node.elm instanceof HTMLElement)
-            surfaces.get(node.elm)?.sync(model);
+          if (node.elm instanceof HTMLElement) surfaces.get(node.elm)?.sync(model);
         },
         destroy: (node) => {
           if (node.elm instanceof HTMLElement) {

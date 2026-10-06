@@ -598,7 +598,7 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
                 if (!(event as InputEvent).isComposing) fillFromInput(target);
                 return;
               }
-              if (!isText(target)) return;
+              if (!isText(target) || composing || (event as InputEvent).isComposing) return;
               const id = rowIdOf(target);
               if (id === undefined) return;
               const typed = unacknowledged.get(id) ?? [];
@@ -669,11 +669,14 @@ export const Surface = Mount.defineStream("OutlinerSurface", {
 
             const compositionstart = () => {
               composing = true;
+              if (model()?.completion) emit(Message.DismissedCompletion());
+              if (model()?.hover) emit(Message.DismissedHover());
             };
 
             const compositionend = (event: CompositionEvent) => {
               composing = false;
               if (isPlaceholderText(event.target)) fillFromInput(event.target);
+              else if (isText(event.target)) input(event);
             };
 
             const paste = (event: ClipboardEvent) => {

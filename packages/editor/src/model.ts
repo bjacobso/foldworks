@@ -1,3 +1,5 @@
+import { Completion, HoverSource } from "@foldworks/text-intelligence";
+import type { TextIntelligence } from "./intelligence";
 import { Effect, Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 import { Command, type Update } from "foldkit";
@@ -46,7 +48,15 @@ const Snapshot = S.Struct({
   explicitMarks: S.Boolean,
 });
 type Snapshot = typeof Snapshot.Type;
+export const OpenCompletion = S.Struct({
+  id: S.String,
+  revision: S.Number,
+  caret: S.Number,
+  ...Completion.List.fields,
+});
 export const Model = S.Struct({
+  completion: S.NullOr(OpenCompletion),
+  hover: S.NullOr(S.Struct({ id: S.String, offset: S.Number, source: HoverSource })),
   id: S.String,
   document: Document,
   selection: Selection,
@@ -70,6 +80,12 @@ export const Model = S.Struct({
 });
 export type Model = typeof Model.Type;
 export const Message = defineMessageUnion({
+  RequestedCompletion: {},
+  MovedCompletion: { delta: S.Number },
+  AcceptedCompletion: { index: S.Number, expectedRevision: S.Number },
+  DismissedIntelligence: {},
+  HoveredText: { id: S.String, offset: S.Number, source: HoverSource },
+  DismissedHover: {},
   Selected: { selection: Selection },
   Input: {
     kind: S.Literals(["text", "backward", "forward", "split", "break"]),
@@ -123,14 +139,9 @@ export type InitConfig = Readonly<{
   markdown?: string;
   editable?: boolean;
 }>;
-export const init = (
-  config: InitConfig,
-  registry: Registry = createRegistry(),
-): Model => {
+export const init = (config: InitConfig, registry: Registry = createRegistry()): Model => {
   const imported =
-    config.markdown === undefined
-      ? undefined
-      : importMarkdown(config.markdown, registry);
+    config.markdown === undefined ? undefined : importMarkdown(config.markdown, registry);
   let document = config.document ??
     imported?.value ?? {
       version: 1 as const,
@@ -138,18 +149,13 @@ export const init = (
     };
   const error = validateDocument(document, registry);
   if (error) throw new Error(error);
-  document = ensureDocument(
-    document,
-    registry,
-    allocator(document, `${config.id}-empty`),
-  );
+  document = ensureDocument(document, registry, allocator(document, `${config.id}-empty`));
   return {
+    completion: null,
+    hover: null,
     id: config.id,
     document,
-    selection: caret(
-      leaves(document).find((node) => registry.get(node.type)?.kind === "text")!
-        .id,
-    ),
+    selection: caret(leaves(document).find((node) => registry.get(node.type)?.kind === "text")!.id),
     storedMarks: [],
     explicitMarks: false,
     past: [],
@@ -175,8 +181,7 @@ const snapshot = (model: Model): Snapshot => ({
   storedMarks: model.storedMarks,
   explicitMarks: model.explicitMarks,
 });
-const same = (a: unknown, b: unknown): boolean =>
-  JSON.stringify(a) === JSON.stringify(b);
+const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 const commit = (
   model: Model,
   edit: Edit,
@@ -192,8 +197,7 @@ const commit = (
       ...model,
       selection: clampSelection(model.document, edit.selection),
     };
-  const coalesce =
-    group !== "" && model.group === group && time - model.lastInputAt < 1000;
+  const coalesce = group !== "" && model.group === group && time - model.lastInputAt < 1000;
   return {
     ...model,
     ...edit,
@@ -209,25 +213,18 @@ const commit = (
   };
 };
 export const activeMarks = (model: Model): ReadonlyArray<Mark> => {
-  if (model.explicitMarks) return model.storedMarks;
+  if (model.explicitMarks) return model.storedMarks.filter((mark) => mark.type !== "literal");
   const node = find(model.document, model.selection.anchor.id);
   return node
     ? (sliceRuns(
         node.content,
         Math.max(0, model.selection.anchor.offset - 1),
         Math.max(1, model.selection.anchor.offset),
-      )[0]?.marks ?? [])
+      )[0]?.marks.filter((mark) => mark.type !== "literal") ?? [])
     : [];
 };
-export const reduce = (
-  model: Model,
-  message: Message,
-  registry: Registry,
-): Model => {
-  const allocate = allocator(
-    model.document,
-    `${model.id}-${model.revision + 1}`,
-  );
+const reduceDocument = (model: Model, message: Message, registry: Registry): Model => {
+  const allocate = allocator(model.document, `${model.id}-${model.revision + 1}`);
   const edit = (result: Edit, announcement?: string) =>
     commit(model, result, registry, announcement);
   const allowedReadonly = [
@@ -257,9 +254,7 @@ export const reduce = (
       if (message.baseRevision !== model.revision)
         return {
           ...model,
-          diagnostics: [
-            "Input arrived for an older document revision. Current content retained.",
-          ],
+          diagnostics: ["Input arrived for an older document revision. Current content retained."],
         };
       const selection = clampSelection(model.document, message.selection);
       const base = {
@@ -268,9 +263,7 @@ export const reduce = (
         group: collapsed(selection) ? model.group : "",
       };
       const marks =
-        find(model.document, selection.anchor.id)?.type === "codeBlock"
-          ? []
-          : activeMarks(base);
+        find(model.document, selection.anchor.id)?.type === "codeBlock" ? [] : activeMarks(base);
       let result: Edit;
       if (message.kind === "text" || message.kind === "break")
         result = replaceRange(
@@ -292,11 +285,7 @@ export const reduce = (
           allocate,
         );
       const editedNode = find(result.document, result.selection.anchor.id);
-      if (
-        message.kind === "text" &&
-        message.value === " " &&
-        editedNode?.type === "paragraph"
-      ) {
+      if (message.kind === "text" && message.value === " " && editedNode?.type === "paragraph") {
         const prefix = plainText(editedNode);
         const heading = /^(#{1,6}) $/.exec(prefix);
         const type = heading
@@ -311,29 +300,18 @@ export const reduce = (
                   ? "taskList"
                   : undefined;
         if (type) {
-          const cleared = updateBlock(
-            result.document,
-            editedNode.id,
-            (node) => ({ ...node, content: [] }),
-          );
-          result = convert(
-            cleared,
-            caret(editedNode.id),
-            type,
-            registry,
-            allocate,
-          );
+          const cleared = updateBlock(result.document, editedNode.id, (node) => ({
+            ...node,
+            content: [],
+          }));
+          result = convert(cleared, caret(editedNode.id), type, registry, allocate);
           if (heading)
             result = {
               ...result,
-              document: updateBlock(
-                result.document,
-                result.selection.anchor.id,
-                (node) => ({
-                  ...node,
-                  attrs: { level: String(heading[1]!.length) },
-                }),
-              ),
+              document: updateBlock(result.document, result.selection.anchor.id, (node) => ({
+                ...node,
+                attrs: { level: String(heading[1]!.length) },
+              })),
             };
         }
       }
@@ -360,9 +338,7 @@ export const reduce = (
       if (message.baseRevision !== model.revision)
         return {
           ...model,
-          diagnostics: [
-            "Native edit conflicted with a newer change. Current document retained.",
-          ],
+          diagnostics: ["Native edit conflicted with a newer change. Current document retained."],
         };
       const document = updateBlock(model.document, message.id, (node) => ({
         ...node,
@@ -382,9 +358,7 @@ export const reduce = (
         return {
           ...model,
           linkOpen: !model.linkOpen,
-          linkValue:
-            activeMarks(model).find((mark) => mark.type === "link")?.value ??
-            "",
+          linkValue: activeMarks(model).find((mark) => mark.type === "link")?.value ?? "",
         };
       const mark: Mark = { type: message.type, value: "" };
       if (collapsed(model.selection)) {
@@ -413,18 +387,13 @@ export const reduce = (
       if (!safeUrl(model.linkValue))
         return {
           ...model,
-          diagnostics: [
-            "Use an https://, http://, mailto:, /path, or #anchor link.",
-          ],
+          diagnostics: ["Use an https://, http://, mailto:, /path, or #anchor link."],
         };
       const mark: Mark = { type: "link", value: model.linkValue };
       if (collapsed(model.selection))
         return {
           ...model,
-          storedMarks: [
-            ...activeMarks(model).filter((m) => m.type !== "link"),
-            mark,
-          ],
+          storedMarks: [...activeMarks(model).filter((m) => m.type !== "link"), mark],
           explicitMarks: true,
           linkOpen: false,
         };
@@ -437,19 +406,9 @@ export const reduce = (
       };
     }
     case "Convert":
-      return edit(
-        convert(
-          model.document,
-          model.selection,
-          message.type,
-          registry,
-          allocate,
-        ),
-      );
+      return edit(convert(model.document, model.selection, message.type, registry, allocate));
     case "Indent":
-      return edit(
-        indentList(model.document, model.selection, message.outdent, allocate),
-      );
+      return edit(indentList(model.document, model.selection, message.outdent, allocate));
     case "Insert": {
       if (!registry.has(message.type)) return model;
       const selected = find(model.document, model.selection.anchor.id);
@@ -459,15 +418,7 @@ export const reduce = (
           content: [],
         }));
         return {
-          ...edit(
-            convert(
-              cleared,
-              caret(selected.id),
-              message.type,
-              registry,
-              allocate,
-            ),
-          ),
+          ...edit(convert(cleared, caret(selected.id), message.type, registry, allocate)),
           slashOpen: false,
         };
       }
@@ -476,8 +427,7 @@ export const reduce = (
         ? model.document.blocks.indexOf(current) + 1
         : model.document.blocks.length;
       const node = createBlock(message.type, registry, allocate);
-      const extra =
-        registry.get(node.type)?.kind === "atom" ? [block(allocate())] : [];
+      const extra = registry.get(node.type)?.kind === "atom" ? [block(allocate())] : [];
       const document: Document = {
         version: 1,
         blocks: [
@@ -505,11 +455,8 @@ export const reduce = (
         selection: model.selection,
       });
     case "Move": {
-      const index = model.document.blocks.findIndex(
-        (node) => node.id === message.id,
-      );
-      const target =
-        model.document.blocks[index + (message.direction === "up" ? -1 : 1)];
+      const index = model.document.blocks.findIndex((node) => node.id === message.id);
+      const target = model.document.blocks[index + (message.direction === "up" ? -1 : 1)];
       return target
         ? edit(
             {
@@ -528,20 +475,13 @@ export const reduce = (
     case "Drop":
       return edit(
         {
-          document: moveBlock(
-            model.document,
-            message.id,
-            message.target,
-            message.before,
-          ),
+          document: moveBlock(model.document, message.id, message.target, message.before),
           selection: model.selection,
         },
         "Block moved.",
       );
     case "Duplicate": {
-      const index = model.document.blocks.findIndex(
-        (node) => node.id === message.id,
-      );
+      const index = model.document.blocks.findIndex((node) => node.id === message.id);
       const original = model.document.blocks[index];
       if (!original) return model;
       const clone = (node: Block): Block => ({
@@ -572,9 +512,7 @@ export const reduce = (
           document: ensureDocument(
             {
               version: 1,
-              blocks: model.document.blocks.filter(
-                (node) => node.id !== message.id,
-              ),
+              blocks: model.document.blocks.filter((node) => node.id !== message.id),
             },
             registry,
             allocate,
@@ -591,12 +529,8 @@ export const reduce = (
         ? {
             ...model,
             ...value,
-            past: undo
-              ? model.past.slice(0, -1)
-              : [...model.past, snapshot(model)],
-            future: undo
-              ? [snapshot(model), ...model.future]
-              : model.future.slice(1),
+            past: undo ? model.past.slice(0, -1) : [...model.past, snapshot(model)],
+            future: undo ? [snapshot(model), ...model.future] : model.future.slice(1),
             revision: model.revision + 1,
             group: "",
             announcement: undo ? "Undone." : "Redone.",
@@ -625,20 +559,14 @@ export const reduce = (
       return { ...model, source: message.value };
     case "ApplySource":
     case "Imported": {
-      if (
-        message._tag === "Imported" &&
-        message.expectedRevision !== model.revision
-      )
+      if (message._tag === "Imported" && message.expectedRevision !== model.revision)
         return {
           ...model,
           diagnostics: [
             "Import cancelled because the document changed while the file was loading.",
           ],
         };
-      if (
-        message._tag === "ApplySource" &&
-        model.sourceRevision !== model.revision
-      )
+      if (message._tag === "ApplySource" && model.sourceRevision !== model.revision)
         return {
           ...model,
           diagnostics: [
@@ -655,9 +583,7 @@ export const reduce = (
               {
                 document: result.value,
                 selection: caret(
-                  leaves(result.value).find(
-                    (node) => registry.get(node.type)?.kind === "text",
-                  )!.id,
+                  leaves(result.value).find((node) => registry.get(node.type)?.kind === "text")!.id,
                 ),
               },
               "Markdown applied.",
@@ -714,9 +640,106 @@ export const reduce = (
     case "Failed":
       return { ...model, diagnostics: [message.reason] };
     case "Files":
+    case "RequestedCompletion":
+    case "MovedCompletion":
+    case "AcceptedCompletion":
+    case "DismissedIntelligence":
+    case "HoveredText":
+    case "DismissedHover":
       return model;
   }
 };
+/** Both Foldkit and the browser projection use these same provider and transaction rules. */
+export const reduce = (
+  model: Model,
+  message: Message,
+  registry: Registry,
+  intelligence?: TextIntelligence,
+): Model => {
+  if (message._tag === "DismissedIntelligence") return { ...model, completion: null, hover: null };
+  if (message._tag === "DismissedHover")
+    return model.hover === null ? model : { ...model, hover: null };
+  if (message._tag === "HoveredText")
+    return intelligence?.hover && find(model.document, message.id)
+      ? { ...model, hover: { id: message.id, offset: message.offset, source: message.source } }
+      : model;
+  const list = model.completion;
+  if (message._tag === "MovedCompletion" || message._tag === "AcceptedCompletion") {
+    const node = list && find(model.document, list.id);
+    if (
+      !model.editable ||
+      !list ||
+      !node ||
+      list.revision !== model.revision ||
+      !collapsed(model.selection) ||
+      model.selection.anchor.id !== list.id ||
+      model.selection.anchor.offset !== list.caret
+    )
+      return { ...model, completion: null };
+    const shown = Completion.visible(list, plainText(node), list.caret);
+    if (message._tag === "MovedCompletion")
+      return {
+        ...model,
+        completion: { ...list, ...Completion.move(list, message.delta, shown.length) },
+      };
+    if (message.expectedRevision !== model.revision) return model;
+    const chosen = shown[message.index];
+    if (!chosen) return { ...model, completion: null };
+    const accepted = Completion.accept(list, plainText(node), chosen);
+    const selection = {
+      anchor: { id: node.id, offset: accepted.from },
+      focus: { id: node.id, offset: accepted.to },
+    };
+    return commit(
+      { ...model, completion: null, hover: null, group: "" },
+      replaceRange(
+        model.document,
+        selection,
+        accepted.insert,
+        activeMarks({ ...model, selection }),
+        registry,
+        allocator(model.document, `${model.id}-${model.revision + 1}`),
+      ),
+      registry,
+      `Inserted ${chosen.label}.`,
+    );
+  }
+  let next = reduceDocument(model, message, registry);
+  if (
+    next.revision !== model.revision ||
+    !equalSelection(next.selection, model.selection) ||
+    !next.editable ||
+    next.sourceOpen ||
+    next.linkOpen
+  )
+    next = { ...next, completion: null, hover: null };
+  if (
+    next.editable &&
+    !next.sourceOpen &&
+    !next.linkOpen &&
+    collapsed(next.selection) &&
+    ["Input", "Reconciled", "RequestedCompletion"].includes(message._tag)
+  ) {
+    const node = find(next.document, next.selection.anchor.id);
+    const caret = next.selection.anchor.offset;
+    const offered = node && intelligence?.complete?.(node, next.document, caret);
+    const count = offered ? Completion.visible(offered, plainText(node!), caret).length : 0;
+    if (
+      offered &&
+      offered.from >= 0 &&
+      offered.from <= offered.to &&
+      offered.to <= plainText(node!).length &&
+      count
+    )
+      next = {
+        ...next,
+        completion: { ...offered, id: node!.id, revision: next.revision, caret },
+        announcement: `${count} suggestions.`,
+      };
+  }
+  return next;
+};
+const equalSelection = (a: Selection, b: Selection) => same(a, b);
 const ReadFile = Command.define("ReadEditorMarkdown", {
   args: { file: File.File, expectedRevision: S.Number },
   messages: [Message.Imported, Message.Failed],
@@ -724,18 +747,13 @@ const ReadFile = Command.define("ReadEditorMarkdown", {
     File.readAsText(file).pipe(
       Effect.map((value) => Message.Imported({ value, expectedRevision })),
       Effect.catch(() =>
-        Effect.succeed(
-          Message.Failed({ reason: "The Markdown file could not be read." }),
-        ),
+        Effect.succeed(Message.Failed({ reason: "The Markdown file could not be read." })),
       ),
     ),
 });
 export const updateWith =
-  (registry: Registry) =>
-  (
-    model: Model,
-    message: Message,
-  ): Update.ReturnWithOutMessage<Model, Message, OutMessage> => {
+  (registry: Registry, intelligence?: TextIntelligence) =>
+  (model: Model, message: Message): Update.ReturnWithOutMessage<Model, Message, OutMessage> => {
     if (message._tag === "Files" && model.editable) {
       const file = message.files[0];
       if (file && File.size(file) <= 1000000)
@@ -750,7 +768,7 @@ export const updateWith =
         },
       };
     }
-    const next = reduce(model, message, registry);
+    const next = reduce(model, message, registry, intelligence);
     return {
       model: next,
       ...(next.revision !== model.revision

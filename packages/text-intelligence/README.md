@@ -68,3 +68,47 @@ from the text; the surface keeps the caret, claims the keys, and points
 diagnostics before the host's content. `.fw-text-diagnostic` with
 `data-severity` draws a wavy underline, and `.fw-text-hovered` marks the range
 a hover describes.
+
+## Reusable mentions and tags
+
+`Mentions` recognizes `@entities` and `#tags` in plain text without a dependency
+on a particular editor, outline, directory, or Markdown parser:
+
+```ts
+import { Mentions, Completion } from "@foldworks/text-intelligence";
+const data: Mentions.Data = {
+  entities: [
+    {
+      id: "person-42",
+      kind: "mention",
+      name: "maya",
+      label: "Maya Chen",
+      description: "Trail lead",
+    },
+  ],
+  tags: ["draft", "field-guide"], // optional; hosts can derive these with tagsIn
+};
+const text = "Invite @ma";
+const query = Mentions.queryAt(text, text.length);
+const list = query && Mentions.suggestions(query, text, data);
+const visible = list && Completion.visible(list, text, text.length);
+const { tokens, diagnostics } = Mentions.analyze(text, data);
+const description = Mentions.describe(text, 9, data);
+// Mentions.descriptionView(description, h) supplies content for HoverPopup.
+```
+
+`recognize`, `queryAt`, `analyze`, and `describe` accept `Options` with a
+`boundary(before, from, text)` predicate and syntax `excluded` ranges.
+`markdownOptions(source)` supplies conservative exclusions for raw Markdown;
+parsed hosts should supply parser-derived exclusions. All offsets are UTF-16.
+Use `segments` to compose tokens and diagnostics with existing formatting.
+Import `@foldworks/text-intelligence/styles.css` for popup and reference colors.
+Decorated spans can use class `fw-reference` and `data-kind="mention"` or `"tag"`.
+
+Lookup and providers are synchronous. Entity IDs identify host records, but
+acceptance only inserts the name as ordinary editable text; no identity binding
+or notifications are created. Hosts own tag derivation, persistence and permission
+policy. Unknown mentions produce diagnostics only when `unknownMention(name)` is
+supplied. Names match NFC and case-insensitively; suggestions also match display
+label words. See the [shared design and integration contract](../../docs/mentions-and-tags.md)
+for representation, stale-result rules, and the real outliner/Markdown adapters.

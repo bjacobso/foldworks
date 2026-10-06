@@ -26,11 +26,17 @@ type UpdateReturn = Update.Return<Model, Message>;
 const suggest = (result: UpdateReturn, message: Outliner.Message): UpdateReturn => {
   const outline = result.model.outline;
   const at =
-    message._tag === "RequestedCompletion" ||
-    (message._tag === "EditedText" && outline.completion === null)
+    message._tag === "RequestedCompletion" || message._tag === "EditedText"
       ? { id: message.id, caret: message.end }
       : undefined;
-  const text = at === undefined ? undefined : find(outline.items, at.id)?.text;
+  const node = at === undefined ? undefined : find(outline.items, at.id);
+  if (
+    node === undefined ||
+    outline.focus?.start !== outline.focus?.end ||
+    outlinePolicy(outline.items).isReadOnly?.(node)
+  )
+    return result;
+  const text = node.text;
   const offer =
     at === undefined || text === undefined
       ? undefined

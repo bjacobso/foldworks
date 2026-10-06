@@ -147,3 +147,20 @@
   border-radius: 2px;
   background: color-mix(in oklab, var(--primary, #2563eb) 10%, transparent);
 }
+
+/* Shared mention/tag presentation, used by any decorated text surface. */
+[data-kind="mention"]:is(.fw-outliner__span, .fw-editor__text-token, .fw-reference) {
+  color: var(--foldworks-ui-info, #2563eb);
+}
+[data-kind="tag"]:is(.fw-outliner__span, .fw-editor__text-token, .fw-reference) {
+  color: color-mix(in oklab, var(--foldworks-ui-success, #15803d) 85%, var(--foreground, #18181b));
+}
+.fw-reference-card {
+  display: grid;
+  gap: 1px;
+  min-width: 160px;
+}
+.fw-reference-card span {
+  color: var(--muted-foreground, #71717a);
+  font-size: 12px;
+}

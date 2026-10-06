@@ -67,9 +67,7 @@ const Project: BlockDefinition = {
     h.input([
       h.AriaLabel("Project label"),
       h.Value(node.attrs.label ?? ""),
-      h.OnChange((value) =>
-        Message.Attributes({ id: node.id, key: "label", value }),
-      ),
+      h.OnChange((value) => Message.Attributes({ id: node.id, key: "label", value })),
     ]),
   portable: (node) => node.attrs.label ?? "Project",
 };
@@ -103,12 +101,7 @@ const imported = importMarkdown(source, Article.registry);
 // imported.value is absent when diagnostics reject the import.
 const native = exportMarkdown(document, Article.registry);
 const strictPortable = exportMarkdown(document, Article.registry, "portable");
-const portableWithFallbacks = exportMarkdown(
-  document,
-  Article.registry,
-  "portable",
-  true,
-);
+const portableWithFallbacks = exportMarkdown(document, Article.registry, "portable", true);
 ```
 
 Foldworks Markdown uses versioned directives:
@@ -201,3 +194,62 @@ The browser suite builds `e2e/fixtures/editor.html` into
 `.context/editor-e2e-dist` alongside the demo. Serve that directory to profile the
 two-instance fixture. Package/release checks also compile and bundle the editor
 from its packed npm artifact in a clean Vite consumer.
+
+## Inline text intelligence
+
+`Editor.define({ textIntelligence })` accepts optional synchronous `analyze`,
+`complete`, and `hover` providers, independently of custom blocks:
+
+```ts
+import { Editor, plainText, type TextIntelligence } from "@foldworks/editor";
+import { Mentions } from "@foldworks/text-intelligence";
+import "@foldworks/text-intelligence/styles.css";
+
+const data = {
+  entities: [{ id: "person-42", kind: "mention" as const, name: "maya", label: "Maya Chen" }],
+  tags: ["draft"],
+};
+const textIntelligence: TextIntelligence = {
+  complete: (node, document, caret) => {
+    // Supply syntax exclusions for heading/code blocks and code/link/literal runs.
+    const options = optionsFor(node);
+    const query = Mentions.queryAt(plainText(node), caret, options);
+    return query && Mentions.suggestions(query, plainText(node), data);
+  },
+  analyze: (node) => Mentions.analyze(plainText(node), data, optionsFor(node)),
+  hover: (node, document, offset, source, h) => {
+    const info = Mentions.describe(
+      plainText(node),
+      offset,
+      data,
+      optionsFor(node),
+      source === "Keyboard",
+    );
+    return info
+      ? { from: info.from, to: info.to, content: Mentions.descriptionView(info, h) }
+      : null;
+  },
+};
+const Article = Editor.define({ textIntelligence });
+```
+
+`optionsFor` is the surface's syntax adapter: exclude heading/code blocks, and
+code, link and literal-escape runs using their cumulative text lengths. The
+[complete demo adapter](../../apps/demo/src/editor/references.ts) demonstrates this
+with document-derived tags and host fixtures. Providers can also supply any
+other semantic token/completion kinds; the editor knows nothing about people.
+Ranges address `plainText(node)` in UTF-16. Tokens and diagnostics compose with
+existing formatting; they never enter document content. Custom `contentView`
+users pass the provider as its fifth argument and provide their own popup chrome.
+
+Ctrl+Space requests suggestions; Up/Down move, Enter/Tab accept, and Escape
+closes. Alt+Enter requests hover at the caret. Acceptance is one undoable text
+transaction with revision/caret checks. Providers and callbacks stay outside the
+serializable model, and asynchronous providers are not supported.
+
+Markdown import/export preserves explicit escaped markers using the additive
+`literal` inline mark (`value: ""`, text containing only `@`/`#`). New typing
+never inherits it. Native document readers written for the earlier mark union
+must recognize this new mark when decoding documents containing literal escapes.
+It renders as editable text and records source interpretation, not an entity ID.
+See the [design note](../../docs/mentions-and-tags.md) for identity and persistence.

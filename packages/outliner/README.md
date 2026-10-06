@@ -290,3 +290,8 @@ inline styles, notes, columns, or links. There is no virtualization, so every
 visible row renders: a keystroke takes under about 60 ms up to 500 rows and
 about 170 ms at 2,000. Drag and drop uses the pointer; keyboard users move
 items with the move shortcuts.
+
+The demo's reusable `@`/`#` provider comes from `Mentions` in
+`@foldworks/text-intelligence`. Hosts provide lookup data and adapt its tokens,
+completions and descriptions to the existing outliner protocol; fixtures and
+usage counts remain in the demo. See the [shared contract](../../docs/mentions-and-tags.md).

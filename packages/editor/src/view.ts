@@ -1,3 +1,10 @@
+import {
+  Completion,
+  CompletionPopup,
+  HoverPopup,
+  diagnosticsAt,
+} from "@foldworks/text-intelligence";
+import type { TextIntelligence } from "./intelligence";
 import { defineView } from "foldkit/submodel";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { contentView, dispatchControl } from "./browser";
@@ -26,19 +33,10 @@ const button = (
 export const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html => {
   const marks = activeMarks(model);
   return h.div(
-    [
-      h.Class("fw-editor__toolbar"),
-      h.Role("toolbar"),
-      h.AriaLabel("Text formatting"),
-    ],
+    [h.Class("fw-editor__toolbar"), h.Role("toolbar"), h.AriaLabel("Text formatting")],
     [
       button("Undo", Message.Undo(), h, !model.editable || !model.past.length),
-      button(
-        "Redo",
-        Message.Redo(),
-        h,
-        !model.editable || !model.future.length,
-      ),
+      button("Redo", Message.Redo(), h, !model.editable || !model.future.length),
       h.span([h.Class("fw-editor__separator"), h.AriaHidden(true)]),
       ...(["bold", "italic", "strike", "code", "link"] as const).map((type) =>
         button(
@@ -54,10 +52,7 @@ export const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html => {
         [
           h.AriaLabel("Block type"),
           h.Disabled(!model.editable),
-          h.Value(
-            find(model.document, model.selection.anchor.id)?.type ??
-              "paragraph",
-          ),
+          h.Value(find(model.document, model.selection.anchor.id)?.type ?? "paragraph"),
           h.OnChange((type) => Message.Convert({ type })),
         ],
         [
@@ -72,29 +67,46 @@ export const toolbarView = (model: Model, h: HtmlBuilder<Message>): Html => {
           ].map(([value, label]) => h.option([h.Value(value!)], [label!])),
         ],
       ),
-      button(
-        "+ Block",
-        Message.ToggleSlash(),
-        h,
-        !model.editable,
-        model.slashOpen,
-      ),
+      button("+ Block", Message.ToggleSlash(), h, !model.editable, model.slashOpen),
       button("Indent", Message.Indent({ outdent: false }), h, !model.editable),
       button("Outdent", Message.Indent({ outdent: true }), h, !model.editable),
     ],
   );
 };
 const controlListeners = new WeakMap<Element, (event: Event) => void>();
-export const viewWith = (registry: Registry) =>
+export const viewWith = (registry: Registry, intelligence?: TextIntelligence) =>
   defineView<Model, Message>((model, h) => {
+    const selector = (id: string) =>
+      `[data-editor-id="${CSS.escape(model.id)}"] [data-text-id="${CSS.escape(id)}"]`;
+    const list = model.completion;
+    const completedNode = list && find(model.document, list.id);
+    const shown =
+      list && completedNode ? Completion.visible(list, plainText(completedNode), list.caret) : [];
+    const hoveredNode = model.hover && find(model.document, model.hover.id);
+    const hover =
+      model.hover && hoveredNode
+        ? intelligence?.hover?.(
+            hoveredNode,
+            model.document,
+            model.hover.offset,
+            model.hover.source,
+            h,
+          )
+        : undefined;
+    const problems =
+      model.hover && hoveredNode
+        ? diagnosticsAt(
+            intelligence?.analyze?.(hoveredNode, model.document).diagnostics ?? [],
+            model.hover.offset,
+          )
+        : [];
     const selected = find(model.document, model.selection.anchor.id);
     const query =
       model.slashOpen && selected && plainText(selected).startsWith("/")
         ? plainText(selected).slice(1).toLowerCase()
         : "";
     const options = [...registry.values()].filter(
-      (def) =>
-        def.name !== "listItem" && def.label.toLowerCase().includes(query),
+      (def) => def.name !== "listItem" && def.label.toLowerCase().includes(query),
     );
     const vnode = h.section(
       [h.Class("fw-editor"), h.DataAttribute("editor-id", model.id)],
@@ -113,11 +125,7 @@ export const viewWith = (registry: Registry) =>
             h.div(
               [h.Class("fw-editor__document-actions")],
               [
-                button(
-                  model.editable ? "Read only" : "Edit document",
-                  Message.ToggleEditable(),
-                  h,
-                ),
+                button(model.editable ? "Read only" : "Edit document", Message.ToggleEditable(), h),
                 button(
                   "Markdown source",
                   Message.ToggleSource(),
@@ -138,16 +146,8 @@ export const viewWith = (registry: Registry) =>
                     ]),
                   ],
                 ),
-                button(
-                  "Export Markdown",
-                  Message.Export({ portable: false }),
-                  h,
-                ),
-                button(
-                  "Portable export",
-                  Message.Export({ portable: true }),
-                  h,
-                ),
+                button("Export Markdown", Message.Export({ portable: false }), h),
+                button("Portable export", Message.Export({ portable: true }), h),
               ],
             ),
           ],
@@ -178,10 +178,7 @@ export const viewWith = (registry: Registry) =>
                   h.div(
                     [h.Key("source"), h.Class("fw-editor__source")],
                     [
-                      h.label(
-                        [h.For(`${model.id}-source`)],
-                        ["Markdown source"],
-                      ),
+                      h.label([h.For(`${model.id}-source`)], ["Markdown source"]),
                       h.textarea([
                         h.Id(`${model.id}-source`),
                         h.AriaLabel("Markdown source"),
@@ -204,7 +201,7 @@ export const viewWith = (registry: Registry) =>
             // lifecycle are independent of the surrounding toolbar and panels.
             h.div(
               [h.Key("surface"), h.Hidden(model.sourceOpen)],
-              [contentView(model, registry, h)],
+              [contentView(model, registry, h, "Document content", intelligence)],
             ),
             ...(model.slashOpen
               ? [
@@ -218,15 +215,9 @@ export const viewWith = (registry: Registry) =>
                     [
                       h.strong([], ["Insert a block"]),
                       ...options.map((def) =>
-                        button(
-                          def.label,
-                          Message.Insert({ type: def.name }),
-                          h,
-                        ),
+                        button(def.label, Message.Insert({ type: def.name }), h),
                       ),
-                      ...(options.length
-                        ? []
-                        : [h.p([], ["No matching blocks"])]),
+                      ...(options.length ? [] : [h.p([], ["No matching blocks"])]),
                       button("Close block menu", Message.ToggleSlash(), h),
                     ],
                   ),
@@ -279,12 +270,45 @@ export const viewWith = (registry: Registry) =>
               ),
             ]
           : []),
+        ...(list && shown.length
+          ? [
+              h.div(
+                [h.DataAttribute("editor-completion-revision", String(model.revision))],
+                [
+                  CompletionPopup.view(
+                    {
+                      id: `${model.id}-completion`,
+                      items: shown,
+                      index: Math.min(list.index, shown.length - 1),
+                      anchor: { selector: selector(list.id), offset: list.caret },
+                      query: Completion.query(list, plainText(completedNode!), list.caret),
+                      onChoose: (index) =>
+                        Message.AcceptedCompletion({ index, expectedRevision: model.revision }),
+                    },
+                    h,
+                  ),
+                ],
+              ),
+            ]
+          : []),
+        ...(model.hover && (hover || problems.length)
+          ? [
+              HoverPopup.view(
+                {
+                  id: `${model.id}-hover`,
+                  anchor: {
+                    selector: selector(model.hover.id),
+                    offset: hover?.from ?? model.hover.offset,
+                  },
+                  diagnostics: problems,
+                  content: hover?.content ?? null,
+                },
+                h,
+              ),
+            ]
+          : []),
         h.div(
-          [
-            h.Class("fw-editor__sr-only"),
-            h.Role("status"),
-            h.AriaLive("polite"),
-          ],
+          [h.Class("fw-editor__sr-only"), h.Role("status"), h.AriaLive("polite")],
           [model.announcement],
         ),
       ],
@@ -299,13 +323,31 @@ export const viewWith = (registry: Registry) =>
             if (!(node.elm instanceof HTMLElement)) return;
             const root = node.elm;
             const listener = (event: Event) => {
-              const button = (
-                event.target as Element
-              ).closest<HTMLButtonElement>("button[data-editor-action]");
+              const option = (event.target as Element).closest<HTMLElement>(
+                ".fw-completion [role=option]",
+              );
+              const revision = option?.closest<HTMLElement>("[data-editor-completion-revision]")
+                ?.dataset.editorCompletionRevision;
+              if (option && revision !== undefined) {
+                if (
+                  dispatchControl(
+                    root,
+                    Message.AcceptedCompletion({
+                      index: Number(option.id.split("-").at(-1)),
+                      expectedRevision: Number(revision),
+                    }),
+                  )
+                ) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                return;
+              }
+              const button = (event.target as Element).closest<HTMLButtonElement>(
+                "button[data-editor-action]",
+              );
               if (!button || button.disabled) return;
-              const message = JSON.parse(
-                button.dataset.editorAction!,
-              ) as Message;
+              const message = JSON.parse(button.dataset.editorAction!) as Message;
               if (
                 ![
                   "Insert",
@@ -314,6 +356,7 @@ export const viewWith = (registry: Registry) =>
                   "Redo",
                   "ToggleSlash",
                   "Indent",
+                  "AcceptedCompletion",
                 ].includes(message._tag)
               )
                 return;
@@ -328,8 +371,7 @@ export const viewWith = (registry: Registry) =>
           destroy: (node) => {
             if (node.elm instanceof Element) {
               const listener = controlListeners.get(node.elm);
-              if (listener)
-                node.elm.removeEventListener("click", listener, true);
+              if (listener) node.elm.removeEventListener("click", listener, true);
               controlListeners.delete(node.elm);
             }
           },

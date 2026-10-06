@@ -177,15 +177,6 @@
   }
 }
 
-/* Mentions and tags, painted by the host's decorations. */
-.outliner-demo .fw-outliner__span[data-kind="mention"] {
-  color: var(--foldworks-ui-info, #2563eb);
-}
-
-.outliner-demo .fw-outliner__span[data-kind="tag"] {
-  color: color-mix(in oklab, var(--foldworks-ui-success, #15803d) 85%, var(--foreground));
-}
-
 .outliner-demo__card {
   display: grid;
   gap: 1px;
