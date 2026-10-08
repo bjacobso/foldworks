@@ -14,7 +14,8 @@
     "pnpm": ">=10.20"
   },
   "scripts": {
-    "check": "pnpm run check:types && pnpm run check:tests && pnpm run lint && pnpm run format:check",
+    "check": "pnpm run check:types && pnpm run check:tests && pnpm run lint && pnpm run format:check && pnpm --filter @foldworks/demo build && pnpm run check:llms",
+    "check:llms": "node scripts/check-llms.mjs",
     "check:tests": "pnpm --recursive --if-present test",
     "check:types": "pnpm run build:packages && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
     "codebase": "pnpm --filter @foldworks/codebase build && node packages/codebase/dist/cli.js",

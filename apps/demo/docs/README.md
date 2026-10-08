@@ -20,6 +20,13 @@ README. New exports and README edits require no second documentation registry.
 The development plugin watches package sources and regenerates the catalog.
 The same catalog is emitted as `/docs/manifest.json` in production.
 
+`../ui-docs.ts` emits `/llms.txt` and Markdown guides from the repository and
+UI package READMEs and docs. Development serves `/llms.txt` as `text/plain` and
+the guides as `text/markdown`; production serves the emitted static assets.
+`pnpm check:llms` validates the built file's H1, maturity/install summary,
+annotated link sections, and every linked documentation asset. It runs after
+the demo build in `pnpm check` and CI.
+
 The parser documents source declarations; it does not resolve inferred types
 or expand third-party re-exports. Schema aliases and nonliteral schemas remain
 visible as declarations instead of being expanded into field tables. The

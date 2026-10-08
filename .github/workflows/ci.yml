@@ -23,6 +23,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up pnpm
@@ -45,8 +46,11 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-
 
-      - name: Run release checks
-        run: pnpm release:check
+      - name: Run checks
+        run: pnpm check
+
+      - name: Validate package tarballs and clean consumer
+        run: node scripts/check-packages.mjs
 
       - name: Install visual-test browser
         run: pnpm --filter @foldworks/demo exec playwright install --with-deps chromium
