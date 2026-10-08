@@ -2,6 +2,8 @@
 
 Polished application primitives for Foldkit and StyleX.
 
+Foldworks is pre-1.0; APIs are evolving.
+
 **[Explore Foldworks](https://foldworks.dev)**
 
 Foldworks is an umbrella collection of reusable packages for building rich,
@@ -125,6 +127,9 @@ pnpm build
 linting, and a non-mutating format check on files changed from `main`. Use
 `pnpm format` to fix changed files; `pnpm format:all` formats the whole
 repository.
+
+It also builds the demo and checks the generated `/llms.txt` structure and
+documentation assets. See [AGENTS.md](./AGENTS.md) for contributor guidance.
 
 Run `pnpm dev` to start the demo application. Turborepo prepares only the
 demo's transitive workspace dependencies with fast runtime builds, then starts
