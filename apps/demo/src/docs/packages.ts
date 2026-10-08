@@ -1,5 +1,6 @@
 import type { LucideIconData as IconData } from "@lucide/icons";
 import {
+  AtSign,
   Bot,
   Boxes,
   Component,
@@ -22,6 +23,7 @@ import {
   TextCursorInput,
   Workflow,
 } from "@lucide/icons";
+import { layerOf, layers } from "../stack";
 import type { PackageDoc } from "./catalog";
 
 const icons: Readonly<Record<string, IconData>> = {
@@ -43,40 +45,26 @@ const icons: Readonly<Record<string, IconData>> = {
   "pdf-viewer": FileSearch,
   "query-builder": ListFilter,
   sidebar: PanelLeft,
+  "text-intelligence": AtSign,
   ui: Component,
   workflow: Workflow,
 };
 
-const groups: ReadonlyArray<Readonly<{ id: string; title: string; packageIds: string[] }>> = [
-  { id: "foundations", title: "Foundations", packageIds: ["ui", "sidebar", "keyboard", "history"] },
-  {
-    id: "editors",
-    title: "Editors",
-    packageIds: ["editor", "code-editor", "outliner", "form-builder", "query-builder"],
-  },
-  {
-    id: "data",
-    title: "Data & review",
-    packageIds: ["data-grid", "data-table", "diff-viewer", "codebase"],
-  },
-  { id: "diagrams", title: "Diagrams & flow", packageIds: ["diagram", "workflow"] },
-  { id: "documents", title: "Documents", packageIds: ["pdf", "pdf-viewer", "pdf-annotator"] },
-  { id: "ai", title: "AI", packageIds: ["agent", "generative-ui"] },
-];
-
 export const packageIcon = (id: string): IconData => icons[id] ?? Boxes;
 
-/** Curated groups for known packages; newly generated packages land in "More packages". */
+/** Groups packages by stack layer; packages not yet placed in the stack land in "More packages". */
 export const groupPackages = (
   packages: ReadonlyArray<PackageDoc>,
-): ReadonlyArray<Readonly<{ id: string; title: string; packages: ReadonlyArray<PackageDoc> }>> => {
-  const known = new Set(groups.flatMap((group) => group.packageIds));
-  return [
-    ...groups.map((group) => ({
-      id: group.id,
-      title: group.title,
-      packages: group.packageIds.flatMap((id) => packages.filter((pkg) => pkg.id === id)),
+): ReadonlyArray<Readonly<{ id: string; title: string; packages: ReadonlyArray<PackageDoc> }>> =>
+  [
+    ...layers.map((layer) => ({
+      id: layer.id,
+      title: layer.title,
+      packages: layer.packageIds.flatMap((id) => packages.filter((pkg) => pkg.id === id)),
     })),
-    { id: "more", title: "More packages", packages: packages.filter((pkg) => !known.has(pkg.id)) },
+    {
+      id: "more",
+      title: "More packages",
+      packages: packages.filter((pkg) => layerOf(pkg.id) === undefined),
+    },
   ].filter((group) => group.packages.length > 0);
-};

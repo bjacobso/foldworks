@@ -134,14 +134,12 @@ describe.sequential("structured workflow builder", () => {
     await expect
       .poll(() => demoNavigation.getByRole("link").allTextContents())
       .toEqual([
-        "Documentation",
         "Home",
+        "Documentation",
         "Outline workspace",
         "Agent playground",
         "Codebase workbench",
-        "Diff review",
         "Workers workbench",
-        "@foldworks/ui",
         "Document editor",
         "Code editor",
         "Outliner",
@@ -150,9 +148,15 @@ describe.sequential("structured workflow builder", () => {
         "Query builder",
         "Form builder",
         "Workflow builder",
-        "Statechart editor",
-        "PDF annotator",
+        "Diff review",
         "PDF viewer",
+        "PDF annotator",
+        "Statechart editor",
+        "Keyboard commands",
+        "Undo history",
+        "Text intelligence",
+        "PDF rendering",
+        "UI system",
       ]);
     await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
     await expect.poll(() => sidebar.getByText("Design system", { exact: true }).count()).toBe(0);
@@ -186,7 +190,7 @@ describe.sequential("structured workflow builder", () => {
       .poll(() =>
         page
           .getByRole("heading", {
-            name: "Application primitives for ambitious teams.",
+            name: "The UI standard library, from tokens to workbenches.",
           })
           .isVisible(),
       )
