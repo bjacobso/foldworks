@@ -1,6 +1,6 @@
 {
   "name": "foldworks",
-  "description": "Polished application primitives for Foldkit and StyleX.",
+  "description": "A standard library of UI primitives for Foldkit and StyleX, from design tokens to complete workbenches.",
   "private": true,
   "type": "module",
   "repository": {

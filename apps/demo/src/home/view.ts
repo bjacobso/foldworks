@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   FileText,
   History,
+  Keyboard,
   Layers3,
   ListChecks,
   ListFilter,
@@ -45,169 +46,128 @@ import {
 } from "../app/route";
 import { Message } from "../app/message";
 import { releaseSpec, releaseSpecPreview } from "../generative-ui/spec";
+import { layers } from "../stack";
 import { className, styles } from "./styles";
 
 type Package = Readonly<{
-  name: string;
-  category: "Foundation" | "Application primitive";
   description: string;
   href: string;
   icon: LucideIconData;
 }>;
 
-const packages: ReadonlyArray<Package> = [
-  {
-    name: "@foldworks/keyboard",
-    category: "Foundation",
-    description: "Typed scoped commands and platform-aware shortcuts with Foldkit lifecycles.",
+const packages: Readonly<Record<string, Package>> = {
+  ui: {
+    description: "Semantic tokens, themes, and accessible components for product surfaces.",
     href: uiKitRouter(),
     icon: Blocks,
   },
-  {
-    name: "@foldworks/editor",
-    category: "Application primitive",
-    description: "Native rich-text editing, Markdown, and extensible document blocks.",
-    href: editorRouter(),
-    icon: FileText,
-  },
-  {
-    name: "@foldworks/ui",
-    category: "Foundation",
-    description: "Themeable, accessible interface components for product surfaces.",
-    href: uiKitRouter(),
-    icon: Blocks,
-  },
-  {
-    name: "@foldworks/sidebar",
-    category: "Foundation",
+  sidebar: {
     description: "Responsive application chrome with controlled navigation state.",
     href: "/",
     icon: PanelLeft,
   },
-  {
-    name: "@foldworks/agent",
-    category: "Application primitive",
-    description:
-      "Composable chat UI with streaming conversations, tool states, approvals, cancellation, and retry.",
-    href: agentRouter(),
-    icon: Bot,
+  keyboard: {
+    description: "Typed scoped commands and platform-aware shortcuts with Foldkit lifecycles.",
+    href: uiKitRouter(),
+    icon: Keyboard,
   },
-  {
-    name: "@foldworks/code-editor",
-    category: "Application primitive",
+  history: {
+    description: "Reusable undo, redo, and bounded document history for controlled models.",
+    href: workflowPath("Vertical"),
+    icon: History,
+  },
+  "text-intelligence": {
+    description: "Hover, completion, highlighting, and diagnostics shared by text surfaces.",
+    href: codeEditorRouter(),
+    icon: TextCursorInput,
+  },
+  diagram: {
+    description: "Compound graphs with cycles, notes, layered layout, and canvas interaction.",
+    href: statechartRouter(),
+    icon: Network,
+  },
+  pdf: {
+    description: "PDF rendering, page geometry, and composable page surfaces.",
+    href: pdfViewerRouter(),
+    icon: FileText,
+  },
+  editor: {
+    description: "Native rich-text editing, Markdown, and extensible document blocks.",
+    href: editorRouter(),
+    icon: FileText,
+  },
+  "code-editor": {
     description: "Code editing, syntax highlighting, and live diagnostics in a versioned document.",
     href: codeEditorRouter(),
     icon: Braces,
   },
-  {
-    name: "@foldworks/codebase",
-    category: "Application primitive",
-    description: "A live repository workbench for documentation, source, history, and Git diffs.",
-    href: codebaseRouter(),
-    icon: FolderGit2,
-  },
-  {
-    name: "@foldworks/diff-viewer",
-    category: "Application primitive",
-    description: "Review-grade unified and split diffs with line selection, threads, and progress.",
-    href: diffViewerRouter(),
-    icon: FileDiff,
-  },
-  {
-    name: "@foldworks/data-table",
-    category: "Application primitive",
-    description:
-      "Resource-first CRUD tables with links, sorting, bulk selection, density, and pinned columns.",
-    href: dataTablePath(),
-    icon: Table2,
-  },
-  {
-    name: "@foldworks/data-grid",
-    category: "Application primitive",
-    description:
-      "Pinned columns, virtualized rows, ordering, range selection, copy/paste, and editing.",
-    href: dataGridPath(),
-    icon: Table2,
-  },
-  {
-    name: "@foldworks/query-builder",
-    category: "Application primitive",
-    description: "Recursive conditions with validation and structured drag and drop.",
-    href: queryBuilderRouter(),
-    icon: ListFilter,
-  },
-  {
-    name: "@foldworks/outliner",
-    category: "Application primitive",
+  outliner: {
     description:
       "Keyboard-first outlines with natural indenting, folding, hoisting, and drag and drop.",
     href: outlinerRouter(),
     icon: ListTree,
   },
-  {
-    name: "@foldworks/text-intelligence",
-    category: "Foundation",
-    description: "Hover, completion, highlighting, and diagnostics shared by text surfaces.",
-    href: codeEditorRouter(),
-    icon: TextCursorInput,
+  "data-table": {
+    description:
+      "Resource-first CRUD tables with links, sorting, bulk selection, density, and pinned columns.",
+    href: dataTablePath(),
+    icon: Table2,
   },
-  {
-    name: "@foldworks/form-builder",
-    category: "Application primitive",
+  "data-grid": {
+    description:
+      "Pinned columns, virtualized rows, ordering, range selection, copy/paste, and editing.",
+    href: dataGridPath(),
+    icon: Table2,
+  },
+  "query-builder": {
+    description: "Recursive conditions with validation and structured drag and drop.",
+    href: queryBuilderRouter(),
+    icon: ListFilter,
+  },
+  "form-builder": {
     description: "Multi-page, multi-actor forms with editable and runnable modes.",
     href: formBuilderPath("Handoff", "Editor"),
     icon: ListChecks,
   },
-  {
-    name: "@foldworks/diagram",
-    category: "Foundation",
-    description: "Compound graphs with cycles, notes, layered layout, and canvas interaction.",
-    href: statechartRouter(),
-    icon: Network,
-  },
-  {
-    name: "@foldworks/workflow",
-    category: "Application primitive",
+  workflow: {
     description: "Structured workflows with branches, layout, history, and inspectors.",
     href: workflowPath("Vertical"),
     icon: Workflow,
   },
-  {
-    name: "@foldworks/pdf",
-    category: "Foundation",
-    description: "PDF rendering, page geometry, and composable page surfaces.",
-    href: pdfViewerRouter(),
-    icon: FileText,
+  "diff-viewer": {
+    description: "Review-grade unified and split diffs with line selection, threads, and progress.",
+    href: diffViewerRouter(),
+    icon: FileDiff,
   },
-  {
-    name: "@foldworks/pdf-annotator",
-    category: "Application primitive",
-    description: "Annotate and export real PDF documents.",
-    href: pdfAnnotatorRouter(),
-    icon: FileText,
-  },
-  {
-    name: "@foldworks/pdf-viewer",
-    category: "Application primitive",
+  "pdf-viewer": {
     description: "Read PDF pages with navigation, zoom, and overlay hotspots.",
     href: pdfViewerRouter(),
     icon: FileText,
   },
-  {
-    name: "@foldworks/history",
-    category: "Foundation",
-    description: "Reusable undo, redo, and bounded document history for controlled models.",
-    href: workflowPath("Vertical"),
-    icon: History,
+  "pdf-annotator": {
+    description: "Annotate and export real PDF documents.",
+    href: pdfAnnotatorRouter(),
+    icon: FileText,
   },
-  {
-    name: "@foldworks/generative-ui",
-    category: "Application primitive",
+  agent: {
+    description:
+      "Composable chat UI with streaming conversations, tool states, approvals, cancellation, and retry.",
+    href: agentRouter(),
+    icon: Bot,
+  },
+  "generative-ui": {
     description: "Schema-checked agent interfaces rendered through a closed component catalog.",
     href: "#generative-ui",
     icon: Sparkles,
   },
-];
+  codebase: {
+    description: "A live repository workbench for documentation, source, history, and Git diffs.",
+    href: codebaseRouter(),
+    icon: FolderGit2,
+  },
+};
+
+const packageCount = layers.reduce((count, layer) => count + layer.packageIds.length, 0);
 
 const link = <Message>(
   label: string,
@@ -334,81 +294,78 @@ const sectionIntro = <Message>(
     ],
   );
 
-const comparison = <Message>(h: HtmlBuilder<Message>): Html =>
-  h.div(
-    [h.Class(className(styles.comparison))],
-    [
-      h.article(
-        [h.Class(className(styles.comparisonColumn))],
+const stack = <Message>(h: HtmlBuilder<Message>): Html =>
+  h.ol(
+    [h.Class(className(styles.stack)), h.AriaLabel("The Foldworks stack, from top to bottom")],
+    layers.map((layer) =>
+      h.li(
         [
-          h.h3(
-            [h.Class(className(styles.comparisonHeading))],
-            [Icon.view({ icon: Blocks, size: 18 }, h), "UI components"],
-          ),
-          h.p(
-            [h.Class(className(styles.comparisonText))],
-            [
-              "Focused building blocks that own presentation and a small interaction contract. Compose them to create a consistent interface.",
-            ],
-          ),
-          h.div(
-            [h.Class(className(styles.chips))],
-            ["Button", "Dialog", "Select", "Table", "Tooltip"].map((name) =>
-              h.span([h.Class(className(styles.chip))], [name]),
+          h.Class(
+            className(
+              styles.stackLayer,
+              layer.id === "Workbenches" && styles.stackLayerTop,
+              layer.id === "Tokens" && styles.stackLayerBase,
             ),
           ),
         ],
-      ),
-      h.article(
-        [h.Class(className(styles.comparisonColumn, styles.comparisonApplication))],
         [
-          h.h3(
-            [h.Class(className(styles.comparisonHeading))],
-            [Icon.view({ icon: Layers3, size: 18 }, h), "Application primitives"],
-          ),
-          h.p(
-            [h.Class(className(styles.comparisonText))],
+          h.span([h.Class(className(styles.stackIndex))], [layer.index]),
+          h.div(
+            [h.Class(className(styles.stackCopy))],
             [
-              "Complete product capabilities with domain models, messages, updates, accessibility, and composition points—not just a styled surface.",
+              h.h3([h.Class(className(styles.stackName))], [layer.title]),
+              h.p([h.Class(className(styles.stackSummary))], [layer.summary]),
             ],
           ),
           h.div(
-            [h.Class(className(styles.chips))],
-            [
-              "DataTable",
-              "DataGrid",
-              "QueryBuilder",
-              "Outliner",
-              "FormBuilder",
-              "Workflow",
-              "PdfAnnotator",
-              "PdfViewer",
-            ].map((name) => h.span([h.Class(className(styles.chip))], [name])),
+            [h.Class(className(styles.stackChips))],
+            layer.examples.map((name) => h.span([h.Class(className(styles.chip))], [name])),
           ),
         ],
       ),
-    ],
+    ),
   );
 
-const packageCard = <Message>(item: Package, h: HtmlBuilder<Message>): Html =>
+const packageCard = <Message>(id: string, item: Package, h: HtmlBuilder<Message>): Html =>
   h.a(
     [
       h.Class(className(styles.packageCard)),
       h.Href(item.href),
-      h.AriaLabel(`${item.name}: ${item.description}`),
+      h.AriaLabel(`@foldworks/${id}: ${item.description}`),
     ],
     [
       h.span(
         [h.Class(className(styles.packageIcon))],
         [Icon.view({ icon: item.icon, size: 17 }, h)],
       ),
-      h.span([h.Class(className(styles.packageCategory))], [item.category]),
       h.span(
         [h.Class(className(styles.packageName))],
-        [item.name, Icon.view({ icon: ArrowRight, size: 14 }, h)],
+        [`@foldworks/${id}`, Icon.view({ icon: ArrowRight, size: 14 }, h)],
       ),
       h.p([h.Class(className(styles.packageDescription))], [item.description]),
     ],
+  );
+
+const catalog = <Message>(h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class(className(styles.catalog))],
+    layers
+      .filter((layer) => layer.packageIds.length > 0)
+      .map((layer) =>
+        h.div(
+          [h.Class(className(styles.catalogGroup))],
+          [
+            h.h3([h.Class(className(styles.catalogHeading))], [layer.title]),
+            h.div(
+              [h.Class(className(styles.packageGrid))],
+              layer.packageIds.flatMap((id) => {
+                const item = packages[id];
+                return item === undefined ? [] : [packageCard(id, item, h)];
+              }),
+            ),
+          ],
+        ),
+      ),
   );
 
 const principle = <Message>(
@@ -499,25 +456,28 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                 [
                   h.div(
                     [h.Class(className(styles.eyebrow))],
-                    [Icon.view({ icon: Blocks, size: 15 }, h), "Foldkit + StyleX"],
+                    [
+                      Icon.view({ icon: Layers3, size: 15 }, h),
+                      "A standard library for Foldkit interfaces",
+                    ],
                   ),
                   h.h2(
                     [h.Class(className(styles.title))],
-                    ["Application primitives for ambitious teams."],
+                    ["The UI standard library, from tokens to workbenches."],
                   ),
                   h.p(
                     [h.Class(className(styles.lead))],
                     [
-                      "Foldworks is a collection of polished, controlled building blocks for ambitious web applications—from interface components to complete editors and structured workflows.",
+                      "Foldworks is a higher-order shadcn. It starts with the buttons, dialogs, and theme tokens you expect, then keeps going: grids, editors, outliners, diagrams, diff review, PDF annotation, and agent surfaces. Every layer shares one token contract, one state model, and the same accessibility bar.",
                     ],
                   ),
                   h.div(
                     [h.Class(className(styles.actions))],
                     [
                       link("Read the documentation", "/docs", "primary", h),
-                      link("Open the Workers workbench", workbenchRouter(), "primary", h),
-                      link("Try the agent playground", agentRouter(), "secondary", h),
                       link("Explore the UI system", uiKitRouter(), "secondary", h),
+                      link("Open the Workers workbench", workbenchRouter(), "secondary", h),
+                      link("Try the agent playground", agentRouter(), "secondary", h),
                       link(
                         "View on GitHub",
                         "https://github.com/bjacobso/foldworks",
@@ -531,21 +491,47 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                     [
                       h.span(
                         [h.Class(className(styles.metaItem))],
+                        [
+                          Icon.view({ icon: Layers3, size: 14 }, h),
+                          `${packageCount} packages, ${layers.length} layers`,
+                        ],
+                      ),
+                      h.span(
+                        [h.Class(className(styles.metaItem))],
+                        [Icon.view({ icon: Braces, size: 14 }, h), "Controlled state throughout"],
+                      ),
+                      h.span(
+                        [h.Class(className(styles.metaItem))],
                         [Icon.view({ icon: CheckCircle2, size: 14 }, h), "Accessible by default"],
-                      ),
-                      h.span(
-                        [h.Class(className(styles.metaItem))],
-                        [Icon.view({ icon: Braces, size: 14 }, h), "Controlled state"],
-                      ),
-                      h.span(
-                        [h.Class(className(styles.metaItem))],
-                        [Icon.view({ icon: Layers3, size: 14 }, h), "Themeable CSS variables"],
                       ),
                     ],
                   ),
                 ],
               ),
               componentPreview(h),
+            ],
+          ),
+
+          h.section(
+            [h.Class(className(styles.section)), h.AriaLabelledBy("stack-title")],
+            [
+              h.div(
+                [h.Class(className(styles.sectionIntro))],
+                [
+                  h.div([h.Class(className(styles.sectionLabel))], ["Top to bottom"]),
+                  h.h2(
+                    [h.Class(className(styles.sectionTitle)), h.Id("stack-title")],
+                    ["Component kits stop at the button. Foldworks keeps going."],
+                  ),
+                  h.p(
+                    [h.Class(className(styles.sectionDescription))],
+                    [
+                      "Component kits give you the bottom of the stack and leave the hard parts to you. Foldworks covers the whole stack, and each layer is built only from the layers beneath it, so your theme and your state model reach the data grid as surely as they reach the button.",
+                    ],
+                  ),
+                ],
+              ),
+              stack(h),
             ],
           ),
 
@@ -562,12 +548,12 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                   h.div([h.Class(className(styles.sectionLabel))], ["Generative UI"]),
                   h.h2(
                     [h.Class(className(styles.sectionTitle)), h.Id("generative-ui-title")],
-                    ["Agents choose from a catalog. Your application keeps control."],
+                    ["Agents choose from the library. Your application keeps control."],
                   ),
                   h.p(
                     [h.Class(className(styles.sectionDescription))],
                     [
-                      "The model returns JSON—not markup or event code. Effect Schema validates the contract, Foldkit renders registered components, and interactions return typed intents to the host.",
+                      "Because every layer has a typed contract, an agent can compose them too. The model returns JSON, not markup or event code. Effect Schema validates it, Foldkit renders registered components, and interactions return typed intents to the host.",
                     ],
                   ),
                 ],
@@ -577,61 +563,35 @@ export const view = (h: HtmlBuilder<Message>): Html =>
           ),
 
           h.section(
-            [h.Class(className(styles.section)), h.AriaLabelledBy("primitives-title")],
-            [
-              h.div(
-                [h.Class(className(styles.sectionIntro))],
-                [
-                  h.div([h.Class(className(styles.sectionLabel))], ["A useful boundary"]),
-                  h.h2(
-                    [h.Class(className(styles.sectionTitle)), h.Id("primitives-title")],
-                    ["Components compose the interface. Primitives run the application."],
-                  ),
-                  h.p(
-                    [h.Class(className(styles.sectionDescription))],
-                    [
-                      "Foldworks keeps low-level UI flexible while packaging the difficult behavior that every serious product eventually has to build.",
-                    ],
-                  ),
-                ],
-              ),
-              comparison(h),
-            ],
-          ),
-
-          h.section(
             [h.Class(className(styles.section)), h.AriaLabelledBy("packages-title")],
             [
               h.div(
                 [h.Class(className(styles.sectionIntro))],
                 [
-                  h.div([h.Class(className(styles.sectionLabel))], ["The collection"]),
+                  h.div([h.Class(className(styles.sectionLabel))], ["The library"]),
                   h.h2(
                     [h.Class(className(styles.sectionTitle)), h.Id("packages-title")],
-                    ["Start small. Compose upward."],
+                    ["Take one layer, or the whole stack."],
                   ),
                   h.p(
                     [h.Class(className(styles.sectionDescription))],
                     [
-                      "Each package stands on its own and shares the same state, accessibility, styling, and composition philosophy.",
+                      "Every package installs on its own and follows the same state, accessibility, styling, and composition rules. Each one links to a live example.",
                     ],
                   ),
                 ],
               ),
-              h.div(
-                [h.Class(className(styles.packageGrid))],
-                packages.map((item) => packageCard(item, h)),
-              ),
+              catalog(h),
             ],
           ),
 
           h.section(
-            [h.Class(className(styles.section)), h.AriaLabel("Built from first principles")],
+            [h.Class(className(styles.section)), h.AriaLabel("One contract at every layer")],
             [
               sectionIntro(
-                "Built from first principles",
-                "Predictable behavior without giving up design control.",
-                "Foldworks separates state, behavior, and styling so the same primitives can fit your product instead of dictating it.",
+                "One contract at every layer",
+                "Higher-order, without losing control.",
+                "The shadcn bargain still holds: you own the theme and the state, and the library supplies the hard behavior. Foldworks applies that bargain to whole applications.",
                 h,
               ),
               h.div(
@@ -639,20 +599,20 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                 [
                   principle(
                     Braces,
-                    "Foldkit behavior",
-                    "Models and messages make every state transition explicit, testable, and controlled by the host application.",
+                    "Your state, every time",
+                    "Every primitive is a Foldkit model, message, and update. A data grid is as controlled, testable, and replayable as a checkbox.",
                     h,
                   ),
                   principle(
                     Layers3,
-                    "StyleX styling",
-                    "Static styles and semantic CSS variables provide strong defaults with shadcn-like theme portability.",
+                    "Your tokens, every surface",
+                    "Semantic CSS variables and StyleX reach every layer. Switch from Shadcn to Polaris and the diff viewer, outliner, and PDF annotator change with the buttons.",
                     h,
                   ),
                   principle(
                     CheckCircle2,
-                    "Product-ready details",
-                    "Keyboard interaction, focus management, validation, history, and responsive behavior ship together.",
+                    "The details included",
+                    "Keyboard commands, focus management, undo history, validation, and responsive behavior ship with each primitive.",
                     h,
                   ),
                 ],

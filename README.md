@@ -1,61 +1,107 @@
 # Foldworks
 
-Polished application primitives for Foldkit and StyleX.
+The UI standard library for Foldkit and StyleX, from design tokens to complete
+workbenches.
 
 **[Explore Foldworks](https://foldworks.dev)**
 
-Foldworks is an umbrella collection of reusable packages for building rich,
-accessible application interfaces with Foldkit:
+Foldworks is a higher-order shadcn. It starts where component kits start, with
+semantic tokens, themes, buttons, dialogs, and menus, then keeps going up the
+stack to the parts every serious product eventually builds by hand: data grids,
+rich-text and code editors, outliners, query and form builders, diagrams, diff
+review, PDF annotation, and agent conversations.
 
-- [`@foldworks/codebase`](./packages/codebase) — a live, read-only web workbench
-  for repository documentation, source, history, and staged or unstaged Git diffs.
-- [`@foldworks/diff-viewer`](./packages/diff-viewer) — a controlled unified and
-  split diff renderer with line selection for code review workflows.
-- [`@foldworks/editor`](./packages/editor) — a native rich-text editor with
-  Markdown import/export, draggable blocks, and application-defined Foldkit views.
-- [`@foldworks/ui`](./packages/ui) — opinionated application chrome, semantic
-  design tokens, and accessible visual primitives.
-- [`@foldworks/agent`](./packages/agent) — a provider-neutral conversation
-  runtime and chat UI with streaming text, tool states, permission checkpoints,
-  and retry.
-- [`@foldworks/generative-ui`](./packages/generative-ui) — an Effect
-  Schema-first contract for agent-generated component graphs, a safe Foldkit
-  renderer, Effect AI structured generation, and an MCP Apps tool bridge.
-- [`@foldworks/data-table`](./packages/data-table) — a resource-first CRUD
-  table with semantic markup, sortable columns, bulk row selection, resource
-  links, density controls, and pinned columns.
-- [`@foldworks/data-grid`](./packages/data-grid) — a typed data-grid core with
-  sorting, resizing, ordering, pinned columns, row virtualization, range
-  selection, clipboard copy/paste, editing, and an accessible view.
-- [`@foldworks/code-editor`](./packages/code-editor) — a native Foldkit editor with
-  highlighting, undo/redo, find/replace, diagnostics, and shared implementation
-  contracts. See the [architecture](./packages/code-editor/NATIVE.md).
-- [`@foldworks/query-builder`](./packages/query-builder) — configurable query
-  documents, editing, validation, rendering, and rule reordering.
-- [`@foldworks/outliner`](./packages/outliner) — a keyboard-first outliner
-  with natural indenting, reordering, folding, hoisting, and drag and drop.
-- [`@foldworks/text-intelligence`](./packages/text-intelligence) — reusable host-provided
-  `@mentions` and `#tags`, plus the shared
-  vocabulary and popups for hover, completion, highlighting, and diagnostics
-  on text surfaces.
-- [`@foldworks/form-builder`](./packages/form-builder) — section-first form
-  documents, immutable operations, registries, and drag-and-drop primitives.
-- [`@foldworks/diagram`](./packages/diagram) — compound directed-graph
+Every layer is built only from the layers beneath it and follows the same
+contract:
+
+- **Your state.** Every primitive is a Foldkit model, message, and update. A
+  data grid is as controlled, testable, and replayable as a checkbox.
+- **Your tokens.** Semantic CSS variables and StyleX reach every layer. Change
+  the theme and the diff viewer, outliner, and PDF annotator change with the
+  buttons.
+- **The details included.** Keyboard commands, focus management, undo history,
+  validation, and responsive behavior ship with each primitive.
+- **One package at a time.** Every package installs on its own. Take one layer
+  or the whole stack.
+
+## The stack
+
+| Layer                      | What it provides                                                                        | Packages                                                                                  |
+| -------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 05. Workbenches            | Complete tools composed from the layers below                                           | `agent`, `generative-ui`, `codebase`                                                      |
+| 04. Application primitives | Product surfaces with models, messages, and updates included                            | `editor`, `code-editor`, `outliner`, `data-table`, `data-grid`, `query-builder`, and more |
+| 03. Behaviors              | Headless engines that more than one surface shares                                      | `keyboard`, `history`, `text-intelligence`, `diagram`, `pdf`                              |
+| 02. Components             | Accessible controls, overlays, and application chrome                                   | `ui`, `sidebar`                                                                           |
+| 01. Tokens                 | Semantic CSS variables in light and dark, with Shadcn, Polaris, Apple, and other themes | `ui`                                                                                      |
+
+### Components
+
+- [`@foldworks/ui`](./packages/ui): semantic design tokens, themes,
+  application chrome, and accessible controls, overlays, menus, trees, split
+  views, and feedback.
+- [`@foldworks/sidebar`](./packages/sidebar): collapsible application chrome,
+  grouped navigation, inset content, and responsive mobile drawer behavior.
+
+### Behaviors
+
+- [`@foldworks/keyboard`](./packages/keyboard): typed, scoped command
+  definitions and platform-aware shortcuts with Foldkit lifecycles.
+- [`@foldworks/history`](./packages/history): immutable undo/redo history for
+  application-owned documents.
+- [`@foldworks/text-intelligence`](./packages/text-intelligence): reusable
+  host-provided `@mentions` and `#tags`, plus the shared vocabulary and popups
+  for hover, completion, highlighting, and diagnostics on text surfaces.
+- [`@foldworks/diagram`](./packages/diagram): compound directed-graph
   documents with ports, notes, and cycles; layered and freeform layout
   strategies; and a canvas interaction model for selection, dragging,
   connecting, panning, and zoom.
-- [`@foldworks/workflow`](./packages/workflow) — recursive workflows,
+- [`@foldworks/pdf`](./packages/pdf): PDF page rendering, geometry, and
+  composable surfaces.
+
+### Application primitives
+
+- [`@foldworks/editor`](./packages/editor): a native rich-text editor with
+  Markdown import/export, draggable blocks, and application-defined Foldkit views.
+- [`@foldworks/code-editor`](./packages/code-editor): a native Foldkit editor
+  with highlighting, undo/redo, find/replace, diagnostics, and shared
+  implementation contracts. See the [architecture](./packages/code-editor/NATIVE.md).
+- [`@foldworks/outliner`](./packages/outliner): a keyboard-first outliner
+  with natural indenting, reordering, folding, hoisting, and drag and drop.
+- [`@foldworks/data-table`](./packages/data-table): a resource-first CRUD
+  table with semantic markup, sortable columns, bulk row selection, resource
+  links, density controls, and pinned columns.
+- [`@foldworks/data-grid`](./packages/data-grid): a typed data-grid core with
+  sorting, resizing, ordering, pinned columns, row virtualization, range
+  selection, clipboard copy/paste, editing, and an accessible view.
+- [`@foldworks/query-builder`](./packages/query-builder): configurable query
+  documents, editing, validation, rendering, and rule reordering.
+- [`@foldworks/form-builder`](./packages/form-builder): section-first form
+  documents, immutable operations, registries, and drag-and-drop primitives.
+- [`@foldworks/workflow`](./packages/workflow): recursive workflows,
   branch-aware operations, layout, and drag-and-drop primitives, built on the
   `@foldworks/diagram` scene contract.
-- [`@foldworks/pdf`](./packages/pdf) — PDF page rendering, geometry, and composable surfaces.
-- [`@foldworks/pdf-viewer`](./packages/pdf-viewer) — read-only PDF viewing with overlay hotspots.
-- [`@foldworks/pdf-annotator`](./packages/pdf-annotator) — multi-page PDF
+- [`@foldworks/diff-viewer`](./packages/diff-viewer): a controlled unified and
+  split diff renderer with line selection for code review workflows.
+- [`@foldworks/pdf-viewer`](./packages/pdf-viewer): read-only PDF viewing
+  with overlay hotspots.
+- [`@foldworks/pdf-annotator`](./packages/pdf-annotator): multi-page PDF
   annotation authoring with AcroForm inspection, versioned JSON, custom data,
   zoom-aware editing, and interactive PDF export.
-- [`@foldworks/sidebar`](./packages/sidebar) — collapsible application chrome,
-  grouped navigation, inset content, and responsive mobile drawer behavior.
-- [`@foldworks/history`](./packages/history) — immutable undo/redo history for
-  application-owned documents.
+
+### Workbenches
+
+- [`@foldworks/agent`](./packages/agent): a provider-neutral conversation
+  runtime and chat UI with streaming text, tool states, permission checkpoints,
+  and retry.
+- [`@foldworks/generative-ui`](./packages/generative-ui): an Effect
+  Schema-first contract for agent-generated component graphs, a safe Foldkit
+  renderer, Effect AI structured generation, and an MCP Apps tool bridge.
+  Because every layer has a typed contract, agents can compose the library too.
+- [`@foldworks/codebase`](./packages/codebase): a live, read-only web
+  workbench for repository documentation, source, history, and staged or
+  unstaged Git diffs.
+
+## Live examples
 
 The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
 suite. Its `/docs` website generates searchable references for every public package
@@ -81,7 +127,7 @@ rows and the code editor, placeholder rows, structure policy, a structural tree
 diff, and a lazily loaded value tree.
 
 See [planned work-surface primitives](./docs/planned-primitives.md) for the
-next areas to explore beyond the current package suite.
+next layers of the library to explore.
 
 ## WorldVM
 

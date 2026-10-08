@@ -347,58 +347,76 @@ export const styles = stylex.create({
     marginBottom: 0,
     marginTop: "12px",
   },
-  comparison: {
+  stack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+    listStyle: "none",
+    margin: 0,
+    padding: 0,
+  },
+  stackLayer: {
+    alignItems: "center",
     backgroundColor: "var(--card)",
     borderColor: "var(--border)",
-    borderRadius: "calc(var(--radius) + 4px)",
+    borderRadius: "var(--radius)",
     borderStyle: "solid",
     borderWidth: "1px",
+    columnGap: "20px",
     display: "grid",
     gridTemplateColumns: {
-      default: "1fr 1fr",
-      "@media (max-width: 760px)": "1fr",
+      default: "auto minmax(220px, 0.9fr) minmax(0, 1.4fr)",
+      "@media (max-width: 860px)": "auto minmax(0, 1fr)",
     },
-    overflow: "hidden",
-  },
-  comparisonColumn: {
-    padding: "28px",
-  },
-  comparisonApplication: {
-    backgroundColor: "color-mix(in oklch, var(--primary) 5%, var(--card))",
-    borderLeftColor: {
-      default: "var(--border)",
-      "@media (max-width: 760px)": "transparent",
+    padding: {
+      default: "18px 22px",
+      "@media (max-width: 620px)": "16px",
     },
-    borderLeftStyle: "solid",
-    borderLeftWidth: "1px",
-    borderTopColor: {
-      default: "transparent",
-      "@media (max-width: 760px)": "var(--border)",
-    },
-    borderTopStyle: "solid",
-    borderTopWidth: "1px",
+    rowGap: "14px",
   },
-  comparisonHeading: {
-    alignItems: "center",
+  stackLayerTop: {
+    backgroundColor: "color-mix(in oklch, var(--primary) 7%, var(--card))",
+    borderColor: "color-mix(in oklch, var(--primary) 30%, var(--border))",
+  },
+  stackLayerBase: {
+    backgroundColor: "color-mix(in oklch, var(--foreground) 4%, var(--card))",
+  },
+  stackIndex: {
+    alignSelf: "start",
+    color: "var(--primary)",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+    fontSize: "12px",
+    fontWeight: 650,
+    paddingTop: "2px",
+  },
+  stackCopy: {
+    minWidth: 0,
+  },
+  stackName: {
     color: "var(--foreground)",
-    display: "flex",
     fontSize: "15px",
     fontWeight: 650,
-    gap: "9px",
     margin: 0,
   },
-  comparisonText: {
+  stackSummary: {
     color: "var(--muted-foreground)",
-    fontSize: "13px",
-    lineHeight: 1.6,
+    fontSize: "12px",
+    lineHeight: 1.55,
     marginBottom: 0,
-    marginTop: "12px",
+    marginTop: "4px",
   },
-  chips: {
+  stackChips: {
     display: "flex",
     flexWrap: "wrap",
-    gap: "7px",
-    marginTop: "20px",
+    gap: "6px",
+    gridColumn: {
+      default: "auto",
+      "@media (max-width: 860px)": "2",
+    },
+    justifyContent: {
+      default: "flex-end",
+      "@media (max-width: 860px)": "flex-start",
+    },
   },
   chip: {
     backgroundColor: "var(--secondary)",
@@ -410,6 +428,24 @@ export const styles = stylex.create({
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
     fontSize: "11px",
     padding: "6px 9px",
+  },
+  catalog: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "28px",
+  },
+  catalogGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  catalogHeading: {
+    color: "var(--muted-foreground)",
+    fontSize: "11px",
+    fontWeight: 650,
+    letterSpacing: "0.08em",
+    margin: 0,
+    textTransform: "uppercase",
   },
   packageGrid: {
     display: "grid",
@@ -432,7 +468,7 @@ export const styles = stylex.create({
     color: "var(--foreground)",
     display: "flex",
     flexDirection: "column",
-    minHeight: "180px",
+    minHeight: "156px",
     padding: "20px",
     textDecoration: "none",
     transition: "background-color 140ms ease, border-color 140ms ease, transform 140ms ease",
@@ -451,14 +487,6 @@ export const styles = stylex.create({
     justifyContent: "center",
     width: "34px",
   },
-  packageCategory: {
-    color: "var(--muted-foreground)",
-    fontSize: "10px",
-    fontWeight: 600,
-    letterSpacing: "0.06em",
-    marginTop: "22px",
-    textTransform: "uppercase",
-  },
   packageName: {
     alignItems: "center",
     display: "flex",
@@ -467,7 +495,7 @@ export const styles = stylex.create({
     fontWeight: 650,
     gap: "6px",
     justifyContent: "space-between",
-    marginTop: "7px",
+    marginTop: "18px",
   },
   packageDescription: {
     color: "var(--muted-foreground)",
