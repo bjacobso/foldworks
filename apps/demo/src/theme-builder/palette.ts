@@ -1,5 +1,12 @@
 import { oklch, parseColor, readableForeground, rgbToOklch } from "./color";
-import { modes, surfaceRadii, type Mode, type Tokens, type ModeTokens } from "./contract";
+import {
+  modes,
+  reactiveBaseTokens,
+  surfaceRadii,
+  type Mode,
+  type Tokens,
+  type ModeTokens,
+} from "./contract";
 import type { WorkingTheme } from "./model";
 
 export const fontStacks = {
@@ -48,10 +55,10 @@ export const generatePalette = (theme: WorkingTheme, mode: Mode): Tokens => {
       : theme.primary;
     Object.assign(result, {
       primary,
-      "primary-foreground": readableForeground(primary),
+      "primary-foreground": readableForeground(primary, result.background || base.background),
       ring: primary,
       "sidebar-primary": primary,
-      "sidebar-primary-foreground": readableForeground(primary),
+      "sidebar-primary-foreground": readableForeground(primary, result.sidebar || base.sidebar),
       "sidebar-ring": primary,
     });
   }
@@ -73,6 +80,8 @@ export const generatePalette = (theme: WorkingTheme, mode: Mode): Tokens => {
     result["foldworks-ui-selection"] = oklch(dark ? 0.28 : 0.95, Math.min(c, 0.025), h);
     result["foldworks-ui-selection-foreground"] = oklch(dark ? 0.9 : 0.3, Math.min(c, 0.07), h);
     result["foldworks-ui-selection-border"] = primary;
+    result["foldworks-ui-drop-target"] = oklch(dark ? 0.24 : 0.97, Math.min(c, 0.02), h);
+    result["foldworks-ui-drop-target-active"] = oklch(dark ? 0.32 : 0.93, Math.min(c, 0.04), h);
     result["foldworks-ui-drop-target-border"] = primary;
     result["foldworks-ui-drop-target-active-border"] = primary;
   }
@@ -127,12 +136,13 @@ export const resolveTheme = (theme: WorkingTheme): ModeTokens => {
     };
     if (theme.radius !== null) {
       tokens.radius = `${theme.radius}rem`;
-      tokens["radius-sm"] = `${theme.radius * 0.6}rem`;
-      tokens["radius-md"] = `${theme.radius * 0.8}rem`;
+      tokens["radius-sm"] = `${Number((theme.radius * 0.6).toFixed(4))}rem`;
+      tokens["radius-md"] = `${Number((theme.radius * 0.8).toFixed(4))}rem`;
       tokens["radius-lg"] = tokens.radius;
-      tokens["radius-xl"] = `${theme.radius * 1.4}rem`;
+      tokens["radius-xl"] = `${Number((theme.radius * 1.4).toFixed(4))}rem`;
       for (const surface of surfaceRadii)
-        tokens[surface] = `${theme.radius * (surface === "radius-button-sm" ? 0.8 : 1)}rem`;
+        tokens[surface] =
+          `${Number((theme.radius * (surface === "radius-button-sm" ? 0.8 : 1)).toFixed(4))}rem`;
     }
     Object.assign(tokens, theme.radii);
     if (theme.font) tokens["font-sans"] = theme.font;
@@ -146,7 +156,19 @@ export const resolveTheme = (theme: WorkingTheme): ModeTokens => {
         "button-outline-surface": theme.outlined ? "transparent" : "var(--secondary)",
         "button-outline-shadow": theme.outlined ? "none" : "var(--shadow-card)",
       });
-    return { ...tokens, ...theme.overrides[mode] };
+    const resolved = { ...tokens, ...theme.overrides[mode] };
+    const changed = new Set(
+      Object.keys(resolved).filter((name) => resolved[name] !== theme.baseline[mode][name]),
+    );
+    for (const [name, formula] of Object.entries(reactiveBaseTokens)) {
+      const dependencies = Array.from(formula.matchAll(/var\(--([\w-]+)\)/g), (match) => match[1]!);
+      if (
+        dependencies.some((dependency) => changed.has(dependency)) &&
+        !theme.overrides[mode][name]
+      )
+        resolved[name] = formula;
+    }
+    return resolved;
   };
   return { light: resolve(modes[0]), dark: resolve(modes[1]) };
 };

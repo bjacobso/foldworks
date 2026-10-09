@@ -30,6 +30,10 @@ import {
 import { Model as OutlinerDemoModel, initialModel as initialOutliner } from "../outliner/model";
 import { ThemeName, ThemePreference, type ThemeState } from "../theme";
 import { Model as PdfViewerDemoModel, initialModel as initialPdfViewer } from "../pdf-viewer/model";
+import {
+  Model as ThemeBuilderModel,
+  initialModel as initialThemeBuilder,
+} from "../theme-builder/model";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
 import { Model as StatechartModel, initialModel as initialStatechart } from "../statechart/model";
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
@@ -61,6 +65,7 @@ export const Model = S.Struct({
   editor: ArticleEditor.Model,
   sidebar: Sidebar.Model,
   uiKit: UiKitModel,
+  themeBuilder: ThemeBuilderModel,
   themeName: ThemeName,
   themePreference: ThemePreference,
   systemIsDark: S.Boolean,
@@ -102,8 +107,9 @@ export const init = (
     }),
     pdfViewerDemo: initialPdfViewer,
     editor: initialEditor(),
-    sidebar: Sidebar.init({ id: "foldworks-sidebar" }),
+    sidebar: Sidebar.init({ id: "foldworks-sidebar", defaultCollapsed: route._tag === "Theme" }),
     uiKit: initialUiKit,
+    themeBuilder: initialThemeBuilder(),
     themeName: theme.name,
     themePreference: theme.preference,
     systemIsDark: theme.systemIsDark,

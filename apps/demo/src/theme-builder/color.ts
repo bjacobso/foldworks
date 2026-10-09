@@ -32,8 +32,15 @@ export const oklch = (l: number, c: number, h: number): string =>
 /** Supported editable syntax is hex, RGB(A), and OKLCH, including CSS percentage channels. */
 export const parseColor = (value: string): RGB | undefined => {
   const text = value.trim().toLowerCase();
-  if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/.test(text)) {
-    const hex = text.length === 4 ? [...text.slice(1)].map((x) => x + x).join("") : text.slice(1);
+  if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(text)) {
+    const hex =
+      text.length <= 5
+        ? text
+            .slice(1)
+            .split("")
+            .map((x) => x + x)
+            .join("")
+        : text.slice(1);
     return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as unknown as RGB;
   }
   const match = /^(oklch|rgba?|color)\(([^)]+)\)$/.exec(text);
@@ -43,7 +50,14 @@ export const parseColor = (value: string): RGB | undefined => {
     .split(/\s*[,/]\s*|\s+/)
     .filter(Boolean);
   if (parts.length < 3 || parts.length > 4) return undefined;
+  if (parts.some((part) => !/^[+-]?(?:\d*\.?\d+)(?:e[+-]?\d+)?(?:%|deg)?$/.test(part)))
+    return undefined;
+  if (parts.length === 4 && match[1] === "oklch" && !match[2]!.includes("/")) return undefined;
   const channels = parts.map((x) => Number(x.replace(/%|deg/g, "")));
+  if (parts.length === 4) {
+    const alpha = parts[3]!.endsWith("%") ? channels[3]! / 100 : channels[3]!;
+    if (alpha < 0 || alpha > 1) return undefined;
+  }
   if (channels.some((x) => !Number.isFinite(x))) return undefined;
   if (match[1] === "oklch") {
     const [l, c, h] = channels as [number, number, number];
@@ -70,17 +84,45 @@ export const toHex = (value: string): string => {
 };
 export const luminance = (rgb: RGB): number =>
   linear(rgb[0]) * 0.2126 + linear(rgb[1]) * 0.7152 + linear(rgb[2]) * 0.0722;
-export const contrast = (foreground: string, background: string): number | undefined => {
-  const fg = parseColor(foreground),
-    bg = parseColor(background);
+const alpha = (value: string): number => {
+  const text = value.trim();
+  if (text.startsWith("#")) {
+    return text.length === 5
+      ? parseInt(text[4]! + text[4]!, 16) / 255
+      : text.length === 9
+        ? parseInt(text.slice(7), 16) / 255
+        : 1;
+  }
+  const match = /(?:\/|,)[ ]*([\d.]+%?)[ ]*\)$/.exec(text);
+  if (!match) return 1;
+  // A comma is alpha only in the four-channel legacy rgba form.
+  if (!text.includes("/") && text.split(",").length !== 4) return 1;
+  return parseFloat(match[1]!) / (match[1]!.endsWith("%") ? 100 : 1);
+};
+const composite = (color: RGB, opacity: number, backing: RGB): RGB =>
+  color.map(
+    (channel, index) => channel * opacity + backing[index]! * (1 - opacity),
+  ) as unknown as RGB;
+export const contrast = (
+  foreground: string,
+  background: string,
+  backing?: string,
+): number | undefined => {
+  const fg = parseColor(foreground);
+  let bg = parseColor(background);
   if (!fg || !bg) return undefined;
-  const a = luminance(fg),
+  if (alpha(background) < 1) {
+    const underlay = backing ? parseColor(backing) : undefined;
+    if (!underlay || alpha(backing!) < 1) return undefined;
+    bg = composite(bg, alpha(background), underlay);
+  }
+  const a = luminance(composite(fg, alpha(foreground), bg)),
     b = luminance(bg);
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 };
 export const contrastLabel = (ratio: number | undefined): string =>
   ratio === undefined ? "—" : ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : `${ratio.toFixed(2)}:1`;
-export const readableForeground = (background: string): string =>
-  (contrast("#ffffff", background) ?? 0) >= (contrast("#000000", background) ?? 0)
+export const readableForeground = (background: string, backing = "#ffffff"): string =>
+  (contrast("#ffffff", background, backing) ?? 0) >= (contrast("#000000", background, backing) ?? 0)
     ? "#ffffff"
     : "#000000";

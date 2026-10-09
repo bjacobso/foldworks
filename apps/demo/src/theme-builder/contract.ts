@@ -44,6 +44,16 @@ export const tokenNames = [
     ),
   ]),
 ];
+/** Rebind dependent base formulas after a user changes their inputs. */
+export const reactiveBaseTokens = Object.fromEntries(
+  Array.from(baseCss.split("/* Compatibility aliases")[0]!.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g))
+    .filter(
+      (match) =>
+        match[2]!.includes("var(") &&
+        /^(primary-hover|ring-muted|destructive-surface|destructive-border)$/.test(match[1]!),
+    )
+    .map((match) => [match[1]!, match[2]!.trim()]),
+);
 export const surfaceRadii = [
   "radius-panel",
   "radius-button",

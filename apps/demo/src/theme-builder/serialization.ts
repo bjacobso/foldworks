@@ -32,7 +32,7 @@ export const validateTheme = (input: unknown): WorkingTheme | undefined => {
     for (const [name, value] of Object.entries(theme.radii)) {
       if (
         !surfaceRadii.some((surface) => surface === name) ||
-        !/^\d+(\.\d+)?(rem|px)$/.test(value) ||
+        !/^\d*\.?\d+(rem|px)$/.test(value) ||
         parseFloat(value) > (value.endsWith("px") ? 999 : 1.25)
       )
         return undefined;

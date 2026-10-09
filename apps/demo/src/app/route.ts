@@ -24,7 +24,8 @@ export type Demo =
   | "Outliner"
   | "PdfAnnotator"
   | "PdfViewer"
-  | "UiKit";
+  | "UiKit"
+  | "Theme";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
 export type WorkflowOrientation = typeof WorkflowOrientation.Type;
@@ -52,6 +53,7 @@ export const AppRoute = defineRouteUnion({
   PdfAnnotator: {},
   PdfViewer: {},
   UiKit: {},
+  Theme: {},
   NotFound: { path: S.String },
 });
 export type AppRoute = typeof AppRoute.Type;
@@ -122,6 +124,8 @@ export const formBuilderRouter = pipe(
   Route.mapTo(AppRoute.FormBuilder),
 );
 
+export const themeRouter = pipe(Route.literal("theme"), Route.mapTo(AppRoute.Theme));
+
 export const uiKitRouter = pipe(Route.literal("ui-kit"), Route.mapTo(AppRoute.UiKit));
 
 export const queryBuilderRouter = pipe(
@@ -159,6 +163,7 @@ const routeParser = Route.oneOf(
   pdfAnnotatorRouter,
   pdfViewerRouter,
   uiKitRouter,
+  themeRouter,
   homeRouter,
 );
 
@@ -198,6 +203,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "PdfAnnotator";
     case "PdfViewer":
       return "PdfViewer";
+    case "Theme":
+      return "Theme";
     case "UiKit":
       return "UiKit";
     case "Workflow":
