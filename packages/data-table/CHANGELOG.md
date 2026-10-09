@@ -1,5 +1,19 @@
 # @foldworks/data-table
 
+## 0.1.1
+
+### Patch Changes
+
+- 0d75dc8: Add a composable Loader for labeled inline and block loading states or groups
+  of decorative placeholders. Extend Skeleton with text and circle shapes, and
+  Spinner with sizes and decorative mode. Both support disabling animation and
+  respect reduced motion. Export loading config types and slot customization.
+  Use the shared Skeleton for data-table loading rows.
+- Updated dependencies [0d75dc8]
+- Updated dependencies [0f16fd8]
+- Updated dependencies [0f16fd8]
+  - @foldworks/ui@0.3.0
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @foldworks/agent
 
+## 0.2.0
+
+### Minor Changes
+
+- 0f16fd8: Name a permission checkpoint's decision with `allowLabel` and `denyLabel`, so a
+  proposed change can read “Accept” and “Discard” instead of “Allow once” and
+  “Deny”.
+
+### Patch Changes
+
+- Updated dependencies [0d75dc8]
+- Updated dependencies [0f16fd8]
+- Updated dependencies [0f16fd8]
+  - @foldworks/ui@0.3.0
+
 ## 0.1.0
 
 ### Minor Changes
