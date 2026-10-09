@@ -72,6 +72,14 @@ describe("theme color math", () => {
     expect(contrastLabel(4.49)).toBe("4.49:1");
     expect(contrast("bad", "#ffffff")).toBeUndefined();
   });
+  it("composites translucent foregrounds and requires a backing for translucent surfaces", () => {
+    expect(contrast("rgb(0 0 0 / 50%)", "#ffffff")).toBeCloseTo(3.977, 3);
+    expect(contrast("#ffffff", "rgb(0 0 0 / 50%)", "#ffffff")).toBeCloseTo(3.977, 3);
+    expect(contrast("#fff", "rgb(0 0 0 / 50%)")).toBeUndefined();
+    expect(toHex("#1234")).toBe("#112233");
+    expect(parseColor("oklch(.5 .1 120 .4)")).toBeUndefined();
+    expect(parseColor("rgb(0 0 0 / 150%)")).toBeUndefined();
+  });
   it("round-trips RGB through OKLCH and clips out-of-gamut channels", () => {
     for (const color of ["#e46731", "#2356af", "#148854", "#abcdef", "#111111"]) {
       const rgb = parseColor(color)!;
@@ -135,6 +143,8 @@ describe("theme palette and token resolution", () => {
       overrides: { light: { primary: "#ad3180" }, dark: {} },
     };
     expect(resolveTheme(theme).light.primary).toBe("#ad3180");
+    expect(resolveTheme(theme).light["primary-hover"]).toContain("var(--primary)");
+    expect(resolveTheme(theme).light["ring-muted"]).toContain("var(--ring)");
     expect(resolveTheme({ ...theme, overrides: { light: {}, dark: {} } }).light.primary).toBe(
       "#1256ab",
     );
@@ -208,6 +218,7 @@ describe("theme exports and serialization", () => {
     expect(hash).toMatch(/^#theme=[A-Za-z0-9_-]+$/);
     expect(themeFromHash(hash)).toEqual(theme);
     expect(deserializeTheme(serializeTheme(theme))).toEqual(theme);
+    expect(validateTheme({ ...theme, radii: { "radius-button": ".5rem" } })).toBeDefined();
     expect(restoredTheme(hash, serializeTheme(fixture()))).toEqual(theme);
     expect(restoredTheme("#theme=broken", serializeTheme(theme))).toEqual(theme);
   });
