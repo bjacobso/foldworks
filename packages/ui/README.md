@@ -198,6 +198,10 @@ above.
 
 ## Theme gallery
 
+[Build a theme](https://foldworks.dev/theme) by adjusting presets, colors, shape,
+typography, and elevation with a live preview. Copy the complete light and dark
+CSS, shadcn / Tailwind v4 variables, or JSON tokens into your app.
+
 In the demo, select a preset in the **Theme** menu. Shadcn is the neutral
 default with crisp monochrome surfaces; Blueprint is dense and
 enterprise-oriented; Office follows Fluent-like geometry; Fluent 2 maps the

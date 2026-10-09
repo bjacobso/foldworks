@@ -48,6 +48,7 @@ import { view as outlinerView } from "../outliner/view";
 import { view as pdfViewerView } from "../pdf-viewer/view";
 import { view as queryBuilderView } from "../query-builder/view";
 import { statechartSummary, view as statechartView } from "../statechart/view";
+import { view as themeBuilderView } from "../theme-builder/view";
 import { view as uiKitView } from "../ui-kit/view";
 import { allNodes } from "../workflow/graph";
 import {
@@ -69,6 +70,7 @@ import {
   queryBuilderRouter,
   statechartRouter,
   uiKitRouter,
+  themeRouter,
   workflowPath,
   type Demo,
 } from "./route";
@@ -357,8 +359,16 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
         isActive: demo === "UiKit",
       },
     ],
-    // Every page exposes the token layer through the theme picker in the header.
-    Tokens: [],
+    // The builder exposes the same token layer as the theme picker.
+    Tokens: [
+      {
+        id: "theme",
+        label: "Theme builder",
+        href: themeRouter(),
+        icon: Palette,
+        isActive: demo === "Theme",
+      },
+    ],
   };
   return [
     {
@@ -681,6 +691,13 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       },
       toParentMessage: (message) => Message.GotDocsMessage({ message }),
     });
+  if (demo === "Theme")
+    return h.submodel({
+      slotId: "theme-builder-content",
+      model: model.themeBuilder,
+      view: themeBuilderView,
+      toParentMessage: (message) => Message.GotThemeBuilderMessage({ message }),
+    });
   if (demo === "Home") return homeView(h);
   if (demo === "Editor")
     return h.submodel({
@@ -808,28 +825,30 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const documentTitle = (demo: Demo): string =>
-  Match.value(demo).pipe(
-    Match.when("Docs", () => "Documentation · Foldworks"),
-    Match.when("Editor", () => "Document editor · Foldworks"),
-    Match.when("Orchestrator", () => "Outline workspace · Foldworks"),
-    Match.when("Agent", () => "Interactive agent · Foldworks"),
-    Match.when("CodeEditor", () => "Code editor · Foldworks"),
-    Match.when("Codebase", () => "Codebase workbench · Foldworks"),
-    Match.when("DiffViewer", () => "Code review · Foldworks"),
-    Match.when("Workbench", () => "Workers workbench · Foldworks"),
-    Match.when("Home", () => "Foldworks · The UI standard library for Foldkit and StyleX"),
-    Match.when("DataTable", () => "Data table · Foldworks"),
-    Match.when("DataGrid", () => "Data grid · Foldworks"),
-    Match.when("FormBuilder", () => "Form builder · Foldworks"),
-    Match.when("QueryBuilder", () => "Query builder · Foldworks"),
-    Match.when("Outliner", () => "Outliner · Foldworks"),
-    Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
-    Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
-    Match.when("UiKit", () => "UI components · Foldworks"),
-    Match.when("Workflow", () => "Workflow · Foldworks"),
-    Match.when("Statechart", () => "Statechart · Foldworks"),
-    Match.exhaustive,
-  );
+  demo === "Theme"
+    ? "Theme builder · Foldworks"
+    : Match.value(demo).pipe(
+        Match.when("Docs", () => "Documentation · Foldworks"),
+        Match.when("Editor", () => "Document editor · Foldworks"),
+        Match.when("Orchestrator", () => "Outline workspace · Foldworks"),
+        Match.when("Agent", () => "Interactive agent · Foldworks"),
+        Match.when("CodeEditor", () => "Code editor · Foldworks"),
+        Match.when("Codebase", () => "Codebase workbench · Foldworks"),
+        Match.when("DiffViewer", () => "Code review · Foldworks"),
+        Match.when("Workbench", () => "Workers workbench · Foldworks"),
+        Match.when("Home", () => "Foldworks · The UI standard library for Foldkit and StyleX"),
+        Match.when("DataTable", () => "Data table · Foldworks"),
+        Match.when("DataGrid", () => "Data grid · Foldworks"),
+        Match.when("FormBuilder", () => "Form builder · Foldworks"),
+        Match.when("QueryBuilder", () => "Query builder · Foldworks"),
+        Match.when("Outliner", () => "Outliner · Foldworks"),
+        Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
+        Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
+        Match.when("UiKit", () => "UI components · Foldworks"),
+        Match.when("Workflow", () => "Workflow · Foldworks"),
+        Match.when("Statechart", () => "Statechart · Foldworks"),
+        Match.exhaustive,
+      );
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
   const demo = demoFromRoute(model.route);
@@ -855,7 +874,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
                   icon: Blocks,
                 },
                 groups: navigationGroups(model),
-                header: toolbar(model, h),
+                header: demo === "Theme" ? h.empty : toolbar(model, h),
                 content: content(model, h),
                 footer: {
                   title: "UI standard library",

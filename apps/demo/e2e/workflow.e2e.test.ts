@@ -1,3 +1,4 @@
+import { themeBuilderScenarios } from "./theme-builder.scenarios";
 import { docsScenarios } from "./docs.scenarios";
 import { desktopScenarios } from "./desktop.scenarios";
 import { mkdir, readFile } from "node:fs/promises";
@@ -1634,6 +1635,7 @@ describe.sequential("structured workflow builder", () => {
     await expect.poll(() => page.locator("html").getAttribute("class")).not.toContain("dark");
   }, 60_000);
 
+  themeBuilderScenarios(() => page, appUrl);
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
   dataGridCoverageScenarios(() => page, appUrl, screenshot);

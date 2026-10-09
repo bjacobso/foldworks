@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
           }),
           foldkit(),
         ],
+  test: { css: { include: [/base\.css/] } },
   optimizeDeps: {
     entries: ["src/entry.ts"],
     exclude: [

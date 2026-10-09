@@ -29,6 +29,8 @@ import { update as updateOutliner } from "../outliner/update";
 import { applyTheme, ThemeName } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
 import { update as updateStatechart } from "../statechart/update";
+import { update as updateThemeBuilder } from "../theme-builder/update";
+import { Message as ThemeBuilderMessage } from "../theme-builder/message";
 import { update as updateUiKit } from "../ui-kit/update";
 import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
@@ -150,14 +152,22 @@ const foldStatechart = Update.foldChild({
   toParentMessage: (message) => Message.GotStatechartMessage({ message }),
 });
 
-/** Commands to run when a route is entered, such as fitting the statechart
- *  canvas once it has a size. */
+const foldThemeBuilder = Update.foldChild({
+  update: updateThemeBuilder,
+  read: (model: Model) => Option.some(model.themeBuilder),
+  write: (model, themeBuilder) => ({ ...model, themeBuilder }),
+  toParentMessage: (message) => Message.GotThemeBuilderMessage({ message }),
+});
+
+/** Commands to run when a route is entered, after its child state exists. */
 export const enterRoute = (model: Model): UpdateReturn =>
-  model.route._tag === "Statechart"
-    ? foldStatechart(model, StatechartMessage.ClickedFit())
-    : model.route._tag === "PdfViewer"
-      ? enterPdfViewer(model)
-      : { model };
+  model.route._tag === "Theme"
+    ? foldThemeBuilder(model, ThemeBuilderMessage.Initialize())
+    : model.route._tag === "Statechart"
+      ? foldStatechart(model, StatechartMessage.ClickedFit())
+      : model.route._tag === "PdfViewer"
+        ? enterPdfViewer(model)
+        : { model };
 
 const foldCodeEditor = Update.foldChild({
   update: updateCodeEditor,
@@ -376,7 +386,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       }),
     ChangedUrl: ({ url }) => {
       const next = applyRoute(model, urlToAppRoute(url));
-      if (next.route._tag !== model.route._tag) return enterRoute(next);
+      if (next.route._tag !== model.route._tag || next.route._tag === "Theme")
+        return enterRoute(next);
       const docsPage = (route: Model["route"]) =>
         route._tag === "Docs"
           ? `${Option.getOrElse(route.package, () => "")}/${Option.getOrElse(route.module, () => "")}`
@@ -403,6 +414,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotPdfViewerDemoMessage: ({ message: childMessage }) => foldPdfViewer(model, childMessage),
     GotEditorMessage: ({ message }) => foldEditor(model, message),
     GotSidebarMessage: ({ message: childMessage }) => foldSidebar(model, childMessage),
+    GotThemeBuilderMessage: ({ message }) => foldThemeBuilder(model, message),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),
     GotGenerativeUiAction: ({ intent }) => ({
       model: evo(model, {
