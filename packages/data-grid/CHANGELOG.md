@@ -1,5 +1,14 @@
 # @foldworks/data-grid
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [0d75dc8]
+- Updated dependencies [0f16fd8]
+- Updated dependencies [0f16fd8]
+  - @foldworks/ui@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

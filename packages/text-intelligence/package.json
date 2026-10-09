@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/text-intelligence",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A shared vocabulary for hover, completion, semantic highlighting, and diagnostics on Foldkit text surfaces.",
   "license": "MIT",
   "author": "Ben Jacobson",
