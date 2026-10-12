@@ -59,7 +59,10 @@ describe("styled animation", () => {
       Animation.Message.Hid(),
     );
     expect(hidden.model.transitionState).toBe("LeaveStart");
-    const leaving = Animation.update(hidden.model, Animation.Message.CompletedWaitForPaint());
+    const leaving = Animation.update(
+      hidden.model,
+      Animation.Message.CompletedWaitForPaint({ generation: hidden.model.transitionGeneration }),
+    );
     expect(leaving.model.transitionState).toBe("LeaveAnimating");
     expect(leaving.outMessage).toBeUndefined();
     expect(leaving.commands).toHaveLength(1);

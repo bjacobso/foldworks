@@ -245,6 +245,7 @@ export const input = <Message>(config: InputConfig<Message>, h: HtmlBuilder<Mess
           ...(config.onInput === undefined ? {} : { onInput: config.onInput }),
           ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),
           ...(config.isReadOnly === undefined ? {} : { isReadOnly: config.isReadOnly }),
+          hasDescription: true,
           isInvalid: config.error !== undefined,
           toView: (attributes) =>
             h.div(rootAttrs(config, h, fieldStyles.root), [
@@ -343,6 +344,7 @@ export const textarea = <Message>(
       ...(config.onInput === undefined ? {} : { onInput: config.onInput }),
       ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),
       ...(config.isReadOnly === undefined ? {} : { isReadOnly: config.isReadOnly }),
+      hasDescription: true,
       isInvalid: config.error !== undefined,
       toView: (attributes) =>
         h.div(rootAttrs(config, h, fieldStyles.root), [
@@ -396,6 +398,7 @@ export const select = <Message>(config: SelectConfig<Message>, h: HtmlBuilder<Me
       ...(config.onChange === undefined ? {} : { onChange: config.onChange }),
       ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),
       ...(config.name === undefined ? {} : { name: config.name }),
+      hasDescription: true,
       isInvalid: config.error !== undefined,
       toView: (attributes) =>
         h.div(rootAttrs(config, h, fieldStyles.root), [

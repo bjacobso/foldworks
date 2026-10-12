@@ -50,7 +50,7 @@ const exported = async () => {
   return page.getByRole("textbox", { name: "Exported Markdown" }).inputValue();
 };
 
-describe.sequential("native document editor", () => {
+describe("native document editor", { concurrent: false }, () => {
   beforeAll(async () => {
     await build({
       root: appRoot,
@@ -94,6 +94,19 @@ describe.sequential("native document editor", () => {
   afterAll(async () => {
     await browser?.close();
     await server?.close();
+  });
+
+  it("ignores malformed custom-event messages and keeps native edits working", async () => {
+    await source("Before");
+    await root().evaluate((element) => {
+      for (const detail of [null, { _tag: "Input", text: 123 }]) {
+        element.dispatchEvent(new CustomEvent("foldworks-editor-message", { detail }));
+      }
+    });
+    expect(await exported()).toBe("Before\n");
+    await select(0, 6);
+    await page.keyboard.type(" after");
+    expect(await exported()).toBe("Before after\n");
   });
 
   it("shares mention and tag completion, retains keyboard focus, and accepts in the middle", async () => {

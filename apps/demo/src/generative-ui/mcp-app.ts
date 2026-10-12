@@ -1,8 +1,8 @@
 import { ActionIntent, Spec, render } from "@foldworks/generative-ui/core";
 import { connectMcpApp, sendActionIntent } from "@foldworks/generative-ui/mcp-app";
 import { foldworksRegistry } from "@foldworks/generative-ui/foldworks";
-import { Schema as S } from "effect";
-import { Port, Runtime, Subscription } from "foldkit";
+import { Effect, Schema as S } from "effect";
+import { Command, Port, Runtime, Subscription, type Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineMessageUnion } from "foldkit/message";
 
@@ -18,6 +18,7 @@ type Surface = typeof Surface.Type;
 const Message = defineMessageUnion({
   ReceivedSurface: { surface: Surface },
   TriggeredAction: { intent: ActionIntent },
+  CompletedEmitAction: {},
 });
 type Message = typeof Message.Type;
 
@@ -29,8 +30,15 @@ const ports = {
   outbound: { action: Port.outbound(ActionIntent) },
 };
 
+const EmitAction = Command.define("McpAppEmitAction", {
+  args: { intent: ActionIntent },
+  messages: [Message.CompletedEmitAction],
+  execute: ({ intent }) =>
+    Port.emit(ports.outbound.action, intent).pipe(Effect.as(Message.CompletedEmitAction())),
+});
+
 const subscriptions = Subscription.make<Model, Message>()(() => ({
-  surface: Port.subscription(ports.inbound.surface, (surface) =>
+  surface: Port.subscriptionEntry(ports.inbound.surface, (surface) =>
     Message.ReceivedSurface({ surface }),
   ),
 }));
@@ -61,12 +69,13 @@ const program = Runtime.makeElement({
   container: root,
   ports,
   init: () => ({ model: { surface: { _tag: "Waiting" as const } } }),
-  update: (model: Model, message: Message) =>
-    Message.match(message, {
+  update: (model: Model, message: Message): Update.Return<Model, Message> =>
+    Message.match<Update.Return<Model, Message>>(message, {
+      CompletedEmitAction: () => ({ model }),
       ReceivedSurface: ({ surface }) => ({ model: { surface } }),
       TriggeredAction: ({ intent }) => ({
         model,
-        commands: [Port.emit(ports.outbound.action, intent)],
+        commands: [EmitAction({ intent })],
       }),
     }),
   view,

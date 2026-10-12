@@ -55,7 +55,7 @@ fan-out, and string sizes.
 ## Generate with Effect AI
 
 `generate` uses the provider-neutral `LanguageModel` service from
-`effect/unstable/ai`. The same Effect Schema sent to the model decodes its
+`effect/ai`. The same Effect Schema sent to the model decodes its
 structured output.
 
 ```ts

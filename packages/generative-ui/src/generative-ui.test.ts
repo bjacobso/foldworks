@@ -1,5 +1,5 @@
 import { Context, Option, Result, Schema as S } from "effect";
-import { Tool } from "effect/unstable/ai";
+import { Tool } from "effect/ai";
 import { inertHtml as h, type Html } from "foldkit/html";
 import { Scene } from "foldkit/test";
 import { describe, expect, it } from "vitest";

@@ -13,6 +13,7 @@ export const orchestratorScenarios = (
     await page.goto(`${appUrl}/orchestrator`, { waitUntil: "networkidle" });
     const status = (id: string) => page.locator(`[data-thread-id="${id}"]`);
     await page.getByRole("button", { name: "Start task", exact: true }).first().click();
+    await poll(() => page.getByRole("button", { name: "Start task", exact: true }).count()).toBe(1);
     await page.getByRole("button", { name: "Start task", exact: true }).click();
     await page.getByRole("button", { name: "Collapse all branches", exact: true }).click();
     await poll(() => page.locator('[data-outline-row="launch"]').innerText()).toContain(

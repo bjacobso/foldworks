@@ -96,7 +96,7 @@ const centerQueryGroup = (groupId: string) =>
     .locator(`[data-query-group="${groupId}"]`)
     .evaluate((element) => element.scrollIntoView({ block: "center" }));
 
-describe.sequential("structured workflow builder", () => {
+describe("structured workflow builder", { concurrent: false }, () => {
   beforeAll(async () => {
     await mkdir(screenshotDirectory, { recursive: true });
     await build({

@@ -58,9 +58,7 @@ export const mountBlockView = (
           toParentMessage: (message) => Event.Action({ message }),
         }),
       subscriptions: Subscription.make<Block, Event>()(() => ({
-        node: Port.subscription(ports.inbound.node, (node) =>
-          Event.Changed({ node }),
-        ),
+        node: Port.subscriptionEntry(ports.inbound.node, (node) => Event.Changed({ node })),
       })),
     }),
   );

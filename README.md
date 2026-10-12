@@ -147,10 +147,30 @@ Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
 when they use them. Applications can supply compatible versions of these shared
 runtimes; each package's peer ranges state what it supports. The named `peers`
 catalog holds those ranges, while the default catalog and lockfile keep exact
-versions for builds and tests. Currently,
-`foldkit@0.156.0` and `@foldkit/ui@0.156.0` themselves require Effect
-`4.0.0-rc.112` exactly, so applications using those releases must use that
-Effect version. Applications consuming StyleX components must also configure
+versions for builds and tests. The tested combination is Effect `4.0.3`,
+Foldkit and `@foldkit/ui` `0.168.0`, `@foldkit/markdown` `0.14.3`, and
+`@foldkit/vite-plugin` `0.27.1`.
+
+Those Foldkit releases declare exact Effect `4.0.0` peers, including
+`@effect/platform-browser` for Foldkit and DevTools. This repository allows
+only `4.0.3` for those exact releases through scoped `peerDependencyRules` in
+`pnpm-workspace.yaml`. The Vite plugin's two exact `4.0.0` Node platform
+dependencies are overridden to `4.0.3` for that plugin release only. Alchemy's
+SQL companions are pinned to `4.0.3` within its declared ranges. Alchemy and
+its frontend adapter are upgraded together to `2.0.0-beta.80`, which uses
+Effect's new import paths. An offline deployment-import test runs through
+`@effect/vitest@4.0.3`; that adapter requires Vitest 5, so the test runner is
+`5.0.3`. Other peer requirements remain checked.
+
+This is a local compatibility exception, not an upstream peer guarantee.
+Applications installing these Foldkit releases with Effect `4.0.3` need the
+same scoped peer rules (or npm overrides). The clean-consumer check in
+`scripts/check-packages.mjs` demonstrates the npm configuration. Remove these
+exceptions when upgrading to releases whose peers accept the tested Effect
+version. The declaration-only Foldkit attribute patch is still carried for
+TypeScript performance; see the [upstream log](./docs/foldkit-upstream.md).
+
+Applications consuming StyleX components must also configure
 the StyleX transform and its cascade layers; see the
 [`@foldworks/ui` setup](./packages/ui/README.md#setup). To test views without
 the StyleX compiler, use `foldworksStylexTest()` from `@foldworks/ui/vite`; see

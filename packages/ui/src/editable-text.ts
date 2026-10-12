@@ -50,8 +50,7 @@ export const Focus = Command.define("FocusEditableText", {
     Dom.focus(`#${CSS.escape(id)}`).pipe(
       Effect.andThen(
         Effect.sync(() => {
-          if (select)
-            (document.getElementById(id) as HTMLInputElement | null)?.select();
+          if (select) (document.getElementById(id) as HTMLInputElement | null)?.select();
         }),
       ),
       Effect.ignore,
@@ -73,8 +72,7 @@ export const update = (
   policy: Policy,
 ): Update.ReturnWithOutMessage<Model, Message, OutMessage> => {
   if (message._tag === "Focused") return { model };
-  if (policy.isDisabled || policy.isReadOnly || policy.isPending)
-    return { model };
+  if (policy.isDisabled || policy.isReadOnly || policy.isPending) return { model };
   switch (message._tag) {
     case "Started": {
       const next: Model = {
@@ -87,10 +85,7 @@ export const update = (
     }
     case "Changed":
       return {
-        model:
-          model.mode === "edit"
-            ? { ...model, draft: message.value, error: "" }
-            : model,
+        model: model.mode === "edit" ? { ...model, draft: message.value, error: "" } : model,
       };
     case "Blurred":
       return policy.blur === "keep"
@@ -170,21 +165,16 @@ export const control = <Message>(
     ...(config.onBlur === undefined ? [] : [h.OnBlur(config.onBlur)]),
     h.OnKeyDownPreventDefault((key, mods) => {
       if (blocked) return Option.none();
-      if (key === "Escape" && config.escape !== "keep")
-        return Option.some(config.onCancel);
-      const policy =
-        config.enter ?? (config.multiline ? "mod-enter" : "commit");
+      if (key === "Escape" && config.escape !== "keep") return Option.some(config.onCancel);
+      const policy = config.enter ?? (config.multiline ? "mod-enter" : "commit");
       return key === "Enter" &&
-        (policy === "commit" ||
-          (policy === "mod-enter" && (mods.metaKey || mods.ctrlKey)))
+        (policy === "commit" || (policy === "mod-enter" && (mods.metaKey || mods.ctrlKey)))
         ? Option.some(config.onCommit)
         : Option.none();
     }),
   ];
   return h.div(sxAttrs(h, styles.column), [
-    config.multiline
-      ? h.textarea([...attrs, h.Rows(3)], [])
-      : h.input([...attrs, h.Type("text")]),
+    config.multiline ? h.textarea([...attrs, h.Rows(3)]) : h.input([...attrs, h.Type("text")]),
     h.span(
       [
         h.Id(`${config.id}-status`),
@@ -223,9 +213,7 @@ export const view = <ParentMessage>(
             h.AriaBusy(config.isPending === true),
             h.AriaLabel(`Edit ${config.label}`),
             h.Disabled(
-              config.isDisabled === true ||
-                config.isReadOnly === true ||
-                config.isPending === true,
+              config.isDisabled === true || config.isReadOnly === true || config.isPending === true,
             ),
             h.OnClick(send(Message.Started())),
             ...sxAttrs(h, styles.button),
@@ -233,12 +221,7 @@ export const view = <ParentMessage>(
           [config.value || "Click to edit"],
         ),
         ...(config.isPending
-          ? [
-              h.span(
-                [h.Role("status"), ...sxAttrs(h, styles.muted)],
-                ["Saving…"],
-              ),
-            ]
+          ? [h.span([h.Role("status"), ...sxAttrs(h, styles.muted)], ["Saving…"])]
           : []),
       ])
     : control(

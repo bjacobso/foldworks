@@ -2,7 +2,7 @@ import * as Desktop from "./desktop";
 import { Command, Update } from "foldkit";
 import { Effect, Option, Schema as S } from "effect";
 import { CodeBlock, Stateful } from "@foldworks/ui";
-import { evo } from "foldkit/struct";
+import { modifyFields } from "foldkit/struct";
 
 import { Message } from "./message";
 import { catalogSnippet, type Model } from "./model";
@@ -200,116 +200,116 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     GotComboboxMessage: ({ message }) => foldCombobox(model, message),
     GotMultiComboboxMessage: ({ message }) => foldMultiCombobox(model, message),
     GotToastMessage: ({ message }) => foldToast(model, message),
-    ChangedName: ({ value }) => ({ model: evo(model, { name: () => value }) }),
-    ChangedEmail: ({ value }) => ({ model: evo(model, { email: () => value }) }),
-    ChangedNotes: ({ value }) => ({ model: evo(model, { notes: () => value }) }),
+    ChangedName: ({ value }) => ({ model: modifyFields(model, { name: () => value }) }),
+    ChangedEmail: ({ value }) => ({ model: modifyFields(model, { email: () => value }) }),
+    ChangedNotes: ({ value }) => ({ model: modifyFields(model, { notes: () => value }) }),
     SelectedAnswerPresentation: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         answerPresentation: () => value,
         announcement: () =>
           value === "value" ? "Showing read-only answers." : "Showing editable controls.",
       }),
     }),
     CommittedReference: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         committedReference: () => value,
         announcement: () => `Reference ${value} committed.`,
       }),
     }),
     ChangedZoom: ({ zoom }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         zoom: () => Math.min(200, Math.max(50, zoom)),
         announcement: () => `Zoom ${Math.min(200, Math.max(50, zoom))}%.`,
       }),
     }),
     SelectedDepartment: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         department: () => value,
         openComponent: () => "",
         announcement: () => `${value} department selected.`,
       }),
     }),
     SelectedFoundationStep: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         foundationStep: () => value,
         announcement: () => `${value} step selected.`,
       }),
     }),
     RemovedTool: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         selectedTools: (values) => values.filter((selected) => selected !== value),
         announcement: () => `${value} removed from the selected tools.`,
       }),
     }),
     RequestedToast: ({ variant }) => showToast(variant)(model),
     SelectedView: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         selectedView: () => value,
         announcement: () => `${value} view selected.`,
       }),
     }),
     ToggledUpdates: ({ isChecked }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         receivesUpdates: () => isChecked,
         announcement: () => `Product updates ${isChecked ? "enabled" : "disabled"}.`,
       }),
     }),
     ToggledSecurityAlerts: ({ isChecked }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         securityAlerts: () => isChecked,
         announcement: () => `Security alerts ${isChecked ? "enabled" : "disabled"}.`,
       }),
     }),
     ToggledTerms: ({ isChecked }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         termsAccepted: () => isChecked,
         announcement: () => `Workspace terms ${isChecked ? "accepted" : "cleared"}.`,
       }),
     }),
     ToggledMixedPermissions: ({ isChecked }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         mixedPermissions: () => isChecked,
         announcement: () => `Team permissions ${isChecked ? "selected" : "cleared"}.`,
       }),
     }),
     ToggledDetails: ({ isOpen }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         isDetailsOpen: () => isOpen,
         announcement: () => `Disclosure ${isOpen ? "expanded" : "collapsed"}.`,
       }),
     }),
     ToggledComponent: ({ component, isOpen }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         openComponent: () => (isOpen ? component : ""),
         announcement: () => `${component} ${isOpen ? "opened" : "closed"}.`,
       }),
     }),
     ChangedSlider: ({ value }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         sliderValue: () => value,
         announcement: () => `Slider changed to ${value}.`,
       }),
     }),
     ChangedOtp: ({ value }) => ({
-      model: evo(model, { otp: () => value }),
+      model: modifyFields(model, { otp: () => value }),
     }),
     ChangedCommandQuery: ({ value }) => ({
-      model: evo(model, { commandQuery: () => value }),
+      model: modifyFields(model, { commandQuery: () => value }),
     }),
     SelectedPage: ({ page }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         page: () => page,
         announcement: () => `Page ${page} selected.`,
       }),
     }),
     SelectedCalendarDay: ({ day }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         selectedCalendarDay: () => day,
         announcement: () => `September ${day} selected.`,
       }),
     }),
     ClickedAction: ({ action }) => ({
-      model: evo(model, { announcement: () => `${action} button selected.` }),
+      model: modifyFields(model, { announcement: () => `${action} button selected.` }),
     }),
     ClickedCopySnippet: () => ({
       model,
@@ -317,9 +317,14 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     }),
     CompletedCopySnippet: ({ isCopied }) =>
       isCopied
-        ? { model: evo(model, { isSnippetCopied: () => true }), commands: [ClearCopiedSnippet()] }
-        : { model: evo(model, { announcement: () => "Clipboard access is unavailable." }) },
+        ? {
+            model: modifyFields(model, { isSnippetCopied: () => true }),
+            commands: [ClearCopiedSnippet()],
+          }
+        : {
+            model: modifyFields(model, { announcement: () => "Clipboard access is unavailable." }),
+          },
     ClearedCopiedSnippet: () => ({
-      model: evo(model, { isSnippetCopied: () => false }),
+      model: modifyFields(model, { isSnippetCopied: () => false }),
     }),
   });
