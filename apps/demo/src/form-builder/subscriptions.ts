@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { Subscription } from "foldkit";
 
 import { FormBuilder } from "@foldworks/form-builder";
@@ -6,7 +7,7 @@ import { Message } from "./message";
 import type { Model } from "./editor-model";
 
 const interaction = Subscription.lift(FormBuilder.subscriptions)<Model, Message>({
-  toChildModel: (model) => model.interaction,
+  read: (model) => Option.some(model.interaction),
   toParentMessage: (message) => Message.GotInteractionMessage({ message }),
 });
 

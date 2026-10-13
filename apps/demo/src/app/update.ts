@@ -10,7 +10,7 @@ import { Sidebar } from "@foldworks/sidebar";
 import { Command, Update } from "foldkit";
 import { scrollIntoViewAfterPaint } from "foldkit/dom";
 import { UrlRequest, load, pushUrl } from "foldkit/navigation";
-import { evo } from "foldkit/struct";
+import { modifyFields } from "foldkit/struct";
 import { toString as urlToString } from "foldkit/url";
 
 import { update as updateCodeEditor } from "../code-editor/update";
@@ -94,7 +94,7 @@ const PersistWorkspace = Command.define("PersistWorkspace", {
 });
 
 const persist = (model: Model, announcement: string): UpdateReturn => {
-  const next = evo(model, {
+  const next = modifyFields(model, {
     persistenceStatus: () => "Saving" as const,
     revision: (value) => value + 1,
     announcement: () => announcement,
@@ -116,7 +116,7 @@ const persist = (model: Model, announcement: string): UpdateReturn => {
 const foldWorkflow = Update.foldChild({
   update: updateWorkflow,
   read: (model: Model) => Option.some(model.workflowEditor),
-  write: (model, workflowEditor) => evo(model, { workflowEditor: () => workflowEditor }),
+  write: (model, workflowEditor) => modifyFields(model, { workflowEditor: () => workflowEditor }),
   toParentMessage: (message) => Message.GotWorkflowEditorMessage({ message }),
   foldOutMessage:
     (outMessage: WorkflowOutMessage) =>
@@ -133,7 +133,7 @@ const foldWorkflow = Update.foldChild({
 const foldForm = Update.foldChild({
   update: updateForm,
   read: (model: Model) => Option.some(model.formEditor),
-  write: (model, formEditor) => evo(model, { formEditor: () => formEditor }),
+  write: (model, formEditor) => modifyFields(model, { formEditor: () => formEditor }),
   toParentMessage: (message) => Message.GotFormEditorMessage({ message }),
   foldOutMessage:
     (outMessage: FormOutMessage) =>
@@ -150,7 +150,7 @@ const foldForm = Update.foldChild({
 const foldStatechart = Update.foldChild({
   update: updateStatechart,
   read: (model: Model) => Option.some(model.statechart),
-  write: (model, statechart) => evo(model, { statechart: () => statechart }),
+  write: (model, statechart) => modifyFields(model, { statechart: () => statechart }),
   toParentMessage: (message) => Message.GotStatechartMessage({ message }),
 });
 
@@ -211,7 +211,7 @@ const foldWorkbench = Update.foldChild({
 const foldDataGrid = Update.foldChild({
   update: updateDataGrid,
   read: (model: Model) => Option.some(model.dataGridDemo),
-  write: (model, dataGridDemo) => evo(model, { dataGridDemo: () => dataGridDemo }),
+  write: (model, dataGridDemo) => modifyFields(model, { dataGridDemo: () => dataGridDemo }),
   toParentMessage: (message) => Message.GotDataGridDemoMessage({ message }),
 });
 
@@ -232,35 +232,36 @@ const foldDiffViewer = Update.foldChild({
 const foldUiKit = Update.foldChild({
   update: updateUiKit,
   read: (model: Model) => Option.some(model.uiKit),
-  write: (model, uiKit) => evo(model, { uiKit: () => uiKit }),
+  write: (model, uiKit) => modifyFields(model, { uiKit: () => uiKit }),
   toParentMessage: (message) => Message.GotUiKitMessage({ message }),
 });
 
 const foldQueryBuilder = Update.foldChild({
   update: updateQueryBuilder,
   read: (model: Model) => Option.some(model.queryBuilderDemo),
-  write: (model, queryBuilderDemo) => evo(model, { queryBuilderDemo: () => queryBuilderDemo }),
+  write: (model, queryBuilderDemo) =>
+    modifyFields(model, { queryBuilderDemo: () => queryBuilderDemo }),
   toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
 });
 
 const foldOutliner = Update.foldChild({
   update: updateOutliner,
   read: (model: Model) => Option.some(model.outlinerDemo),
-  write: (model, outlinerDemo) => evo(model, { outlinerDemo: () => outlinerDemo }),
+  write: (model, outlinerDemo) => modifyFields(model, { outlinerDemo: () => outlinerDemo }),
   toParentMessage: (message) => Message.GotOutlinerDemoMessage({ message }),
 });
 
 const foldPdfAnnotator = Update.foldChild({
   update: PdfAnnotator.update,
   read: (model: Model) => Option.some(model.pdfAnnotator),
-  write: (model, pdfAnnotator) => evo(model, { pdfAnnotator: () => pdfAnnotator }),
+  write: (model, pdfAnnotator) => modifyFields(model, { pdfAnnotator: () => pdfAnnotator }),
   toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
 });
 
 const foldPdfViewer = Update.foldChild({
   update: updatePdfViewer,
   read: (model: Model) => Option.some(model.pdfViewerDemo),
-  write: (model, pdfViewerDemo) => evo(model, { pdfViewerDemo: () => pdfViewerDemo }),
+  write: (model, pdfViewerDemo) => modifyFields(model, { pdfViewerDemo: () => pdfViewerDemo }),
   toParentMessage: (message) => Message.GotPdfViewerDemoMessage({ message }),
 });
 
@@ -290,12 +291,12 @@ const foldEditor = Update.foldChild({
 const foldSidebar = Update.foldChild({
   update: Sidebar.update,
   read: (model: Model) => Option.some(model.sidebar),
-  write: (model, sidebar) => evo(model, { sidebar: () => sidebar }),
+  write: (model, sidebar) => modifyFields(model, { sidebar: () => sidebar }),
   toParentMessage: (message) => Message.GotSidebarMessage({ message }),
 });
 
 const applyRoute = (model: Model, route: Model["route"]): Model => {
-  let next: Model = evo(model, { route: () => route });
+  let next: Model = modifyFields(model, { route: () => route });
   if (
     route._tag === "Docs" &&
     (model.route._tag !== "Docs" ||
@@ -322,7 +323,7 @@ const applyRoute = (model: Model, route: Model["route"]): Model => {
     const workflowEditor = setOrientation(next.workflowEditor, workflowOrientationFromRoute(route));
     return workflowEditor === next.workflowEditor
       ? next
-      : evo(next, {
+      : modifyFields(next, {
           workflowEditor: () => workflowEditor,
           revision: (value) => value + 1,
         });
@@ -332,12 +333,14 @@ const applyRoute = (model: Model, route: Model["route"]): Model => {
   const { exampleId, mode } = formStateFromRoute(route);
   const previousEditor = next.formEditor;
   if (previousEditor.exampleId !== exampleId) {
-    next = evo(next, { formEditor: (editor) => loadExample(editor, exampleId) });
+    next = modifyFields(next, { formEditor: (editor) => loadExample(editor, exampleId) });
   }
   if (next.formEditor.mode !== mode) {
-    next = evo(next, { formEditor: (editor) => setMode(editor, mode) });
+    next = modifyFields(next, { formEditor: (editor) => setMode(editor, mode) });
   }
-  return next.formEditor === previousEditor ? next : evo(next, { revision: (value) => value + 1 });
+  return next.formEditor === previousEditor
+    ? next
+    : modifyFields(next, { revision: (value) => value + 1 });
 };
 
 export const update = (model: Model, message: Message): UpdateReturn =>
@@ -346,14 +349,14 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     CompletedLoadExternal: () => ({ model }),
     CompletedApplyTheme: () => ({ model }),
     CompletedPersistWorkspace: ({ succeeded }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         persistenceStatus: () => (succeeded ? "Saved" : "Error"),
         announcement: () =>
           succeeded ? "Changes saved locally." : "Changes could not be saved in this browser.",
       }),
     }),
     ChangedSystemTheme: ({ isDark }) => {
-      const next = evo(model, { systemIsDark: () => isDark });
+      const next = modifyFields(model, { systemIsDark: () => isDark });
       return model.themePreference === "System"
         ? {
             model: next,
@@ -368,7 +371,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         : { model: next };
     },
     SelectedThemeName: ({ name }) => ({
-      model: evo(model, { themeName: () => name }),
+      model: modifyFields(model, { themeName: () => name }),
       commands: [
         ApplyTheme({
           name,
@@ -378,7 +381,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ],
     }),
     SelectedThemePreference: ({ preference }) => ({
-      model: evo(model, { themePreference: () => preference }),
+      model: modifyFields(model, { themePreference: () => preference }),
       commands: [
         ApplyTheme({
           name: model.themeName,
@@ -429,7 +432,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotThemeBuilderMessage: ({ message }) => foldThemeBuilder(model, message),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),
     GotGenerativeUiAction: ({ intent }) => ({
-      model: evo(model, {
+      model: modifyFields(model, {
         announcement: () =>
           `${intent.action.replaceAll("_", " ")} requested from ${intent.elementId}.`,
       }),

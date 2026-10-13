@@ -1,6 +1,6 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
-import { evo } from "foldkit/struct";
+import { modifyFields } from "foldkit/struct";
 import { Outliner, find, updateItem } from "@foldworks/outliner";
 
 import { suggestionsAt } from "./mentions";
@@ -12,7 +12,7 @@ const foldOutliner = Update.foldChild({
   update: (outline: Outliner.Model, message: Outliner.Message) =>
     Outliner.update(outline, message, outlinePolicy(outline.items)),
   read: (model: Model) => Option.some(model.outline),
-  write: (model, outline) => evo(model, { outline: () => outline }),
+  write: (model, outline) => modifyFields(model, { outline: () => outline }),
   toParentMessage: (message) => Message.GotOutlinerMessage({ message }),
 });
 
@@ -70,6 +70,8 @@ export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match(message, {
     GotOutlinerMessage: ({ message: childMessage }) =>
       suggest(foldOutliner(model, childMessage), childMessage),
-    ToggledCheckboxes: () => ({ model: evo(model, { showCheckboxes: (value) => !value }) }),
+    ToggledCheckboxes: () => ({
+      model: modifyFields(model, { showCheckboxes: (value) => !value }),
+    }),
     ToggledDone: ({ id }) => toggleDone(model, id),
   });

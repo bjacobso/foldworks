@@ -1,6 +1,6 @@
 import { Effect, Option } from "effect";
 import { Command, Update } from "foldkit";
-import { evo } from "foldkit/struct";
+import { modifyFields } from "foldkit/struct";
 
 import { DataGrid } from "@foldworks/data-grid";
 
@@ -20,7 +20,7 @@ const Save = Command.define("SaveDemoGridEdits", {
 const foldGrid = Update.foldChild({
   update: DataGrid.update,
   read: (model: Model) => Option.some(model.grid),
-  write: (model, grid) => evo(model, { grid: () => grid }),
+  write: (model, grid) => modifyFields(model, { grid: () => grid }),
   toParentMessage: (message) => Message.GotGridMessage({ message }),
   foldOutMessage: (submission: DataGrid.OutMessage) => (model: Model) => ({
     model,
@@ -31,7 +31,7 @@ const foldGrid = Update.foldChild({
 const foldCoverageGrid = Update.foldChild({
   update: DataGrid.update,
   read: (model: Model) => Option.some(model.coverage.grid),
-  write: (model, grid) => evo(model, { coverage: (coverage) => ({ ...coverage, grid }) }),
+  write: (model, grid) => modifyFields(model, { coverage: (coverage) => ({ ...coverage, grid }) }),
   toParentMessage: (message) => Message.GotCoverageGridMessage({ message }),
   // The coverage matrix is read-only, so it never submits edits.
   foldOutMessage: () => (model: Model) => ({ model }),
@@ -42,10 +42,10 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     GotGridMessage: ({ message: gridMessage }) => foldGrid(model, gridMessage),
     GotCoverageGridMessage: ({ message: gridMessage }) => foldCoverageGrid(model, gridMessage),
     ChangedCoverageSearch: ({ search }) => ({
-      model: evo(model, { coverage: (coverage) => ({ ...coverage, search }) }),
+      model: modifyFields(model, { coverage: (coverage) => ({ ...coverage, search }) }),
     }),
     ToggledCoverageGaps: ({ gapsOnly }) => ({
-      model: evo(model, { coverage: (coverage) => ({ ...coverage, gapsOnly }) }),
+      model: modifyFields(model, { coverage: (coverage) => ({ ...coverage, gapsOnly }) }),
     }),
     ChangedEditingMode: ({ mode }) =>
       model.grid.drafts.length ||

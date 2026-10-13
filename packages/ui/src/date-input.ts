@@ -84,6 +84,7 @@ export const calendarLocale = (
       timeZone: "UTC",
     }).format(new globalThis.Date(globalThis.Date.UTC(2026, month, day)));
   return S.decodeUnknownSync(Calendar.LocaleConfig)({
+    ...Calendar.defaultEnglishLocale,
     firstDayOfWeek,
     monthNames: Array.from({ length: 12 }, (_, month) => format({ month: "long" }, month, 1)),
     shortMonthNames: Array.from({ length: 12 }, (_, month) => format({ month: "short" }, month, 1)),

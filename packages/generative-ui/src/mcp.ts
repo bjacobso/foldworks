@@ -1,5 +1,5 @@
 import { Effect, Schema as S } from "effect";
-import { McpServer, Tool, Toolkit } from "effect/unstable/ai";
+import { McpServer, Tool, Toolkit } from "effect/ai";
 
 import type { Catalog } from "./catalog";
 

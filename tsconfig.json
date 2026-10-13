@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["alchemy.run.ts"]
+  "include": ["alchemy.run.ts", "scripts/infra.test.ts", "vitest.infra.config.ts"]
 }

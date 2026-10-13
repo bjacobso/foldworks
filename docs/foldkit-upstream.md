@@ -13,8 +13,9 @@ Status values: **carried** (we ship a local patch or workaround), **proposed**
 
 ## `Attribute<Message>` type-check blow-up
 
-- Status: **carried** as `patches/foldkit@0.156.0.patch` (bjacobso/foldworks#40).
-  Not filed.
+- Status: **carried** as `patches/foldkit@0.168.0.patch` (bjacobso/foldworks#40).
+  Rebased onto `foldkit@0.168.0`; its published declaration remains a union.
+  The patch still changes declarations only. Not filed.
 - Affects: every generic `view<Message>(config, h)` component and helper. In
   practice that is `@foldworks/ui`, and any package built the same way.
 - Guard: `packages/ui/src/foldkit-attribute.test.ts` fails to type-check if
@@ -138,9 +139,9 @@ queue and a fiber.
 through its `define` API, not for a plain `div`.
 
 This literal already breaks on upstream `main`. Foldkit #913 changed the
-variant to `f: (event: CustomEvent<unknown>) => Option<Message>`, with the detail
-decoded against a Schema, so the next Foldkit upgrade must touch this code
-anyway.
+variant to `f: (event: CustomEvent<unknown>) => Option<Message>`. Foldworks
+now validates the detail against its Message schema and returns `Some` only
+for valid messages, preserving synchronous dispatch on `foldkit@0.168.0`.
 
 Ask: a public `h.OnCustomEvent(name, detailSchema, toMessage)` (or similar) for
 plain elements, with synchronous dispatch.

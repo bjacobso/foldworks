@@ -424,15 +424,13 @@ const jsonInspector = (model: Model, h: HtmlBuilder<Message>): Html =>
           ),
         ],
       ),
-      h.textarea(
-        [
-          h.Class("fk-pdf-annotator__json-editor"),
-          h.AriaLabel("Annotation document JSON"),
-          h.Spellcheck(false),
-          h.OnInput((value) => Message.ChangedJsonDraft({ value })),
-        ],
-        [model.jsonDraft],
-      ),
+      h.textarea([
+        h.Class("fk-pdf-annotator__json-editor"),
+        h.AriaLabel("Annotation document JSON"),
+        h.Value(model.jsonDraft),
+        h.Spellcheck(false),
+        h.OnInput((value) => Message.ChangedJsonDraft({ value })),
+      ]),
       model.jsonError === ""
         ? h.p(
             [h.Class("fk-pdf-annotator__json-help")],

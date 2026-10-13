@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { Subscription } from "foldkit";
 
 import { Workflow } from "@foldworks/workflow";
@@ -11,7 +12,7 @@ const interaction = Subscription.lift({
   dragKeyboard: Workflow.subscriptions.documentKeyboard,
   autoScroll: Workflow.subscriptions.autoScroll,
 })<Model, Message>({
-  toChildModel: (model) => model.workflow,
+  read: (model) => Option.some(model.workflow),
   toParentMessage: (message) => Message.GotWorkflowMessage({ message }),
 });
 

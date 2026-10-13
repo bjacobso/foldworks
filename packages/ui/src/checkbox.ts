@@ -32,6 +32,7 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
   return Checkbox.view(
     {
       id: config.id,
+      hasDescription: true,
       isChecked: config.isChecked,
       onToggle: config.onToggle,
       ...(config.isDisabled === undefined ? {} : { isDisabled: config.isDisabled }),

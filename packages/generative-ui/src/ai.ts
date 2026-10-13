@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel } from "effect/ai";
 
 import type { Catalog } from "./catalog";
 import { catalogPrompt } from "./catalog";

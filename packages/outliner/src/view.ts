@@ -382,27 +382,24 @@ const rowView = (
       h.div(
         [h.Class("fw-outliner__cell"), h.DataAttribute("decorated", String(painted))],
         [
-          h.textarea(
-            [
-              h.Id(ids.text(row.id)),
-              h.Class("fw-outliner__text"),
-              h.Rows(1),
-              h.Value(row.text),
-              h.AriaLabel(`Item text, level ${row.depth + 1}`),
-              h.Spellcheck(inputs.spellcheck ?? true),
-              h.Readonly(readOnly),
-              h.DataAttribute("outline-text", "true"),
-              ...(hover?.id === row.id ? [h.AriaDescribedBy(ids.hover)] : []),
-              ...(suggestions?.id === row.id
-                ? [
-                    h.AriaAutocomplete("list"),
-                    h.AriaControls(ids.completion),
-                    h.AriaActiveDescendant(optionId(ids.completion, suggestions.index)),
-                  ]
-                : []),
-            ],
-            [],
-          ),
+          h.textarea([
+            h.Id(ids.text(row.id)),
+            h.Class("fw-outliner__text"),
+            h.Rows(1),
+            h.Value(row.text),
+            h.AriaLabel(`Item text, level ${row.depth + 1}`),
+            h.Spellcheck(inputs.spellcheck ?? true),
+            h.Readonly(readOnly),
+            h.DataAttribute("outline-text", "true"),
+            ...(hover?.id === row.id ? [h.AriaDescribedBy(ids.hover)] : []),
+            ...(suggestions?.id === row.id
+              ? [
+                  h.AriaAutocomplete("list"),
+                  h.AriaControls(ids.completion),
+                  h.AriaActiveDescendant(optionId(ids.completion, suggestions.index)),
+                ]
+              : []),
+          ]),
           h.div(
             [
               h.Class("fw-outliner__mirror"),
@@ -511,18 +508,15 @@ const placeholderView = (
       h.div(
         [h.Class("fw-outliner__cell")],
         [
-          h.textarea(
-            [
-              h.Class("fw-outliner__text"),
-              h.Rows(1),
-              h.Value(""),
-              h.Placeholder(placeholder.label),
-              h.AriaLabel(name),
-              h.Spellcheck(inputs.spellcheck ?? true),
-              h.DataAttribute("placeholder-text", "true"),
-            ],
-            [],
-          ),
+          h.textarea([
+            h.Class("fw-outliner__text"),
+            h.Rows(1),
+            h.Value(""),
+            h.Placeholder(placeholder.label),
+            h.AriaLabel(name),
+            h.Spellcheck(inputs.spellcheck ?? true),
+            h.DataAttribute("placeholder-text", "true"),
+          ]),
         ],
       ),
     ],

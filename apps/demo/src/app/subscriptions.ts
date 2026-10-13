@@ -1,6 +1,6 @@
 import { subscriptions as documentAnalysisSubscriptions } from "../document-analysis/subscriptions";
 import { subscriptions as orchestratorSubscriptions } from "../orchestrator/subscriptions";
-import { Effect, Schema as S, Stream } from "effect";
+import { Effect, Option, Schema as S, Stream } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
 import { Subscription } from "foldkit";
 
@@ -74,7 +74,7 @@ const historySubscriptions = Subscription.make<Model, Message>()((entry) => ({
 }));
 
 const themeSubscriptions = Subscription.make<Model, Message>()(() => ({
-  systemTheme: Subscription.persistent(
+  systemTheme: Subscription.persistentEntry(
     Stream.fromEventListener<MediaQueryListEvent>(
       window.matchMedia(SYSTEM_DARK_QUERY),
       "change",
@@ -83,50 +83,50 @@ const themeSubscriptions = Subscription.make<Model, Message>()(() => ({
 }));
 
 const workflow = Subscription.lift(workflowSubscriptions)<Model, Message>({
-  toChildModel: (model) => model.workflowEditor,
+  read: (model) => Option.some(model.workflowEditor),
   toParentMessage: (message) => Message.GotWorkflowEditorMessage({ message }),
 });
 
 const statechart = Subscription.lift(statechartSubscriptions)<Model, Message>({
   when: (model) => model.route._tag === "Statechart",
-  toChildModel: (model) => model.statechart,
+  read: (model) => Option.some(model.statechart),
   toParentMessage: (message) => Message.GotStatechartMessage({ message }),
 });
 
 const orchestrator = Subscription.lift(orchestratorSubscriptions)<Model, Message>({
-  toChildModel: (model) => model.orchestrator,
+  read: (model) => Option.some(model.orchestrator),
   toParentMessage: (message) => Message.GotOrchestratorMessage({ message }),
 });
 
 const agent = Subscription.lift(agentSubscriptions)<Model, Message>({
   when: (model) => model.route._tag === "Agent",
-  toChildModel: (model) => model.agent,
+  read: (model) => Option.some(model.agent),
   toParentMessage: (message) => Message.GotAgentMessage({ message }),
 });
 
 const form = Subscription.lift(formSubscriptions)<Model, Message>({
-  toChildModel: (model) => model.formEditor,
+  read: (model) => Option.some(model.formEditor),
   toParentMessage: (message) => Message.GotFormEditorMessage({ message }),
 });
 
 const workbench = Subscription.lift(workbenchSubscriptions)<Model, Message>({
   when: (model) => model.route._tag === "Workbench",
-  toChildModel: (model) => model.workbench,
+  read: (model) => Option.some(model.workbench),
   toParentMessage: (message) => Message.GotWorkbenchMessage({ message }),
 });
 
 const dataGrid = Subscription.lift(dataGridSubscriptions)<Model, Message>({
-  toChildModel: (model) => model.dataGridDemo,
+  read: (model) => Option.some(model.dataGridDemo),
   toParentMessage: (message) => Message.GotDataGridDemoMessage({ message }),
 });
 
 const queryBuilder = Subscription.lift(queryBuilderSubscriptions)<Model, Message>({
-  toChildModel: (model) => model.queryBuilderDemo,
+  read: (model) => Option.some(model.queryBuilderDemo),
   toParentMessage: (message) => Message.GotQueryBuilderDemoMessage({ message }),
 });
 
 const pdfAnnotator = Subscription.lift(PdfAnnotator.subscriptions)<Model, Message>({
-  toChildModel: (model) => model.pdfAnnotator,
+  read: (model) => Option.some(model.pdfAnnotator),
   toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
 });
 

@@ -10,10 +10,7 @@ import {
   TextCursorInput,
   type LucideIconData,
 } from "@lucide/icons";
-import {
-  defineFieldTypes,
-  type FieldTypeDefinition,
-} from "@foldworks/form-builder";
+import { defineFieldTypes, type FieldTypeDefinition } from "@foldworks/form-builder";
 
 import { Message } from "./message";
 import type { FieldKind, FormField } from "./model";
@@ -48,20 +45,17 @@ const markdownPreview = (source: string): MarkdownPreview => {
   return preview;
 };
 
-const makeField = (
-  id: string,
-  type: FieldKind,
-  label: string,
-): FormField => ({
+const makeField = (id: string, type: FieldKind, label: string): FormField => ({
   id,
   type,
   label,
   description: "",
   required: false,
   options: type === "singleSelect" ? ["Option one", "Option two"] : [],
-  content: type === "content"
-    ? "# Important information\n\nAdd helpful content for this participant to review."
-    : "",
+  content:
+    type === "content"
+      ? "# Important information\n\nAdd helpful content for this participant to review."
+      : "",
 });
 
 const inputAttributes = (mode: "Editor" | "Runner") =>
@@ -87,15 +81,13 @@ const definitions = {
     palette: { label: "Long text", description: "A multi-line answer" },
     create: (id) => makeField(id, "longText", "Long answer"),
     render: ({ mode, value, onInput }, h) =>
-      h.textarea(
-        [
-          h.Class(className(formStyles.previewInput, formStyles.previewTextarea)),
-          h.Disabled(inputAttributes(mode).disabled),
-          h.OnInput(onInput),
-          h.Placeholder("Enter a detailed answer"),
-        ],
-        [value],
-      ),
+      h.textarea([
+        h.Class(className(formStyles.previewInput, formStyles.previewTextarea)),
+        h.Disabled(inputAttributes(mode).disabled),
+        h.OnInput(onInput),
+        h.Placeholder("Enter a detailed answer"),
+        h.Value(value),
+      ]),
   },
   singleSelect: {
     icon: CircleDot,
@@ -121,15 +113,18 @@ const definitions = {
     palette: { label: "Checkbox", description: "An acknowledgment" },
     create: (id) => makeField(id, "checkbox", "I agree"),
     render: ({ field, mode, value, onInput }, h) =>
-      h.label([h.Class(className(formStyles.checkboxRow))], [
-        h.input([
-          h.Type("checkbox"),
-          h.Checked(value === "true"),
-          h.Disabled(inputAttributes(mode).disabled),
-          h.OnClick(onInput(value === "true" ? "false" : "true")),
-        ]),
-        h.span([], [field.label]),
-      ]),
+      h.label(
+        [h.Class(className(formStyles.checkboxRow))],
+        [
+          h.input([
+            h.Type("checkbox"),
+            h.Checked(value === "true"),
+            h.Disabled(inputAttributes(mode).disabled),
+            h.OnClick(onInput(value === "true" ? "false" : "true")),
+          ]),
+          h.span([], [field.label]),
+        ],
+      ),
   },
   date: {
     icon: CalendarDays,
@@ -151,39 +146,50 @@ const definitions = {
     render: ({ field }, h) => {
       const preview = markdownPreview(field.content);
       if (preview._tag === "Invalid") {
-        return h.div([h.Class(className(formStyles.contentBlock))], [
-          h.p([h.Class(className(formStyles.markdownError))], [
-            `Markdown preview unavailable: ${preview.message}`,
-          ]),
-          h.pre([h.Class(className(formStyles.markdownSource))], [field.content]),
-        ]);
+        return h.div(
+          [h.Class(className(formStyles.contentBlock))],
+          [
+            h.p(
+              [h.Class(className(formStyles.markdownError))],
+              [`Markdown preview unavailable: ${preview.message}`],
+            ),
+            h.pre([h.Class(className(formStyles.markdownSource))], [field.content]),
+          ],
+        );
       }
 
-      return h.div([h.Class(className(formStyles.contentBlock))], [
-        Markdown.view(preview.document, {
-          views: {
-            Heading: ({ level }, content) => {
-              const attributes = [h.Class(className(formStyles.contentHeading))];
-              switch (level) {
-                case 1: return h.h1(attributes, content);
-                case 2: return h.h2(attributes, content);
-                case 3: return h.h3(attributes, content);
-                case 4: return h.h4(attributes, content);
-                case 5: return h.h5(attributes, content);
-                case 6: return h.h6(attributes, content);
-              }
+      return h.div(
+        [h.Class(className(formStyles.contentBlock))],
+        [
+          Markdown.view(preview.document, {
+            views: {
+              Heading: ({ level }, content) => {
+                const attributes = [h.Class(className(formStyles.contentHeading))];
+                switch (level) {
+                  case 1:
+                    return h.h1(attributes, content);
+                  case 2:
+                    return h.h2(attributes, content);
+                  case 3:
+                    return h.h3(attributes, content);
+                  case 4:
+                    return h.h4(attributes, content);
+                  case 5:
+                    return h.h5(attributes, content);
+                  case 6:
+                    return h.h6(attributes, content);
+                }
+              },
+              Paragraph: (_paragraph, content) =>
+                h.p([h.Class(className(formStyles.contentParagraph))], content),
+              InlineCode: ({ value }) =>
+                h.code([h.Class(className(formStyles.markdownInlineCode))], [value]),
+              CodeBlock: ({ value }) =>
+                h.pre([h.Class(className(formStyles.markdownCodeBlock))], [h.code([], [value])]),
             },
-            Paragraph: (_paragraph, content) =>
-              h.p([h.Class(className(formStyles.contentParagraph))], content),
-            InlineCode: ({ value }) =>
-              h.code([h.Class(className(formStyles.markdownInlineCode))], [value]),
-            CodeBlock: ({ value }) =>
-              h.pre([h.Class(className(formStyles.markdownCodeBlock))], [
-                h.code([], [value]),
-              ]),
-          },
-        }),
-      ]);
+          }),
+        ],
+      );
     },
   },
 } satisfies Record<

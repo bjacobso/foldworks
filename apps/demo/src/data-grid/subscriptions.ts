@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { Subscription } from "foldkit";
 
 import { DataGrid } from "@foldworks/data-grid";
@@ -6,12 +7,12 @@ import { Message } from "./message";
 import type { Model } from "./model";
 
 const worksheet = Subscription.lift(DataGrid.subscriptions)<Model, Message>({
-  toChildModel: (model) => model.grid,
+  read: (model) => Option.some(model.grid),
   toParentMessage: (message) => Message.GotGridMessage({ message }),
 });
 
 const coverage = Subscription.lift(DataGrid.subscriptions)<Model, Message>({
-  toChildModel: (model) => model.coverage.grid,
+  read: (model) => Option.some(model.coverage.grid),
   toParentMessage: (message) => Message.GotCoverageGridMessage({ message }),
 });
 

@@ -6,10 +6,10 @@ import { join, resolve } from "node:path";
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const packagesRoot = join(repositoryRoot, "packages");
 const sharedRuntimeVersions = {
-  "@foldkit/ui": "0.156.0",
+  "@foldkit/ui": "0.168.0",
   "@stylexjs/stylex": "0.19.0",
-  effect: "4.0.0-rc.112",
-  foldkit: "0.156.0",
+  effect: "4.0.3",
+  foldkit: "0.168.0",
 };
 
 const run = (command, args, options = {}) =>
@@ -166,13 +166,23 @@ try {
         scripts: { build: "vite build", test: "vitest run", typecheck: "tsc --noEmit" },
         dependencies: Object.fromEntries([
           ...Object.entries(sharedRuntimeVersions),
+          ["@effect/platform-browser", "4.0.3"],
           ...[...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
         ]),
+        // Mirror the workspace's exception for these exact Foldkit releases.
+        // npm overrides also apply to peers; no global peer bypass is used.
+        overrides: {
+          "foldkit@0.168.0": {
+            effect: "$effect",
+            "@effect/platform-browser": "$@effect/platform-browser",
+          },
+          "@foldkit/ui@0.168.0": { effect: "$effect" },
+        },
         devDependencies: {
           "@stylexjs/unplugin": "0.19.0",
           typescript: "6.0.3",
           vite: "8.2.2",
-          vitest: "4.1.11",
+          vitest: "5.0.3",
         },
       },
       null,

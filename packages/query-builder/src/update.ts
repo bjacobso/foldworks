@@ -1,6 +1,6 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
-import { evo } from "foldkit/struct";
+import { modifyFields } from "foldkit/struct";
 import { DragAndDrop } from "@foldkit/ui";
 
 import { applyNodeReorder } from "./interaction";
@@ -30,7 +30,7 @@ const commitDrop =
 const foldInteraction = Update.foldChild({
   update: DragAndDrop.update,
   read: (model: Model) => Option.some(model.interaction),
-  write: (model, interaction) => evo(model, { interaction: () => interaction }),
+  write: (model, interaction) => modifyFields(model, { interaction: () => interaction }),
   toParentMessage: (message) => Message.GotInteractionMessage({ message }),
   foldOutMessage: commitDrop,
 });
