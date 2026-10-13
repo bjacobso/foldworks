@@ -133,7 +133,11 @@ for (const mode of ["Light", "Dark"] as const) {
       await page.getByRole("button", { name: "Dialog", exact: true }).click();
       const dialog = page.getByRole("dialog", { name: "Dialog example" });
       await expect(dialog).toBeVisible();
-      await expect(dialog).toHaveScreenshot([`polaris-${mode.toLowerCase()}`, "dialog-open.png"]);
+      // The native <dialog> fills the viewport, including the application behind
+      // its backdrop. Compare the component panel so unrelated navigation changes
+      // do not invalidate this fixture.
+      const panel = dialog.locator("section[data-size]");
+      await expect(panel).toHaveScreenshot([`polaris-${mode.toLowerCase()}`, "dialog-open.png"]);
     });
 
     test("open dropdown menu matches its approved image", async ({ page }) => {
