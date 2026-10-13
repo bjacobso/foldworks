@@ -10,7 +10,9 @@
     "README.md",
     "LICENSE"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bjacobso/foldworks.git",
@@ -36,7 +38,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./graph": {
+      "types": "./dist/graph.d.ts",
+      "import": "./dist/graph.js"
+    },
+    "./styles.css": "./dist/styles.css"
   },
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",

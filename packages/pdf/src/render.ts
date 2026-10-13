@@ -42,9 +42,11 @@ export const DEFAULT_RENDER_SCALE = 2;
 const failureReason = (error: unknown): string =>
   error instanceof Error ? error.message : "The PDF could not be rendered.";
 
-const tryPdf = <A>(run: () => PromiseLike<A>): Effect.Effect<A, PdfRenderError> =>
+const tryPdf = <A>(
+  run: (signal: AbortSignal) => PromiseLike<A>,
+): Effect.Effect<A, PdfRenderError> =>
   Effect.tryPromise({
-    try: async () => run(),
+    try: async (signal) => run(signal),
     catch: (cause) => new PdfRenderError({ reason: failureReason(cause), cause }),
   });
 
@@ -103,19 +105,28 @@ export const rasterizePage = (
   scale: number,
   imageType: RenderPagesOptions["imageType"] = "image/png",
 ): Effect.Effect<PageRaster, PdfRenderError> =>
-  tryPdf(async () => {
+  tryPdf(async (signal) => {
     const viewport = page.getViewport({ scale });
     const canvas = window.document.createElement("canvas");
     canvas.width = Math.ceil(viewport.width);
     canvas.height = Math.ceil(viewport.height);
     const context = canvas.getContext("2d", { alpha: false });
     if (context === null) throw new Error("Canvas rendering is not available.");
-    await page.render({ canvas, canvasContext: context, viewport }).promise;
-    return {
-      imageUrl: canvas.toDataURL(imageType),
-      pixelWidth: canvas.width,
-      pixelHeight: canvas.height,
-    };
+    const task = page.render({ canvas, canvasContext: context, viewport });
+    const cancel = () => task.cancel();
+    signal.addEventListener("abort", cancel, { once: true });
+    try {
+      await task.promise;
+      return {
+        imageUrl: canvas.toDataURL(imageType),
+        pixelWidth: canvas.width,
+        pixelHeight: canvas.height,
+      };
+    } finally {
+      signal.removeEventListener("abort", cancel);
+      canvas.width = 0;
+      canvas.height = 0;
+    }
   });
 
 const allPageIndexes = (document: PDFDocumentProxy): ReadonlyArray<number> =>

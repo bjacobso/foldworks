@@ -730,3 +730,39 @@ and browser-test screenshots.
 controlled desktop workflows. See the [architecture and integration guide](docs/desktop.md)
 and the **Desktop workspace** example in `/ui-kit`. Command definitions are
 shared through `@foldworks/keyboard`; application actions remain host-owned.
+
+## Citations
+
+`Citation` is an inline superscript or chip with a hover/focus preview and a
+source activation message. It uses the existing tooltip model and reducer:
+
+```ts
+const citation = Citation.init({ id: "citation-1", showDelay: 150 });
+
+h.submodel({
+  slotId: citation.id,
+  model: citation,
+  view: Citation.view,
+  viewInputs: Citation.styledViewInputs(
+    {
+      label: 1,
+      preview: "Employees may bid on schedules.",
+      onActivate: Message.OpenedSource({ id: "source-1" }),
+    },
+    h,
+  ),
+  toParentMessage: (message) => Message.GotCitationMessage({ message }),
+});
+```
+
+Fold `Citation.update` as a child and handle or discard its tooltip
+`Shown`/`Hidden` out-messages. Escape dismisses the preview. `variant: "chip"`
+uses baseline alignment; the default is `superscript`. Slots support the same
+attributes and StyleX overrides as other components. Previews are application
+content and have no citation storage or provenance semantics.
+
+For interactive previews, use `Citation.popoverViewInputs` with
+`Stateful.Popover.init`, `.view`, and `.update`. Its marker opens the preview;
+a separate “Open source” button inside dispatches `onActivate`, so opening the
+popover and navigating to the source remain distinct actions. Tooltip previews
+must contain non-interactive content.

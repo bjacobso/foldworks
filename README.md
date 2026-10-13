@@ -129,7 +129,8 @@ rows and the code editor, placeholder rows, structure policy, a structural tree
 diff, and a lazily loaded value tree.
 
 See [planned work-surface primitives](./docs/planned-primitives.md) for the
-next layers of the library to explore.
+next layers of the library to explore, and [document analysis](./docs/document-analysis.md)
+for available primitives for checking extracted values against their source documents.
 
 ## WorldVM
 
@@ -305,3 +306,5 @@ package-boundary decisions are documented in [Desktop primitives](packages/ui/do
 The outliner and native Markdown editor share plain-text mentions and tags. See
 the [design and adapter contract](./docs/mentions-and-tags.md) for host lookup,
 syntax exclusions, stable identity, and persistence.
+
+[Document analysis demo](https://foldworks.dev/document-analysis) composes PDF passage highlights and text selection, transcript ranges, prose diffs, citation previews, and a read-only relationship graph using synthetic documents.

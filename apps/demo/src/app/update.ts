@@ -1,3 +1,5 @@
+import { update as updateDocumentAnalysis } from "../document-analysis/update";
+import { Message as DocumentAnalysisMessage } from "../document-analysis/message";
 import { update as updateOrchestrator } from "../orchestrator/update";
 import { update as updateDocs } from "../docs/update";
 import { Effect, Option, Schema as S } from "effect";
@@ -167,7 +169,9 @@ export const enterRoute = (model: Model): UpdateReturn =>
       ? foldStatechart(model, StatechartMessage.ClickedFit())
       : model.route._tag === "PdfViewer"
         ? enterPdfViewer(model)
-        : { model };
+        : model.route._tag === "DocumentAnalysis"
+          ? foldDocumentAnalysis(model, DocumentAnalysisMessage.Initialize())
+          : { model };
 
 const foldCodeEditor = Update.foldChild({
   update: updateCodeEditor,
@@ -258,6 +262,13 @@ const foldPdfViewer = Update.foldChild({
   read: (model: Model) => Option.some(model.pdfViewerDemo),
   write: (model, pdfViewerDemo) => evo(model, { pdfViewerDemo: () => pdfViewerDemo }),
   toParentMessage: (message) => Message.GotPdfViewerDemoMessage({ message }),
+});
+
+const foldDocumentAnalysis = Update.foldChild({
+  update: updateDocumentAnalysis,
+  read: (model: Model) => Option.some(model.documentAnalysis),
+  write: (model, documentAnalysis) => ({ ...model, documentAnalysis }),
+  toParentMessage: (message) => Message.GotDocumentAnalysisMessage({ message }),
 });
 
 // Generate the sample PDF the first time the viewer demo opens.
@@ -411,6 +422,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       foldQueryBuilder(model, childMessage),
     GotOutlinerDemoMessage: ({ message: childMessage }) => foldOutliner(model, childMessage),
     GotPdfAnnotatorMessage: ({ message: childMessage }) => foldPdfAnnotator(model, childMessage),
+    GotDocumentAnalysisMessage: ({ message }) => foldDocumentAnalysis(model, message),
     GotPdfViewerDemoMessage: ({ message: childMessage }) => foldPdfViewer(model, childMessage),
     GotEditorMessage: ({ message }) => foldEditor(model, message),
     GotSidebarMessage: ({ message: childMessage }) => foldSidebar(model, childMessage),

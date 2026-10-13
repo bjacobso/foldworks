@@ -548,6 +548,9 @@ importers:
       '@lucide/icons':
         specifier: 'catalog:'
         version: 1.40.0
+      pdfjs-dist:
+        specifier: 'catalog:'
+        version: 6.3.289
     devDependencies:
       effect:
         specifier: 'catalog:'

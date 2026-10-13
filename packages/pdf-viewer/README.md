@@ -3,7 +3,7 @@
 A read-only Foldkit PDF viewer composed from `@foldworks/pdf` page surfaces,
 rendering, and geometry.
 
-`PdfViewer` renders every page of a PDF to an image and adds page navigation,
+`PdfViewer` renders pages near the viewport and adds page navigation,
 zoom (fit width, or 50–200%), download, and skeletons while pages render. It
 has no editing UI.
 
@@ -61,11 +61,62 @@ Other view options: `actions` (extra toolbar controls), `label`,
 fills its container and scrolls internally, so give it a sized parent. Import
 `@foldworks/pdf-viewer/styles.css` once.
 
+## Passage highlights and selection
+
+```ts
+PdfViewer.view(
+  {
+    model: model.viewer,
+    toParentMessage: (message) => Message.GotViewerMessage({ message }),
+    highlights: [
+      {
+        key: "evidence",
+        label: "Schedule bidding evidence",
+        regions: location.regions, // from locateQuote, native selection, or OCR
+        tone: "warning",
+        isSelected: model.selectedId === "evidence",
+        onClick: Message.SelectedEvidence({ id: "evidence" }),
+      },
+    ],
+    selectableText: true,
+    onSelectText: (selection) => Message.SelectedPdfText({ selection }),
+  },
+  h,
+);
+```
+
+`PdfHighlight` accepts several rectangles per page and several pages per
+passage. Its first rectangle is the single accessible toggle button; the other
+rectangles paint the same selection and dispatch the same activation message.
+Keys must be unique across highlights and single-rectangle overlays, and each
+page should appear once in `regions`. `scrollTo(key)` finds the first rectangle.
+Existing boxed `PdfOverlay` inputs keep their behavior.
+
+`selectableText` mounts PDF.js' transparent native text layer, including font
+metrics and rotation. On pointer release or keyboard selection, `onSelectText`
+receives `{ text, regions: [{ pageIndex, rects }] }` with user-space rectangles.
+Selections must start and end in this viewer's text layers. Selection is not
+persisted by the viewer. Without a callback, the same data travels through
+`Message.SelectedText` for the host to intercept. Scanned pages need OCR from
+the host and have no selectable text. Highlights can intercept pointer presses;
+selection can begin outside them, or the host can temporarily hide highlights.
+
+See the [document-analysis demo](https://foldworks.dev/document-analysis) for a
+cross-page passage, linked transcript, and a 12-page bounded-cache example.
+
 ## Known behavior
 
-- **Memory:** rendered pages are kept in the model as PNG `data:` URLs, and
-  pages render one at a time, each from a fresh PDF.js session. This suits forms
-  and short documents; very long documents hold every page image in memory.
+- **Memory:** at most `maxCachedPages` page images (default 8, minimum 1) are
+  retained as PNG `data:` URLs. A mounted viewer opens one shared PDF.js document
+  for sequential rendering and releases it on document replacement or unmount.
+  Page geometry is inspected separately before rendering. Pages within one
+  viewport height of the scroller are prioritized by distance to its center.
+  Offscreen cache entries are evicted first, using least-recently-used order;
+  evicted pages render again when revisited. Text layers are released with their
+  page images. All page placeholders and geometry remain mounted, so this bounds
+  raster/text-layer memory, not the number of page wrappers or the source bytes.
+  A very small cache may leave some visible pages pending; set it large enough
+  for your viewport. Rendering requires the view to be mounted.
 - **Fit width** scales the widest page to the viewer, so all pages share one
   scale. In mixed-orientation documents, portrait pages are narrower than the
   viewer. Fit width is capped at 200% and may go below 50% in narrow viewers.

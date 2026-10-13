@@ -283,3 +283,67 @@ button.fk-pdf-viewer__overlay:hover {
     transition: none;
   }
 }
+
+.fk-pdf-viewer__highlight {
+  background: color-mix(in srgb, var(--pdf-viewer-overlay-color) 28%, transparent);
+  border: 0;
+  border-radius: 0;
+}
+.fk-pdf-viewer__highlight-group {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.fk-pdf-viewer__highlight[data-clickable="true"] {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.fk-pdf-viewer__text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  transform-origin: 0 0;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.fk-pdf-viewer__text-layer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0 0;
+  user-select: text;
+}
+.fk-pdf-viewer__text-layer > :not(.markedContent),
+.fk-pdf-viewer__text-layer .markedContent span:not(.markedContent) {
+  --font-height: 0;
+  --scale-x: 1;
+  --rotate: 0deg;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.fk-pdf-viewer__text-layer .markedContent {
+  display: contents;
+}
+.fk-pdf-viewer__text-layer ::selection {
+  background: color-mix(in srgb, var(--foldworks-ui-info) 30%, transparent);
+}
+.fk-pdf-viewer__text-layer {
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+}
+.fk-pdf-viewer__text-layer[data-main-rotation="90"] {
+  transform: rotate(90deg) translateY(-100%);
+}
+.fk-pdf-viewer__text-layer[data-main-rotation="180"] {
+  transform: rotate(180deg) translate(-100%, -100%);
+}
+.fk-pdf-viewer__text-layer[data-main-rotation="270"] {
+  transform: rotate(270deg) translateX(-100%);
+}

@@ -13,7 +13,15 @@ import {
   ZoomOut,
 } from "@lucide/icons";
 import { Button, Empty, Icon, Skeleton } from "@foldworks/ui";
-import { overlayPosition, pageSurface, type PdfRect } from "@foldworks/pdf";
+import {
+  overlayPosition,
+  pageSurface,
+  type PdfRect,
+  type PdfTextRegion,
+  type PdfTextSelection,
+} from "@foldworks/pdf";
+
+import { RenderVisiblePages } from "./render-session";
 
 import { Message } from "./viewer-message";
 import {
@@ -50,10 +58,25 @@ export type PdfOverlay<ParentMessage> = Readonly<{
   title?: string;
 }>;
 
+/** A passage may span lines and pages. The first rectangle owns its one keyboard control. */
+export type PdfHighlight<ParentMessage> = Readonly<{
+  key: string;
+  regions: ReadonlyArray<PdfTextRegion>;
+  label: string;
+  tone?: PdfOverlayTone;
+  isSelected?: boolean;
+  onClick?: ParentMessage;
+  title?: string;
+}>;
+
 export type ViewConfig<ParentMessage> = Readonly<{
   model: Model;
   toParentMessage: (message: Message) => ParentMessage;
   overlays?: ReadonlyArray<PdfOverlay<ParentMessage>>;
+  highlights?: ReadonlyArray<PdfHighlight<ParentMessage>>;
+  /** Mount PDF.js' native transparent, selectable text layer. Defaults to false. */
+  selectableText?: boolean;
+  onSelectText?: (selection: PdfTextSelection) => ParentMessage;
   /** Rendered between the toolbar and the pages, e.g. a "Synthetic preview" alert. */
   banner?: Html;
   /** Text stamped faintly across every page. Decorative; pair it with a banner for screen readers. */
@@ -219,6 +242,57 @@ const overlayView = <ParentMessage>(
       );
 };
 
+const highlightView = <ParentMessage>(
+  page: ViewerPage,
+  highlight: PdfHighlight<ParentMessage>,
+  h: HtmlBuilder<ParentMessage>,
+): Html => {
+  const first = highlight.regions.find((region) => region.rects.length > 0);
+  let primary = first?.pageIndex === page.pageIndex;
+  return h.keyed("span")(
+    `highlight-${highlight.key}`,
+    [h.Class("fk-pdf-viewer__highlight-group")],
+    highlight.regions
+      .filter((region) => region.pageIndex === page.pageIndex)
+      .flatMap((region) =>
+        region.rects.map((rect, index) => {
+          const isPrimary = primary;
+          primary = false;
+          const attrs = [
+            h.Class("fk-pdf-viewer__overlay fk-pdf-viewer__highlight"),
+            h.Style(overlayPosition(page, rect)),
+            h.DataAttribute("pdf-overlay-key", highlight.key),
+            h.DataAttribute("tone", highlight.tone ?? "warning"),
+            h.DataAttribute("selected", highlight.isSelected === true ? "true" : "false"),
+            h.Title(highlight.title ?? highlight.label),
+            ...(isPrimary ? [h.AriaLabel(highlight.label)] : [h.AriaHidden(true)]),
+          ];
+          return isPrimary && highlight.onClick !== undefined
+            ? h.button(
+                [
+                  ...attrs,
+                  h.Type("button"),
+                  h.AriaPressed(highlight.isSelected === true ? "true" : "false"),
+                  h.OnClick(highlight.onClick),
+                ],
+                [],
+              )
+            : h.span(
+                [
+                  ...attrs,
+                  ...(isPrimary ? [h.Role("img")] : []),
+                  ...(highlight.onClick === undefined
+                    ? []
+                    : [h.OnClick(highlight.onClick), h.DataAttribute("clickable", "true")]),
+                  h.DataAttribute("highlight-rect", String(index)),
+                ],
+                [],
+              );
+        }),
+      ),
+  );
+};
+
 const pageView = <ParentMessage>(
   config: ViewConfig<ParentMessage>,
   name: string,
@@ -261,6 +335,17 @@ const pageView = <ParentMessage>(
         config.watermark === undefined
           ? h.empty
           : h.span([h.Class("fk-pdf-viewer__watermark"), h.AriaHidden(true)], [config.watermark]),
+        config.selectableText === true
+          ? h.div(
+              [h.Class("fk-pdf-viewer__text-layer"), h.DataAttribute("pdf-text-layer", "true")],
+              [],
+            )
+          : h.empty,
+        ...(config.highlights ?? [])
+          .filter((highlight) =>
+            highlight.regions.some((region) => region.pageIndex === page.pageIndex),
+          )
+          .map((highlight) => highlightView(page, highlight, h)),
         overlays.length === 0
           ? h.empty
           : h.div(
@@ -474,8 +559,25 @@ const contentView = <ParentMessage>(
       const document = model.document;
       const overlays = config.overlays ?? [];
       return h.keyed("div")(
-        `document-${model.revision}`,
-        [h.Class("fk-pdf-viewer__pages")],
+        `document-${model.revision}-${model.renderScale}-${model.maxCachedPages}-${config.selectableText === true}`,
+        [
+          h.Class("fk-pdf-viewer__pages"),
+          h.OnMount(
+            Mount.mapMessage(
+              RenderVisiblePages({
+                revision: model.revision,
+                bytesBase64: document.bytesBase64,
+                scale: model.renderScale,
+                maxCachedPages: model.maxCachedPages,
+                selectableText: config.selectableText === true,
+              }),
+              (message) =>
+                message._tag === "SelectedText" && config.onSelectText !== undefined
+                  ? config.onSelectText(message.selection)
+                  : config.toParentMessage(message),
+            ),
+          ),
+        ],
         document.pages.map((page) =>
           pageView(
             config,
@@ -520,7 +622,11 @@ export const view = <ParentMessage>(
           h.AriaBusy(
             config.model.document._tag === "Loading" ||
               (config.model.document._tag === "Ready" &&
-                config.model.document.pages.some((page) => page.image._tag === "Pending")),
+                config.model.document.pages.some(
+                  (page) =>
+                    config.model.visiblePageIndexes.includes(page.pageIndex) &&
+                    page.image._tag === "Pending",
+                )),
           ),
           h.OnMount(Mount.mapMessage(ObserveScroller(), config.toParentMessage)),
         ],

@@ -495,3 +495,20 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Cell states retain selection and editing error precedence. */
+.fk-data-grid__cell[data-tone="neutral"]:not([data-selected="true"]):not([data-error="true"]) {
+  background: var(--background);
+}
+.fk-data-grid__cell[data-tone="info"]:not([data-selected="true"]):not([data-error="true"]) {
+  background: var(--foldworks-ui-info-surface);
+}
+.fk-data-grid__cell[data-tone="success"]:not([data-selected="true"]):not([data-error="true"]) {
+  background: var(--foldworks-ui-success-surface);
+}
+.fk-data-grid__cell[data-tone="warning"]:not([data-selected="true"]):not([data-error="true"]) {
+  background: var(--foldworks-ui-warning-surface);
+}
+.fk-data-grid__cell[data-tone="danger"]:not([data-selected="true"]):not([data-error="true"]) {
+  background: var(--foldworks-ui-danger-surface);
+}

@@ -23,3 +23,13 @@ export {
 } from "./popup";
 
 export * as Mentions from "./mentions";
+
+export {
+  HighlightedText,
+  innermostRange,
+  snippets,
+  type HighlightedTextConfig,
+  type HighlightRange,
+  type HighlightTone,
+  type TextSnippet,
+} from "./highlighted-text";
