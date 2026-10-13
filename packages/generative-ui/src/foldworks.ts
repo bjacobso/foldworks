@@ -1,4 +1,4 @@
-import { Alert, Badge, Button, Card, Heading, Layout, Table, Text } from "@foldworks/ui";
+import { Alert, Badge, Button, Card, Field, Heading, Layout, Table, Text } from "@foldworks/ui";
 import { Schema as S } from "effect";
 
 import type { ActionDefinitions, Catalog } from "./catalog";
@@ -92,6 +92,19 @@ export const foldworksComponents = {
     }),
     children: "none",
     events: ["press"],
+  },
+  TextInput: {
+    description:
+      "Controlled text field. The change event sends data { value: string } on every edit. The host updates the value prop.",
+    props: S.Struct({
+      label: S.String,
+      value: S.String,
+      description: S.optional(S.String),
+      placeholder: S.optional(S.String),
+      disabled: S.optional(S.Boolean),
+    }),
+    children: "none",
+    events: ["change"],
   },
   Table: {
     description: "Small read-only data table. Prefer fewer than ten rows.",
@@ -254,6 +267,24 @@ export const foldworksRegistry = <Message>(): Registry<Message> => ({
         rows: value.rows,
         attributes: [h.Key(context.id)],
         ...optional("caption", value.caption),
+      },
+      h,
+    );
+  },
+  TextInput: (context, h) => {
+    const value = props("TextInput", context);
+    return Field.input<Message>(
+      {
+        id: context.id,
+        attributes: [h.Key(context.id)],
+        label: value.label,
+        value: value.value,
+        ...optional("description", value.description),
+        ...optional("placeholder", value.placeholder),
+        ...optional("isDisabled", value.disabled),
+        ...(context.element.on?.change === undefined
+          ? { isReadOnly: true }
+          : { onInput: (next: string) => context.emit("change", { value: next }) as Message }),
       },
       h,
     );

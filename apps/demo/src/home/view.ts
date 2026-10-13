@@ -40,6 +40,7 @@ import {
   pdfViewerRouter,
   queryBuilderRouter,
   statechartRouter,
+  viewspecRouter,
   uiKitRouter,
   workbenchRouter,
   workflowPath,
@@ -157,7 +158,7 @@ const packages: Readonly<Record<string, Package>> = {
   },
   "generative-ui": {
     description: "Schema-checked agent interfaces rendered through a closed component catalog.",
-    href: "#generative-ui",
+    href: viewspecRouter(),
     icon: Sparkles,
   },
   codebase: {

@@ -14,10 +14,25 @@ export type ComponentDefinition<Props extends ObjectSchema = ObjectSchema> = Rea
 export type ActionDefinition<Params extends ObjectSchema = ObjectSchema> = Readonly<{
   description: string;
   params: Params;
+  /** User event data, separate from the document's static parameters. */
+  data?: ObjectSchema;
 }>;
 
 export type ComponentDefinitions = Readonly<Record<string, ComponentDefinition>>;
 export type ActionDefinitions = Readonly<Record<string, ActionDefinition>>;
+
+/** A discriminated union inferred from the host's action schemas. */
+export type IntentFor<Actions extends ActionDefinitions> = {
+  [Name in keyof Actions & string]: Readonly<{
+    action: Name;
+    elementId: string;
+    event: string;
+    params: Actions[Name]["params"]["Type"];
+  }> &
+    (Actions[Name] extends { readonly data: infer Data extends ObjectSchema }
+      ? Readonly<{ data: Data["Type"] }>
+      : {});
+}[keyof Actions & string];
 
 export type Catalog<
   Components extends ComponentDefinitions = ComponentDefinitions,
@@ -28,6 +43,7 @@ export type Catalog<
   components: Components;
   actions: Actions;
   schema: S.Codec<Spec, Spec, never, never>;
+  intentSchema: S.Codec<IntentFor<Actions>, IntentFor<Actions>, never, never>;
 }>;
 
 const union = (members: ReadonlyArray<S.Top>): S.Top => {
@@ -76,7 +92,18 @@ export const defineCatalog = <
     root: S.String,
     elements: S.Record(S.String, elementSchema(config.components, config.actions)),
   }) as unknown as S.Codec<Spec, Spec, never, never>;
-  return { ...config, schema };
+  const intentSchema = union(
+    Object.entries(config.actions).map(([name, definition]) =>
+      S.Struct({
+        action: S.Literal(name),
+        elementId: S.String,
+        event: S.String,
+        params: definition.params,
+        ...(definition.data === undefined ? {} : { data: definition.data }),
+      }),
+    ),
+  ) as S.Codec<IntentFor<Actions>, IntentFor<Actions>, never, never>;
+  return { ...config, schema, intentSchema };
 };
 
 const jsonSchemaFor = (schema: S.Top): unknown => {
@@ -105,6 +132,7 @@ export const catalogPrompt = (catalog: Catalog): string => {
         name,
         description: definition.description,
         params: jsonSchemaFor(definition.params),
+        ...(definition.data === undefined ? {} : { data: jsonSchemaFor(definition.data) }),
       }),
     )
     .join("\n");
@@ -115,6 +143,7 @@ export const catalogPrompt = (catalog: Catalog): string => {
     "The root and every child reference must name an element in the elements map.",
     "The element graph must be connected and acyclic. Leaf elements use an empty children array.",
     "Bind interactions through an element's on map. Never emit code, HTML, CSS, URLs, or event-handler source.",
+    "Action params are static document data. User event data is supplied by the renderer, never by a binding.",
     "Components (one JSON object per line):",
     components,
     "Actions (one JSON object per line):",

@@ -29,6 +29,7 @@ import { update as updateOutliner } from "../outliner/update";
 import { applyTheme, ThemeName } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
 import { update as updateStatechart } from "../statechart/update";
+import { update as updateViewSpec } from "../viewspec/update";
 import { update as updateThemeBuilder } from "../theme-builder/update";
 import { Message as ThemeBuilderMessage } from "../theme-builder/message";
 import { update as updateUiKit } from "../ui-kit/update";
@@ -150,6 +151,13 @@ const foldStatechart = Update.foldChild({
   read: (model: Model) => Option.some(model.statechart),
   write: (model, statechart) => evo(model, { statechart: () => statechart }),
   toParentMessage: (message) => Message.GotStatechartMessage({ message }),
+});
+
+const foldViewSpec = Update.foldChild({
+  update: updateViewSpec,
+  read: (model: Model) => Option.some(model.viewspec),
+  write: (model, viewspec) => ({ ...model, viewspec }),
+  toParentMessage: (message) => Message.GotViewSpecMessage({ message }),
 });
 
 const foldThemeBuilder = Update.foldChild({
@@ -402,6 +410,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotWorkflowEditorMessage: ({ message: childMessage }) => foldWorkflow(model, childMessage),
     GotFormEditorMessage: ({ message: childMessage }) => foldForm(model, childMessage),
     GotStatechartMessage: ({ message: childMessage }) => foldStatechart(model, childMessage),
+    GotViewSpecMessage: ({ message }) => foldViewSpec(model, message),
     GotCodeEditorMessage: ({ message }) => foldCodeEditor(model, message),
     GotWorkbenchMessage: ({ message }) => foldWorkbench(model, message),
     GotDataGridDemoMessage: ({ message: childMessage }) => foldDataGrid(model, childMessage),

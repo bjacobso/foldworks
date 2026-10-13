@@ -1,6 +1,6 @@
 import { Result, Schema as S, SchemaIssue } from "effect";
 
-import type { Catalog } from "./catalog";
+import type { ActionDefinitions, Catalog, ComponentDefinitions, IntentFor } from "./catalog";
 import {
   defaultValidationLimits,
   type Spec,
@@ -12,8 +12,11 @@ export type ValidationResult = Result.Result<Spec, ReadonlyArray<ValidationIssue
 
 const formatter = SchemaIssue.makeFormatterStandardSchemaV1();
 
-const schemaIssues = (catalog: Catalog, input: unknown): ValidationResult => {
-  const decoded = S.decodeUnknownResult(catalog.schema, {
+const schemaIssues = <Value>(
+  schema: S.Codec<Value, Value, never, never>,
+  input: unknown,
+): Result.Result<Value, ReadonlyArray<ValidationIssue>> => {
+  const decoded = S.decodeUnknownResult(schema, {
     errors: "all",
     onExcessProperty: "error",
   })(input);
@@ -65,7 +68,7 @@ export const validateSpec = (
   input: unknown,
   overrides: Partial<ValidationLimits> = {},
 ): ValidationResult => {
-  const decoded = schemaIssues(catalog, input);
+  const decoded = schemaIssues(catalog.schema, input);
   if (Result.isFailure(decoded)) return decoded;
   const spec = decoded.success;
   const limits = { ...defaultValidationLimits, ...overrides };
@@ -164,4 +167,25 @@ export const validateSpec = (
       });
   }
   return issues.length === 0 ? Result.succeed(spec) : Result.fail(issues);
+};
+
+/** Decode a typed host intent. This validates data, not identity or authorization. */
+export const validateActionIntent = <
+  Components extends ComponentDefinitions,
+  Actions extends ActionDefinitions,
+>(
+  catalog: Catalog<Components, Actions>,
+  input: unknown,
+  overrides: Partial<Pick<ValidationLimits, "maxStringLength">> = {},
+): Result.Result<IntentFor<Actions>, ReadonlyArray<ValidationIssue>> => {
+  const decoded = schemaIssues(catalog.intentSchema, input);
+  if (Result.isFailure(decoded)) return decoded;
+  const issues: ValidationIssue[] = [];
+  visitStrings(
+    decoded.success,
+    "intent",
+    overrides.maxStringLength ?? defaultValidationLimits.maxStringLength,
+    issues,
+  );
+  return issues.length === 0 ? decoded : Result.fail(issues);
 };

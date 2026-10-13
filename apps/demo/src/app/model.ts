@@ -36,6 +36,7 @@ import {
 } from "../theme-builder/model";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
 import { Model as StatechartModel, initialModel as initialStatechart } from "../statechart/model";
+import { Model as ViewSpecModel, init as initViewSpec } from "../viewspec/model";
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
 import {
   AppRoute,
@@ -54,6 +55,7 @@ export const Model = S.Struct({
   workbench: WorkbenchModel,
   workflowEditor: WorkflowEditorModel,
   statechart: StatechartModel,
+  viewspec: ViewSpecModel,
   formEditor: FormEditorModel,
   dataGridDemo: DataGridModel,
   dataTableDemo: DataTableModel,
@@ -95,6 +97,7 @@ export const init = (
     workbench: initWorkbench(workers?.snapshot, workers?.error),
     workflowEditor: initWorkflowEditor(persisted?.workflow, workflowOrientationFromRoute(route)),
     statechart: initialStatechart,
+    viewspec: initViewSpec(),
     formEditor: initFormEditor(persisted?.forms ?? exampleForms, exampleId, mode),
     dataGridDemo: setDataGridExample(initialDataGrid, dataGridExampleFromRoute(route)),
     dataTableDemo: initDataTable(dataTablePersonFromRoute(route)),

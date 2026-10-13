@@ -1,4 +1,5 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Schema } from "effect";
 
 import type { ActionIntent, Element, Spec } from "./model";
 
@@ -7,7 +8,7 @@ export type RenderContext<Message> = Readonly<{
   element: Element;
   props: Readonly<Record<string, unknown>>;
   children: ReadonlyArray<Html>;
-  emit: (event: string) => Message | undefined;
+  emit: (event: string, data?: Schema.JsonObject) => Message | undefined;
 }>;
 
 export type ComponentRenderer<Message> = (
@@ -49,7 +50,7 @@ export const render = <Message>(config: RenderConfig<Message>, h: HtmlBuilder<Me
         element: node,
         props: node.props,
         children,
-        emit: (event) => {
+        emit: (event, data) => {
           const binding = node.on?.[event];
           return binding === undefined
             ? undefined
@@ -58,6 +59,7 @@ export const render = <Message>(config: RenderConfig<Message>, h: HtmlBuilder<Me
                 elementId: id,
                 event,
                 params: binding.params ?? {},
+                ...(data === undefined ? {} : { data }),
               });
         },
       },

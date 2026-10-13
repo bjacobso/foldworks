@@ -5,9 +5,9 @@ data, not code: an Effect Schema validates a flat component graph, and a
 registry maps the allowed component names onto real Foldworks views.
 
 This is an intentionally small first slice. It includes layout, content,
-status, tables, and buttons. It does not yet include agent-defined HTML/CSS,
-remote scripts, arbitrary URLs, mutable form state, repeat expressions, or
-streaming patches.
+status, tables, buttons, and controlled text fields. It does not yet include
+agent-defined HTML/CSS, remote scripts, arbitrary URLs, document-declared state,
+repeat expressions, or streaming patches.
 
 Use `@foldworks/generative-ui/core`, `/ai`, and `/mcp` in server code. The
 `/foldworks` entry point includes browser UI components, and `/mcp-app` contains
@@ -51,6 +51,78 @@ if (Result.isSuccess(decoded)) {
 Validation is strict and checks catalog membership, component props, action
 params, supported events, references, reachability, cycles, depth, node count,
 fan-out, and string sizes.
+
+## Controlled fields and typed intents
+
+`TextInput` takes `label` and `value`, with optional `description`, `placeholder`,
+and `disabled` props. Its `change` event fires on every edit with
+`data: { value: string }`. The document's static `params` stay separate from
+user event data. Declare the receiving action's `data` schema in the catalog:
+
+```ts
+import { validateActionIntent } from "@foldworks/generative-ui/core";
+
+const catalog = createFoldworksCatalog({
+  edit_note: {
+    description: "Edit the local note draft.",
+    params: Schema.Struct({}),
+    data: Schema.Struct({ value: Schema.String }),
+  },
+});
+
+// An element in a normal version-1 document:
+const field = {
+  type: "TextInput",
+  props: { label: "Note", value: "Current draft" },
+  children: [],
+  on: { change: { action: "edit_note", params: {} } },
+};
+
+// In the host's Foldkit reducer:
+const decoded = validateActionIntent(catalog, receivedIntent);
+if (Result.isSuccess(decoded)) {
+  const intent = decoded.success;
+  // action, params, and data are inferred from this catalog.
+  return { model: { ...model, note: intent.data.value } };
+}
+```
+
+The host stores the new value and supplies it in the next document. Use a pure
+presentation adapter to compose fixture or application data into concrete
+props and static action params, then call `validateSpec` before rendering.
+`toMessage` constructs a Foldkit message; domain work belongs in the host's
+update/command handling. The renderer has no expression evaluator, state store,
+network access, or action executor. An unbound text field is read-only; a
+disabled field has no edit handler.
+
+`catalog.intentSchema` and the exported `IntentFor<typeof catalog.actions>`
+derive a discriminated action union from the same schemas. Actions declaring
+`data` require it in received intents; actions without a data schema reject it.
+`validateActionIntent` rejects excess properties and applies the default
+4,000-character string limit, adjustable with `{ maxStringLength }`.
+Bindings cannot supply event data. `validateSpec` validates static params and
+event names; it does not prove that an action's data schema accepts a
+component's emitted payload. Decode received intents to check that boundary.
+
+Intent decoding validates shape, not authorization, element identity, event
+origin, freshness, or whether a control was enabled. Hosts must check their own
+policy and current domain state before executing requests. Keep all schemas
+JSON-compatible when carrying documents and intents through transports.
+
+Existing version-1 documents and button intents retain their shape. Adding a
+text field requires a renderer/catalog that supports it. The MCP Apps bridge
+can carry fields in complete specs and includes event data when sending an
+intent; it does not maintain drafts or apply host responses automatically.
+
+The demo's `/viewspec` route exercises search, selection, local drafts, empty
+results, and host acceptance/refusal using hardcoded crew fixtures. It also
+accepts prompts through `generate` with a mock Effect `LanguageModel` service.
+Select a fixed response cassette to try valid layouts, generated host actions,
+schema/graph failures, malformed JSON, and a provider error. These are local
+mock responses; no live model interprets the prompt. Inspect the generated and
+fixture documents and the last submitted intent in the playground. See the
+[ViewSpec feature and ownership map](../../docs/viewspec.md) for the legacy
+reference, adoption choices, and remaining gaps.
 
 ## Generate with Effect AI
 
@@ -111,6 +183,7 @@ useful inside the existing agent chat, over MCP, or over another transport.
   permission flow.
 - MCP is a transport and embedding boundary, not the UI domain model.
 
-The next useful step is patch streaming. It should follow after the
+Further work includes additional controlled fields, bounded document-local
+state and composition, and patch streaming. Streaming should follow after the
 complete-spec path has agent-generation evals, accessibility checks, and
 resource-budget telemetry.

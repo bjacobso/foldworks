@@ -9,7 +9,7 @@ diff review prototype at `/diff-viewer`.
 Foldkit's bidirectional router owns navigational state. The project overview
 lives at `/`; demos live at `/ui-kit`, `/editor`, `/codebase`, `/data-table`, `/data-grid`, `/query-builder`,
 `/form-builder`, `/workflow`, `/pdf-annotator`, `/agent`, `/outliner`, `/code-editor`,
-`/workbench`, and `/statechart`. Workflow orientation and the
+`/workbench`, `/statechart`, and `/viewspec`. Workflow orientation and the
 form's example and Editor/Preview mode live in query parameters so those states
 can be linked, reloaded, and traversed with browser history. Transient selections,
 drag state, column widths, and in-progress document edits remain in the
@@ -172,3 +172,17 @@ The `/ui-kit` Desktop workspace demonstrates shared keyboard commands, measured
 breadcrumb/action rows, inline editing, token entry, a nested inspector, context
 menus, modal variants and a controlled date input. See
 [the integration guide](../../packages/ui/docs/desktop.md).
+
+## ViewSpec playground
+
+The `/viewspec` route uses `@foldworks/generative-ui` to render a validated
+fixture crew directory and assignment draft. It demonstrates controlled text
+edits, host-owned typed intents, and local acceptance/refusal without an
+ontology connection. The sidebar and generative-ui package card link to it.
+Its mock generation panel accepts a prompt and replays one of seven response
+cassettes through the real generative-ui generation API and validation. Try
+**Mission brief** for an accepted generated action, **Off-duty request** for a
+refused one, or an invalid/error cassette to see failure and retry. The cassette
+determines the fixed response; the mock does not interpret the prompt. Add
+responses in `src/viewspec/cassettes.ts`. No AI credentials are needed.
+See [the ownership map](../../docs/viewspec.md) for the adopted slice and gaps.
