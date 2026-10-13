@@ -1,0 +1,105 @@
+.fw-graph {
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  min-width: 0;
+}
+.fw-graph__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.fw-graph button {
+  font: inherit;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.fw-graph button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.fw-graph button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px var(--ring);
+}
+.fw-graph__canvas {
+  position: relative;
+  overflow: hidden;
+  background: var(--muted);
+  border: 1px solid var(--border);
+}
+.fw-graph__background {
+  position: absolute;
+  inset: 0;
+}
+.fw-graph__world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.fw-graph__edges {
+  overflow: visible;
+  position: absolute;
+  pointer-events: none;
+}
+.fw-graph__edges polyline {
+  stroke: var(--graph-tone, var(--muted-foreground));
+  stroke-width: 1.5;
+  fill: none;
+}
+.fw-graph__edges text {
+  fill: var(--graph-tone, var(--foreground));
+  stroke: var(--muted);
+  stroke-width: 4px;
+  paint-order: stroke;
+  font-size: 12px;
+}
+.fw-graph__node {
+  position: absolute;
+  border: 1px solid var(--graph-tone, var(--border));
+  border-radius: var(--radius-md);
+  background: var(--card);
+  pointer-events: none;
+}
+.fw-graph__node-label {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  min-height: 62px;
+  pointer-events: auto;
+}
+.fw-graph__disclosure {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  pointer-events: auto;
+}
+.fw-graph [data-tone="info"] {
+  --graph-tone: var(--foldworks-ui-info);
+}
+.fw-graph [data-tone="success"] {
+  --graph-tone: var(--foldworks-ui-success);
+}
+.fw-graph [data-tone="warning"] {
+  --graph-tone: var(--foldworks-ui-warning);
+}
+.fw-graph [data-tone="danger"] {
+  --graph-tone: var(--foldworks-ui-danger);
+}
+.fw-graph [data-tone="muted"] {
+  --graph-tone: var(--muted-foreground);
+}
+.fw-graph__list {
+  margin-top: 12px;
+}
+.fw-graph__list li {
+  margin-block: 4px;
+}
+/* Container frames must not cover edges routed between their children. */
+.fw-graph__node[data-container="true"] {
+  background: transparent;
+}

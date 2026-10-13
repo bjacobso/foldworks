@@ -12,16 +12,19 @@ import "@foldworks/diff-viewer/styles.css";
 
 const [file] = parseUnifiedDiff(patch);
 
-DiffViewer.view({
-  file,
-  mode: "Split",
-  selectedRange: { path: file.path, side: "new", startLine: 20, endLine: 24 },
-  onSelectLine: (selection) => Message.SelectedLine(selection),
-  onStartSelection: (selection) => Message.StartedSelection(selection),
-  onExtendSelection: (selection, method) => Message.ExtendedSelection({ ...selection, method }),
-  onEndSelection: () => Message.EndedSelection(),
-  onCancelSelection: () => Message.CancelledSelection(),
-}, h);
+DiffViewer.view(
+  {
+    file,
+    mode: "Split",
+    selectedRange: { path: file.path, side: "new", startLine: 20, endLine: 24 },
+    onSelectLine: (selection) => Message.SelectedLine(selection),
+    onStartSelection: (selection) => Message.StartedSelection(selection),
+    onExtendSelection: (selection, method) => Message.ExtendedSelection({ ...selection, method }),
+    onEndSelection: () => Message.EndedSelection(),
+    onCancelSelection: () => Message.CancelledSelection(),
+  },
+  h,
+);
 ```
 
 Drag across line-number gutters to select a range, or focus a gutter and use
@@ -29,3 +32,35 @@ Shift+Arrow Up/Down. Escape cancels the selection. The view is deliberately
 controlled: view mode, reviewed state, selected range, and thread metadata all
 belong to the application. This keeps the renderer useful with local Git,
 GitHub, GitLab, or agent-authored review workflows.
+
+## Prose comparison
+
+```ts
+import { diffText, ProseDiff } from "@foldworks/diff-viewer";
+
+const parts = diffText(originalClause, revisedClause);
+ProseDiff.view(
+  {
+    oldText: originalClause,
+    newText: revisedClause,
+    mode: "split", // "inline" by default
+    oldLabel: "Reference",
+    newLabel: "Rider",
+  },
+  h,
+);
+```
+
+`diffText` returns compact `equal`, `addition`, and `removal` parts with exact
+text and UTF-16 `oldFrom`/`newFrom` offsets. Filtering out additions reconstructs
+the original; filtering out removals reconstructs the revision, including all
+whitespace and punctuation. Word mode handles Unicode words and separate
+punctuation. `{ granularity: "sentence", locale: "en" }` uses `Intl.Segmenter`.
+It does not classify moved sentences or align unrelated sections.
+
+Myers' search is bounded by `maxSearchCells` (default 1,000,000). If that budget
+is exhausted, the changed middle becomes a removal plus an addition; common
+prefix and suffix tokens remain equal. This retains exact source text while
+avoiding unbounded diff-search memory on long, unrelated inputs. The view is
+controlled and read-only, uses semantic `<ins>`/`<del>` markup and theme tones,
+and needs the same package stylesheet as `DiffViewer`.

@@ -30,3 +30,14 @@ export {
   type SurfaceOverlay,
 } from "./surface";
 export { base64ToBytes, bytesToBase64, downloadBytes } from "./bytes";
+export {
+  PdfTextItem,
+  PdfPageText,
+  PdfTextRegion,
+  PdfTextSelection,
+  pdfTextItems,
+  readPageText,
+  readPdfText,
+  locateQuote,
+  type QuoteLocation,
+} from "./text";

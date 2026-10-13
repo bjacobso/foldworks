@@ -173,6 +173,7 @@ export const view = defineView<Model, Message>((model, h) =>
               model: model.viewer,
               toParentMessage: (message) => Message.GotViewerMessage({ message }),
               label: "Synthetic onboarding packet",
+              selectableText: true,
               overlays: overlays(model),
               watermark: "Synthetic",
               banner:

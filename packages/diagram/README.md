@@ -104,3 +104,62 @@ Drop points are reported in world coordinates; resolve them with `nodeAt`,
 
 Arrow keys nudge the selection, Shift moves ten units, Delete and Backspace
 request removal, and Enter activates the focused element.
+
+## Read-only graph exploration
+
+`@foldworks/diagram/graph` provides a themed graph view on this package's
+existing compound layout and canvas interaction. It is also exported as `Graph`
+from the root package. Import `@foldworks/diagram/styles.css` once.
+
+```ts
+import * as Graph from "@foldworks/diagram/graph";
+
+const graph = Graph.init({ id: "relations", direction: "Down" });
+const document: Graph.GraphDocument = {
+  nodes: [
+    { id: "source", data: { label: "Source", tone: "info" } },
+    { id: "result", data: { label: "Result", description: "A derived record" } },
+  ],
+  edges: [
+    {
+      id: "supports",
+      source: { nodeId: "source" },
+      target: { nodeId: "result" },
+      data: { label: "Supports", tone: "success" },
+    },
+  ],
+  annotations: [],
+};
+
+// Bind your document when folding the reducer:
+const updateGraph = (model: Graph.Model, message: Graph.Message) =>
+  Graph.update(model, message, document);
+
+Graph.view(
+  { model: graph, document, toParentMessage: (message) => Message.GotGraphMessage({ message }) },
+  h,
+);
+```
+
+Lift `Graph.subscriptions` to track pan gestures. Fold `OutMessage.Selected`,
+`ClearedSelection`, `Activated`, and `ChangedExpansion` to handle application behavior. Click or
+Space selects a node; Enter or double-click activates it. In the default `Down`
+layout, Up/Down follow the first incoming/outgoing edge, and Left/Right walk
+siblings in document order. `Right` layout rotates those directions. Nodes are
+never nudged or edited. One visual node is a tab stop; the optional, visible
+“Graph as a list” disclosure offers each node and its outgoing labeled
+relations through ordinary buttons.
+
+Compound disclosure hides descendants and reroutes external edges to their
+collapsed ancestor. `ChangedNeighborhood({ id: Option.some(nodeId), hops: 1 })`
+filters to an undirected neighborhood and its ancestors; toolbar controls
+expand or contract that neighborhood. `Option.none()` restores the whole graph.
+`RequestedFit` fits the visible graph, and `RequestedFocus({ id })` reveals a
+node's ancestors, centers it, and moves focus. The host must supply unique IDs
+and a valid document (use `validateDocument` for imported data).
+
+Limits: node content is a label with an optional accessible description; use the
+lower layers for custom renderers. Free-form annotations are omitted from this
+read-only view. All visible nodes render at once. Neighborhood exploration uses
+loaded nodes only; fetching neighbors belongs to the host. Layout and graph
+state contain no ontology, inference, or application record semantics.

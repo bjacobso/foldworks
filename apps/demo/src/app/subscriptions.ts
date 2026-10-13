@@ -1,3 +1,4 @@
+import { subscriptions as documentAnalysisSubscriptions } from "../document-analysis/subscriptions";
 import { subscriptions as orchestratorSubscriptions } from "../orchestrator/subscriptions";
 import { Effect, Schema as S, Stream } from "effect";
 import { PdfAnnotator } from "@foldworks/pdf-annotator";
@@ -129,6 +130,12 @@ const pdfAnnotator = Subscription.lift(PdfAnnotator.subscriptions)<Model, Messag
   toParentMessage: (message) => Message.GotPdfAnnotatorMessage({ message }),
 });
 
+const documentAnalysis = Subscription.lift(documentAnalysisSubscriptions)<Model, Message>({
+  when: (model) => model.route._tag === "DocumentAnalysis",
+  toChildModel: (model) => model.documentAnalysis,
+  toParentMessage: (message) => Message.GotDocumentAnalysisMessage({ message }),
+});
+
 export const subscriptions = Subscription.aggregate<Model, Message>()(
   workflow,
   statechart,
@@ -139,6 +146,7 @@ export const subscriptions = Subscription.aggregate<Model, Message>()(
   workbench,
   queryBuilder,
   pdfAnnotator,
+  documentAnalysis,
   themeSubscriptions,
   historySubscriptions,
 );

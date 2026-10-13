@@ -16,13 +16,7 @@ export const pdfViewerScenarios = (
       const pages = page.locator("[data-pdf-viewer-page]");
       const controls = page.getByRole("toolbar", { name: "PDF controls" });
       await expect.poll(() => pages.count()).toBe(3);
-      await expect
-        .poll(() =>
-          pages.evaluateAll((elements) =>
-            elements.map((element) => element.getAttribute("data-state")),
-          ),
-        )
-        .toEqual(["rendered", "rendered", "rendered"]);
+      await expect.poll(() => pages.nth(0).getAttribute("data-state")).toBe("rendered");
       await expect
         .poll(() => page.getByText("Synthetic preview", { exact: true }).isVisible())
         .toBe(true);
@@ -49,6 +43,26 @@ export const pdfViewerScenarios = (
         .poll(() => controls.getByText("Page 3 of 3", { exact: true }).isVisible())
         .toBe(true);
 
+      await expect.poll(() => rotatedPage.getAttribute("data-state")).toBe("rendered");
+      const title = rotatedPage
+        .locator("[data-pdf-text-layer] span")
+        .filter({ hasText: "Supplement B. Reverification" });
+      await expect.poll(() => title.count()).toBe(1);
+      // Measure both boxes in one frame while page navigation may still be animating.
+      const textGeometry = await title.evaluate((element) => {
+        const text = element.getBoundingClientRect();
+        const page = element.closest("[data-pdf-viewer-page]")!.getBoundingClientRect();
+        return {
+          x: (text.x - page.x) / page.width,
+          y: (text.y - page.y) / page.height,
+          width: text.width,
+          height: text.height,
+        };
+      });
+      expect(textGeometry.x).toBeCloseTo(72 / 792, 2);
+      expect(textGeometry.y).toBeGreaterThan(50 / 612);
+      expect(textGeometry.y).toBeLessThan(90 / 612);
+      expect(textGeometry.width).toBeGreaterThan(textGeometry.height * 5);
       await controls.getByRole("button", { name: "Previous page" }).click();
       await expect
         .poll(() => controls.getByText("Page 2 of 3", { exact: true }).isVisible())

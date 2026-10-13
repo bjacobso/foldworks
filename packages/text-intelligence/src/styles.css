@@ -164,3 +164,81 @@
   color: var(--muted-foreground, #71717a);
   font-size: 12px;
 }
+
+.fw-highlighted-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.fw-highlighted-text__range {
+  --highlight-color: var(--foldworks-ui-info, #2563eb);
+  background: color-mix(in srgb, var(--highlight-color) 15%, transparent);
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  white-space: inherit;
+  text-align: inherit;
+  box-decoration-break: clone;
+}
+button.fw-highlighted-text__range {
+  cursor: pointer;
+}
+.fw-highlighted-text__range[data-tone="neutral"],
+.fw-highlighted-text__range[data-tone="muted"] {
+  --highlight-color: var(--muted-foreground);
+}
+.fw-highlighted-text__range[data-tone="success"] {
+  --highlight-color: var(--foldworks-ui-success);
+}
+.fw-highlighted-text__range[data-tone="warning"] {
+  --highlight-color: var(--foldworks-ui-warning);
+}
+.fw-highlighted-text__range[data-tone="danger"] {
+  --highlight-color: var(--foldworks-ui-danger);
+}
+.fw-highlighted-text__range:not([data-depth="1"]) {
+  background: color-mix(in srgb, var(--highlight-color) 28%, transparent);
+}
+.fw-highlighted-text__range[data-selected="true"] {
+  box-shadow: 0 0 0 1px var(--highlight-color);
+}
+.fw-highlighted-text__range:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.fw-highlighted-text__hidden-control:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+.fw-highlighted-text__range[role="button"] {
+  cursor: pointer;
+}
+.fw-highlighted-text__group {
+  position: relative;
+}
+.fw-highlighted-text__tooltip {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  bottom: 100%;
+  left: 0;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  font-size: 12px;
+  white-space: normal;
+  min-width: 140px;
+  max-width: 280px;
+  pointer-events: none;
+}
+.fw-highlighted-text__group:hover > .fw-highlighted-text__tooltip,
+.fw-highlighted-text__group:focus-within > .fw-highlighted-text__tooltip {
+  display: block;
+}

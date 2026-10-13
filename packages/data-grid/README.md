@@ -383,3 +383,16 @@ writes against its current data at save time. A submitted batch does not
 prescribe atomicity or any particular persistence backend.
 
 Infinite loading remains future work.
+
+### Per-cell tones
+
+A column's `tone(context)` returns `Neutral`, `Info`, `Success`, `Warning`, or
+`Danger` for each rendered cell. This overrides the row's background for that
+cell while preserving the selection and editing-error treatment. It does not
+alter the value, sorting, or clipboard serialization. Render a label or icon as
+well when a status matters; color alone should not convey its meaning.
+
+```ts
+{ id: "status", header: "Status", accessor: (row) => row.status,
+  tone: ({ row }) => row.status === "conflict" ? "Danger" : "Success" }
+```

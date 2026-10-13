@@ -1,4 +1,8 @@
 import {
+  Model as DocumentAnalysisModel,
+  init as initDocumentAnalysis,
+} from "../document-analysis/model";
+import {
   Model as OrchestratorModel,
   initialModel as initialOrchestrator,
 } from "../orchestrator/model";
@@ -62,6 +66,7 @@ export const Model = S.Struct({
   outlinerDemo: OutlinerDemoModel,
   pdfAnnotator: PdfAnnotator.Model,
   pdfViewerDemo: PdfViewerDemoModel,
+  documentAnalysis: DocumentAnalysisModel,
   editor: ArticleEditor.Model,
   sidebar: Sidebar.Model,
   uiKit: UiKitModel,
@@ -106,6 +111,7 @@ export const init = (
       sampleUrl: "/foldworks-sample.pdf",
     }),
     pdfViewerDemo: initialPdfViewer,
+    documentAnalysis: initDocumentAnalysis(),
     editor: initialEditor(),
     sidebar: Sidebar.init({ id: "foldworks-sidebar", defaultCollapsed: route._tag === "Theme" }),
     uiKit: initialUiKit,
