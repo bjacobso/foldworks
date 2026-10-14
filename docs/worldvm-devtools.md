@@ -6,6 +6,9 @@ software that models the world, reasons about it, and acts on it. Its planned
 thread inspector, ontology browser, event log, webhook inspector, and admin UI.
 Foldworks is the UI layer those tools are planned to use.
 
+The [ViewSpec feature and ownership map](./viewspec.md) records a first generic
+UI-document slice and the legacy features that remain host or WorldVM concerns.
+
 This document records which Foldworks packages would build each surface and
 where WorldVM-specific code should live. It is a proposal, not a commitment.
 WorldVM's packages are not published yet, and nothing in this repository

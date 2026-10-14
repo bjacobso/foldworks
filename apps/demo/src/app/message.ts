@@ -22,6 +22,7 @@ import { Message as PdfViewerDemoMessage } from "../pdf-viewer/message";
 import { Message as QueryBuilderDemoMessage } from "../query-builder/message";
 import { ThemeName, ThemePreference } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
+import { Message as ViewSpecMessage } from "../viewspec/message";
 import { Message as ThemeBuilderMessage } from "../theme-builder/message";
 import { Message as UiKitMessage } from "../ui-kit/message";
 import { Message as WorkflowEditorMessage } from "../workflow/message";
@@ -42,6 +43,7 @@ export const Message = defineMessageUnion({
   GotWorkflowEditorMessage: { message: WorkflowEditorMessage },
   GotFormEditorMessage: { message: FormEditorMessage },
   GotStatechartMessage: { message: StatechartMessage },
+  GotViewSpecMessage: { message: ViewSpecMessage },
   GotCodeEditorMessage: { message: CodeEditorMessage },
   GotWorkbenchMessage: { message: WorkbenchMessage },
   GotDataGridDemoMessage: { message: DataGridMessage },

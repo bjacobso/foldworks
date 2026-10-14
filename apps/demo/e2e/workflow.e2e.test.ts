@@ -22,6 +22,7 @@ import { pdfViewerScenarios } from "./pdf-viewer.scenarios";
 import { statechartScenarios } from "./statechart.scenarios";
 import { outlinerScenarios } from "./outliner.scenarios";
 import { orchestratorScenarios } from "./orchestrator.scenarios";
+import { viewspecScenarios } from "./viewspec.scenarios";
 
 const appRoot = resolve(import.meta.dirname, "..");
 const screenshotDirectory = resolve(appRoot, "../../.context/demo-screenshots");
@@ -1656,4 +1657,5 @@ describe("structured workflow builder", { concurrent: false }, () => {
   outlinerScenarios(() => page, appUrl, screenshot);
   orchestratorScenarios(() => page, appUrl, screenshot);
   packageDemoScreenshotScenarios(() => page, appUrl, screenshot);
+  viewspecScenarios(() => page, appUrl, screenshot);
 });

@@ -27,6 +27,7 @@ export const ActionIntent = S.Struct({
   elementId: S.String,
   event: S.String,
   params: S.JsonObject,
+  data: S.optional(S.JsonObject),
 });
 export type ActionIntent = typeof ActionIntent.Type;
 

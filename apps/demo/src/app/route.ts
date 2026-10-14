@@ -17,6 +17,7 @@ export type Demo =
   | "Workbench"
   | "Workflow"
   | "Statechart"
+  | "ViewSpec"
   | "DataTable"
   | "DataGrid"
   | "FormBuilder"
@@ -43,6 +44,7 @@ export const AppRoute = defineRouteUnion({
   Workbench: {},
   Workflow: { orientation: S.Option(WorkflowOrientation) },
   Statechart: {},
+  ViewSpec: {},
   DataTable: { person: S.Option(S.String) },
   DataGrid: { example: S.Option(DataGridExample) },
   FormBuilder: {
@@ -81,6 +83,8 @@ export const docsRouter = pipe(
 export const homeRouter = pipe(Route.root, Route.mapTo(AppRoute.Home));
 
 export const statechartRouter = pipe(Route.literal("statechart"), Route.mapTo(AppRoute.Statechart));
+
+export const viewspecRouter = pipe(Route.literal("viewspec"), Route.mapTo(AppRoute.ViewSpec));
 
 export const codeEditorRouter = pipe(
   Route.literal("code-editor"),
@@ -156,6 +160,7 @@ const routeParser = Route.oneOf(
   editorRouter,
   workflowRouter,
   statechartRouter,
+  viewspecRouter,
   agentRouter,
   orchestratorRouter,
   workbenchRouter,
@@ -221,6 +226,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "Workflow";
     case "Statechart":
       return "Statechart";
+    case "ViewSpec":
+      return "ViewSpec";
     case "NotFound":
       return "Home";
   }
