@@ -6,10 +6,10 @@ import { join, resolve } from "node:path";
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const packagesRoot = join(repositoryRoot, "packages");
 const sharedRuntimeVersions = {
-  "@foldkit/ui": "0.156.0",
+  "@foldkit/ui": "0.168.0",
   "@stylexjs/stylex": "0.19.0",
-  effect: "4.0.0-rc.112",
-  foldkit: "0.156.0",
+  effect: "4.0.3",
+  foldkit: "0.168.0",
 };
 
 const run = (command, args, options = {}) =>
@@ -166,13 +166,23 @@ try {
         scripts: { build: "vite build", test: "vitest run", typecheck: "tsc --noEmit" },
         dependencies: Object.fromEntries([
           ...Object.entries(sharedRuntimeVersions),
+          ["@effect/platform-browser", "4.0.3"],
           ...[...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
         ]),
+        // Mirror the workspace's exception for these exact Foldkit releases.
+        // npm overrides also apply to peers; no global peer bypass is used.
+        overrides: {
+          "foldkit@0.168.0": {
+            effect: "$effect",
+            "@effect/platform-browser": "$@effect/platform-browser",
+          },
+          "@foldkit/ui@0.168.0": { effect: "$effect" },
+        },
         devDependencies: {
           "@stylexjs/unplugin": "0.19.0",
           typescript: "6.0.3",
           vite: "8.2.2",
-          vitest: "4.1.11",
+          vitest: "5.0.3",
         },
       },
       null,
@@ -234,6 +244,10 @@ import "@foldworks/code-editor/styles.css";
 import "@foldworks/data-table/styles.css";
 import "@foldworks/data-grid/styles.css";
 import "@foldworks/pdf-annotator/styles.css";
+import "@foldworks/pdf-viewer/styles.css";
+import "@foldworks/text-intelligence/styles.css";
+import "@foldworks/diff-viewer/styles.css";
+import "@foldworks/diagram/styles.css";
 
 import * as Agent from "@foldworks/agent";
 import * as Editor from "@foldworks/editor";
@@ -243,6 +257,11 @@ import * as StructuredEditor from "@foldworks/code-editor/structured";
 import * as DataTable from "@foldworks/data-table";
 import * as DataGrid from "@foldworks/data-grid";
 import * as Diagram from "@foldworks/diagram";
+import * as Graph from "@foldworks/diagram/graph";
+import * as Pdf from "@foldworks/pdf";
+import * as PdfViewer from "@foldworks/pdf-viewer";
+import * as TextIntelligence from "@foldworks/text-intelligence";
+import * as DiffViewer from "@foldworks/diff-viewer";
 import * as FormBuilder from "@foldworks/form-builder";
 import * as History from "@foldworks/history";
 import * as Keyboard from "@foldworks/keyboard";
@@ -254,7 +273,7 @@ import * as UiIcon from "@foldworks/ui/icon";
 import * as UiTokens from "@foldworks/ui/tokens.stylex";
 import * as Workflow from "@foldworks/workflow";
 
-const modules = [Agent, Editor, CodeEditor, EditorContracts, StructuredEditor, DataTable, DataGrid, Diagram, FormBuilder, History, Keyboard, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
+const modules = [Agent, Editor, CodeEditor, EditorContracts, StructuredEditor, DataTable, DataGrid, Diagram, Graph, Pdf, PdfViewer, TextIntelligence, DiffViewer, FormBuilder, History, Keyboard, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
 const app = document.querySelector<HTMLElement>("#app");
 if (app === null) throw new Error("Missing smoke-test mount point.");
 app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.keys(module).length, 0) + " Foldworks exports";

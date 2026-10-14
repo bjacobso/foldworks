@@ -56,6 +56,9 @@ export const Model = S.Struct({
   /** Increments on every load so late results from an earlier document are ignored. */
   revision: S.Number,
   renderScale: S.Number,
+  maxCachedPages: S.Number,
+  visiblePageIndexes: S.Array(S.Number),
+  cachedPageIndexes: S.Array(S.Number),
   zoom: Zoom,
   viewportWidth: S.Number,
   currentPageIndex: S.Number,
@@ -69,6 +72,8 @@ export type InitConfig = Readonly<{
   zoom?: "fit-width" | number;
   /** Pixels per PDF point used when rasterizing pages. Defaults to 2. */
   renderScale?: number;
+  /** Maximum retained page images, default 8. Visible pages are prioritized. */
+  maxCachedPages?: number;
 }>;
 
 export const MIN_ZOOM_PERCENT = 50;
@@ -88,6 +93,11 @@ export const init = (config: InitConfig): Model => ({
   id: config.id,
   document: ViewerDocument.Empty(),
   revision: 0,
+  maxCachedPages: Number.isFinite(config.maxCachedPages)
+    ? Math.max(1, Math.floor(config.maxCachedPages!))
+    : 8,
+  visiblePageIndexes: [],
+  cachedPageIndexes: [],
   renderScale:
     config.renderScale !== undefined &&
     Number.isFinite(config.renderScale) &&
@@ -130,16 +140,4 @@ export const nextZoomStep = (percent: number, direction: "in" | "out"): number =
       ? ZOOM_STEPS.find((candidate) => candidate > current)
       : [...ZOOM_STEPS].reverse().find((candidate) => candidate < current);
   return step ?? (direction === "in" ? MAX_ZOOM_PERCENT : MIN_ZOOM_PERCENT);
-};
-
-/** Next page still waiting for a raster, starting at `fromIndex` and wrapping. */
-export const nextPendingPageIndex = (
-  pages: ReadonlyArray<ViewerPage>,
-  fromIndex: number,
-): number | undefined => {
-  for (let offset = 0; offset < pages.length; offset += 1) {
-    const page = pages[(fromIndex + offset) % pages.length];
-    if (page?.image._tag === "Pending") return page.pageIndex;
-  }
-  return undefined;
 };

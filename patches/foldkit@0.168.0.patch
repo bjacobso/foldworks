@@ -1,0 +1,30 @@
+--- a/dist/html/index.d.ts
++++ b/dist/html/index.d.ts
+@@ -171,7 +171,26 @@
+  *  `ReadonlyArray<Attribute<Message> | ChildAttribute>`, so consumers
+  *  can spread published bundles directly into their own attribute
+  *  arrays. */
+-export type Attribute<Message> = Data.TaggedEnum<{
++export interface Attribute<out Message> {
++    readonly _tag: AttributeTag;
++    readonly key?: string;
++    readonly value?: unknown;
++    readonly text?: string;
++    readonly name?: string;
++    readonly message?: Message;
++    readonly options?: ClickOptions;
++    readonly f?: (...args: never) => Message | Option.Option<Message> | Option.Option<Readonly<{
++        focusSelector: string;
++        message: Message;
++    }>>;
++    readonly action?: MountAction<Message, any>;
++}
++/** The `_tag` of every attribute variant. */
++export type AttributeTag = AttributeVariant<unknown>['_tag'];
++/** The precise runtime shape of every attribute, one variant per `_tag`.
++ *  Every variant is assignable to {@link Attribute}; the renderer switches on
++ *  this union. */
++export type AttributeVariant<Message> = Data.TaggedEnum<{
+     Key: {
+         readonly value: string;
+     };

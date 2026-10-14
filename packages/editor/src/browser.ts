@@ -1,6 +1,7 @@
 import { segments, offsetAtPoint, optionId, mostSevere } from "@foldworks/text-intelligence";
 import type { TextIntelligence } from "./intelligence";
 import type { Html, HtmlBuilder } from "foldkit/html";
+import { Option, Schema } from "effect";
 import {
   collapsed,
   find,
@@ -1018,7 +1019,8 @@ export const contentView = (
       {
         _tag: "OnCustomEvent",
         name: EVENT,
-        f: (event: CustomEvent<Message>) => event.detail,
+        f: (event: CustomEvent<unknown>): Option.Option<Message> =>
+          Schema.is(Message)(event.detail) ? Option.some(event.detail) : Option.none(),
       },
     ],
     [],

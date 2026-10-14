@@ -41,7 +41,7 @@ const loaded = (pages: ReadonlyArray<PageInfo> = [page(0), page(1), page(2)]): M
 };
 
 describe("PDF viewer update", () => {
-  it("opens a document, then renders its pages one at a time", () => {
+  it("opens page geometry and lets the mounted viewport request rendering", () => {
     const requested = update(
       init({ id: "journey-pdf" }),
       loadBytes("i-9.pdf", new Uint8Array([37, 80, 68, 70])),
@@ -59,7 +59,7 @@ describe("PDF viewer update", () => {
       }),
     );
     expect(opened.model.document._tag).toBe("Ready");
-    expect(commandNames(opened)).toEqual(["RenderPdfViewerPage"]);
+    expect(commandNames(opened)).toEqual([]);
 
     const first = update(
       opened.model,
@@ -69,7 +69,7 @@ describe("PDF viewer update", () => {
         url: "data:image/png;base64,AA==",
       }),
     );
-    expect(commandNames(first)).toEqual(["RenderPdfViewerPage"]);
+    expect(commandNames(first)).toEqual([]);
 
     const second = update(
       first.model,
@@ -82,6 +82,55 @@ describe("PDF viewer update", () => {
     expect(commandNames(second)).toEqual([]);
     const pages = second.model.document._tag === "Ready" ? second.model.document.pages : [];
     expect(pages.map((item) => item.image._tag)).toEqual(["Rendered", "Failed"]);
+  });
+
+  it("bounds the image cache and evicts outside the visible window first", () => {
+    let model = { ...loaded(), maxCachedPages: 2 };
+    model = update(
+      model,
+      Message.ChangedVisiblePages({ revision: model.revision, pageIndexes: [1, 2] }),
+    ).model;
+    for (const pageIndex of [0, 1, 2])
+      model = update(
+        model,
+        Message.CompletedRenderPage({
+          revision: model.revision,
+          pageIndex,
+          url: `page-${pageIndex}`,
+        }),
+      ).model;
+    expect(model.cachedPageIndexes).toEqual([1, 2]);
+    expect(model.document._tag === "Ready" && model.document.pages[0]?.image._tag).toBe("Pending");
+    const stale = update(
+      model,
+      Message.CompletedRenderPage({ revision: model.revision - 1, pageIndex: 0, url: "stale" }),
+    );
+    expect(stale.model).toBe(model);
+    expect(init({ id: "bounded", maxCachedPages: NaN }).maxCachedPages).toBe(8);
+  });
+
+  it("restarts cached pages on remount and surfaces a session failure", () => {
+    let model = loaded();
+    model = update(
+      model,
+      Message.CompletedRenderPage({ revision: model.revision, pageIndex: 0, url: "first" }),
+    ).model;
+    const restarted = update(
+      model,
+      Message.StartedRenderSession({ revision: model.revision }),
+    ).model;
+    expect(restarted.cachedPageIndexes).toEqual([]);
+    expect(restarted.document._tag === "Ready" && restarted.document.pages[0]?.image._tag).toBe(
+      "Pending",
+    );
+    const failed = update(
+      restarted,
+      Message.FailedRenderSession({ revision: model.revision, reason: "Worker unavailable" }),
+    ).model;
+    expect(failed.document._tag).toBe("Failed");
+    expect(
+      update(failed, Message.StartedRenderSession({ revision: model.revision - 1 })).model,
+    ).toBe(failed);
   });
 
   it("ignores results that arrive after a newer document was requested", () => {

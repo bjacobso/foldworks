@@ -1,3 +1,4 @@
+import { Message as DocumentAnalysisMessage } from "../document-analysis/message";
 import { Message as OrchestratorMessage } from "../orchestrator/message";
 import { Schema as S } from "effect";
 import { ActionIntent } from "@foldworks/generative-ui/core";
@@ -51,6 +52,7 @@ export const Message = defineMessageUnion({
   GotQueryBuilderDemoMessage: { message: QueryBuilderDemoMessage },
   GotOutlinerDemoMessage: { message: OutlinerDemoMessage },
   GotPdfAnnotatorMessage: { message: PdfAnnotator.Message },
+  GotDocumentAnalysisMessage: { message: DocumentAnalysisMessage },
   GotPdfViewerDemoMessage: { message: PdfViewerDemoMessage },
   GotEditorMessage: { message: EditorMessage },
   GotSidebarMessage: { message: Sidebar.Message },

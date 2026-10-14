@@ -25,6 +25,7 @@ export type Demo =
   | "Outliner"
   | "PdfAnnotator"
   | "PdfViewer"
+  | "DocumentAnalysis"
   | "UiKit"
   | "Theme";
 
@@ -54,6 +55,7 @@ export const AppRoute = defineRouteUnion({
   Outliner: {},
   PdfAnnotator: {},
   PdfViewer: {},
+  DocumentAnalysis: {},
   UiKit: {},
   Theme: {},
   NotFound: { path: S.String },
@@ -144,6 +146,11 @@ export const pdfAnnotatorRouter = pipe(
   Route.mapTo(AppRoute.PdfAnnotator),
 );
 
+export const documentAnalysisRouter = pipe(
+  Route.literal("document-analysis"),
+  Route.mapTo(AppRoute.DocumentAnalysis),
+);
+
 export const pdfViewerRouter = pipe(Route.literal("pdf-viewer"), Route.mapTo(AppRoute.PdfViewer));
 
 export const editorRouter = pipe(Route.literal("editor"), Route.mapTo(AppRoute.Editor));
@@ -167,6 +174,7 @@ const routeParser = Route.oneOf(
   outlinerRouter,
   pdfAnnotatorRouter,
   pdfViewerRouter,
+  documentAnalysisRouter,
   uiKitRouter,
   themeRouter,
   homeRouter,
@@ -206,6 +214,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "Outliner";
     case "PdfAnnotator":
       return "PdfAnnotator";
+    case "DocumentAnalysis":
+      return "DocumentAnalysis";
     case "PdfViewer":
       return "PdfViewer";
     case "Theme":

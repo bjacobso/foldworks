@@ -348,6 +348,7 @@ export const view = <Row, ParentMessage>(
               ),
             });
           };
+          const cellTone = cell.column.tone?.(cellContext);
           const details = editing ? undefined : cell.column.details?.(cellContext);
           const hasCellDetails = details !== undefined && details !== "";
           const content =
@@ -389,6 +390,7 @@ export const view = <Row, ParentMessage>(
               h.AriaSelected(isSelected),
               h.Tabindex(isTabStop ? 0 : -1),
               h.DataAttribute("cell-column-id", cell.column.id),
+              ...(cellTone === undefined ? [] : [h.DataAttribute("tone", cellTone.toLowerCase())]),
               h.DataAttribute("pinned", tableColumn?.pinned?.toLowerCase() ?? "false"),
               h.DataAttribute("pin-boundary", tableColumn?.isPinBoundary ? "true" : "false"),
               ...(tableColumn?.pinned === "Start"

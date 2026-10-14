@@ -158,6 +158,9 @@ export const nativeEditorScenarios = (
     await expect
       .poll(() => editor(page).getByRole("option").allTextContents())
       .toEqual(["LOG_LEVELdebug, info, warn, or error"]);
+    await expect
+      .poll(async () => (await snapshot(page)).completion?.items[0]?.insert)
+      .toBe("LOG_LEVEL=");
     await input(page).press("Enter");
     await expect
       .poll(() => editor(page).getByRole("option").allTextContents())
@@ -176,8 +179,14 @@ export const nativeEditorScenarios = (
     await expect
       .poll(() => input(page).inputValue())
       .toBe(`${text}LOG_LEVEL=warn\nCACHE_URL=redis://\${REGION}\n`);
+    await expect
+      .poll(async () =>
+        (await editor(page).getByRole("option").allTextContents()).some((option) =>
+          option.startsWith("FEATURE_EXPORT"),
+        ),
+      )
+      .toBe(true);
     const offered = await editor(page).getByRole("option").allTextContents();
-    expect(offered.some((option) => option.startsWith("FEATURE_EXPORT"))).toBe(true);
     expect(offered.some((option) => option.startsWith("APP_ENV"))).toBe(false);
     await screenshot("native-editor-language-service");
   });

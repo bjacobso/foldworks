@@ -1,3 +1,4 @@
+import { documentAnalysisScenarios } from "./document-analysis.scenarios";
 import { themeBuilderScenarios } from "./theme-builder.scenarios";
 import { docsScenarios } from "./docs.scenarios";
 import { desktopScenarios } from "./desktop.scenarios";
@@ -97,7 +98,7 @@ const centerQueryGroup = (groupId: string) =>
     .locator(`[data-query-group="${groupId}"]`)
     .evaluate((element) => element.scrollIntoView({ block: "center" }));
 
-describe.sequential("structured workflow builder", () => {
+describe("structured workflow builder", { concurrent: false }, () => {
   beforeAll(async () => {
     await mkdir(screenshotDirectory, { recursive: true });
     await build({
@@ -151,6 +152,7 @@ describe.sequential("structured workflow builder", () => {
         "Form builder",
         "Workflow builder",
         "Diff review",
+        "Document analysis",
         "PDF viewer",
         "PDF annotator",
         "Statechart editor",
@@ -159,6 +161,7 @@ describe.sequential("structured workflow builder", () => {
         "Text intelligence",
         "PDF rendering",
         "UI system",
+        "Theme builder",
       ]);
     await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
     await expect.poll(() => sidebar.getByText("Design system", { exact: true }).count()).toBe(0);
@@ -1649,6 +1652,7 @@ describe.sequential("structured workflow builder", () => {
   agentScenarios(() => page, appUrl, screenshot);
   diffViewerScenarios(() => page, appUrl, screenshot);
   pdfViewerScenarios(() => page, appUrl, screenshot);
+  documentAnalysisScenarios(() => page, appUrl, screenshot);
   statechartScenarios(() => page, appUrl, screenshot);
   outlinerScenarios(() => page, appUrl, screenshot);
   orchestratorScenarios(() => page, appUrl, screenshot);

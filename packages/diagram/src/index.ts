@@ -4,3 +4,4 @@ export * from "./layout";
 export * from "./operations";
 export * from "./scene";
 export * as Diagram from "./interaction";
+export * as Graph from "./graph";

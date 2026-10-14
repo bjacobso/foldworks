@@ -42,6 +42,7 @@
     "pdf-lib": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-browser": "catalog:",
     "@foldkit/devtools": "catalog:",
     "@foldkit/vite-plugin": "catalog:",
     "@playwright/test": "catalog:",

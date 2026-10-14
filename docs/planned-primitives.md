@@ -6,7 +6,9 @@ proposals, not settled package APIs or implementation commitments. Promote an
 area into implementation work after testing it against a real application view.
 
 [Outline workspace](./outline-workspace.md) records a working composition and
-the primitive gaps discovered while building it.
+the primitive gaps discovered while building it. [Document analysis](./document-analysis.md)
+records the available PDF, text, graph, diff, and citation primitives for a
+document analysis workspace, with the remaining work kept separate.
 
 ## Current foundation and adjacent work
 

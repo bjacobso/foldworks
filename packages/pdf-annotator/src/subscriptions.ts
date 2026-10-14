@@ -1,4 +1,4 @@
-import { Effect, Schema as S, Stream } from "effect";
+import { Option, Effect, Schema as S, Stream } from "effect";
 import { Subscription } from "foldkit";
 
 import { DragAndDrop } from "@foldkit/ui";
@@ -10,7 +10,7 @@ const drag = Subscription.lift({
   pdfAnnotationEscape: DragAndDrop.subscriptions.documentEscape,
   pdfAnnotationKeyboard: DragAndDrop.subscriptions.documentKeyboard,
 })<Model, Message>({
-  toChildModel: (model) => model.dragAndDrop,
+  read: (model) => Option.some(model.dragAndDrop),
   toParentMessage: (message) => Message.GotDragMessage({ message }),
 });
 
@@ -21,20 +21,23 @@ const resize = Subscription.make<Model, Message>()((entry) => ({
       modelToDependencies: (model) => ({
         isResizing: model.resizeState._tag === "Resizing",
       }),
-      dependenciesToStream: ({ isResizing }) => Stream.when(
-        Stream.merge(
-          Stream.fromEventListener<PointerEvent>(document, "pointermove").pipe(
-            Stream.map((event) => Message.MovedResize({
-              screenX: event.screenX,
-              screenY: event.screenY,
-            })),
+      dependenciesToStream: ({ isResizing }) =>
+        Stream.when(
+          Stream.merge(
+            Stream.fromEventListener<PointerEvent>(document, "pointermove").pipe(
+              Stream.map((event) =>
+                Message.MovedResize({
+                  screenX: event.screenX,
+                  screenY: event.screenY,
+                }),
+              ),
+            ),
+            Stream.fromEventListener<PointerEvent>(document, "pointerup").pipe(
+              Stream.map(() => Message.FinishedResize()),
+            ),
           ),
-          Stream.fromEventListener<PointerEvent>(document, "pointerup").pipe(
-            Stream.map(() => Message.FinishedResize()),
-          ),
+          Effect.sync(() => isResizing),
         ),
-        Effect.sync(() => isResizing),
-      ),
     },
   ),
 }));

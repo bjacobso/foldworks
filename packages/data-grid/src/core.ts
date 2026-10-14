@@ -80,6 +80,8 @@ export type ColumnDef<Row, ParentMessage = never> = Readonly<{
   compare?: (left: Row, right: Row) => number;
   /** Plain-text hover and focus details for a cell. Multiple lines are kept.
    * Details hold no model state; one shared popover serves the whole grid. */
+  /** Per-cell semantic tone, overriding the row background without changing its value. */
+  tone?: (context: CellContext<Row>) => RowTone | undefined;
   details?: (context: CellContext<Row>) => string | undefined;
   clipboardValue?: (context: CellContext<Row>) => string;
   renderCell?: (context: CellContext<Row>, h: HtmlBuilder<ParentMessage>) => Html;

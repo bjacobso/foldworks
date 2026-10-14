@@ -79,3 +79,34 @@ directly inside Foldkit Commands.
 
 The ready-made [`@foldworks/pdf-viewer`](../pdf-viewer) and
 [`@foldworks/pdf-annotator`](../pdf-annotator) compose these primitives.
+
+## Positioned text and quote location
+
+```ts
+import { locateQuote, readPdfText } from "@foldworks/pdf";
+
+const positioned = yield * readPdfText(bytes);
+const location = locateQuote(positioned, "Employees may bid on schedules.");
+if (location._tag === "Found") {
+  // location.regions is [{ pageIndex, rects }], in PDF user space.
+}
+```
+
+`readPageText(page, pageIndex)` reads one already-open page. `pdfTextItems(content)`
+is the pure conversion of PDF.js text items and font metrics into user-space
+rectangles; it accounts for rotated baselines. `PdfPageText`, `PdfTextItem`,
+`PdfTextRegion`, and `PdfTextSelection` also have Effect schemas. OCR word boxes
+can be supplied as `PdfPageText` without any PDF.js extraction.
+
+`locateQuote(pages, quote)` matches case-sensitive text after normalizing
+whitespace, Unicode compatibility forms (including ligatures), and hyphens at
+explicit line or page breaks. It returns `Found`, `NotFound`, `EmptyQuote`, or
+`Ambiguous`. To resolve a repeated quote deliberately, pass `{ occurrence: 1 }`
+for its second occurrence. There is no fuzzy matching.
+
+Rectangles cover whole PDF.js text items, which may contain several words or a
+whole line. They are **not glyph bounds**: a partial-item quote can highlight
+extra words. Use a viewer's native text selection for tighter rectangles.
+Extraction follows PDF.js item order, not inferred reading order: multi-column,
+vertical, or unusually encoded documents may require host-supplied OCR or text
+positions. No OCR is performed, and scanned pages have empty item arrays.

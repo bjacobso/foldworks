@@ -1,12 +1,6 @@
 import { Effect, Schema as S } from "effect";
 import { Command, type Update } from "foldkit";
-import {
-  base64ToBytes,
-  bytesToBase64,
-  downloadBytes,
-  readPdfPages,
-  renderPages,
-} from "@foldworks/pdf";
+import { base64ToBytes, bytesToBase64, downloadBytes, readPdfPages } from "@foldworks/pdf";
 
 import { Message } from "./viewer-message";
 import {
@@ -15,7 +9,6 @@ import {
   Zoom,
   clampZoomPercent,
   effectiveZoomPercent,
-  nextPendingPageIndex,
   pagesOf,
   type Model,
   type PageInfo,
@@ -96,30 +89,6 @@ const LoadBytes = Command.define("LoadPdfViewerBytes", {
     ),
 });
 
-const RenderPage = Command.define("RenderPdfViewerPage", {
-  args: { revision: S.Number, bytesBase64: S.String, pageIndex: S.Number, scale: S.Number },
-  messages: [Message.CompletedRenderPage, Message.FailedRenderPage],
-  execute: ({ revision, bytesBase64, pageIndex, scale }) =>
-    Effect.suspend(() =>
-      renderPages(base64ToBytes(bytesBase64), { scale, pageIndexes: [pageIndex] }),
-    ).pipe(
-      Effect.map(([page]) =>
-        page === undefined
-          ? Message.FailedRenderPage({ revision, pageIndex, reason: "The page did not render." })
-          : Message.CompletedRenderPage({ revision, pageIndex, url: page.imageUrl }),
-      ),
-      Effect.catch((error) =>
-        Effect.succeed(
-          Message.FailedRenderPage({
-            revision,
-            pageIndex,
-            reason: failureReason(error),
-          }),
-        ),
-      ),
-    ),
-});
-
 const scrollBehavior = (): ScrollBehavior =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
@@ -180,43 +149,35 @@ const Download = Command.define("DownloadPdfViewerDocument", {
 const pageLabel = (pageIndex: number, pageCount: number): string =>
   `Page ${pageIndex + 1} of ${pageCount}`;
 
-/** Render the next page still waiting, preferring pages near the one in view. */
-const renderNext = (model: Model): UpdateReturn => {
-  if (model.document._tag !== "Ready") return { model };
-  const pageIndex = nextPendingPageIndex(model.document.pages, model.currentPageIndex);
-  if (pageIndex === undefined) {
-    return {
-      model: {
-        ...model,
-        announcement: `${model.document.name} ready, ${model.document.pages.length} page${model.document.pages.length === 1 ? "" : "s"}.`,
-      },
-    };
+/** LRU cache, preferring eviction of pages outside the observer's render window. */
+const replacePage = (model: Model, pageIndex: number, image: PageImage): Model => {
+  if (
+    model.document._tag !== "Ready" ||
+    !model.document.pages.some((page) => page.pageIndex === pageIndex)
+  )
+    return model;
+  const cached = model.cachedPageIndexes.filter((index) => index !== pageIndex);
+  if (image._tag !== "Pending") cached.push(pageIndex);
+  while (cached.length > model.maxCachedPages) {
+    const outside = cached.findIndex((index) => !model.visiblePageIndexes.includes(index));
+    cached.splice(outside < 0 ? 0 : outside, 1);
   }
+  const retained = new Set(cached);
   return {
-    model,
-    commands: [
-      RenderPage({
-        revision: model.revision,
-        bytesBase64: model.document.bytesBase64,
-        pageIndex,
-        scale: model.renderScale,
+    ...model,
+    cachedPageIndexes: cached,
+    document: {
+      ...model.document,
+      pages: model.document.pages.map((page): ViewerPage => {
+        if (page.pageIndex === pageIndex)
+          return { ...page, image: retained.has(pageIndex) ? image : PageImage.Pending() };
+        return page.image._tag !== "Pending" && !retained.has(page.pageIndex)
+          ? { ...page, image: PageImage.Pending() }
+          : page;
       }),
-    ],
+    },
   };
 };
-
-const replacePage = (model: Model, pageIndex: number, image: PageImage): Model =>
-  model.document._tag !== "Ready"
-    ? model
-    : {
-        ...model,
-        document: {
-          ...model.document,
-          pages: model.document.pages.map(
-            (page): ViewerPage => (page.pageIndex === pageIndex ? { ...page, image } : page),
-          ),
-        },
-      };
 
 const setZoom = (model: Model, zoom: Zoom): UpdateReturn => {
   const next = { ...model, zoom };
@@ -232,6 +193,8 @@ const startLoad = (model: Model, name: string): Model => ({
   document: ViewerDocument.Loading({ name }),
   revision: model.revision + 1,
   currentPageIndex: 0,
+  cachedPageIndexes: [],
+  visiblePageIndexes: [],
   announcement: `Opening ${name}.`,
 });
 
@@ -248,16 +211,18 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     CompletedLoad: ({ revision, name, bytesBase64, pages }) =>
       revision !== model.revision
         ? { model }
-        : renderNext({
-            ...model,
-            document: ViewerDocument.Ready({
-              name,
-              bytesBase64,
-              pages: pages.map((page) => ({ ...page, image: PageImage.Pending() })),
-            }),
-            currentPageIndex: 0,
-            announcement: `Rendering ${name}.`,
-          }),
+        : {
+            model: {
+              ...model,
+              document: ViewerDocument.Ready({
+                name,
+                bytesBase64,
+                pages: pages.map((page) => ({ ...page, image: PageImage.Pending() })),
+              }),
+              currentPageIndex: 0,
+              announcement: `${name} ready, ${pages.length} pages.`,
+            },
+          },
     FailedLoad: ({ revision, name, reason }) =>
       revision !== model.revision
         ? { model }
@@ -271,14 +236,57 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     CompletedRenderPage: ({ revision, pageIndex, url }) =>
       revision !== model.revision
         ? { model }
-        : renderNext(replacePage(model, pageIndex, PageImage.Rendered({ url }))),
+        : { model: replacePage(model, pageIndex, PageImage.Rendered({ url })) },
     FailedRenderPage: ({ revision, pageIndex, reason }) =>
       revision !== model.revision
         ? { model }
-        : renderNext(replacePage(model, pageIndex, PageImage.Failed({ reason }))),
+        : { model: replacePage(model, pageIndex, PageImage.Failed({ reason })) },
+    StartedRenderSession: ({ revision }) =>
+      revision !== model.revision || model.document._tag !== "Ready"
+        ? { model }
+        : {
+            model: {
+              ...model,
+              cachedPageIndexes: [],
+              document: {
+                ...model.document,
+                pages: model.document.pages.map((page) => ({
+                  ...page,
+                  image: PageImage.Pending(),
+                })),
+              },
+            },
+          },
+    FailedRenderSession: ({ revision, reason }) =>
+      revision !== model.revision || model.document._tag !== "Ready"
+        ? { model }
+        : {
+            model: {
+              ...model,
+              document: ViewerDocument.Failed({ name: model.document.name, reason }),
+              cachedPageIndexes: [],
+              announcement: reason,
+            },
+          },
+    ChangedVisiblePages: ({ revision, pageIndexes }) =>
+      revision !== model.revision || model.document._tag !== "Ready"
+        ? { model }
+        : {
+            model: {
+              ...model,
+              visiblePageIndexes: [...new Set(pageIndexes)]
+                .filter((index) => pagesOf(model).some((page) => page.pageIndex === index))
+                .slice(0, model.maxCachedPages),
+              cachedPageIndexes: [
+                ...model.cachedPageIndexes.filter((index) => !pageIndexes.includes(index)),
+                ...model.cachedPageIndexes.filter((index) => pageIndexes.includes(index)),
+              ],
+            },
+          },
+    SelectedText: () => ({ model }),
     RequestedPage: ({ pageIndex }) => {
       const pages = pagesOf(model);
-      if (pages.length === 0) return { model };
+      if (pages.length === 0 || !Number.isFinite(pageIndex)) return { model };
       const target = Math.min(pages.length - 1, Math.max(0, Math.round(pageIndex)));
       return {
         model: {

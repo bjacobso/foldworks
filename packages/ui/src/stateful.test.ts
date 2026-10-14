@@ -9,33 +9,49 @@ import * as Select from "./stateful/select";
 import * as Tooltip from "./stateful/tooltip";
 
 const TestTabs = Tabs.create<"overview" | "restricted" | "activity">();
-const tabInputs = Tabs.styledViewInputs({
-  ariaLabel: "Account views",
-  selectedValue: "overview",
-  tabs: [
-    { value: "overview", label: "Overview", content: ["Overview content"] },
-    { value: "restricted", label: "Restricted", content: ["Restricted content"], isDisabled: true },
-    { value: "activity", label: "Activity", content: ["Activity content"] },
-  ],
-}, h);
+const tabInputs = Tabs.styledViewInputs(
+  {
+    ariaLabel: "Account views",
+    selectedValue: "overview",
+    tabs: [
+      { value: "overview", label: "Overview", content: ["Overview content"] },
+      {
+        value: "restricted",
+        label: "Restricted",
+        content: ["Restricted content"],
+        isDisabled: true,
+      },
+      { value: "activity", label: "Activity", content: ["Activity content"] },
+    ],
+  },
+  h,
+);
 
 describe("styled Foldkit tabs", () => {
   it("applies attributes to repeated and structural slots", () => {
-    const inputs = Tabs.styledViewInputs({
-      ariaLabel: "Composable views",
-      selectedValue: "overview",
-      tabs: [
-        { value: "overview", label: "Overview", content: ["Overview content"] },
-        { value: "restricted", label: "Restricted", content: ["Restricted content"], isDisabled: true },
-        { value: "activity", label: "Activity", content: ["Activity content"] },
-      ],
-      slotProps: {
-        list: { attributes: [h.DataAttribute("composition-slot", "list")] },
-        trigger: { attributes: [h.DataAttribute("composition-slot", "trigger")] },
-        panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
+    const inputs = Tabs.styledViewInputs(
+      {
+        ariaLabel: "Composable views",
+        selectedValue: "overview",
+        tabs: [
+          { value: "overview", label: "Overview", content: ["Overview content"] },
+          {
+            value: "restricted",
+            label: "Restricted",
+            content: ["Restricted content"],
+            isDisabled: true,
+          },
+          { value: "activity", label: "Activity", content: ["Activity content"] },
+        ],
+        slotProps: {
+          list: { attributes: [h.DataAttribute("composition-slot", "list")] },
+          trigger: { attributes: [h.DataAttribute("composition-slot", "trigger")] },
+          panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
+        },
       },
-    }, h);
-    Scene.scene(
+      h,
+    );
+    Scene.scene<Tabs.Model, Tabs.Message, Tabs.OutMessage>(
       { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, inputs)() },
       Scene.given(Tabs.init({ id: "composable-tabs" })),
       Scene.expect(Scene.selector('[data-composition-slot="list"]')).toExist(),
@@ -45,11 +61,14 @@ describe("styled Foldkit tabs", () => {
   });
 
   it("navigates past disabled tabs and emits the selected value through the real key handler", () => {
-    Scene.scene(
+    Scene.scene<Tabs.Model, Tabs.Message, Tabs.OutMessage>(
       { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, tabInputs)() },
       Scene.given(Tabs.init({ id: "account" })),
       Scene.expect(Scene.role("tab", { name: "Restricted" })).toBeDisabled(),
-      Scene.expect(Scene.role("tab", { name: "Overview" })).toHaveAttr("aria-controls", "account-panel-0"),
+      Scene.expect(Scene.role("tab", { name: "Overview" })).toHaveAttr(
+        "aria-controls",
+        "account-panel-0",
+      ),
       Scene.keydown(Scene.role("tab", { name: "Overview" }), "ArrowRight"),
       Scene.expectOutMessage(Tabs.OutMessage.Selected({ value: "activity", index: 2 })),
       Scene.Command.resolve(Tabs.FocusTab, Tabs.Message.CompletedFocusTab()),
@@ -57,7 +76,7 @@ describe("styled Foldkit tabs", () => {
   });
 
   it("keeps manual keyboard focus separate from selection until Enter", () => {
-    Scene.scene(
+    Scene.scene<Tabs.Model, Tabs.Message, Tabs.OutMessage>(
       { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, tabInputs)() },
       Scene.given(Tabs.init({ id: "account", activationMode: "Manual" })),
       Scene.keydown(Scene.role("tab", { name: "Overview" }), "End"),
@@ -73,7 +92,7 @@ describe("styled Foldkit tabs", () => {
 
   it("uses vertical arrow navigation when configured", () => {
     const inputs = { ...tabInputs, orientation: "Vertical" as const };
-    Scene.scene(
+    Scene.scene<Tabs.Model, Tabs.Message, Tabs.OutMessage>(
       { update: TestTabs.update, view: Scene.withViewInputs(TestTabs.view, inputs)() },
       Scene.given(Tabs.init({ id: "account" })),
       Scene.expect(Scene.role("tablist")).toHaveAttr("aria-orientation", "vertical"),
@@ -86,55 +105,72 @@ describe("styled Foldkit tabs", () => {
 
 describe("styled Foldkit dialog", () => {
   it("applies slot attributes without replacing engine attributes", () => {
-    const inputs = Dialog.styledViewInputs({
-      title: "Composable dialog",
-      content: () => ["Content"],
-      slotProps: {
-        panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
-        title: { attributes: [h.DataAttribute("composition-slot", "title")] },
+    const inputs = Dialog.styledViewInputs(
+      {
+        title: "Composable dialog",
+        content: () => ["Content"],
+        slotProps: {
+          panel: { attributes: [h.DataAttribute("composition-slot", "panel")] },
+          title: { attributes: [h.DataAttribute("composition-slot", "title")] },
+        },
       },
-    }, h);
+      h,
+    );
     const model = { ...Dialog.init({ id: "composable-dialog" }), isOpen: true };
     Scene.scene(
       { update: Dialog.update, view: Scene.withViewInputs(Dialog.view, inputs)() },
       Scene.given(model),
+      Scene.Mount.resolve(Dialog.AcquireResources, Dialog.Message.SucceededAcquireResources()),
       Scene.expect(Scene.selector('[data-composition-slot="panel"]')).toExist(),
-      Scene.expect(Scene.selector('[data-composition-slot="title"]'))
-        .toHaveAttr("id", Dialog.titleId(model)),
+      Scene.expect(Scene.selector('[data-composition-slot="title"]')).toHaveAttr(
+        "id",
+        Dialog.titleId(model),
+      ),
     );
   });
 
   it("retains initial focus, description linkage, and the engine's close command", () => {
-    const inputs = Dialog.styledViewInputs({
-      title: "Edit profile",
-      content: ({ initialFocus }, h) => [h.input([...initialFocus, h.AriaLabel("Name")])],
-      footer: ({ closeButton }, h) => [h.button(closeButton, ["Cancel"])],
-    }, h);
+    const inputs = Dialog.styledViewInputs(
+      {
+        title: "Edit profile",
+        content: ({ initialFocus }, h) => [h.input([...initialFocus, h.AriaLabel("Name")])],
+        footer: ({ closeButton }, h) => [h.button(closeButton, ["Cancel"])],
+      },
+      h,
+    );
     const model = { ...Dialog.init({ id: "profile" }), isOpen: true };
     Scene.scene(
       { update: Dialog.update, view: Scene.withViewInputs(Dialog.view, inputs)() },
       Scene.given(model),
+      Scene.Mount.resolve(Dialog.AcquireResources, Dialog.Message.SucceededAcquireResources()),
       Scene.expect(Scene.role("dialog")).toHaveAttr("aria-labelledby", Dialog.titleId(model)),
       Scene.expect(Scene.selector(`[id="${Dialog.descriptionId(model)}"]`)).toExist(),
       Scene.expect(Scene.role("button", { name: "Cancel" })).toHaveAttr("type", "button"),
       Scene.click(Scene.role("button", { name: "Cancel" })),
       Scene.expectOutMessage(Dialog.OutMessage.Closed()),
       Scene.Command.resolve(Dialog.CloseDialog, Dialog.Message.CompletedCloseDialog()),
+      Scene.Mount.expectEnded(Dialog.AcquireResources),
     );
   });
 
   it("supports rich titles, embedded close actions, dividers, and width presets", () => {
-    const inputs = Dialog.styledViewInputs({
-      title: [h.span([], ["Edit schema"])],
-      size: "md",
-      dividers: true,
-      headerActions: ({ closeButton }, h) => [h.button([...closeButton, h.AriaLabel("Close editor")], ["×"])],
-      content: () => ["Editor"],
-    }, h);
+    const inputs = Dialog.styledViewInputs(
+      {
+        title: [h.span([], ["Edit schema"])],
+        size: "md",
+        dividers: true,
+        headerActions: ({ closeButton }, h) => [
+          h.button([...closeButton, h.AriaLabel("Close editor")], ["×"]),
+        ],
+        content: () => ["Editor"],
+      },
+      h,
+    );
     const model = { ...Dialog.init({ id: "schema-editor" }), isOpen: true };
     Scene.scene(
       { update: Dialog.update, view: Scene.withViewInputs(Dialog.view, inputs)() },
       Scene.given(model),
+      Scene.Mount.resolve(Dialog.AcquireResources, Dialog.Message.SucceededAcquireResources()),
       Scene.expect(Scene.role("heading", { name: "Edit schema" })).toExist(),
       Scene.expect(Scene.role("button", { name: "Close editor" })).toExist(),
       Scene.expect(Scene.selector("section")).toHaveAttr("data-size", "md"),
@@ -145,11 +181,15 @@ describe("styled Foldkit dialog", () => {
 
 describe("styled Foldkit tooltip", () => {
   it("opens on focus, dismisses with Escape, and supports a custom trigger element", () => {
-    const inputs = Tooltip.styledViewInputs({
-      trigger: ["Schema help"],
-      label: [h.strong([], ["Choose a valid schema"])],
-      renderTrigger: (attributes, children, h) => h.span([...attributes, h.Tabindex(0)], children),
-    }, h);
+    const inputs = Tooltip.styledViewInputs(
+      {
+        trigger: ["Schema help"],
+        label: [h.strong([], ["Choose a valid schema"])],
+        renderTrigger: (attributes, children, h) =>
+          h.span([...attributes, h.Tabindex(0)], children),
+      },
+      h,
+    );
     const trigger = Scene.selector(`#${Tooltip.triggerId("schema-help")}`);
     Scene.scene(
       { update: Tooltip.update, view: Scene.withViewInputs(Tooltip.view, inputs)() },
@@ -169,16 +209,28 @@ describe("styled Foldkit select", () => {
     { value: "people", label: "People" },
     { value: "operations", label: "Operations", isDisabled: true },
   ] as const;
-  const inputs = Select.styledViewInputs({
-    options, value: "people", ariaLabel: "Department", name: "department",
-  }, h);
+  const inputs = Select.styledViewInputs(
+    {
+      options,
+      value: "people",
+      ariaLabel: "Department",
+      name: "department",
+    },
+    h,
+  );
   const TestSelect = Select.create<"people" | "operations">();
 
   it("passes disabled behavior and form values to the listbox engine", () => {
     Scene.scene(
-      { update: TestSelect.update, view: Scene.withViewInputs(TestSelect.view, { ...inputs, isDisabled: true })() },
+      {
+        update: TestSelect.update,
+        view: Scene.withViewInputs(TestSelect.view, { ...inputs, isDisabled: true })(),
+      },
       Scene.given(Select.init({ id: "department" })),
-      Scene.expect(Scene.role("button", { name: "Department" })).toHaveAttr("aria-disabled", "true"),
+      Scene.expect(Scene.role("button", { name: "Department" })).toHaveAttr(
+        "aria-disabled",
+        "true",
+      ),
       Scene.expect(Scene.selector('input[name="department"]')).toHaveAttr("value", "people"),
       Scene.expectNoOutMessage(),
       Scene.expect(Scene.role("listbox")).not.toExist(),

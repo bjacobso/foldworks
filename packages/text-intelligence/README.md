@@ -112,3 +112,51 @@ policy. Unknown mentions produce diagnostics only when `unknownMention(name)` is
 supplied. Names match NFC and case-insensitively; suggestions also match display
 label words. See the [shared design and integration contract](../../docs/mentions-and-tags.md)
 for representation, stale-result rules, and the real outliner/Markdown adapters.
+
+## Read-only highlighted text
+
+```ts
+import { HighlightedText, snippets } from "@foldworks/text-intelligence";
+
+HighlightedText.view(
+  {
+    text: transcript,
+    selectedKey: model.selectedEvidenceId,
+    ranges: [
+      {
+        key: "evidence-1",
+        from: 15,
+        to: 40,
+        tone: "warning",
+        label: "Eligibility requirement",
+        tooltip: "Source page 3",
+        onClick: Message.SelectedEvidence({ id: "evidence-1" }),
+      },
+    ],
+  },
+  h,
+);
+
+const windows = snippets(transcript, searchHits, 40);
+```
+
+Ranges use UTF-16 offsets with exclusive ends and unique keys. They are clipped
+to the text; invalid, empty, and out-of-bounds ranges are ignored. `segments`
+splits overlaps; the narrowest covering range determines the tone and click
+message, with input order breaking ties. `data-depth` records overlap depth and
+`selectedKey` paints all pieces of a selected range. Tones are `neutral`, `info`,
+`success`, `warning`, `danger`, and `muted`.
+
+Every actionable range has one keyboard stop in reading order, even when it is
+fully covered by a narrower range. Enter or Space dispatches its message.
+Fully covered controls appear when focused. Tooltip text appears on hover or
+focus and is exposed as an accessible description. It is non-interactive;
+compose a host-owned popover when the preview contains actions. The view is not
+virtualized, so use snippets or a host-managed block window for very long text.
+
+`snippets(text, ranges, context)` creates keyword-in-context windows, merges
+touching windows, and returns source `from`/`to`, `text`, clipped source ranges,
+and `leadingEllipsis`/`trailingEllipsis` flags. Ranges remain in original source
+coordinates: subtract the window's `from` before passing them to a local view,
+or use `segments(window.text, layers, window.from)` directly. Context defaults
+to 40 UTF-16 units. Empty hits produce no snippets.

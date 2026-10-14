@@ -1,7 +1,7 @@
 import { generate } from "@foldworks/generative-ui/ai";
 import { Spec, validateSpec } from "@foldworks/generative-ui/core";
 import { Effect, Result, Schema as S, Stream } from "effect";
-import { AiError, LanguageModel } from "effect/unstable/ai";
+import { AiError, LanguageModel } from "effect/ai";
 
 import { catalog } from "./catalog";
 import { cassettes, type CassetteId } from "./cassettes";
@@ -16,7 +16,7 @@ export type GenerationResult = typeof GenerationResult.Type;
 export const cassetteModel = (
   cassetteId: CassetteId,
   observeRequest?: (options: LanguageModel.ProviderOptions) => void,
-): Effect.Effect<LanguageModel.Service> =>
+): Effect.Effect<LanguageModel.LanguageModel> =>
   LanguageModel.make({
     generateText: (options) =>
       Effect.gen(function* () {

@@ -357,38 +357,35 @@ export const view = <ParentMessage>(
                   }),
                 ],
               ),
-              h.textarea(
-                [
-                  h.Id(model.id),
-                  h.Class("native-editor__input"),
-                  h.AriaLabel(label),
-                  h.Attribute(
-                    "aria-describedby",
-                    `${model.id}-help${hoverRow === undefined ? "" : ` ${model.id}-hover`}`,
-                  ),
-                  h.Attribute("spellcheck", "false"),
-                  h.Attribute("autocapitalize", "off"),
-                  h.Attribute("autocomplete", "off"),
-                  h.Wrap(model.options.lineWrapping ? "soft" : "off"),
-                  h.Readonly(model.options.readOnly),
-                  { _tag: "Prop", key: "foldkitNative", value: model },
-                  ...(showsCompletion
-                    ? [
-                        h.AriaAutocomplete("list"),
-                        h.Attribute("aria-controls", `${model.id}-completions`),
-                        h.Attribute(
-                          "aria-activedescendant",
-                          optionId(
-                            `${model.id}-completions`,
-                            Math.min(model.completion!.index, suggestions.length - 1),
-                          ),
+              h.textarea([
+                h.Id(model.id),
+                h.Class("native-editor__input"),
+                h.AriaLabel(label),
+                h.Attribute(
+                  "aria-describedby",
+                  `${model.id}-help${hoverRow === undefined ? "" : ` ${model.id}-hover`}`,
+                ),
+                h.Attribute("spellcheck", "false"),
+                h.Attribute("autocapitalize", "off"),
+                h.Attribute("autocomplete", "off"),
+                h.Wrap(model.options.lineWrapping ? "soft" : "off"),
+                h.Readonly(model.options.readOnly),
+                { _tag: "Prop", key: "foldkitNative", value: model },
+                ...(showsCompletion
+                  ? [
+                      h.AriaAutocomplete("list"),
+                      h.Attribute("aria-controls", `${model.id}-completions`),
+                      h.Attribute(
+                        "aria-activedescendant",
+                        optionId(
+                          `${model.id}-completions`,
+                          Math.min(model.completion!.index, suggestions.length - 1),
                         ),
-                      ]
-                    : []),
-                  h.OnMount(Mount.mapMessage(ObserveInput(), toParentMessage)),
-                ],
-                [],
-              ),
+                      ),
+                    ]
+                  : []),
+                h.OnMount(Mount.mapMessage(ObserveInput(), toParentMessage)),
+              ]),
             ],
           ),
         ],

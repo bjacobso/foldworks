@@ -35,24 +35,26 @@
     "release:ready": "node scripts/check-release-ready.mjs",
     "test": "pnpm run build:packages && pnpm --recursive --if-present test",
     "typecheck": "pnpm run build:packages && pnpm run typecheck:infra && pnpm --recursive --if-present typecheck",
-    "typecheck:infra": "tsc --noEmit",
+    "typecheck:infra": "tsc --noEmit && vitest run --config vitest.infra.config.ts",
     "test:e2e": "pnpm run build:packages && pnpm --filter @foldworks/demo test:e2e",
     "test:visual": "pnpm run build:packages && pnpm --filter @foldworks/demo test:visual",
     "test:visual:update": "pnpm run build:packages && pnpm --filter @foldworks/demo test:visual:update",
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@alchemy.run/frontend-frameworks": "2.0.0-beta.76",
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.80",
     "@changesets/cli": "^3.0.2",
-    "@effect/platform-node": "4.0.0-rc.112",
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "4.0.3",
     "@types/node": "catalog:",
-    "alchemy": "2.0.0-beta.76",
+    "alchemy": "2.0.0-beta.80",
     "effect": "catalog:",
     "hono": "4.12.14",
     "oxfmt": "^0.44.0",
     "oxlint": "^1.59.0",
     "tsup": "^8.5.1",
     "turbo": "^2.11.3",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

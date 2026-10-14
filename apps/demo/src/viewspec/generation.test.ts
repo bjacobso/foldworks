@@ -1,6 +1,6 @@
 import { generate } from "@foldworks/generative-ui/ai";
 import { Effect, Option } from "effect";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel } from "effect/ai";
 import { describe, expect, it } from "vitest";
 
 import { catalog } from "./catalog";

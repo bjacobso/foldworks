@@ -1,6 +1,8 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
+import { PdfTextSelection } from "@foldworks/pdf";
+
 import { PageInfo } from "./viewer-model";
 
 export const Message = defineMessageUnion({
@@ -15,6 +17,10 @@ export const Message = defineMessageUnion({
   FailedLoad: { revision: S.Number, name: S.String, reason: S.String },
   CompletedRenderPage: { revision: S.Number, pageIndex: S.Number, url: S.String },
   FailedRenderPage: { revision: S.Number, pageIndex: S.Number, reason: S.String },
+  StartedRenderSession: { revision: S.Number },
+  FailedRenderSession: { revision: S.Number, reason: S.String },
+  ChangedVisiblePages: { revision: S.Number, pageIndexes: S.Array(S.Number) },
+  SelectedText: { revision: S.Number, selection: PdfTextSelection },
   RequestedPage: { pageIndex: S.Number },
   CompletedScrollToPage: {},
   ScrolledToPage: { pageIndex: S.Number },

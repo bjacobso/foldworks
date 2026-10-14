@@ -15,4 +15,10 @@ export {
   type InitConfig,
 } from "./viewer-model";
 export { goToPage, loadBytes, loadUrl, scrollTo, update } from "./viewer-update";
-export { view, type PdfOverlay, type PdfOverlayTone, type ViewConfig } from "./viewer-view";
+export {
+  view,
+  type PdfHighlight,
+  type PdfOverlay,
+  type PdfOverlayTone,
+  type ViewConfig,
+} from "./viewer-view";
