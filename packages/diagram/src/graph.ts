@@ -296,7 +296,7 @@ export const update = (model: Model, message: Message, document: GraphDocument):
   });
 
 const canvasSubscriptions = Subscription.lift(Diagram.subscriptions)<Model, Message>({
-  toChildModel: (model) => model.canvas,
+  read: (model) => Option.some(model.canvas),
   toParentMessage: (message) => Message.GotCanvasMessage({ message }),
 });
 

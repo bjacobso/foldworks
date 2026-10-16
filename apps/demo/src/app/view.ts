@@ -474,7 +474,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             : demo === "Codebase"
               ? "Codebase workbench"
               : demo === "DiffViewer"
-                ? "Code review"
+                ? "Change request"
                 : demo === "Workbench"
                   ? "Workers workbench"
                   : demo === "Workflow"
@@ -516,7 +516,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
             : demo === "Codebase"
               ? "Living documentation · source · history · Git diffs"
               : demo === "DiffViewer"
-                ? "Split and unified diffs · line comments · review progress"
+                ? "Local configuration · review · checks · merge history"
                 : demo === "Workbench"
                   ? "Inspect · Explain · Preview · Apply · History"
                   : demo === "Workflow"
@@ -571,12 +571,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                   : demo === "Codebase"
                     ? [toolbarBadge({ label: "Read-only fixture", tone: "info", dot: true }, h)]
                     : demo === "DiffViewer"
-                      ? [
-                          toolbarBadge(
-                            { label: "Interactive prototype", tone: "info", dot: true },
-                            h,
-                          ),
-                        ]
+                      ? [toolbarBadge({ label: "Local simulation", tone: "info", dot: true }, h)]
                       : demo === "Workbench"
                         ? [toolbarBadge({ label: "Reference workspace", dot: true }, h)]
                         : demo === "DataTable"
@@ -864,7 +859,7 @@ const documentTitle = (demo: Demo): string =>
           Match.when("Agent", () => "Interactive agent · Foldworks"),
           Match.when("CodeEditor", () => "Code editor · Foldworks"),
           Match.when("Codebase", () => "Codebase workbench · Foldworks"),
-          Match.when("DiffViewer", () => "Code review · Foldworks"),
+          Match.when("DiffViewer", () => "Change request · Foldworks"),
           Match.when("Workbench", () => "Workers workbench · Foldworks"),
           Match.when("Home", () => "Foldworks · The UI standard library for Foldkit and StyleX"),
           Match.when("DataTable", () => "Data table · Foldworks"),

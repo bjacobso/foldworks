@@ -134,6 +134,11 @@ const packages: Readonly<Record<string, Package>> = {
     href: workflowPath("Vertical"),
     icon: Workflow,
   },
+  review: {
+    description: "Compose local change requests with anchored threads and host-owned persistence.",
+    href: diffViewerRouter(),
+    icon: FileDiff,
+  },
   "diff-viewer": {
     description: "Review-grade unified and split diffs with line selection, threads, and progress.",
     href: diffViewerRouter(),

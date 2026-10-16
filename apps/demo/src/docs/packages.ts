@@ -34,6 +34,7 @@ const icons: Readonly<Record<string, IconData>> = {
   "data-table": Table2,
   diagram: Network,
   "diff-viewer": FileDiff,
+  review: FileDiff,
   editor: PenLine,
   "form-builder": TextCursorInput,
   "generative-ui": Sparkles,

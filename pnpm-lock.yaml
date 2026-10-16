@@ -184,6 +184,9 @@ importers:
       '@foldworks/query-builder':
         specifier: workspace:*
         version: link:../../packages/query-builder
+      '@foldworks/review':
+        specifier: workspace:*
+        version: link:../../packages/review
       '@foldworks/sidebar':
         specifier: workspace:*
         version: link:../../packages/sidebar
@@ -368,6 +371,10 @@ importers:
         version: 5.0.3(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/diff-viewer:
+    dependencies:
+      '@foldworks/text-intelligence':
+        specifier: workspace:*
+        version: link:../text-intelligence
     devDependencies:
       effect:
         specifier: 'catalog:'
@@ -601,6 +608,28 @@ importers:
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.0
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.3
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.168.0(patch_hash=b8953975f3bc58aaa77313d70f7cfb9508aa7e47ed999849f1ca98b2cfeeef98)(@effect/platform-browser@4.0.3(effect@4.0.3))(effect@4.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
+  packages/review:
+    dependencies:
+      '@foldworks/diff-viewer':
+        specifier: workspace:*
+        version: link:../diff-viewer
+      '@foldworks/ui':
+        specifier: workspace:*
+        version: link:../ui
+    devDependencies:
       effect:
         specifier: 'catalog:'
         version: 4.0.3

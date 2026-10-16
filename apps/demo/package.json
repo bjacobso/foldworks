@@ -39,7 +39,8 @@
     "@stylexjs/stylex": "catalog:",
     "effect": "catalog:",
     "foldkit": "catalog:",
-    "pdf-lib": "catalog:"
+    "pdf-lib": "catalog:",
+    "@foldworks/review": "workspace:*"
   },
   "devDependencies": {
     "@effect/platform-browser": "catalog:",

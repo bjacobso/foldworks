@@ -4,7 +4,7 @@ A browser-only demo app built with Foldkit, StyleX, and Vite. The homepage
 introduces the Foldworks package family, shows a live component composition,
 and explains the boundary between UI components and application primitives.
 Use the sidebar to move between every package showcase, including the interactive
-diff review prototype at `/diff-viewer`.
+local change-request reference at `/diff-viewer`.
 
 Foldkit's bidirectional router owns navigational state. The project overview
 lives at `/`; demos live at `/ui-kit`, `/editor`, `/codebase`, `/data-table`, `/data-grid`, `/query-builder`,
@@ -172,3 +172,45 @@ The `/ui-kit` Desktop workspace demonstrates shared keyboard commands, measured
 breadcrumb/action rows, inline editing, token entry, a nested inspector, context
 menus, modal variants and a controlled date input. See
 [the integration guide](../../packages/ui/docs/desktop.md).
+
+## Local change-request reference
+
+`/diff-viewer` implements edit → diff → change request → pending line comments →
+suggestions → checks → approve → merge → history. It has two synthetic JSON
+configuration files validated by Effect schemas. All transport, identity,
+persistence and policy are local demo host code; there is no external repository
+or Git provider integration.
+
+Change checkout to true and rollout to 100 in CodeEditor (a string for checkout
+shows a schema diagnostic). Open the request and switch to the local reviewer.
+Comment on new line 4, then select new lines 3–4 and suggest:
+
+```json
+  "rollout": 25,
+  "reviewedBy": "Local reviewer"
+```
+
+Submit Request changes, switch to author and apply the suggestion. Its thread
+is reanchored to the replacement revision; the old note discussion is outdated.
+Approve as the reviewer, switch back to author, then merge. Local history,
+comments, source text, review drafts and viewed files survive reload. Approval
+only counts while its captured configuration text matches the working files. The example policy excludes outdated threads from
+blocking requirements. Failed storage writes report an error and retain the
+current in-memory session; this adapter has no multi-tab concurrency control.
+
+Keyboard users activate a gutter with Enter, extend an existing selection with
+Shift+Arrow, save with Mod+Enter, and close with Escape to return to the gutter.
+Closing retains drafts for the same anchor and revision. Thread lists use one
+tab stop with Arrow/Home/End and Enter to reveal an anchor. Changed-file trees
+use Space for viewed state. The reference includes local dark appearance and a
+single-column narrow layout.
+
+Run the focused scenario with:
+
+```sh
+pnpm --filter @foldworks/demo exec vitest run --config vitest.e2e.config.ts -t 'change request reference'
+```
+
+`pnpm test:e2e` also runs it. Documentation screenshots (animations disabled, not
+pixel comparisons) are saved under `.context/demo-screenshots/change-request-*.png`.
+Reset simulation clears this example's saved state.

@@ -214,6 +214,8 @@ export const ChangeSetPreview = {
 };
 
 export type TimelineEntry = Readonly<{
+  /** Open host-defined activity kind; omitted for existing transaction entries. */
+  kind?: string;
   id: string;
   title: string;
   actor: string;
@@ -224,7 +226,12 @@ export type TimelineEntry = Readonly<{
 
 export const TransactionTimeline = {
   view: <Message>(
-    config: Readonly<{ label: string; entries: ReadonlyArray<TimelineEntry>; emptyText?: string }>,
+    config: Readonly<{
+      label: string;
+      entries: ReadonlyArray<TimelineEntry>;
+      emptyText?: string;
+      renderBody?: (entry: TimelineEntry) => Html | undefined;
+    }>,
     h: HtmlBuilder<Message>,
   ): Html =>
     h.section(
@@ -236,19 +243,27 @@ export const TransactionTimeline = {
           : []),
         h.ol(
           sxAttrs(h, styles.list),
-          config.entries.map((entry) =>
-            h.li(sxAttrs(h, styles.box), [
-              h.h4(sxAttrs(h, styles.title), [entry.title]),
-              h.p(sxAttrs(h, styles.muted), [`${entry.actor} · ${entry.timestamp}`]),
-              ...entry.changes.map((change) =>
-                h.p(sxAttrs(h, styles.label), [
-                  `${change.label}: ${change.before} → ${change.after}`,
-                ]),
-              ),
-              h.p(sxAttrs(h, styles.muted), [entry.context]),
-              h.p(sxAttrs(h, styles.muted), [entry.id]),
-            ]),
-          ),
+          config.entries.map((entry) => {
+            const body = config.renderBody?.(entry);
+            return h.li(
+              [
+                ...sxAttrs(h, styles.box),
+                h.DataAttribute("entry-kind", entry.kind ?? "transaction"),
+              ],
+              [
+                h.h4(sxAttrs(h, styles.title), [entry.title]),
+                h.p(sxAttrs(h, styles.muted), [`${entry.actor} · ${entry.timestamp}`]),
+                ...(body ? [body] : []),
+                ...entry.changes.map((change) =>
+                  h.p(sxAttrs(h, styles.label), [
+                    `${change.label}: ${change.before} → ${change.after}`,
+                  ]),
+                ),
+                h.p(sxAttrs(h, styles.muted), [entry.context]),
+                h.p(sxAttrs(h, styles.muted), [entry.id]),
+              ],
+            );
+          }),
         ),
       ],
     ),

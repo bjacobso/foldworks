@@ -56,5 +56,8 @@
   "peerDependencies": {
     "effect": "catalog:peers",
     "foldkit": "catalog:peers"
+  },
+  "dependencies": {
+    "@foldworks/text-intelligence": "workspace:*"
   }
 }

@@ -414,3 +414,52 @@
   background: var(--foldworks-ui-danger-surface);
   text-decoration: line-through;
 }
+
+.fk-diff-viewer__widget,
+.fk-diff-viewer__annotation {
+  grid-column: 1 / -1;
+  padding: 12px;
+  white-space: normal;
+}
+.fk-diff-viewer__gutter[data-annotation-tone="danger"] {
+  box-shadow: inset 3px 0 var(--fk-danger, #e5484d);
+}
+.fk-diff-viewer__gutter[data-annotation-tone="warning"] {
+  box-shadow: inset 3px 0 #e5a000;
+}
+.fk-diff-viewer__gutter[data-annotation-tone="info"] {
+  box-shadow: inset 3px 0 #3b82f6;
+}
+.fk-diff-viewer__gutter[data-annotation-tone="success"] {
+  box-shadow: inset 3px 0 #30a46c;
+}
+.fk-diff-viewer__code ins {
+  background: #30a46c33;
+  text-decoration: none;
+}
+.fk-diff-viewer__code del {
+  background: #e5484d33;
+  text-decoration: line-through;
+}
+.fk-value-diff {
+  padding: 16px;
+  color: var(--foldworks-ui-foreground, inherit);
+}
+.fk-value-diff ul {
+  padding: 0;
+  list-style: none;
+}
+.fk-value-diff li {
+  border-block-end: 1px solid var(--foldworks-ui-border, #aaa);
+  padding-block: 12px;
+}
+.fk-value-diff pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fk-value-diff ins {
+  background: #30a46c22;
+}
+.fk-value-diff del {
+  background: #e5484d22;
+}

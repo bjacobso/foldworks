@@ -771,3 +771,15 @@ For interactive previews, use `Citation.popoverViewInputs` with
 a separate “Open source” button inside dispatches `onActivate`, so opening the
 popover and navigating to the source remain distinct actions. Tooltip previews
 must contain non-interactive content.
+
+## Review composition extensions
+
+`Tree.view` accepts `checkedIds` and `onCheckedChange(id, checked)` for checkable
+file rows. Space toggles the active leaf, and mouse users can click its checkbox.
+`showActions: false` hides rename/move controls on read-only trees. Selection,
+expansion and focus still use the Tree submodel.
+
+`TransactionTimeline` entries accept an optional open-string `kind` (default
+`transaction`). `renderBody(entry)` adds host Html beneath the heading for
+comments, reviews, checks or other activity; existing change rows and context
+remain visible. Ordering, timestamps, filtering and persistence stay with hosts.

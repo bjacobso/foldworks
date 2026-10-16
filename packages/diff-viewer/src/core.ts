@@ -6,6 +6,7 @@ export type DiffSide = "old" | "new";
 export interface DiffLine {
   readonly kind: DiffLineKind;
   readonly content: string;
+  readonly noNewline?: boolean;
   readonly oldLine: number | null;
   readonly newLine: number | null;
 }
@@ -29,6 +30,8 @@ export interface DiffFile {
   readonly additions: number;
   readonly deletions: number;
   readonly hunks: readonly DiffHunk[];
+  /** Full sources retained by diffFile for exact cross-revision mapping. */
+  readonly source?: Readonly<{ oldText: string; newText: string }>;
 }
 
 export interface DiffSelection {
@@ -79,13 +82,17 @@ export const selectionLabel = (selection: DiffSelectionRange): string => {
     : `${prefix} lines ${normalized.startLine}–${normalized.endLine}`;
 };
 
-export const selectableLines = (
-  file: DiffFile,
-  side: DiffSide,
-): readonly number[] => [...new Set(file.hunks.flatMap((hunk) => hunk.lines.flatMap((line) => {
-  const number = side === "old" ? line.oldLine : line.newLine;
-  return number === null ? [] : [number];
-})))].sort((left, right) => left - right);
+export const selectableLines = (file: DiffFile, side: DiffSide): readonly number[] =>
+  [
+    ...new Set(
+      file.hunks.flatMap((hunk) =>
+        hunk.lines.flatMap((line) => {
+          const number = side === "old" ? line.oldLine : line.newLine;
+          return number === null ? [] : [number];
+        }),
+      ),
+    ),
+  ].sort((left, right) => left - right);
 
 export const adjacentSelectableLine = (
   file: DiffFile,
@@ -106,12 +113,28 @@ const cleanPath = (path: string): string => {
 
 export const languageFromPath = (path: string): string => {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
-  return ({
-    ts: "typescript", tsx: "tsx", js: "javascript", jsx: "jsx",
-    json: "json", css: "css", scss: "scss", html: "html", md: "markdown",
-    yml: "yaml", yaml: "yaml", py: "python", rs: "rust", go: "go",
-    sh: "shell", toml: "toml",
-  } as Record<string, string>)[extension] ?? "text";
+  return (
+    (
+      {
+        ts: "typescript",
+        tsx: "tsx",
+        js: "javascript",
+        jsx: "jsx",
+        json: "json",
+        css: "css",
+        scss: "scss",
+        html: "html",
+        md: "markdown",
+        yml: "yaml",
+        yaml: "yaml",
+        py: "python",
+        rs: "rust",
+        go: "go",
+        sh: "shell",
+        toml: "toml",
+      } as Record<string, string>
+    )[extension] ?? "text"
+  );
 };
 
 type MutableFile = {
@@ -139,8 +162,14 @@ export const parseUnifiedDiff = (patch: string): readonly DiffFile[] => {
   const finishFile = () => {
     finishHunk();
     if (file === undefined) return;
-    const additions = file.hunks.reduce((sum, hunk) => sum + hunk.lines.filter((line) => line.kind === "addition").length, 0);
-    const deletions = file.hunks.reduce((sum, hunk) => sum + hunk.lines.filter((line) => line.kind === "deletion").length, 0);
+    const additions = file.hunks.reduce(
+      (sum, hunk) => sum + hunk.lines.filter((line) => line.kind === "addition").length,
+      0,
+    );
+    const deletions = file.hunks.reduce(
+      (sum, hunk) => sum + hunk.lines.filter((line) => line.kind === "deletion").length,
+      0,
+    );
     const path = file.path || file.oldPath;
     files.push({ ...file, path, language: languageFromPath(path), additions, deletions });
     file = undefined;
@@ -172,8 +201,10 @@ export const parseUnifiedDiff = (patch: string): readonly DiffFile[] => {
       file.path = cleanPath(rawLine.slice("rename to ".length));
       file.status = "renamed";
     } else if (rawLine.startsWith("Binary files ")) file.status = "binary";
-    else if (rawLine.startsWith("--- ")) file.oldPath = cleanPath(rawLine.slice(4));
-    else if (rawLine.startsWith("+++ ")) file.path = cleanPath(rawLine.slice(4));
+    else if (lines === undefined && rawLine.startsWith("--- "))
+      file.oldPath = cleanPath(rawLine.slice(4));
+    else if (lines === undefined && rawLine.startsWith("+++ "))
+      file.path = cleanPath(rawLine.slice(4));
 
     const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@\s?(.*)$/.exec(rawLine);
     if (hunk !== null) {
@@ -193,7 +224,12 @@ export const parseUnifiedDiff = (patch: string): readonly DiffFile[] => {
       lines = [];
       continue;
     }
-    if (lines === undefined || rawLine === "" || rawLine === "\\ No newline at end of file") continue;
+    if (rawLine === "\\ No newline at end of file") {
+      const previous = lines?.at(-1);
+      if (previous && lines) lines[lines.length - 1] = { ...previous, noNewline: true };
+      continue;
+    }
+    if (lines === undefined || rawLine === "") continue;
     if (rawLine.startsWith("+")) {
       lines.push({ kind: "addition", content: rawLine.slice(1), oldLine: null, newLine });
       newLine += 1;
@@ -232,13 +268,18 @@ export const splitRows = (hunk: DiffHunk): readonly SplitRow[] => {
     for (let row = 0; row < Math.max(deletions.length, additions.length); row += 1) {
       const left = deletions[row];
       const right = additions[row];
-      rows.push({ ...(left === undefined ? {} : { left }), ...(right === undefined ? {} : { right }) });
+      rows.push({
+        ...(left === undefined ? {} : { left }),
+        ...(right === undefined ? {} : { right }),
+      });
     }
   }
   return rows;
 };
 
-export const diffTotals = (files: readonly DiffFile[]): Readonly<{ additions: number; deletions: number }> => ({
+export const diffTotals = (
+  files: readonly DiffFile[],
+): Readonly<{ additions: number; deletions: number }> => ({
   additions: files.reduce((sum, file) => sum + file.additions, 0),
   deletions: files.reduce((sum, file) => sum + file.deletions, 0),
 });

@@ -1,204 +1,528 @@
-import { Check, ChevronRight, CircleCheck, FileCode2, GitPullRequest, MessageSquare, SplitSquareHorizontal, Rows3 } from "@lucide/icons";
-import { DiffViewer, diffTotals, selectionLabel, type DiffFile, type DiffSelectionRange, type DiffThreadMarker } from "@foldworks/diff-viewer";
-import { Button, Icon } from "@foldworks/ui";
+import {
+  DiffViewer,
+  diffFile,
+  ValueDiff,
+  diffValues,
+  diagnosticsToAnnotations,
+  contextGaps,
+  expandContext,
+  normalizeSelection,
+  selectionLabel,
+  type DiffLineRef,
+} from "@foldworks/diff-viewer";
+import { CodeEditor } from "@foldworks/code-editor";
+import {
+  ChangedFiles,
+  CheckList,
+  MergeReadiness,
+  ChangeRequestHeader,
+  ReviewThreads,
+  ReviewSubmit,
+  ReviewerList,
+} from "@foldworks/review";
+import { TransactionTimeline, ChangeSetPreview } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
-
-import { reviewFiles } from "./fixture";
+import type { Model, ReviewThread } from "./model";
 import { Message } from "./message";
-import type { Model, ReviewComment } from "./model";
+import { author, reviewer } from "./fixture";
+import {
+  currentFile,
+  fileDiff,
+  changedFiles,
+  diagnostics,
+  checks,
+  mappedThread,
+  approved,
+  openCurrentThreads,
+  canMerge,
+  parseValue,
+  reviewHighlight,
+} from "./domain";
 
-const statusLabel = (file: DiffFile): string =>
-  file.status === "added" ? "Added" : file.status === "deleted" ? "Deleted" : file.status === "renamed" ? "Renamed" : "Modified";
-
-const fileItem = (model: Model, file: DiffFile, h: HtmlBuilder<Message>): Html => {
-  const viewed = model.viewedPaths.includes(file.path);
-  const commentCount = model.comments.filter((comment) => comment.path === file.path && !comment.resolved).length;
-  return h.button([
-    h.Type("button"),
-    h.Class("review-demo__file"),
-    h.DataAttribute("active", model.activePath === file.path ? "true" : "false"),
-    h.OnClick(Message.SelectedFile({ path: file.path })),
-    h.AriaLabel(`${file.path}, ${statusLabel(file)}, ${file.additions} additions, ${file.deletions} deletions${viewed ? ", viewed" : ""}`),
-  ], [
-    h.span([h.Class("review-demo__file-state"), h.DataAttribute("status", file.status)], [
-      viewed ? Icon.view({ icon: Check, size: 12, strokeWidth: 2.6 }, h) : statusLabel(file).slice(0, 1),
-    ]),
-    h.span([h.Class("review-demo__file-copy")], [
-      h.strong([], [file.path.split("/").pop() ?? file.path]),
-      h.span([], [file.path.includes("/") ? file.path.slice(0, file.path.lastIndexOf("/")) : "Repository root"]),
-    ]),
-    h.span([h.Class("review-demo__file-stats")], [
-      h.span([h.Class("review-demo__plus")], [`+${file.additions}`]),
-      h.span([h.Class("review-demo__minus")], [`−${file.deletions}`]),
-      ...(commentCount === 0 ? [] : [h.span([h.Class("review-demo__comment-count")], [String(commentCount)])]),
-    ]),
-  ]);
+const button = (label: string, message: Message, h: HtmlBuilder<Message>, disabled = false) =>
+  h.button(
+    [h.Type("button"), h.Class("cr-demo__button"), h.OnClick(message), h.Disabled(disabled)],
+    [label],
+  );
+const threadView = (model: Model, thread: ReviewThread, h: HtmlBuilder<Message>): Html => {
+  const mapping = mappedThread(model, thread);
+  return h.div(
+    [h.Id(`review-thread-${thread.id}`), h.Tabindex(-1)],
+    [
+      ReviewThreads.threadView(
+        {
+          model: model.reviewUi,
+          thread,
+          readOnly: model.status !== "open",
+          anchorState: mapping.state,
+          label: `${selectionLabel(mapping.state === "outdated" ? thread.anchor : mapping.range)} · ${thread.anchor.path.split("/").at(-1)}`,
+          toMessage: (message) => Message.GotThreadsMessage({ message }),
+          canEdit: (c) => model.status === "open" && c.author.id === model.actor,
+          canDelete: (c) => model.status === "open" && c.author.id === model.actor,
+          ...(model.actor === "author" &&
+          model.status === "open" &&
+          thread.status === "open" &&
+          !thread.comments.some((c) => c.pending)
+            ? {
+                onApplySuggestion: (
+                  suggestion: import("@foldworks/review").Suggestion,
+                  threadId: string,
+                ) => Message.AppliedSuggestion({ suggestion, threadId }),
+              }
+            : {}),
+        },
+        h,
+      ),
+    ],
+  );
 };
-
-const navigation = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const totals = diffTotals(reviewFiles);
-  return h.aside([h.Class("review-demo__navigation"), h.AriaLabel("Changed files")], [
-    h.div([h.Class("review-demo__nav-heading")], [
-      h.div([], [h.strong([], ["Files changed"]), h.span([], [`${reviewFiles.length}`])]),
-      h.p([], [`${totals.additions} additions and ${totals.deletions} deletions`]),
-    ]),
-    h.div([h.Class("review-demo__progress-track"), h.AriaLabel(`${model.viewedPaths.length} of ${reviewFiles.length} files viewed`)], [
-      h.span([h.Style({ width: `${(model.viewedPaths.length / reviewFiles.length) * 100}%` })], []),
-    ]),
-    h.div([h.Class("review-demo__file-list")], reviewFiles.map((file) => fileItem(model, file, h))),
-    h.div([h.Class("review-demo__nav-footer")], [
-      h.span([], [`${model.viewedPaths.length} of ${reviewFiles.length} viewed`]),
-      h.span([], ["⌘⇧Enter to submit"]),
-    ]),
-  ]);
+const lineWidgets = (model: Model, ref: DiffLineRef, h: HtmlBuilder<Message>): Html | undefined => {
+  const items = model.threads.flatMap((thread) => {
+    const mapping = mappedThread(model, thread);
+    return mapping.state !== "outdated" &&
+      mapping.range.path === ref.path &&
+      mapping.range.side === ref.side &&
+      mapping.range.endLine === ref.line
+      ? [threadView(model, thread, h)]
+      : [];
+  });
+  const key = model.reviewUi.composerKey,
+    anchor = model.draftAnchors[key];
+  if (
+    key.startsWith("new:") &&
+    anchor &&
+    anchor.path === ref.path &&
+    anchor.side === ref.side &&
+    anchor.endLine === ref.line
+  )
+    items.push(
+      h.strong([], [selectionLabel(anchor)]),
+      ReviewThreads.composerView(
+        {
+          model: model.reviewUi,
+          draftKey: key,
+          targetId: key,
+          kind: "create",
+          toMessage: (message) => Message.GotThreadsMessage({ message }),
+          ...(anchor.side === "new"
+            ? {
+                suggestionAnchor: {
+                  path: anchor.path,
+                  startLine: anchor.startLine,
+                  endLine: anchor.endLine,
+                  expected: anchor.revisionText
+                    .replace(/\n$/, "")
+                    .split("\n")
+                    .slice(anchor.startLine - 1, anchor.endLine)
+                    .join("\n"),
+                },
+              }
+            : {}),
+        },
+        h,
+      ),
+    );
+  return items.length ? h.div([], items) : undefined;
 };
-
-const modeControl = (model: Model, h: HtmlBuilder<Message>): Html => h.div([
-  h.Class("review-demo__mode"),
-  h.Role("group"),
-  h.AriaLabel("Diff layout"),
-], [
-  h.button([
-    h.Type("button"), h.DataAttribute("active", model.mode === "Split" ? "true" : "false"),
-    h.OnClick(Message.ChangedMode({ mode: "Split" })), h.AriaLabel("Side-by-side diff"),
-  ], [Icon.view({ icon: SplitSquareHorizontal, size: 14 }, h), "Split"]),
-  h.button([
-    h.Type("button"), h.DataAttribute("active", model.mode === "Unified" ? "true" : "false"),
-    h.OnClick(Message.ChangedMode({ mode: "Unified" })), h.AriaLabel("Unified diff"),
-  ], [Icon.view({ icon: Rows3, size: 14 }, h), "Unified"]),
-]);
-
-const thread = (comment: ReviewComment, h: HtmlBuilder<Message>): Html => h.article([
-  h.Class("review-demo__thread"),
-  h.DataAttribute("resolved", comment.resolved ? "true" : "false"),
-], [
-  h.div([h.Class("review-demo__thread-heading")], [
-    h.span([h.Class("review-demo__avatar")], [comment.author === "You" ? "YO" : comment.author.split(" ").map((part) => part[0]).join("")]),
-    h.div([], [h.strong([], [comment.author]), h.span([], [selectionLabel(comment)])]),
-    h.span([h.Class("review-demo__thread-status")], [comment.resolved ? "Resolved" : "Open"]),
-  ]),
-  h.p([], [comment.body]),
-  h.button([
-    h.Type("button"),
-    h.Class("review-demo__resolve"),
-    h.OnClick(Message.ToggledResolved({ id: comment.id })),
-  ], [comment.resolved ? "Reopen thread" : "Resolve thread"]),
-]);
-
-const composer = (model: Model, h: HtmlBuilder<Message>): Html => {
-  if (model.selectionPath === "" || model.selectionStartLine < 1) {
-    return h.div([h.Class("review-demo__comment-empty")], [
-      Icon.view({ icon: MessageSquare, size: 18 }, h),
-      h.strong([], ["Comment on a line"]),
-      h.p([], ["Click a line for one comment, or drag across line numbers to select a range."]),
-    ]);
+const canvas = (model: Model, h: HtmlBuilder<Message>): Html => {
+  const file = currentFile(model),
+    before = parseValue(file.baseText),
+    after = parseValue(file.text);
+  let diff = fileDiff(file);
+  const revealed = model.threads.find(
+    (t) => t.id === model.reviewUi.activeThreadId && t.anchor.path === file.path,
+  );
+  if (revealed && mappedThread(model, revealed).state !== "outdated")
+    diff = diffFile({
+      path: file.path,
+      oldText: file.baseText,
+      newText: file.text,
+      context: Math.max(file.baseText.length, file.text.length),
+    });
+  for (const id of model.expandedGaps) {
+    const gap = contextGaps(diff).find((g) => g.beforeHunkId === id);
+    if (gap) diff = expandContext(diff, { oldText: file.baseText, newText: file.text }, gap, 20);
   }
-  return h.form([
-    h.Class("review-demo__composer"),
-    h.OnSubmit(Message.SubmittedComment()),
-  ], [
-    h.div([h.Class("review-demo__composer-heading")], [
-      h.strong([], [selectionLabel({
-        path: model.selectionPath,
-        side: model.selectionSide,
-        startLine: model.selectionStartLine,
-        endLine: model.selectionEndLine,
-      })]),
-      h.span([], [model.selectionPath.split("/").pop() ?? model.selectionPath]),
-    ]),
-    h.textarea([
-      h.AriaLabel("Review comment"),
-      h.Placeholder("Leave a clear, actionable comment…"),
-      h.Value(model.draft),
-      h.OnInput((value) => Message.ChangedDraft({ value })),
-    ]),
-    h.div([h.Class("review-demo__composer-actions")], [
-      Button.view({ label: "Cancel", size: "xs", variant: "ghost", onClick: Message.CancelledComment() }, h),
-      Button.view({ label: "Add comment", size: "xs", onClick: Message.SubmittedComment(), isDisabled: model.draft.trim() === "" }, h),
-    ]),
-  ]);
+  return h.main(
+    [h.Class("cr-demo__canvas")],
+    [
+      h.section(
+        [h.Class("cr-demo__editor")],
+        [
+          h.div(
+            [h.Class("cr-demo__section-heading")],
+            [
+              h.h2(
+                [],
+                [model.actor === "author" ? "Working configuration" : "Proposed configuration"],
+              ),
+              h.span(
+                [],
+                [
+                  model.actor === "author" && model.status !== "merged"
+                    ? "Editable · Effect schema"
+                    : "Read only",
+                ],
+              ),
+            ],
+          ),
+          CodeEditor.view(
+            {
+              model: {
+                ...model.editor,
+                options: {
+                  ...model.editor.options,
+                  theme: model.dark ? "dark" : "light",
+                  readOnly: model.actor !== "author" || model.status === "merged",
+                },
+              },
+              label: "Configuration source",
+              meta: file.path,
+              showToolbar: false,
+              showInspector: false,
+              toParentMessage: (message) => Message.GotEditorMessage({ message }),
+            },
+            h,
+          ),
+        ],
+      ),
+      h.section(
+        [h.Class("cr-demo__diff")],
+        [
+          h.div(
+            [h.Class("cr-demo__section-heading")],
+            [
+              h.h2([], ["Review changes"]),
+              h.div(
+                [h.Class("cr-demo__toolbar"), h.Role("group"), h.AriaLabel("Diff layout")],
+                [
+                  button(
+                    model.semantic ? "Line diff" : "Semantic values",
+                    Message.ToggledSemantic(),
+                    h,
+                  ),
+                  button("Unified diff", Message.ChangedMode({ mode: "Unified" }), h),
+                  button("Side-by-side diff", Message.ChangedMode({ mode: "Split" }), h),
+                ],
+              ),
+            ],
+          ),
+          model.semantic && before !== undefined && after !== undefined
+            ? ValueDiff.view({ changes: diffValues(before, after) }, h)
+            : model.semantic
+              ? h.p([], ["Fix syntax before comparing decoded values."])
+              : diff.hunks.length
+                ? DiffViewer.view(
+                    {
+                      file: diff,
+                      highlight: reviewHighlight,
+                      mode: model.mode,
+                      ...(model.selection
+                        ? { selectedRange: normalizeSelection(model.selection) }
+                        : {}),
+                      annotations: diagnosticsToAnnotations(
+                        file.path,
+                        file.text,
+                        diagnostics(file),
+                      ),
+                      threads: model.threads.flatMap((t) => {
+                        const mapping = mappedThread(model, t);
+                        return mapping.state === "outdated"
+                          ? []
+                          : [
+                              {
+                                ...mapping.range,
+                                count: t.comments.length,
+                                resolved: t.status === "resolved",
+                              },
+                            ];
+                      }),
+                      reviewed: model.viewedPaths.includes(file.path),
+                      onReviewedChange: (viewed) =>
+                        Message.ChangedViewed({ path: file.path, viewed }),
+                      ...(model.status === "open"
+                        ? {
+                            onSelectLine: (ref: DiffLineRef) => Message.SelectedLine(ref),
+                            onStartSelection: (ref: DiffLineRef) => Message.StartedSelection(ref),
+                            onExtendSelection: (ref: DiffLineRef, method: "Pointer" | "Keyboard") =>
+                              Message.ExtendedSelection({ ...ref, method }),
+                            onEndSelection: () => Message.EndedSelection(),
+                            onCancelSelection: () => Message.CancelledSelection(),
+                          }
+                        : {}),
+                      lineWidgets: (ref) => lineWidgets(model, ref, h),
+                      onExpandGap: (gap) => Message.ExpandedGap({ id: gap.beforeHunkId }),
+                    },
+                    h,
+                  )
+                : h.p(
+                    [h.Class("cr-demo__empty")],
+                    [
+                      model.status === "merged"
+                        ? "Saved configuration matches the merged proposal. See the activity below."
+                        : "Edit this file to compare it with the saved configuration.",
+                    ],
+                  ),
+        ],
+      ),
+      ChangeSetPreview.view(
+        {
+          label: "Local impact preview",
+          basis:
+            "This fixture changes checkout availability and the configuration approval requirement.",
+          consequences: [
+            {
+              kind: "changed",
+              label: "Checkout rollout",
+              detail: "The local policy limits the proposed rollout to 25%.",
+            },
+          ],
+          actions: [],
+        },
+        h,
+      ),
+      TransactionTimeline.view(
+        {
+          label: "Change request activity",
+          entries: model.activity,
+          emptyText: "Open a change request to start its activity history.",
+          renderBody: (entry) =>
+            entry.kind === "review"
+              ? h.p([], ["Reviewer intent recorded by the local host."])
+              : undefined,
+        },
+        h,
+      ),
+    ],
+  );
 };
-
-const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const activeComments = model.comments.filter((comment) => comment.path === model.activePath);
-  const openCount = model.comments.filter((comment) => !comment.resolved).length;
-  return h.aside([h.Class("review-demo__inspector"), h.AriaLabel("Review details")], [
-    h.section([h.Class("review-demo__summary")], [
-      h.div([h.Class("review-demo__summary-heading")], [
-        Icon.view({ icon: GitPullRequest, size: 17 }, h),
-        h.div([], [h.strong([], ["Review summary"]), h.span([], ["PR #148 · ready for review"])]),
-      ]),
-      h.p([], ["Adds line-anchored review comments and scopes Git reads for larger change sets."]),
-      h.div([h.Class("review-demo__checks")], [
-        h.span([], [Icon.view({ icon: CircleCheck, size: 14 }, h), "3 checks passed"]),
-        h.span([], [`${openCount} open ${openCount === 1 ? "thread" : "threads"}`]),
-      ]),
-    ]),
-    h.section([h.Class("review-demo__comment-section")], [
-      h.div([h.Class("review-demo__section-heading")], [
-        h.strong([], ["Comments"]),
-        h.span([], [String(activeComments.length)]),
-      ]),
-      composer(model, h),
-      ...activeComments.map((comment) => thread(comment, h)),
-    ]),
-  ]);
-};
-
-const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const activeFile = reviewFiles.find((file) => file.path === model.activePath) ?? reviewFiles[0];
-  if (activeFile === undefined) return h.div([h.Class("review-demo")], ["No diff fixture loaded."]);
-  const selectedRange: DiffSelectionRange | undefined = model.selectionPath === "" ? undefined : {
-    path: model.selectionPath,
-    side: model.selectionSide,
-    startLine: model.selectionStartLine,
-    endLine: model.selectionEndLine,
-  };
-  const markers: DiffThreadMarker[] = model.comments.map((comment) => ({
-    path: comment.path,
-    side: comment.side,
-    startLine: comment.startLine,
-    endLine: comment.endLine,
-    count: 1,
-    resolved: comment.resolved,
-  }));
-  const activeIndex = reviewFiles.findIndex((file) => file.path === activeFile.path);
-
-  return h.div([h.Class("review-demo"), h.DataAttribute("diff-review-demo", "true")], [
-    h.header([h.Class("review-demo__topbar")], [
-      h.div([h.Class("review-demo__crumbs")], [
-        h.span([], ["foldworks"]), Icon.view({ icon: ChevronRight, size: 12 }, h),
-        h.span([], ["feature/inline-reviews"]), Icon.view({ icon: ChevronRight, size: 12 }, h),
-        h.strong([], ["Add inline code review comments"]),
-      ]),
-      h.div([h.Class("review-demo__topbar-actions")], [
-        h.span([h.Class("review-demo__position")], [`${activeIndex + 1} / ${reviewFiles.length}`]),
-        modeControl(model, h),
-      ]),
-    ]),
-    h.div([h.Class("review-demo__workspace")], [
-      navigation(model, h),
-      h.main([h.Class("review-demo__canvas")], [
-        h.div([h.Class("review-demo__diff-scroll")], [
-          DiffViewer.view({
-            file: activeFile,
-            mode: model.mode,
-            ...(selectedRange === undefined ? {} : { selectedRange }),
-            threads: markers,
-            reviewed: model.viewedPaths.includes(activeFile.path),
-            onSelectLine: (selection) => Message.SelectedLine(selection),
-            onStartSelection: (selection) => Message.StartedSelection(selection),
-            onExtendSelection: (selection, method) => Message.ExtendedSelection({ ...selection, method }),
-            onEndSelection: () => Message.EndedSelection(),
-            onCancelSelection: () => Message.CancelledComment(),
-            onReviewedChange: (viewed) => Message.ToggledViewed({ path: activeFile.path, viewed }),
-          }, h),
-        ]),
-      ]),
-      inspector(model, h),
-    ]),
-  ]);
-};
-
-export const view = defineView<Model, Message>((model, h) => diffReviewView(model, h));
+const inspector = (model: Model, h: HtmlBuilder<Message>): Html =>
+  h.aside(
+    [h.Class("cr-demo__inspector"), h.AriaLabel("Review details")],
+    [
+      CheckList.view(
+        {
+          checks: checks(model),
+          onRerun: () => Message.ReranChecks(),
+          renderDetails: (check) =>
+            h.p(
+              [],
+              [
+                check.id === "schema"
+                  ? "Synchronous Effect schema validation of JSON source. Runs in this browser."
+                  : "An illustrative local rule, evaluated in this browser. The host owns this policy.",
+              ],
+            ),
+        },
+        h,
+      ),
+      ReviewerList.view(
+        {
+          reviewers: [
+            {
+              author: reviewer,
+              required: true,
+              ownedFileCount: 2,
+              ...(model.reviews.at(-1) ? { verdict: model.reviews.at(-1)!.verdict } : {}),
+            },
+          ],
+        },
+        h,
+      ),
+      ...(model.status === "open" && model.actor === "reviewer"
+        ? [
+            ReviewSubmit.view(
+              {
+                summary: model.summary,
+                verdict: model.verdict,
+                pendingCount: model.threads
+                  .flatMap((t) => t.comments)
+                  .filter((c) => c.pending && c.author.id === model.actor).length,
+                allowedVerdicts: ["comment", "approve", "request-changes"],
+                onSummaryChange: (value) => Message.ChangedSummary({ value }),
+                onVerdictChange: (verdict) => Message.ChangedVerdict({ verdict }),
+                onSubmit: Message.SubmittedReview(),
+              },
+              h,
+            ),
+          ]
+        : []),
+      MergeReadiness.view(
+        {
+          requirements: [
+            {
+              id: "checks",
+              label: "Local checks",
+              outcome: checks(model).every((c) => c.status === "passed") ? "met" : "unmet",
+              reason: "Both local validators must pass.",
+              children: checks(model).map((c) => ({
+                id: c.id,
+                label: c.name,
+                outcome: c.status === "passed" ? "met" : "unmet",
+                reason: c.summary ?? "",
+              })),
+            },
+            {
+              id: "approval",
+              label: "Current revision approved",
+              outcome: approved(model) ? "met" : "unmet",
+              reason: "The reviewer must approve this exact configuration revision.",
+            },
+            {
+              id: "threads",
+              label: "Current discussions resolved",
+              outcome: openCurrentThreads(model).length ? "unmet" : "met",
+              reason:
+                "Outdated discussions remain in history and do not block this illustrative policy.",
+            },
+            {
+              id: "pending",
+              label: "Pending comments published",
+              outcome: model.threads.some((t) => t.comments.some((c) => c.pending))
+                ? "unmet"
+                : "met",
+              reason: "Submit pending review comments.",
+            },
+          ],
+          canMerge: canMerge(model),
+          onMerge: Message.Merged(),
+          strategies: [{ id: "apply", label: "Apply configuration" }],
+          strategy: "apply",
+          onStrategyChange: () => Message.CompletedReveal(),
+        },
+        h,
+      ),
+      ReviewThreads.listView(
+        {
+          model: model.reviewUi,
+          threads: model.threads,
+          groupBy: (t) => t.anchor.path,
+          anchorState: (t) => mappedThread(model, t).state,
+          toMessage: (message) => Message.GotThreadsMessage({ message }),
+        },
+        h,
+      ),
+      ...model.threads
+        .filter(
+          (t) =>
+            model.status === "merged" ||
+            mappedThread(model, t).state === "outdated" ||
+            !fileDiff(model.files.find((f) => f.path === t.anchor.path)!).hunks.length,
+        )
+        .map((t) => threadView(model, t, h)),
+    ],
+  );
+export const view = defineView<Model, Message>((model, h) =>
+  h.div(
+    [
+      h.Class("cr-demo"),
+      h.DataAttribute("change-request-demo", "true"),
+      h.DataAttribute("dark", String(model.dark)),
+    ],
+    [
+      h.div(
+        [h.Class("cr-demo__notice")],
+        [
+          h.strong([], ["LOCAL SIMULATION"]),
+          h.span(
+            [],
+            [
+              "Synthetic configuration repository · stored in this browser · no Git provider integration",
+            ],
+          ),
+        ],
+      ),
+      ChangeRequestHeader.view(
+        {
+          title: "Roll out the new checkout",
+          status: model.status,
+          author,
+          baseLabel: "saved configuration",
+          headLabel: "working proposal",
+          actions: [
+            button(model.dark ? "Light appearance" : "Dark appearance", Message.ToggledDark(), h),
+            button("Reset simulation", Message.Reset(), h),
+          ],
+        },
+        h,
+      ),
+      h.div(
+        [h.Class("cr-demo__toolbar")],
+        [
+          h.label(
+            [],
+            [
+              "Configuration file ",
+              h.select(
+                [
+                  h.AriaLabel("Configuration file"),
+                  h.Value(model.activePath),
+                  h.OnChange((path) => Message.SelectedFile({ path })),
+                ],
+                model.files.map((file) => h.option([h.Value(file.path)], [file.path])),
+              ),
+            ],
+          ),
+          h.span(
+            [h.Class("cr-demo__actor")],
+            [`Acting as ${model.actor === "author" ? "author" : "reviewer"}`],
+          ),
+          button(
+            model.actor === "author" ? "Act as reviewer" : "Act as author",
+            Message.SwitchedActor({ actor: model.actor === "author" ? "reviewer" : "author" }),
+            h,
+            model.status === "draft",
+          ),
+          ...(model.status === "draft"
+            ? [
+                button(
+                  "Open change request",
+                  Message.OpenedRequest(),
+                  h,
+                  !changedFiles(model).length || checks(model)[0]!.status !== "passed",
+                ),
+              ]
+            : []),
+        ],
+      ),
+      h.p(
+        [h.Class("cr-demo__hint")],
+        [
+          model.status === "draft"
+            ? "Edit checkout to true and rollout to 100; try a string for checkout to see schema diagnostics. Then open a change request."
+            : "Review tip: select new lines 3–4 and suggest rollout 25 with a reviewedBy field. Arrow keys extend a range; Mod+Enter saves a pending comment.",
+        ],
+      ),
+      h.div(
+        [h.Class("cr-demo__workspace")],
+        [
+          h.aside(
+            [h.Class("cr-demo__navigation"), h.AriaLabel("File navigation")],
+            [
+              ChangedFiles.view(
+                {
+                  model: model.filesUi,
+                  files: changedFiles(model),
+                  toMessage: (message) => Message.GotFilesMessage({ message }),
+                },
+                h,
+              ),
+              h.p(
+                [],
+                [`${model.viewedPaths.length} files viewed · ${model.threads.length} discussions`],
+              ),
+            ],
+          ),
+          canvas(model, h),
+          inspector(model, h),
+        ],
+      ),
+      h.p(
+        [h.Role("status"), h.AriaLive("polite"), h.Class("cr-demo__announcement")],
+        [model.announcement],
+      ),
+      ...(model.storageError ? [h.p([h.Role("alert")], [model.storageError])] : []),
+    ],
+  ),
+);
