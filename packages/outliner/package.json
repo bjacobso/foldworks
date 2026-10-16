@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/outliner",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A keyboard-first Foldkit outliner with natural indenting, reordering, collapsing, hoisting, and drag and drop.",
   "license": "MIT",
   "author": "Ben Jacobson",

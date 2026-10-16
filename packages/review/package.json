@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/review",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Provider-neutral review threads and change-request composition for Foldkit.",
   "license": "MIT",
   "author": "Ben Jacobson",

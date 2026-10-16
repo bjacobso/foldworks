@@ -1,6 +1,6 @@
 {
   "name": "@foldworks/form-builder",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Composable multi-page and multi-actor form-building primitives for Foldkit.",
   "license": "MIT",
   "author": "Ben Jacobson",
