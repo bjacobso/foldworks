@@ -64,3 +64,25 @@ prefix and suffix tokens remain equal. This retains exact source text while
 avoiding unbounded diff-search memory on long, unrelated inputs. The view is
 controlled and read-only, uses semantic `<ins>`/`<del>` markup and theme tones,
 and needs the same package stylesheet as `DiffViewer`.
+
+## Text sources and line extensions
+
+`diffFile({ path, oldPath?, oldText, newText, context: 3 })` produces a bounded
+Myers line diff without requiring a patch. `formatUnifiedDiff(file)` serializes
+it. Empty sources imply added/deleted status; `oldPath` selects rename status.
+CRLF is normalized to LF. Missing final newlines are represented by
+`DiffLine.noNewline` and preserved in patches. Paths must be plain paths without
+newlines or quoted patch escapes. Binary content is not inferred. Search uses
+`maxSearchCells` (default one million), then falls back to a replacement.
+
+`lineWidgets(ref)` inserts host Html below a line, spanning both columns in
+split mode. Context rows expose both old and new refs; return a widget for only
+the side on which it belongs. `annotations` adds gutter tones and accessible
+labels, with optional messages beneath the range's last line. `lineGutterId`
+provides a stable focus-return target. Paired replacement rows use semantic
+`ins`/`del` word highlights; unequal blocks pair by index, without move detection.
+
+`highlight(content, language)` can supply text-intelligence `SemanticToken`
+ranges (UTF-16, exclusive end, open string kinds). Invalid or overlapping tokens
+are ignored. On replacement rows, unchanged fragments are tokenized separately;
+changed spans retain their change markup. The default is a small regex tokenizer.

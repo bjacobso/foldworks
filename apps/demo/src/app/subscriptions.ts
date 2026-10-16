@@ -131,8 +131,8 @@ const pdfAnnotator = Subscription.lift(PdfAnnotator.subscriptions)<Model, Messag
 });
 
 const documentAnalysis = Subscription.lift(documentAnalysisSubscriptions)<Model, Message>({
-  when: (model) => model.route._tag === "DocumentAnalysis",
-  toChildModel: (model) => model.documentAnalysis,
+  read: (model) =>
+    model.route._tag === "DocumentAnalysis" ? Option.some(model.documentAnalysis) : Option.none(),
   toParentMessage: (message) => Message.GotDocumentAnalysisMessage({ message }),
 });
 
