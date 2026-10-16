@@ -1,9 +1,11 @@
+import { ReviewThreads } from "@foldworks/review";
 import { Schema as S } from "effect";
 
 import { reviewFiles } from "./fixture";
 
 export const ReviewComment = S.Struct({
   id: S.String,
+  threadId: S.optional(S.String),
   path: S.String,
   side: S.Literals(["old", "new"]),
   startLine: S.Number,
@@ -15,6 +17,7 @@ export const ReviewComment = S.Struct({
 export type ReviewComment = typeof ReviewComment.Type;
 
 export const Model = S.Struct({
+  reviewUi: ReviewThreads.Model,
   activePath: S.String,
   mode: S.Literals(["Unified", "Split"]),
   viewedPaths: S.Array(S.String),
@@ -30,6 +33,7 @@ export const Model = S.Struct({
 export type Model = typeof Model.Type;
 
 export const initialModel: Model = {
+  reviewUi: ReviewThreads.init({ id: "demo-review" }),
   activePath: reviewFiles[0]?.path ?? "",
   mode: "Split",
   viewedPaths: [reviewFiles[1]?.path ?? ""].filter(Boolean),

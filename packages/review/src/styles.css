@@ -1,0 +1,45 @@
+.fk-review__thread,
+.fk-review__composer,
+.fk-review__list {
+  border: 1px solid var(--foldworks-ui-border, #aaa);
+  border-radius: 8px;
+  padding: 12px;
+  margin-block: 8px;
+  color: var(--foldworks-ui-foreground, inherit);
+  background: var(--foldworks-ui-surface, transparent);
+}
+.fk-review__comment {
+  border-bottom: 1px solid var(--foldworks-ui-border, #aaa);
+  padding-block: 12px;
+}
+.fk-review__comment time {
+  margin-inline: 8px;
+  font-size: 0.8em;
+}
+.fk-review__body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fk-review__composer textarea {
+  display: block;
+  width: 100%;
+  min-height: 80px;
+  background: inherit;
+  color: inherit;
+  font: inherit;
+}
+.fk-review__thread button,
+.fk-review__composer button,
+.fk-review__list button {
+  margin: 4px;
+}
+.fk-review__list [role="option"][aria-selected="true"] {
+  outline: 2px solid currentColor;
+}
+.fk-review__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

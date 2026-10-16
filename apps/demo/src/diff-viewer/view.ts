@@ -1,3 +1,4 @@
+import { ReviewThreads, type Thread } from "@foldworks/review";
 import {
   Check,
   ChevronRight,
@@ -22,7 +23,7 @@ import { defineView } from "foldkit/submodel";
 
 import { reviewFiles } from "./fixture";
 import { Message } from "./message";
-import type { Model, ReviewComment } from "./model";
+import type { Model } from "./model";
 
 const statusLabel = (file: DiffFile): string =>
   file.status === "added"
@@ -149,101 +150,45 @@ const modeControl = (model: Model, h: HtmlBuilder<Message>): Html =>
     ],
   );
 
-const thread = (comment: ReviewComment, h: HtmlBuilder<Message>): Html =>
-  h.article(
-    [
-      h.Class("review-demo__thread"),
-      h.DataAttribute("resolved", comment.resolved ? "true" : "false"),
-    ],
-    [
-      h.div(
-        [h.Class("review-demo__thread-heading")],
-        [
-          h.span(
-            [h.Class("review-demo__avatar")],
-            [
-              comment.author === "You"
-                ? "YO"
-                : comment.author
-                    .split(" ")
-                    .map((part) => part[0])
-                    .join(""),
-            ],
-          ),
-          h.div([], [h.strong([], [comment.author]), h.span([], [selectionLabel(comment)])]),
-          h.span([h.Class("review-demo__thread-status")], [comment.resolved ? "Resolved" : "Open"]),
-        ],
-      ),
-      h.p([], [comment.body]),
-      h.button(
-        [
-          h.Type("button"),
-          h.Class("review-demo__resolve"),
-          h.OnClick(Message.ToggledResolved({ id: comment.id })),
-        ],
-        [comment.resolved ? "Reopen thread" : "Resolve thread"],
-      ),
-    ],
+const hostThreads = (model: Model): readonly Thread<DiffSelectionRange>[] =>
+  model.comments
+    .filter((c) => !c.threadId)
+    .map((comment) => ({
+      id: comment.id,
+      anchor: comment,
+      status: comment.resolved ? "resolved" : "open",
+      comments: model.comments
+        .filter((c) => c.id === comment.id || c.threadId === comment.id)
+        .map((c) => ({
+          id: c.id,
+          author: { id: c.author, name: c.author },
+          body: c.body,
+          createdAt: "2026-10-16",
+        })),
+    }));
+const thread = (model: Model, item: Thread<DiffSelectionRange>, h: HtmlBuilder<Message>): Html =>
+  ReviewThreads.threadView(
+    {
+      model: model.reviewUi,
+      thread: item,
+      label: selectionLabel(item.anchor),
+      toMessage: (message) => Message.GotReviewThreadsMessage({ message }),
+      canEdit: (comment) => comment.author.id === "You",
+      canDelete: (comment) => comment.author.id === "You",
+    },
+    h,
   );
-
-const composer = (model: Model, h: HtmlBuilder<Message>): Html => {
-  if (model.selectionPath === "" || model.selectionStartLine < 1) {
-    return h.div(
-      [h.Class("review-demo__comment-empty")],
-      [
-        Icon.view({ icon: MessageSquare, size: 18 }, h),
-        h.strong([], ["Comment on a line"]),
-        h.p([], ["Click a line for one comment, or drag across line numbers to select a range."]),
-      ],
-    );
-  }
-  return h.form(
-    [h.Class("review-demo__composer"), h.OnSubmit(Message.SubmittedComment())],
-    [
-      h.div(
-        [h.Class("review-demo__composer-heading")],
-        [
-          h.strong(
-            [],
-            [
-              selectionLabel({
-                path: model.selectionPath,
-                side: model.selectionSide,
-                startLine: model.selectionStartLine,
-                endLine: model.selectionEndLine,
-              }),
-            ],
-          ),
-          h.span([], [model.selectionPath.split("/").pop() ?? model.selectionPath]),
-        ],
-      ),
-      h.textarea([
-        h.AriaLabel("Review comment"),
-        h.Placeholder("Leave a clear, actionable comment…"),
-        h.Value(model.draft),
-        h.OnInput((value) => Message.ChangedDraft({ value })),
-      ]),
-      h.div(
-        [h.Class("review-demo__composer-actions")],
-        [
-          Button.view(
-            { label: "Cancel", size: "xs", variant: "ghost", onClick: Message.CancelledComment() },
-            h,
-          ),
-          Button.view(
-            {
-              label: "Add comment",
-              size: "xs",
-              onClick: Message.SubmittedComment(),
-              isDisabled: model.draft.trim() === "",
-            },
-            h,
-          ),
-        ],
-      ),
-    ],
+const composer = (model: Model, h: HtmlBuilder<Message>): Html =>
+  ReviewThreads.composerView(
+    {
+      model: model.reviewUi,
+      draftKey: "new",
+      targetId: "new",
+      kind: "create",
+      toMessage: (message) => Message.GotReviewThreadsMessage({ message }),
+    },
+    h,
   );
-};
 
 const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
   const activeComments = model.comments.filter((comment) => comment.path === model.activePath);
@@ -284,8 +229,15 @@ const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
             [h.Class("review-demo__section-heading")],
             [h.strong([], ["Comments"]), h.span([], [String(activeComments.length)])],
           ),
-          composer(model, h),
-          ...activeComments.map((comment) => thread(comment, h)),
+          ReviewThreads.listView(
+            {
+              model: model.reviewUi,
+              threads: hostThreads(model),
+              groupBy: (t) => t.anchor.path,
+              toMessage: (message) => Message.GotReviewThreadsMessage({ message }),
+            },
+            h,
+          ),
         ],
       ),
     ],
@@ -358,6 +310,24 @@ const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
                       mode: model.mode,
                       ...(selectedRange === undefined ? {} : { selectedRange }),
                       threads: markers,
+                      lineWidgets: (ref) => {
+                        const inline = hostThreads(model)
+                          .filter(
+                            (t) =>
+                              t.anchor.path === ref.path &&
+                              t.anchor.side === ref.side &&
+                              t.anchor.endLine === ref.line,
+                          )
+                          .map((t) => thread(model, t, h));
+                        if (
+                          model.reviewUi.composerKey === "new" &&
+                          model.selectionPath === ref.path &&
+                          model.selectionSide === ref.side &&
+                          Math.max(model.selectionStartLine, model.selectionEndLine) === ref.line
+                        )
+                          inline.push(composer(model, h));
+                        return inline.length ? h.div([], inline) : undefined;
+                      },
                       annotations: [
                         {
                           path: activeFile.path,

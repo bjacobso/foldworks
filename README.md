@@ -28,13 +28,13 @@ contract:
 
 ## The stack
 
-| Layer                      | What it provides                                                                        | Packages                                                                                  |
-| -------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 05. Workbenches            | Complete tools composed from the layers below                                           | `agent`, `generative-ui`, `codebase`                                                      |
-| 04. Application primitives | Product surfaces with models, messages, and updates included                            | `editor`, `code-editor`, `outliner`, `data-table`, `data-grid`, `query-builder`, and more |
-| 03. Behaviors              | Headless engines that more than one surface shares                                      | `keyboard`, `history`, `text-intelligence`, `diagram`, `pdf`                              |
-| 02. Components             | Accessible controls, overlays, and application chrome                                   | `ui`, `sidebar`                                                                           |
-| 01. Tokens                 | Semantic CSS variables in light and dark, with Shadcn, Polaris, Apple, and other themes | `ui`                                                                                      |
+| Layer                      | What it provides                                                                        | Packages                                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 05. Workbenches            | Complete tools composed from the layers below                                           | `agent`, `generative-ui`, `codebase`                                                                |
+| 04. Application primitives | Product surfaces with models, messages, and updates included                            | `editor`, `code-editor`, `outliner`, `data-table`, `data-grid`, `query-builder`, `review`, and more |
+| 03. Behaviors              | Headless engines that more than one surface shares                                      | `keyboard`, `history`, `text-intelligence`, `diagram`, `pdf`                                        |
+| 02. Components             | Accessible controls, overlays, and application chrome                                   | `ui`, `sidebar`                                                                                     |
+| 01. Tokens                 | Semantic CSS variables in light and dark, with Shadcn, Polaris, Apple, and other themes | `ui`                                                                                                |
 
 ### Components
 
@@ -82,6 +82,7 @@ contract:
 - [`@foldworks/workflow`](./packages/workflow): recursive workflows,
   branch-aware operations, layout, and drag-and-drop primitives, built on the
   `@foldworks/diagram` scene contract.
+- [`@foldworks/review`](./packages/review): review threads, drafts, and host-owned change-request workflows.
 - [`@foldworks/diff-viewer`](./packages/diff-viewer): a controlled unified and
   split diff renderer with line selection for code review workflows.
 - [`@foldworks/pdf-viewer`](./packages/pdf-viewer): read-only PDF viewing

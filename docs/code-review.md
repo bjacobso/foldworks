@@ -104,8 +104,10 @@ createdAt, editedAt?, pending? }` and `Thread<Anchor>` `{ id, anchor, status:
   `RequestedCreateThread`, `RequestedReply`, `RequestedEdit`, `RequestedDelete`,
   `RequestedResolve`, and `RequestedReopen`, and answers by updating the thread
   data it passes back in. Drafts survive a host round trip and are cleared only
-  when the host confirms with `Committed({ draftKey })`, so a failed save keeps
-  the text.
+  when the host confirms with `Committed({ draftKey, body })`, so a failed save keeps
+  the text. The acknowledgement includes the saved body so a delayed response
+  cannot erase newer typing. New-anchor requests carry a host-owned `anchorKey`;
+  hosts keep the generic anchor data outside the UI submodel.
 - **Views.** `ReviewThreads.threadView` renders one thread with its comments, a
   reply composer, and resolve/reopen. `ReviewThreads.composerView` renders the
   new-thread composer for a selected range. `ReviewThreads.listView` renders all

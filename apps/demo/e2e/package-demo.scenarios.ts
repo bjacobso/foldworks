@@ -14,6 +14,7 @@ const expectedPackages = [
   "@foldworks/form-builder",
   "@foldworks/workflow",
   "@foldworks/diff-viewer",
+  "@foldworks/review",
   "@foldworks/pdf-viewer",
   "@foldworks/pdf-annotator",
   "@foldworks/keyboard",

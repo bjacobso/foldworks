@@ -57,6 +57,7 @@ export const layers: ReadonlyArray<Layer> = [
       "form-builder",
       "workflow",
       "diff-viewer",
+      "review",
       "pdf-viewer",
       "pdf-annotator",
     ],
