@@ -441,3 +441,25 @@
   background: #e5484d33;
   text-decoration: line-through;
 }
+.fk-value-diff {
+  padding: 16px;
+  color: var(--foldworks-ui-foreground, inherit);
+}
+.fk-value-diff ul {
+  padding: 0;
+  list-style: none;
+}
+.fk-value-diff li {
+  border-block-end: 1px solid var(--foldworks-ui-border, #aaa);
+  padding-block: 12px;
+}
+.fk-value-diff pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fk-value-diff ins {
+  background: #30a46c22;
+}
+.fk-value-diff del {
+  background: #e5484d22;
+}

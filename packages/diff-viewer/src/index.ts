@@ -18,3 +18,4 @@ export {
 
 export * from "./file";
 export * from "./anchors";
+export * from "./values";

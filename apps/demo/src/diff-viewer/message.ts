@@ -3,6 +3,7 @@ import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
 export const Message = defineMessageUnion({
+  ToggledSemantic: {},
   GotChangedFilesMessage: { message: ChangedFiles.Message },
   MergedRequest: {},
   AppliedSuggestion: { threadId: S.String },

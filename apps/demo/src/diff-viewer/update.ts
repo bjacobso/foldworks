@@ -85,6 +85,7 @@ const foldFiles = (parent: Model, message: ChangedFiles.Message) =>
   })(parent, message);
 const updateCore = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match<Update.Return<Model, Message>>(message, {
+    ToggledSemantic: () => ({ model: { ...model, semantic: !model.semantic } }),
     GotChangedFilesMessage: ({ message }) => foldFiles(model, message),
     MergedRequest: () =>
       model.submittedVerdict !== "approve" || model.comments.some((c) => !c.resolved)

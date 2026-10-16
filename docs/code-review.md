@@ -190,7 +190,9 @@ Line diffs are honest but do not say what changed in a configuration value.
   returns path-level changes `{ path: readonly (string | number)[], kind:
 "added" | "removed" | "changed", before?, after? }`. Arrays of objects with an
   `id` (or a host `key` function) are matched by identity; other arrays are
-  compared by index.
+  compared by index. Identity-matched arrays ignore pure reorder; changed/added
+  paths use after indexes and removed paths use before indexes. This is a review
+  summary, not a patch. Inputs must be finite, acyclic JSON-like values.
 - **`ValueDiff.view`** renders those changes grouped by path with before and
   after values, as a "semantic" alternative to the line view of the same file.
   A host that has source maps from its parser can link a path change to its

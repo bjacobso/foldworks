@@ -111,3 +111,26 @@ revision to reveal.
 the next hunk and joins touching hunks. It validates visible source content and
 requested gap lines, rejecting stale gaps or mismatched sources. It does not
 expand the trailing file region. Counts and file totals remain unchanged.
+
+## Decoded configuration values and diagnostics
+
+`diffValues(before, after, { key? })` accepts finite, acyclic JSON-like values and
+returns added/removed/changed paths. Objects compare own string keys. Arrays with
+unique `id` values on every item match by identity; `key(value, arrayPath)` can
+supply host identity. Duplicate/missing keys fall back to indexes. Pure reorder
+in an identity-matched array is ignored. Matched/added paths use after indexes;
+removed paths use before indexes. This is a review summary, not an executable
+patch. Non-JSON values and cycles throw. Inputs should fit in memory and within
+the JavaScript call stack; there is no streaming or depth virtualization.
+
+`ValueDiff.view({ changes, onSelectPath? }, h)` groups by parent path and renders
+before/after JSON with semantic deletion/insertion markup. The optional path
+callback lets a host use parser source maps; the package does not infer source
+locations from decoded values.
+
+`diagnosticsToAnnotations(path, text, diagnostics)` accepts code-editor /
+text-intelligence diagnostics with UTF-16 offsets and exclusive `to`. It clamps
+offsets, handles CRLF and point diagnostics, and maps error/warning/info/hint to
+gutter tones on the new side. EOF points map to the last real line (line 1 for
+empty text); an empty diff has no line on which to paint the annotation, so show
+file-level validation in the host checks view as well.

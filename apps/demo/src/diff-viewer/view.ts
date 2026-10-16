@@ -1,3 +1,5 @@
+import { Schema as S } from "effect";
+import { validate } from "@foldworks/code-editor/structured";
 import {
   ReviewThreads,
   ReviewSubmit,
@@ -21,6 +23,9 @@ import {
 } from "@lucide/icons";
 import {
   DiffViewer,
+  ValueDiff,
+  diffValues,
+  diagnosticsToAnnotations,
   diffFile,
   contextGaps,
   expandContext,
@@ -57,6 +62,14 @@ const modeControl = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [h.Class("review-demo__mode"), h.Role("group"), h.AriaLabel("Diff layout")],
     [
+      h.button(
+        [
+          h.Type("button"),
+          h.AriaPressed(String(model.semantic)),
+          h.OnClick(Message.ToggledSemantic()),
+        ],
+        ["Semantic values"],
+      ),
       h.button(
         [
           h.Type("button"),
@@ -334,58 +347,83 @@ const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
               h.div(
                 [h.Class("review-demo__diff-scroll")],
                 [
-                  DiffViewer.view(
-                    {
-                      file: activeFile,
-                      ...(activeFile.source
-                        ? {
-                            onExpandGap: (gap: import("@foldworks/diff-viewer").DiffGap) =>
-                              Message.ExpandedContext({ beforeHunkId: gap.beforeHunkId }),
-                          }
-                        : {}),
-                      mode: model.mode,
-                      ...(selectedRange === undefined ? {} : { selectedRange }),
-                      threads: markers,
-                      lineWidgets: (ref) => {
-                        const inline = hostThreads(model)
-                          .filter(
-                            (t) =>
-                              t.anchor.path === ref.path &&
-                              t.anchor.side === ref.side &&
-                              t.anchor.endLine === ref.line,
-                          )
-                          .map((t) => thread(model, t, h));
-                        if (
-                          model.reviewUi.composerKey === "new" &&
-                          model.selectionPath === ref.path &&
-                          model.selectionSide === ref.side &&
-                          Math.max(model.selectionStartLine, model.selectionEndLine) === ref.line
-                        )
-                          inline.push(composer(model, h));
-                        return inline.length ? h.div([], inline) : undefined;
-                      },
-                      annotations: [
+                  model.semantic && activeFile.source
+                    ? ValueDiff.view(
                         {
-                          path: activeFile.path,
-                          side: "new",
-                          startLine: 24,
-                          endLine: 24,
-                          tone: "info",
-                          label: "Local review note",
+                          changes: diffValues(
+                            Object.fromEntries(
+                              localSource.oldText
+                                .trim()
+                                .split("\n")
+                                .map((l) => [l.split(": ")[0]!, l.endsWith("true")]),
+                            ),
+                            Object.fromEntries(
+                              model.workingText
+                                .trim()
+                                .split("\n")
+                                .map((l) => [l.split(": ")[0]!, l.endsWith("true")]),
+                            ),
+                          ),
                         },
-                      ],
-                      reviewed: model.viewedPaths.includes(activeFile.path),
-                      onSelectLine: (selection) => Message.SelectedLine(selection),
-                      onStartSelection: (selection) => Message.StartedSelection(selection),
-                      onExtendSelection: (selection, method) =>
-                        Message.ExtendedSelection({ ...selection, method }),
-                      onEndSelection: () => Message.EndedSelection(),
-                      onCancelSelection: () => Message.CancelledComment(),
-                      onReviewedChange: (viewed) =>
-                        Message.ToggledViewed({ path: activeFile.path, viewed }),
-                    },
-                    h,
-                  ),
+                        h,
+                      )
+                    : DiffViewer.view(
+                        {
+                          file: activeFile,
+                          ...(activeFile.source
+                            ? {
+                                onExpandGap: (gap: import("@foldworks/diff-viewer").DiffGap) =>
+                                  Message.ExpandedContext({ beforeHunkId: gap.beforeHunkId }),
+                              }
+                            : {}),
+                          mode: model.mode,
+                          ...(selectedRange === undefined ? {} : { selectedRange }),
+                          threads: markers,
+                          lineWidgets: (ref) => {
+                            const inline = hostThreads(model)
+                              .filter(
+                                (t) =>
+                                  t.anchor.path === ref.path &&
+                                  t.anchor.side === ref.side &&
+                                  t.anchor.endLine === ref.line,
+                              )
+                              .map((t) => thread(model, t, h));
+                            if (
+                              model.reviewUi.composerKey === "new" &&
+                              model.selectionPath === ref.path &&
+                              model.selectionSide === ref.side &&
+                              Math.max(model.selectionStartLine, model.selectionEndLine) ===
+                                ref.line
+                            )
+                              inline.push(composer(model, h));
+                            return inline.length ? h.div([], inline) : undefined;
+                          },
+                          annotations: activeFile.source
+                            ? diagnosticsToAnnotations(
+                                activeFile.path,
+                                model.workingText,
+                                validate(S.Record(S.String, S.Boolean), {
+                                  uri: activeFile.path,
+                                  session: 1,
+                                  revision: 1,
+                                  languageId: "yaml",
+                                  text: model.workingText,
+                                  lineEnding: "lf",
+                                }),
+                              )
+                            : [],
+                          reviewed: model.viewedPaths.includes(activeFile.path),
+                          onSelectLine: (selection) => Message.SelectedLine(selection),
+                          onStartSelection: (selection) => Message.StartedSelection(selection),
+                          onExtendSelection: (selection, method) =>
+                            Message.ExtendedSelection({ ...selection, method }),
+                          onEndSelection: () => Message.EndedSelection(),
+                          onCancelSelection: () => Message.CancelledComment(),
+                          onReviewedChange: (viewed) =>
+                            Message.ToggledViewed({ path: activeFile.path, viewed }),
+                        },
+                        h,
+                      ),
                 ],
               ),
             ],
