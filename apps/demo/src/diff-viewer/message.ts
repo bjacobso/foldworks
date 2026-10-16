@@ -1,8 +1,12 @@
-import { ReviewThreads } from "@foldworks/review";
+import { ReviewThreads, Verdict } from "@foldworks/review";
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
 export const Message = defineMessageUnion({
+  AppliedSuggestion: { threadId: S.String },
+  ChangedReviewSummary: { summary: S.String },
+  ChoseVerdict: { verdict: Verdict },
+  SubmittedReview: {},
   GotReviewThreadsMessage: { message: ReviewThreads.Message },
   ExpandedContext: { beforeHunkId: S.String },
   SelectedFile: { path: S.String },

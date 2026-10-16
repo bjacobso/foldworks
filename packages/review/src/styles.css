@@ -43,3 +43,27 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
+.fk-review__panel {
+  border: 1px solid var(--foldworks-ui-border, #aaa);
+  padding: 12px;
+  border-radius: 8px;
+  margin-block: 8px;
+}
+.fk-review__panel textarea {
+  display: block;
+  width: 100%;
+  color: inherit;
+  background: inherit;
+}
+.fk-review__panel button {
+  margin: 4px;
+}
+.fk-review__panel [data-verdict="approve"] {
+  color: var(--foldworks-ui-success, #198359);
+}
+.fk-review__panel [data-verdict="request-changes"] {
+  color: var(--foldworks-ui-danger, #d04444);
+}
+.fk-review__panel [data-verdict="requested"] {
+  opacity: 0.7;
+}

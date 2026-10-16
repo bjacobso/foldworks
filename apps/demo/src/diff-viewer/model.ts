@@ -1,11 +1,13 @@
-import { ReviewThreads } from "@foldworks/review";
+import { ReviewThreads, Suggestion, Verdict } from "@foldworks/review";
 import { Schema as S } from "effect";
 
-import { reviewFiles } from "./fixture";
+import { reviewFiles, localSource } from "./fixture";
 
 export const ReviewComment = S.Struct({
   id: S.String,
   threadId: S.optional(S.String),
+  pending: S.optional(S.Boolean),
+  suggestion: S.optional(Suggestion),
   path: S.String,
   side: S.Literals(["old", "new"]),
   startLine: S.Number,
@@ -18,6 +20,10 @@ export type ReviewComment = typeof ReviewComment.Type;
 
 export const Model = S.Struct({
   reviewUi: ReviewThreads.Model,
+  workingText: S.String,
+  reviewSummary: S.String,
+  verdict: Verdict,
+  submittedVerdict: S.String,
   expandedHunks: S.Array(S.String),
   activePath: S.String,
   mode: S.Literals(["Unified", "Split"]),
@@ -34,6 +40,10 @@ export const Model = S.Struct({
 export type Model = typeof Model.Type;
 
 export const initialModel: Model = {
+  workingText: localSource.newText,
+  reviewSummary: "",
+  verdict: "comment",
+  submittedVerdict: "",
   reviewUi: ReviewThreads.init({ id: "demo-review" }),
   expandedHunks: [],
   activePath: reviewFiles[0]?.path ?? "",
@@ -50,8 +60,15 @@ export const initialModel: Model = {
       id: "comment-1",
       path: reviewFiles[0]?.path ?? "",
       side: "new",
-      startLine: 24,
-      endLine: 24,
+      startLine: 4,
+      endLine: 4,
+      suggestion: {
+        path: reviewFiles[0]?.path ?? "",
+        startLine: 4,
+        endLine: 4,
+        expected: "flag_4: true",
+        replacement: "flag_4: false",
+      },
       author: "Maya Chen",
       body: "Should this emit only after the API call succeeds? Otherwise retries could double-count published reviews.",
       resolved: false,

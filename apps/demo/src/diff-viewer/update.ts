@@ -1,6 +1,6 @@
 import { Update } from "foldkit";
 import { Option } from "effect";
-import { ReviewThreads } from "@foldworks/review";
+import { ReviewThreads, applySuggestions } from "@foldworks/review";
 import { lineGutterId } from "@foldworks/diff-viewer";
 
 import { Message } from "./message";
@@ -57,6 +57,7 @@ const foldThreads = Update.foldChild({
                   id: `comment-${model.comments.length + 1}`,
                   threadId: parent.id,
                   author: "You",
+                  pending: true,
                   body: out.body,
                 },
               ],
@@ -70,6 +71,33 @@ const foldThreads = Update.foldChild({
 const updateCore = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match(message, {
     GotReviewThreadsMessage: ({ message }) => foldThreads(model, message),
+    AppliedSuggestion: ({ threadId }) => {
+      const suggestion = model.comments.find((c) => c.id === threadId)?.suggestion;
+      if (!suggestion) return { model };
+      const result = applySuggestions(model.workingText, [suggestion]);
+      return result.status === "applied"
+        ? {
+            model: {
+              ...model,
+              workingText: result.text,
+              comments: model.comments.map((c) =>
+                c.id === threadId ? { ...c, resolved: true } : c,
+              ),
+              announcement: "Suggestion applied locally.",
+            },
+          }
+        : { model: { ...model, announcement: `Suggestion rejected: ${result.reason}.` } };
+    },
+    ChangedReviewSummary: ({ summary }) => ({ model: { ...model, reviewSummary: summary } }),
+    ChoseVerdict: ({ verdict }) => ({ model: { ...model, verdict } }),
+    SubmittedReview: () => ({
+      model: {
+        ...model,
+        submittedVerdict: model.verdict,
+        comments: model.comments.map((c) => ({ ...c, pending: false })),
+        announcement: "Local review submitted.",
+      },
+    }),
     ExpandedContext: ({ beforeHunkId }) => ({
       model: { ...model, expandedHunks: [...model.expandedHunks, beforeHunkId] },
     }),
@@ -156,6 +184,7 @@ const updateCore = (model: Model, message: Message): Update.Return<Model, Messag
               startLine,
               endLine,
               author: "You",
+              pending: true,
               body,
               resolved: false,
             },

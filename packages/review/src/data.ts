@@ -1,8 +1,10 @@
+import { Suggestion } from "./suggestions";
 import { Schema as S } from "effect";
 
 export const Author = S.Struct({ id: S.String, name: S.String, avatarUrl: S.optional(S.String) });
 export type Author = typeof Author.Type;
 export const Comment = S.Struct({
+  suggestion: S.optional(Suggestion),
   id: S.String,
   author: Author,
   body: S.String,

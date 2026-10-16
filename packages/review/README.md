@@ -44,3 +44,28 @@ inputs, never persisted in `Thread`. For diff anchors use `mapRange` from
 `@foldworks/diff-viewer`; retain the original anchor and source revision when
 mapping reports outdated, so discussion stays available in the list even if
 its line no longer exists.
+
+## Suggestions and pending reviews
+
+A `Comment` may carry a `Suggestion` with path, inclusive 1-based start/end
+lines, replacement and **expected** original content. Capture expected content
+when proposing it, joined with LF without the range's terminal newline.
+`applySuggestions(text, suggestions)` returns `applied` with new text, or
+`rejected` with `stale`, `overlap`, or `mixed-paths`. A rejection changes nothing;
+stale results identify invalid ranges and mismatching expected text. It never
+searches for similar content. The host verifies the path, commits the returned
+text, remaps anchors and resolves threads.
+
+Application normalizes CRLF to LF, preserves the source's final newline
+convention and treats empty replacement as deletion of complete lines. A single
+terminal newline on replacement is ignored. Zero-width insertions are not
+supported; replace an existing range with the desired complete lines instead.
+`threadView` previews the suggestion as a diff; `onApplySuggestion` exposes the
+host action. Omit the callback when applying is unavailable.
+
+`pending` on comments is host data. `ReviewSubmit.view` takes controlled summary,
+verdict, pending count, allowed verdicts and submission callbacks. Unsupported
+verdicts cannot be selected; submission disables for a disallowed current
+choice or `isSubmitting`. Hosts must also validate submission intent and retain
+drafts on failure. `ReviewerList.view` displays requested/returned verdicts,
+required labels, and optional ownership counts. Neither view evaluates policy.

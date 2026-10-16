@@ -1,4 +1,10 @@
-import { ReviewThreads, type Thread } from "@foldworks/review";
+import {
+  ReviewThreads,
+  ReviewSubmit,
+  ReviewerList,
+  type Thread,
+  type Verdict,
+} from "@foldworks/review";
 import {
   Check,
   ChevronRight,
@@ -11,6 +17,7 @@ import {
 } from "@lucide/icons";
 import {
   DiffViewer,
+  diffFile,
   contextGaps,
   expandContext,
   mapRange,
@@ -166,6 +173,8 @@ const hostThreads = (model: Model): readonly Thread<DiffSelectionRange>[] =>
           id: c.id,
           author: { id: c.author, name: c.author },
           body: c.body,
+          ...(c.suggestion ? { suggestion: c.suggestion } : {}),
+          ...(c.pending !== undefined ? { pending: c.pending } : {}),
           createdAt: "2026-10-16",
         })),
     }));
@@ -176,10 +185,21 @@ const thread = (model: Model, item: Thread<DiffSelectionRange>, h: HtmlBuilder<M
       thread: item,
       anchorState: (() => {
         const file = reviewFiles.find((f) => f.path === item.anchor.path);
-        return file?.source ? mapRange(file, item.anchor, file).state : "current";
+        return file?.source
+          ? mapRange(
+              file,
+              item.anchor,
+              diffFile({
+                path: file.path,
+                oldText: file.source.oldText,
+                newText: model.workingText,
+              }),
+            ).state
+          : "current";
       })(),
       label: selectionLabel(item.anchor),
       toMessage: (message) => Message.GotReviewThreadsMessage({ message }),
+      onApplySuggestion: (_, threadId) => Message.AppliedSuggestion({ threadId }),
       canEdit: (comment) => comment.author.id === "You",
       canDelete: (comment) => comment.author.id === "You",
     },
@@ -229,6 +249,30 @@ const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
           ),
         ],
       ),
+      ReviewSubmit.view(
+        {
+          summary: model.reviewSummary,
+          verdict: model.verdict,
+          pendingCount: model.comments.filter((c) => c.pending).length,
+          allowedVerdicts: ["comment", "approve", "request-changes"],
+          onSummaryChange: (summary) => Message.ChangedReviewSummary({ summary }),
+          onVerdictChange: (verdict) => Message.ChoseVerdict({ verdict }),
+          onSubmit: Message.SubmittedReview(),
+        },
+        h,
+      ),
+      ReviewerList.view(
+        {
+          reviewers: [
+            {
+              author: { id: "local-reviewer", name: "Local reviewer" },
+              required: true,
+              ...(model.submittedVerdict ? { verdict: model.submittedVerdict as Verdict } : {}),
+            },
+          ],
+        },
+        h,
+      ),
       h.section(
         [h.Class("review-demo__comment-section")],
         [
@@ -254,9 +298,22 @@ const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
 const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
   let activeFile = reviewFiles.find((file) => file.path === model.activePath) ?? reviewFiles[0];
   if (activeFile === undefined) return h.div([h.Class("review-demo")], ["No diff fixture loaded."]);
+  if (activeFile.source)
+    activeFile = diffFile({
+      path: activeFile.path,
+      oldText: localSource.oldText,
+      newText: model.workingText,
+      context: 2,
+    });
   for (const id of model.expandedHunks) {
     const gap = contextGaps(activeFile).find((g) => g.beforeHunkId === id);
-    if (gap && activeFile.source) activeFile = expandContext(activeFile, localSource, gap, 20);
+    if (gap && activeFile.source)
+      activeFile = expandContext(
+        activeFile,
+        { oldText: localSource.oldText, newText: model.workingText },
+        gap,
+        20,
+      );
   }
   const selectedRange: DiffSelectionRange | undefined =
     model.selectionPath === ""

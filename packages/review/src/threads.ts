@@ -1,3 +1,5 @@
+import { diffFile, DiffViewer } from "@foldworks/diff-viewer";
+import type { Suggestion } from "./suggestions";
 import { Effect, Option, Schema as S } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
@@ -203,6 +205,7 @@ export type ThreadConfig<Anchor, Message> = Base<Message> &
     thread: Thread<Anchor>;
     anchorState?: AnchorState;
     label?: string;
+    onApplySuggestion?: (suggestion: Suggestion, threadId: string) => Message;
     renderBody?: (comment: Comment) => Html;
     canEdit?: (comment: Comment) => boolean;
     canDelete?: (comment: Comment) => boolean;
@@ -262,6 +265,35 @@ export const threadView = <Anchor, ParentMessage>(
                       )
                     : (config.renderBody?.(comment) ??
                       h.p([h.Class("fk-review__body")], [comment.body])),
+                  ...(comment.suggestion
+                    ? [
+                        DiffViewer.view(
+                          {
+                            file: diffFile({
+                              path: comment.suggestion.path,
+                              oldText: comment.suggestion.expected + "\n",
+                              newText: comment.suggestion.replacement
+                                ? comment.suggestion.replacement.replace(/\n$/, "") + "\n"
+                                : "",
+                            }),
+                          },
+                          h,
+                        ),
+                        ...(config.onApplySuggestion
+                          ? [
+                              h.button(
+                                [
+                                  h.Type("button"),
+                                  h.OnClick(
+                                    config.onApplySuggestion(comment.suggestion, thread.id),
+                                  ),
+                                ],
+                                ["Apply suggestion"],
+                              ),
+                            ]
+                          : []),
+                      ]
+                    : []),
                   ...(config.canEdit?.(comment)
                     ? [
                         action(

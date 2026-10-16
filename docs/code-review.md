@@ -132,7 +132,7 @@ Package: `@foldworks/review`, using `@foldworks/diff-viewer` for rendering.
 A suggestion is a comment that carries replacement text for its anchored range
 on the new side.
 
-- `Suggestion` `{ path, startLine, endLine, replacement }` is an optional field
+- `Suggestion` `{ path, startLine, endLine, replacement, expected }` is an optional field
   on `Comment`.
 - `applySuggestions(text, suggestions)` applies one or more suggestions to a
   file's text, rejects overlapping ranges, and reports suggestions whose range
