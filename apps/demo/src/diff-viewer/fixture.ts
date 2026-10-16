@@ -1,4 +1,4 @@
-import { parseUnifiedDiff } from "@foldworks/diff-viewer";
+import { diffFile, parseUnifiedDiff } from "@foldworks/diff-viewer";
 
 export const reviewPatch = `diff --git a/apps/demo/src/review/commands.ts b/apps/demo/src/review/commands.ts
 index 42b49ad..7c8e510 100644
@@ -107,4 +107,13 @@ ${" "}
  *,
 `;
 
-export const reviewFiles = parseUnifiedDiff(reviewPatch);
+export const localSource = {
+  oldText: Array.from({ length: 32 }, (_, i) => `flag_${i + 1}: false`).join("\n") + "\n",
+  newText:
+    Array.from(
+      { length: 32 },
+      (_, i) => `flag_${i + 1}: ${i === 3 || i === 29 ? "true" : "false"}`,
+    ).join("\n") + "\n",
+};
+export const localFile = diffFile({ path: "config/flags.yaml", ...localSource, context: 2 });
+export const reviewFiles = [localFile, ...parseUnifiedDiff(reviewPatch)];

@@ -18,6 +18,7 @@ export type ReviewComment = typeof ReviewComment.Type;
 
 export const Model = S.Struct({
   reviewUi: ReviewThreads.Model,
+  expandedHunks: S.Array(S.String),
   activePath: S.String,
   mode: S.Literals(["Unified", "Split"]),
   viewedPaths: S.Array(S.String),
@@ -34,6 +35,7 @@ export type Model = typeof Model.Type;
 
 export const initialModel: Model = {
   reviewUi: ReviewThreads.init({ id: "demo-review" }),
+  expandedHunks: [],
   activePath: reviewFiles[0]?.path ?? "",
   mode: "Split",
   viewedPaths: [reviewFiles[1]?.path ?? ""].filter(Boolean),

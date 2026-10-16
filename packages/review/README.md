@@ -35,3 +35,12 @@ reveal the active thread. Hosts provide anchor display state; resolved threads
 collapse until expanded. Request and save status use a polite live region.
 Focus targets must still exist when a command executes. Thread IDs, UI IDs and
 draft keys must be stable and unique within the surface.
+
+## Outdated threads
+
+Pass `anchorState: 'current' | 'moved' | 'outdated'` to `threadView` and an
+`anchorState(thread)` function to `listView`. These are derived host display
+inputs, never persisted in `Thread`. For diff anchors use `mapRange` from
+`@foldworks/diff-viewer`; retain the original anchor and source revision when
+mapping reports outdated, so discussion stays available in the list even if
+its line no longer exists.

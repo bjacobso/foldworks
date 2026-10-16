@@ -92,6 +92,7 @@ export const diffFile = (options: DiffFileOptions): DiffFile => {
     );
   });
   return {
+    source: { oldText: options.oldText, newText: options.newText },
     path: options.path,
     oldPath: options.oldPath ?? options.path,
     status:

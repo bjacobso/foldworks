@@ -86,3 +86,28 @@ provides a stable focus-return target. Paired replacement rows use semantic
 ranges (UTF-16, exclusive end, open string kinds). Invalid or overlapping tokens
 are ignored. On replacement rows, unchanged fragments are tokenized separately;
 changed spans retain their change markup. The default is a small regex tokenizer.
+
+## Revision anchors and context
+
+`mapLine(file, side, line)` returns `mapped` with the opposite-side line,
+`deleted` for removed/replaced lines, or `unknown` for invalid coordinates.
+Unchanged lines outside hunks follow cumulative offsets. Parsed patches cannot
+validate coordinates beyond the represented source; hosts must supply valid
+line numbers.
+
+`mapRange(fromFile, range, toFile)` maps to the later file's **new** side and
+returns `{ state: 'current' | 'moved', range }` or
+`{ state: 'outdated', reason }`. Every source line must survive contiguously.
+`diffFile` retains full `source` snapshots, allowing exact revision-to-revision
+mapping even for added lines. Serialization omits snapshots. Without both
+snapshots, mapping requires a shared base path and surviving base-side lines;
+newly added anchors conservatively become outdated. No fuzzy or move matching.
+Hosts retain original anchors/snapshots for outdated threads and decide which
+revision to reveal.
+
+`contextGaps(file)` describes hidden context before/between hunks. Supply
+`onExpandGap` to render an expansion button.
+`expandContext(file, { oldText, newText }, gap, lines)` adds context preceding
+the next hunk and joins touching hunks. It validates visible source content and
+requested gap lines, rejecting stale gaps or mismatched sources. It does not
+expand the trailing file region. Counts and file totals remain unchanged.

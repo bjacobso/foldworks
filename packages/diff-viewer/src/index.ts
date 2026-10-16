@@ -17,3 +17,4 @@ export {
 } from "./prose";
 
 export * from "./file";
+export * from "./anchors";

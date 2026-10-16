@@ -1,3 +1,4 @@
+import { contextGaps, type DiffGap } from "./anchors";
 import type { SemanticToken } from "@foldworks/text-intelligence";
 import { diffText } from "./prose";
 import { Option } from "effect";
@@ -24,6 +25,7 @@ export type DiffAnnotation = DiffSelectionRange &
 
 export type ViewConfig<Message> = Readonly<{
   file: DiffFile;
+  onExpandGap?: (gap: DiffGap) => Message;
   lineWidgets?: (line: DiffLineRef) => Html | undefined;
   annotations?: readonly DiffAnnotation[];
   highlight?: (content: string, language: string) => readonly Highlight[];
@@ -321,20 +323,6 @@ const splitCell = <Message>(
   );
 };
 
-const hiddenLinesBefore = (file: DiffFile, hunkIndex: number): number => {
-  const current = file.hunks[hunkIndex];
-  if (current === undefined) return 0;
-  if (hunkIndex === 0) return Math.max(0, Math.min(current.oldStart, current.newStart) - 1);
-  const previous = file.hunks[hunkIndex - 1]!;
-  return Math.max(
-    0,
-    Math.min(
-      current.oldStart - (previous.oldStart + previous.oldCount),
-      current.newStart - (previous.newStart + previous.newCount),
-    ),
-  );
-};
-
 export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
   const mode = config.mode ?? "Unified";
   const markers = config.threads ?? [];
@@ -409,14 +397,24 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
               ["Binary file changed. Preview is not available."],
             ),
           ]
-        : config.file.hunks.flatMap((hunk, hunkIndex) => {
-            const hidden = hiddenLinesBefore(config.file, hunkIndex);
+        : config.file.hunks.flatMap((hunk) => {
+            const expandable = contextGaps(config.file).find((g) => g.beforeHunkId === hunk.id);
+            const hidden = expandable?.count ?? 0;
             const gap =
               hidden > 0
                 ? [
                     h.div(
                       [h.Class("fk-diff-viewer__gap")],
-                      [`⋯ ${hidden} unchanged ${hidden === 1 ? "line" : "lines"}`],
+                      [
+                        ...(config.onExpandGap && expandable
+                          ? [
+                              h.button(
+                                [h.Type("button"), h.OnClick(config.onExpandGap(expandable))],
+                                [`Expand ${hidden} unchanged lines`],
+                              ),
+                            ]
+                          : [`⋯ ${hidden} unchanged ${hidden === 1 ? "line" : "lines"}`]),
+                      ],
                     ),
                   ]
                 : [];

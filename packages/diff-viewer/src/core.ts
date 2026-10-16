@@ -30,6 +30,8 @@ export interface DiffFile {
   readonly additions: number;
   readonly deletions: number;
   readonly hunks: readonly DiffHunk[];
+  /** Full sources retained by diffFile for exact cross-revision mapping. */
+  readonly source?: Readonly<{ oldText: string; newText: string }>;
 }
 
 export interface DiffSelection {

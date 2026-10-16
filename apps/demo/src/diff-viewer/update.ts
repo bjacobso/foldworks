@@ -70,6 +70,9 @@ const foldThreads = Update.foldChild({
 const updateCore = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match(message, {
     GotReviewThreadsMessage: ({ message }) => foldThreads(model, message),
+    ExpandedContext: ({ beforeHunkId }) => ({
+      model: { ...model, expandedHunks: [...model.expandedHunks, beforeHunkId] },
+    }),
     SelectedFile: ({ path }) => ({
       model: {
         ...model,

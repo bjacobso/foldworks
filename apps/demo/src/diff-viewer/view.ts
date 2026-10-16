@@ -11,6 +11,9 @@ import {
 } from "@lucide/icons";
 import {
   DiffViewer,
+  contextGaps,
+  expandContext,
+  mapRange,
   diffTotals,
   selectionLabel,
   type DiffFile,
@@ -21,7 +24,7 @@ import { Button, Icon } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { reviewFiles } from "./fixture";
+import { reviewFiles, localSource } from "./fixture";
 import { Message } from "./message";
 import type { Model } from "./model";
 
@@ -171,6 +174,10 @@ const thread = (model: Model, item: Thread<DiffSelectionRange>, h: HtmlBuilder<M
     {
       model: model.reviewUi,
       thread: item,
+      anchorState: (() => {
+        const file = reviewFiles.find((f) => f.path === item.anchor.path);
+        return file?.source ? mapRange(file, item.anchor, file).state : "current";
+      })(),
       label: selectionLabel(item.anchor),
       toMessage: (message) => Message.GotReviewThreadsMessage({ message }),
       canEdit: (comment) => comment.author.id === "You",
@@ -245,8 +252,12 @@ const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const activeFile = reviewFiles.find((file) => file.path === model.activePath) ?? reviewFiles[0];
+  let activeFile = reviewFiles.find((file) => file.path === model.activePath) ?? reviewFiles[0];
   if (activeFile === undefined) return h.div([h.Class("review-demo")], ["No diff fixture loaded."]);
+  for (const id of model.expandedHunks) {
+    const gap = contextGaps(activeFile).find((g) => g.beforeHunkId === id);
+    if (gap && activeFile.source) activeFile = expandContext(activeFile, localSource, gap, 20);
+  }
   const selectedRange: DiffSelectionRange | undefined =
     model.selectionPath === ""
       ? undefined
@@ -307,6 +318,12 @@ const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
                   DiffViewer.view(
                     {
                       file: activeFile,
+                      ...(activeFile.source
+                        ? {
+                            onExpandGap: (gap: import("@foldworks/diff-viewer").DiffGap) =>
+                              Message.ExpandedContext({ beforeHunkId: gap.beforeHunkId }),
+                          }
+                        : {}),
                       mode: model.mode,
                       ...(selectedRange === undefined ? {} : { selectedRange }),
                       threads: markers,

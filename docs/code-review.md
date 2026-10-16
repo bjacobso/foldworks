@@ -82,7 +82,12 @@ newText }, gap, lines)` returns a new `DiffFile` with those lines added as
 - **Mapping anchors to a new revision.** `mapLine(file, side, line)` and
   `mapRange(fromFile, range, toFile)` report where a line on one side lands on
   the other, or that it was deleted. A thread created on revision 1 can then be
-  shown on revision 2 as current, moved, or outdated.
+  shown on revision 2 as current, moved, or outdated. `mapRange` always targets
+  the new side and returns `{ state, range }` or `{ state: "outdated", reason }`.
+  `diffFile` retains source snapshots for exact revision mapping; parsed patches
+  without snapshots require a common base and cannot remap added lines.
+  Replacements and noncontiguous ranges become outdated. Context expansion
+  supports gaps before/between hunks, not the trailing file region.
 
 ### 2. Review threads
 

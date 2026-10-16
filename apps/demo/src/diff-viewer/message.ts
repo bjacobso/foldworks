@@ -4,6 +4,7 @@ import { defineMessageUnion } from "foldkit/message";
 
 export const Message = defineMessageUnion({
   GotReviewThreadsMessage: { message: ReviewThreads.Message },
+  ExpandedContext: { beforeHunkId: S.String },
   SelectedFile: { path: S.String },
   ChangedMode: { mode: S.Literals(["Unified", "Split"]) },
   SelectedLine: { path: S.String, side: S.Literals(["old", "new"]), line: S.Number },
