@@ -1,5 +1,40 @@
 # @foldworks/ui
 
+## 0.3.0
+
+### Minor Changes
+
+- cec341d: Require the tested Effect 4.0.3 and Foldkit 0.168.0 shared runtime peers.
+  Migrate renamed Foldkit APIs, textarea values, custom-event messages, and Effect
+  AI imports. Update the re-exported headless UI APIs to @foldkit/ui 0.168.0.
+  Preserve description linkage and supply the calendar format data required by
+  the new headless APIs.
+- 6973c08: Add changed-file navigation, checks, merge requirements and change-request
+  headers. Extend checkable Tree composition and timeline activity body slots.
+- 0d75dc8: Add a composable Loader for labeled inline and block loading states or groups
+  of decorative placeholders. Extend Skeleton with text and circle shapes, and
+  Spinner with sizes and decorative mode. Both support disabling animation and
+  respect reduced motion. Export loading config types and slot customization.
+  Use the shared Skeleton for data-table loading rows.
+- 4aba469: Add generic document-analysis building blocks: positioned PDF text and explicit quote location, multi-region passage highlights, selectable PDF text and bounded viewport rendering, overlap-safe highlighted text and context snippets, read-only graph exploration, word/sentence prose diffs, citation previews, and per-cell grid tones.
+- 0f16fd8: Add `TreeDiff`, a structural diff for any two versions of a tree whose nodes
+  keep their ids. It marks nodes added, removed, moved, or edited, reports a
+  reordering with the fewest moves, keeps removed nodes where they were, and
+  shows only the region that changed, folding unchanged runs into a count.
+  `diffTrees`, `changedRegion`, and `summarizeDiff` are exported. `ChangeSetPreview`
+  gains a `content` slot for such a view, and its `changes` and `consequences`
+  are now optional.
+- 0f16fd8: Add `ValueTree`, a keyboard-navigable tree for nested values with lazily
+  loaded branches. Expanding a node without loaded children sends
+  `RequestedChildren` and shows “Loading…” until the host supplies them, and
+  “Show N more” sends `RequestedMore`, so values can live behind handles in
+  another process. `ValueTree.fromValue` builds nodes from plain values.
+
+### Patch Changes
+
+- Updated dependencies [cec341d]
+  - @foldworks/keyboard@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

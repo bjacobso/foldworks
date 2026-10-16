@@ -1,5 +1,26 @@
 # @foldworks/query-builder
 
+## 0.2.0
+
+### Minor Changes
+
+- a3e6a8e: Redesign the query builder with a denser rail layout, AND/OR group selectors, and a plain-language summary. The read-only view now leads with the summary sentence and shows the structured logic in a disclosure. Nested groups can be dragged between groups alongside rules via `moveNode` and `applyNodeReorder`.
+- cec341d: Require the tested Effect 4.0.3 and Foldkit 0.168.0 shared runtime peers.
+  Migrate renamed Foldkit APIs, textarea values, custom-event messages, and Effect
+  AI imports. Update the re-exported headless UI APIs to @foldkit/ui 0.168.0.
+  Preserve description linkage and supply the calendar format data required by
+  the new headless APIs.
+
+### Patch Changes
+
+- Updated dependencies [cec341d]
+- Updated dependencies [6973c08]
+- Updated dependencies [0d75dc8]
+- Updated dependencies [4aba469]
+- Updated dependencies [0f16fd8]
+- Updated dependencies [0f16fd8]
+  - @foldworks/ui@0.3.0
+
 ## 0.1.1
 
 ### Patch Changes

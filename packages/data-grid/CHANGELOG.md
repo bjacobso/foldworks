@@ -1,5 +1,26 @@
 # @foldworks/data-grid
 
+## 0.3.0
+
+### Minor Changes
+
+- cec341d: Require the tested Effect 4.0.3 and Foldkit 0.168.0 shared runtime peers.
+  Migrate renamed Foldkit APIs, textarea values, custom-event messages, and Effect
+  AI imports. Update the re-exported headless UI APIs to @foldkit/ui 0.168.0.
+  Preserve description linkage and supply the calendar format data required by
+  the new headless APIs.
+- 4aba469: Add generic document-analysis building blocks: positioned PDF text and explicit quote location, multi-region passage highlights, selectable PDF text and bounded viewport rendering, overlap-safe highlighted text and context snippets, read-only graph exploration, word/sentence prose diffs, citation previews, and per-cell grid tones.
+
+### Patch Changes
+
+- Updated dependencies [cec341d]
+- Updated dependencies [6973c08]
+- Updated dependencies [0d75dc8]
+- Updated dependencies [4aba469]
+- Updated dependencies [0f16fd8]
+- Updated dependencies [0f16fd8]
+  - @foldworks/ui@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

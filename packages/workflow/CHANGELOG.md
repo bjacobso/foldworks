@@ -1,5 +1,22 @@
 # @foldworks/workflow
 
+## 0.3.0
+
+### Minor Changes
+
+- cec341d: Require the tested Effect 4.0.3 and Foldkit 0.168.0 shared runtime peers.
+  Migrate renamed Foldkit APIs, textarea values, custom-event messages, and Effect
+  AI imports. Update the re-exported headless UI APIs to @foldkit/ui 0.168.0.
+  Preserve description linkage and supply the calendar format data required by
+  the new headless APIs.
+
+### Patch Changes
+
+- Updated dependencies [cec341d]
+- Updated dependencies [6973c08]
+- Updated dependencies [4aba469]
+  - @foldworks/diagram@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes
