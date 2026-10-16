@@ -201,29 +201,38 @@ const lineContent = <Message>(
   config: ViewConfig<Message>,
   line: DiffLine,
   h: HtmlBuilder<Message>,
+  paired?: DiffLine,
 ): readonly Html[] => {
-  const pair = config.file.hunks
-    .flatMap((hunk) => splitRows(hunk))
-    .find((row) => row.left === line || row.right === line);
-  if (
-    line.kind === "context" ||
-    !pair?.left ||
-    !pair.right ||
-    pair.left.kind !== "deletion" ||
-    pair.right.kind !== "addition"
+  if (line.kind === "context" || !paired) return highlighted(line.content, h, config);
+  const tokens = config.highlight?.(line.content, config.file.language);
+  return diffText(
+    line.kind === "deletion" ? line.content : paired.content,
+    line.kind === "addition" ? line.content : paired.content,
   )
-    return highlighted(line.content, h, config);
-  return diffText(pair.left.content, pair.right.content)
     .filter((part) =>
       line.kind === "deletion" ? part.kind !== "addition" : part.kind !== "removal",
     )
-    .map((part) =>
-      part.kind === "equal"
-        ? h.span([], highlighted(part.text, h, config))
+    .map((part) => {
+      const from = line.kind === "deletion" ? part.oldFrom : part.newFrom;
+      const fragmentConfig = tokens
+        ? {
+            ...config,
+            highlight: () =>
+              tokens
+                .filter((token) => token.to > from && token.from < from + part.text.length)
+                .map((token) => ({
+                  ...token,
+                  from: Math.max(0, token.from - from),
+                  to: Math.min(part.text.length, token.to - from),
+                })),
+          }
+        : config;
+      return part.kind === "equal"
+        ? h.span([], highlighted(part.text, h, fragmentConfig))
         : part.kind === "addition"
           ? h.ins([], [part.text])
-          : h.del([], [part.text]),
-    );
+          : h.del([], [part.text]);
+    });
 };
 
 const widgets = <Message>(
@@ -261,6 +270,7 @@ const unifiedLine = <Message>(
   config: ViewConfig<Message>,
   line: DiffLine,
   h: HtmlBuilder<Message>,
+  paired?: DiffLine,
 ): Html => {
   const side: DiffSide = line.kind === "deletion" ? "old" : "new";
   const number = side === "old" ? line.oldLine : line.newLine;
@@ -282,7 +292,7 @@ const unifiedLine = <Message>(
         [h.Class("fk-diff-viewer__prefix"), h.AriaHidden(true)],
         [line.kind === "addition" ? "+" : line.kind === "deletion" ? "−" : " "],
       ),
-      h.code([h.Class("fk-diff-viewer__code")], lineContent(config, line, h)),
+      h.code([h.Class("fk-diff-viewer__code")], lineContent(config, line, h, paired)),
       ...(number === null
         ? []
         : [h.span([h.Class("fk-diff-viewer__sr-only")], [`${side} line ${number}`])]),
@@ -295,6 +305,7 @@ const splitCell = <Message>(
   line: DiffLine | undefined,
   side: DiffSide,
   h: HtmlBuilder<Message>,
+  paired?: DiffLine,
 ): Html => {
   if (line === undefined)
     return h.div(
@@ -318,12 +329,20 @@ const splitCell = <Message>(
         [h.Class("fk-diff-viewer__prefix"), h.AriaHidden(true)],
         [line.kind === "addition" ? "+" : line.kind === "deletion" ? "−" : " "],
       ),
-      h.code([h.Class("fk-diff-viewer__code")], lineContent(config, line, h)),
+      h.code([h.Class("fk-diff-viewer__code")], lineContent(config, line, h, paired)),
     ],
   );
 };
 
 export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
+  const pairs = new Map<DiffLine, DiffLine>();
+  for (const hunk of config.file.hunks)
+    for (const row of splitRows(hunk)) {
+      if (row.left?.kind === "deletion" && row.right?.kind === "addition") {
+        pairs.set(row.left, row.right);
+        pairs.set(row.right, row.left);
+      }
+    }
   const mode = config.mode ?? "Unified";
   const markers = config.threads ?? [];
   return h.section(
@@ -428,15 +447,27 @@ export const view = <Message>(config: ViewConfig<Message>, h: HtmlBuilder<Messag
             const content =
               mode === "Unified"
                 ? hunk.lines.flatMap((line) => [
-                    unifiedLine({ ...config, threads: markers }, line, h),
+                    unifiedLine({ ...config, threads: markers }, line, h, pairs.get(line)),
                     ...widgets(config, line, h),
                   ])
                 : splitRows(hunk).flatMap((row) => [
                     h.div(
                       [h.Class("fk-diff-viewer__split-row")],
                       [
-                        splitCell({ ...config, threads: markers }, row.left, "old", h),
-                        splitCell({ ...config, threads: markers }, row.right, "new", h),
+                        splitCell(
+                          { ...config, threads: markers },
+                          row.left,
+                          "old",
+                          h,
+                          row.left ? pairs.get(row.left) : undefined,
+                        ),
+                        splitCell(
+                          { ...config, threads: markers },
+                          row.right,
+                          "new",
+                          h,
+                          row.right ? pairs.get(row.right) : undefined,
+                        ),
                       ],
                     ),
                     ...(row.left ? widgets(config, row.left, h, "old") : []),

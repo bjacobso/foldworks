@@ -373,7 +373,7 @@ importers:
   packages/diff-viewer:
     dependencies:
       '@foldworks/text-intelligence':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../text-intelligence
     devDependencies:
       effect:

@@ -94,7 +94,8 @@ export const diffFile = (options: DiffFileOptions): DiffFile => {
   return {
     source: { oldText: options.oldText, newText: options.newText },
     path: options.path,
-    oldPath: options.oldPath ?? options.path,
+    oldPath:
+      options.oldPath ?? (options.oldText === "" && options.newText !== "" ? "" : options.path),
     status:
       options.oldPath !== undefined && options.oldPath !== options.path
         ? "renamed"
@@ -112,7 +113,7 @@ export const diffFile = (options: DiffFileOptions): DiffFile => {
 
 export const formatUnifiedDiff = (file: DiffFile): string =>
   [
-    `diff --git a/${file.oldPath} b/${file.path}`,
+    `diff --git a/${file.oldPath || file.path} b/${file.path}`,
     ...(file.status === "added"
       ? ["new file mode 100644"]
       : file.status === "deleted"
@@ -122,6 +123,9 @@ export const formatUnifiedDiff = (file: DiffFile): string =>
           : []),
     `--- ${file.status === "added" ? "/dev/null" : `a/${file.oldPath}`}`,
     `+++ ${file.status === "deleted" ? "/dev/null" : `b/${file.path}`}`,
+    ...(file.status === "binary"
+      ? [`Binary files a/${file.oldPath || file.path} and b/${file.path} differ`]
+      : []),
     ...file.hunks.flatMap((hunk) => [
       hunk.header,
       ...hunk.lines.flatMap((line) => [

@@ -40,3 +40,10 @@ it("rejects stale, overlapping, invalid and mixed-file batches atomically", () =
   ).toMatchObject({ reason: "mixed-paths" });
   expect(applySuggestions("a\r\n", [])).toEqual({ status: "applied", text: "a\r\n" });
 });
+
+it("distinguishes replacing a line with a blank line from deleting it", () => {
+  expect(applySuggestions("a\nb\n", [suggestion(1, 1, "a", "\n")])).toEqual({
+    status: "applied",
+    text: "\nb\n",
+  });
+});

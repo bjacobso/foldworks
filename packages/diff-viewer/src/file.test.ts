@@ -68,3 +68,30 @@ it("renders full row slots, accessible annotations, custom tokens and semantic i
     expect(Scene.findAll(html, '[data-annotation-tone="danger"]')).toHaveLength(1);
   }
 });
+
+it("preserves header-looking source lines and binary status when serializing", () => {
+  const file = diffFile({ path: "config.txt", oldText: "-- old\n", newText: "++ new\n" });
+  const parsed = parseUnifiedDiff(formatUnifiedDiff(file))[0]!;
+  expect(parsed.path).toBe("config.txt");
+  expect(parsed.oldPath).toBe("config.txt");
+  expect(parsed.hunks[0]!.lines.map((l) => l.content)).toEqual(["-- old", "++ new"]);
+  expect(
+    parseUnifiedDiff(formatUnifiedDiff({ ...file, status: "binary", hunks: [] }))[0]!.status,
+  ).toBe("binary");
+});
+
+it("calls the highlighting hook with complete source lines for replacements", () => {
+  const seen: string[] = [];
+  const h = inertHtml as unknown as HtmlBuilder<string>;
+  view(
+    {
+      file: diffFile({ path: "f", oldText: "prefix old suffix\n", newText: "prefix new suffix\n" }),
+      highlight: (content) => {
+        seen.push(content);
+        return [{ from: 0, to: content.length, kind: "custom" }];
+      },
+    },
+    h,
+  );
+  expect(seen).toEqual(["prefix old suffix", "prefix new suffix"]);
+});

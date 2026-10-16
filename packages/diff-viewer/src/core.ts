@@ -201,8 +201,10 @@ export const parseUnifiedDiff = (patch: string): readonly DiffFile[] => {
       file.path = cleanPath(rawLine.slice("rename to ".length));
       file.status = "renamed";
     } else if (rawLine.startsWith("Binary files ")) file.status = "binary";
-    else if (rawLine.startsWith("--- ")) file.oldPath = cleanPath(rawLine.slice(4));
-    else if (rawLine.startsWith("+++ ")) file.path = cleanPath(rawLine.slice(4));
+    else if (lines === undefined && rawLine.startsWith("--- "))
+      file.oldPath = cleanPath(rawLine.slice(4));
+    else if (lines === undefined && rawLine.startsWith("+++ "))
+      file.path = cleanPath(rawLine.slice(4));
 
     const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@\s?(.*)$/.exec(rawLine);
     if (hunk !== null) {

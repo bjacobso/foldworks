@@ -84,8 +84,8 @@ provides a stable focus-return target. Paired replacement rows use semantic
 
 `highlight(content, language)` can supply text-intelligence `SemanticToken`
 ranges (UTF-16, exclusive end, open string kinds). Invalid or overlapping tokens
-are ignored. On replacement rows, unchanged fragments are tokenized separately;
-changed spans retain their change markup. The default is a small regex tokenizer.
+are ignored. The hook receives complete lines even on replacement rows; token ranges are
+clipped to unchanged fragments and changed spans retain their change markup. The default is a small regex tokenizer.
 
 ## Revision anchors and context
 
@@ -134,3 +134,12 @@ offsets, handles CRLF and point diagnostics, and maps error/warning/info/hint to
 gutter tones on the new side. EOF points map to the last real line (line 1 for
 empty text); an empty diff has no line on which to paint the annotation, so show
 file-level validation in the host checks view as well.
+
+## Change-request reference
+
+The demo at `/diff-viewer` compares synthetic JSON configuration with `diffFile`,
+offers line/semantic views, and maps schema diagnostics into gutters. Review
+threads and suggestions are composed through line slots using
+`@foldworks/review`. The host retains source revisions and reanchors an applied
+suggestion to its explicit replacement range; unrelated deleted anchors remain
+outdated. This is a browser-local simulation.

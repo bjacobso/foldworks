@@ -69,7 +69,9 @@ export const mapRange = (
       ? mapLine(revisionDiff, "old", line)
       : base.status === "mapped" && fromFile.oldPath === toFile.oldPath
         ? mapLine(toFile, "old", base.line)
-        : { status: "unknown" as const };
+        : base.status === "deleted"
+          ? base
+          : { status: "unknown" as const };
     if (mapped.status !== "mapped") return { state: "outdated", reason: mapped.status };
     if (previous !== undefined && mapped.line !== previous + 1)
       return { state: "outdated", reason: "deleted" };

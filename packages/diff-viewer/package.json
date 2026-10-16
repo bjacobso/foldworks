@@ -58,6 +58,6 @@
     "foldkit": "catalog:peers"
   },
   "dependencies": {
-    "@foldworks/text-intelligence": "workspace:^"
+    "@foldworks/text-intelligence": "workspace:*"
   }
 }

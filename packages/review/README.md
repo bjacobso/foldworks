@@ -2,7 +2,8 @@
 
 Provider-neutral review UI for Foldkit. The host owns transport, persistence,
 identity, permissions, policy, and merging. Import `@foldworks/review/styles.css`
-once for the package CSS. This package uses the same Effect and Foldkit peers as
+once for the package CSS. Suggestion previews also need
+`@foldworks/diff-viewer/styles.css`. This package uses the same Effect and Foldkit peers as
 the other Foldworks primitives.
 
 ## Threads and drafts
@@ -97,3 +98,20 @@ use arbitrary host IDs and labels.
 `ChangeRequestHeader.view` composes `AppHeader` and `Badge` with title, status,
 author, base/head labels and host action Html. Use UI `TransactionTimeline`
 entries with `kind` and `renderBody(entry)` for one ordered activity stream.
+
+## Suggestion composers and reference host
+
+Pass a `suggestionAnchor` (path, inclusive lines and expected text) to
+`composerView` to offer an optional replacement editor. `ReviewThreads` owns
+these replacement drafts alongside comment bodies. Acknowledgements for saves
+with suggestions include the saved `suggestion`, so typing a new replacement
+while saving is protected too. `readOnly` on `threadView` hides mutation actions
+while retaining resolved-thread expansion and body rendering.
+
+The `/diff-viewer` reference app composes this package with CodeEditor,
+DiffViewer, ValueDiff, ChangeSetPreview and TransactionTimeline. It is a synthetic
+browser-local configuration workflow. Its illustrative host policy requires
+schema and rollout checks, approval of the current revision, publication of
+pending comments, and resolution of current discussions. Outdated discussion is
+retained without blocking this example's merge. Identity switching, validation,
+persistence and the simulated merge are demo host code, not package services.

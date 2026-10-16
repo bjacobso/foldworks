@@ -46,7 +46,7 @@ export const applySuggestions = (
     lines.splice(
       suggestion.startLine - 1,
       suggestion.endLine - suggestion.startLine + 1,
-      ...(replacement === "" ? [] : replacement.split("\n")),
+      ...(suggestion.replacement === "" ? [] : replacement.split("\n")),
     );
   }
   return {

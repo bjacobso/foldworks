@@ -7,11 +7,11 @@ reviewed proposals. Each team that builds one ends up rebuilding the same loop:
 **edit → see the change → open a change request → discuss it line by line →
 suggest fixes → run checks → approve → merge → read the history.**
 
-This note proposes the Foldworks primitives for that loop, so a host can compose
+This note describes the Foldworks primitives for that loop, so a host can compose
 its own review process instead of building a GitHub clone. A host may read from
 local Git, from GitHub or GitLab, from an agent's proposed edits, or from a
 database of versioned documents. Foldworks never names a provider. The scopes
-below are proposals until each one passes in the reference demo described at the
+below are implemented and exercised by the local reference demo described at the
 end.
 
 ## Boundary
@@ -43,11 +43,11 @@ requirements the host evaluated and their outcomes.
 | Mentions in comment drafts                 | `Mentions` in `@foldworks/text-intelligence`                                                                                                     |
 | Agent-proposed edits                       | `@foldworks/agent` permission checkpoints with `allowLabel`/`denyLabel` and `renderDetails`                                                      |
 
-The [diff-viewer demo](../apps/demo/src/diff-viewer/) already hand-builds a
-comment model (`ReviewComment` with path, side, and line range), viewed files,
-and resolution. That state is the starting point for the reusable thread model.
+The [change-request demo](../apps/demo/src/diff-viewer/) composes the reusable
+review submodel with host-owned configuration, viewed files, review verdicts,
+revision snapshots and local persistence.
 
-## Gaps
+## Implemented primitives
 
 ### 1. Diffs from two texts, and richer line rendering
 
@@ -112,7 +112,9 @@ createdAt, editedAt?, pending? }` and `Thread<Anchor>` `{ id, anchor, status:
   when the host confirms with `Committed({ draftKey, body })`, so a failed save keeps
   the text. The acknowledgement includes the saved body so a delayed response
   cannot erase newer typing. New-anchor requests carry a host-owned `anchorKey`;
-  hosts keep the generic anchor data outside the UI submodel.
+  hosts keep the generic anchor data outside the UI submodel. Optional suggestion
+  composers keep replacement drafts in this submodel too; a matching save
+  acknowledgement also includes the saved suggestion.
 - **Views.** `ReviewThreads.threadView` renders one thread with its comments, a
   reply composer, and resolve/reopen. `ReviewThreads.composerView` renders the
   new-thread composer for a selected range. `ReviewThreads.listView` renders all
@@ -136,7 +138,11 @@ on the new side.
   on `Comment`.
 - `applySuggestions(text, suggestions)` applies one or more suggestions to a
   file's text, rejects overlapping ranges, and reports suggestions whose range
-  no longer matches (`stale`) rather than guessing.
+  no longer matches (`stale`) rather than guessing. `expected` is the original
+  range content joined with LF, without its terminal newline. Batches are atomic
+  and cover one path. Application normalizes CRLF to LF and preserves the source
+  final-newline convention. Empty replacement deletes complete lines; a single
+  terminal newline on a nonempty replacement is ignored.
 - The comment view shows the suggestion as a small diff and offers "Apply" when
   the host passes `onApplySuggestion`. Applying is a host action: the host
   commits the new text and resolves the thread.
@@ -176,8 +182,8 @@ failed | skipped | cancelled | neutral, summary?, duration?, detailsHref? }`
   pieces rather than replacing them.
 - **Activity.** `TransactionTimeline` covers applied changes. A change request
   also needs comments, reviews, pushes, check results, and status changes in
-  one stream. Prefer extending `TransactionTimeline` with an entry `kind` and a
-  host body slot over adding a second timeline component.
+  one stream. `TransactionTimeline` accepts an open-string entry `kind` and a
+  `renderBody(entry)` host slot, retaining its existing change rows and context.
 
 ### 6. Configuration-aware review
 
@@ -207,13 +213,13 @@ Line diffs are honest but do not say what changed in a configuration value.
 
 ## Reference demo
 
-Replace or extend the existing [diff-viewer demo](../apps/demo/src/diff-viewer/)
+The implementation extends the existing [diff-viewer demo](../apps/demo/src/diff-viewer/)
 with a **change request** reference app on a synthetic, browser-local
 configuration repository: a few YAML or JSON files for feature flags and access
-rules, with an Effect schema for each. It must say on screen that it is a local
-simulation, not a Git provider integration.
+rules, with an Effect schema for each. It says on screen that it is a local
+simulation with no Git provider integration.
 
-The scenario, also the e2e test:
+The scenario, also the e2e test (`change request reference`):
 
 1. Open a file and edit a flag in `CodeEditor`; a schema error shows inline.
 2. Fix it; the working change shows as a diff produced by `diffFile`, with the
@@ -223,16 +229,20 @@ The scenario, also the e2e test:
 4. As a second reviewer, select lines, leave a pending comment and a suggestion,
    and submit "Request changes".
 5. As the author, apply the suggestion; the thread moves to the new revision
-   and an unrelated thread becomes outdated.
+   and an unrelated thread becomes outdated. The host explicitly reanchors the
+   applied suggestion to its replacement range and retains its original revision.
 6. Approve, see every requirement met, merge, and read the activity timeline.
-   State survives a reload.
+   State survives a reload. The illustrative policy requires current-revision
+   approval and resolved current discussions; outdated discussions remain
+   nonblocking history. Storage failures retain the in-memory session; multi-tab
+   conflict control is deferred for this local reference adapter.
 
 Also cover keyboard-only commenting, narrow screens, and dark mode, following
 the [workers workbench](./workbench/README.md) conventions for screenshots.
 
 ## Sequence
 
-Each step ships with tests, README documentation of behavior and limits, a
+All seven steps ship with tests, README documentation of behavior and limits, a
 changeset, and demo coverage:
 
 1. `diffFile`, `formatUnifiedDiff`, intraline highlights, line slots,
@@ -246,6 +256,14 @@ changeset, and demo coverage:
    timeline extension.
 6. `diffValues`, `ValueDiff.view`, and the diagnostics-to-annotations helper.
 7. The full change-request reference demo and its e2e scenario.
+
+## Reference verification
+
+`pnpm check` validates each implementation step. `pnpm test:e2e` includes the full
+local review flow plus keyboard cancellation, narrow layout and dark appearance.
+Captures are saved to `.context/demo-screenshots/change-request-*.png` with
+animations disabled. These are documentation captures, not pixel comparisons.
+See [demo instructions](../apps/demo/README.md#local-change-request-reference).
 
 ## Later
 

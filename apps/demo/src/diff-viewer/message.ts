@@ -1,32 +1,34 @@
-import { ReviewThreads, Verdict, ChangedFiles } from "@foldworks/review";
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+import { CodeEditor } from "@foldworks/code-editor";
+import { ChangedFiles, ReviewThreads, Suggestion, Verdict } from "@foldworks/review";
 
+const Line = { path: S.String, side: S.Literals(["old", "new"]), line: S.Number };
 export const Message = defineMessageUnion({
-  ToggledSemantic: {},
-  GotChangedFilesMessage: { message: ChangedFiles.Message },
-  MergedRequest: {},
-  AppliedSuggestion: { threadId: S.String },
-  ChangedReviewSummary: { summary: S.String },
-  ChoseVerdict: { verdict: Verdict },
-  SubmittedReview: {},
-  GotReviewThreadsMessage: { message: ReviewThreads.Message },
-  ExpandedContext: { beforeHunkId: S.String },
+  GotEditorMessage: { message: CodeEditor.Message },
+  GotThreadsMessage: { message: ReviewThreads.Message },
+  GotFilesMessage: { message: ChangedFiles.Message },
   SelectedFile: { path: S.String },
   ChangedMode: { mode: S.Literals(["Unified", "Split"]) },
-  SelectedLine: { path: S.String, side: S.Literals(["old", "new"]), line: S.Number },
-  StartedSelection: { path: S.String, side: S.Literals(["old", "new"]), line: S.Number },
-  ExtendedSelection: {
-    path: S.String,
-    side: S.Literals(["old", "new"]),
-    line: S.Number,
-    method: S.Literals(["Pointer", "Keyboard"]),
-  },
+  ToggledSemantic: {},
+  ToggledDark: {},
+  SelectedLine: Line,
+  StartedSelection: Line,
+  ExtendedSelection: { ...Line, method: S.Literals(["Pointer", "Keyboard"]) },
   EndedSelection: {},
-  ChangedDraft: { value: S.String },
-  SubmittedComment: {},
-  CancelledComment: {},
-  ToggledViewed: { path: S.String, viewed: S.Boolean },
-  ToggledResolved: { id: S.String },
+  CancelledSelection: {},
+  ExpandedGap: { id: S.String },
+  ChangedViewed: { path: S.String, viewed: S.Boolean },
+  SwitchedActor: { actor: S.Literals(["author", "reviewer"]) },
+  OpenedRequest: {},
+  AppliedSuggestion: { suggestion: Suggestion, threadId: S.String },
+  ChangedSummary: { value: S.String },
+  ChangedVerdict: { verdict: Verdict },
+  SubmittedReview: {},
+  ReranChecks: {},
+  Merged: {},
+  Reset: {},
+  Persisted: { error: S.String },
+  CompletedReveal: {},
 });
 export type Message = typeof Message.Type;

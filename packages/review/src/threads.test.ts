@@ -90,3 +90,76 @@ it("renders pending-safe plain text, resolved expansion, composer keys and a sin
   )!;
   expect(Scene.findAll(composer, "textarea")).toHaveLength(1);
 });
+
+it("retains newer suggestion edits across acknowledgements and clears matching suggestion drafts", () => {
+  let model = Threads.update(
+    initial,
+    Threads.Message.ChangedDraft({ draftKey: "s", value: "Try this" }),
+  ).model;
+  model = Threads.update(
+    model,
+    Threads.Message.ToggledSuggestion({ draftKey: "s", enabled: true, value: "old" }),
+  ).model;
+  model = Threads.update(
+    model,
+    Threads.Message.ChangedSuggestion({ draftKey: "s", value: "newer" }),
+  ).model;
+  const suggestion = { path: "f", startLine: 1, endLine: 1, expected: "old", replacement: "saved" };
+  expect(
+    Threads.update(
+      model,
+      Threads.Message.Committed({ draftKey: "s", body: "Try this", suggestion }),
+    ).model.suggestionDrafts.s,
+  ).toBe("newer");
+  const committed = Threads.update(
+    model,
+    Threads.Message.Committed({
+      draftKey: "s",
+      body: "Try this",
+      suggestion: { ...suggestion, replacement: "newer" },
+    }),
+  ).model;
+  expect(committed.suggestionKeys).toEqual([]);
+  expect(committed.suggestionDrafts.s).toBeUndefined();
+});
+
+it("submits current suggestion text even before a view refresh", () => {
+  let model = {
+    ...initial,
+    drafts: { s: "Try this" },
+    suggestionKeys: ["s"],
+    suggestionDrafts: { s: "fresh replacement" },
+  };
+  const result = Threads.update(
+    model,
+    Threads.Message.Submitted({
+      draftKey: "s",
+      targetId: "anchor",
+      kind: "create",
+      suggestionAnchor: { path: "f", startLine: 1, endLine: 1, expected: "old" },
+    }),
+  );
+  expect(result.outMessage).toMatchObject({ suggestion: { replacement: "fresh replacement" } });
+});
+
+it("retains a draft if the suggestion was removed during its save", () => {
+  const model = {
+    ...initial,
+    drafts: { s: "body" },
+    suggestionKeys: [],
+    suggestionDrafts: { s: "replacement" },
+  };
+  const saved = {
+    path: "f",
+    startLine: 1,
+    endLine: 1,
+    expected: "old",
+    replacement: "replacement",
+  };
+  expect(
+    Threads.update(
+      model,
+      Threads.Message.Committed({ draftKey: "s", body: "body", suggestion: saved }),
+    ).model.drafts.s,
+  ).toBe("body");
+});
