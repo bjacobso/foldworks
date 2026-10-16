@@ -247,6 +247,7 @@ import "@foldworks/pdf-annotator/styles.css";
 import "@foldworks/pdf-viewer/styles.css";
 import "@foldworks/text-intelligence/styles.css";
 import "@foldworks/diff-viewer/styles.css";
+import "@foldworks/review/styles.css";
 import "@foldworks/diagram/styles.css";
 
 import * as Agent from "@foldworks/agent";
@@ -264,6 +265,8 @@ import * as TextIntelligence from "@foldworks/text-intelligence";
 import * as DiffViewer from "@foldworks/diff-viewer";
 import * as FormBuilder from "@foldworks/form-builder";
 import * as History from "@foldworks/history";
+import * as Review from "@foldworks/review";
+console.log(Review.ReviewThreads.init({ id: "consumer-review" }).id);
 import * as Keyboard from "@foldworks/keyboard";
 import * as PdfAnnotator from "@foldworks/pdf-annotator";
 import * as QueryBuilder from "@foldworks/query-builder";

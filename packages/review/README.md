@@ -69,3 +69,31 @@ verdicts cannot be selected; submission disables for a disallowed current
 choice or `isSubmitting`. Hosts must also validate submission intent and retain
 drafts on failure. `ReviewerList.view` displays requested/returned verdicts,
 required labels, and optional ownership counts. Neither view evaluates policy.
+
+## Change-request composition
+
+`ChangedFiles.init({ id, files })` and `ChangedFiles.update(model, message,
+{ files, mode })` wrap the UI `Tree` submodel. Pass the same file inputs to
+`ChangedFiles.view({ model, files, mode, toMessage }, h)`. The host handles
+`SelectedFile` and `RequestedViewed` out-messages. Directories aggregate additions,
+deletions and open threads. Status letters and annotation tones have text
+labels. The filter and unviewed toggle affect display, never host file data.
+`mode: 'flat'` removes directories. Tree Arrow/Home/End keys navigate; Space
+toggles the active file's viewed checkbox. Paths must be unique. Initial files
+expand all directories; hosts can reconcile expansion for newly arriving paths.
+
+`CheckList.view` summarizes queued/running/passed/failed/skipped/cancelled/neutral
+checks, with optional `onRerun(check)` and native expandable `renderDetails(check)`.
+Duration is a host-formatted string; details links and their access policy belong
+to the host. No network requests or execution happen in the view.
+
+`MergeReadiness.view` takes host-evaluated requirements (including nested
+requirements and optional actions), `canMerge`, `onMerge`, and optional controlled
+strategy choices. Nested requirements reuse `ExplanationTree`. `canMerge` is
+authoritative; the view never derives authorization from requirement labels.
+The host must check policy again when processing the merge message. Strategies
+use arbitrary host IDs and labels.
+
+`ChangeRequestHeader.view` composes `AppHeader` and `Badge` with title, status,
+author, base/head labels and host action Html. Use UI `TransactionTimeline`
+entries with `kind` and `renderBody(entry)` for one ordered activity stream.

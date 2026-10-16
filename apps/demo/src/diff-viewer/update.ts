@@ -1,8 +1,9 @@
 import { Update } from "foldkit";
 import { Option } from "effect";
-import { ReviewThreads, applySuggestions } from "@foldworks/review";
+import { ReviewThreads, applySuggestions, ChangedFiles } from "@foldworks/review";
 import { lineGutterId } from "@foldworks/diff-viewer";
 
+import { reviewFiles } from "./fixture";
 import { Message } from "./message";
 import type { Model } from "./model";
 
@@ -68,8 +69,45 @@ const foldThreads = Update.foldChild({
     },
 });
 
+const foldFiles = (parent: Model, message: ChangedFiles.Message) =>
+  Update.foldChild({
+    update: (filesUi: ChangedFiles.Model, message: ChangedFiles.Message) =>
+      ChangedFiles.update(filesUi, message, {
+        files: reviewFiles.map((f) => ({ ...f, viewed: parent.viewedPaths.includes(f.path) })),
+      }),
+    read: (model: Model) => Option.some(model.filesUi),
+    write: (model, filesUi) => ({ ...model, filesUi }),
+    toParentMessage: (message) => Message.GotChangedFilesMessage({ message }),
+    foldOutMessage: (out) => (model: Model) =>
+      out._tag === "SelectedFile"
+        ? update(model, Message.SelectedFile({ path: out.path }))
+        : update(model, Message.ToggledViewed({ path: out.path, viewed: out.viewed })),
+  })(parent, message);
 const updateCore = (model: Model, message: Message): Update.Return<Model, Message> =>
-  Message.match(message, {
+  Message.match<Update.Return<Model, Message>>(message, {
+    GotChangedFilesMessage: ({ message }) => foldFiles(model, message),
+    MergedRequest: () =>
+      model.submittedVerdict !== "approve" || model.comments.some((c) => !c.resolved)
+        ? { model }
+        : {
+            model: {
+              ...model,
+              requestStatus: "merged",
+              announcement: "Local change request merged.",
+              activity: [
+                ...model.activity,
+                {
+                  id: `activity-${model.activity.length}`,
+                  title: "Merged locally",
+                  kind: "status",
+                  actor: "Author",
+                  timestamp: "2026-10-16",
+                  context: "Browser-local simulation",
+                  changes: [],
+                },
+              ],
+            },
+          },
     GotReviewThreadsMessage: ({ message }) => foldThreads(model, message),
     AppliedSuggestion: ({ threadId }) => {
       const suggestion = model.comments.find((c) => c.id === threadId)?.suggestion;
@@ -94,6 +132,18 @@ const updateCore = (model: Model, message: Message): Update.Return<Model, Messag
       model: {
         ...model,
         submittedVerdict: model.verdict,
+        activity: [
+          ...model.activity,
+          {
+            id: `activity-${model.activity.length}`,
+            title: `Review: ${model.verdict}`,
+            kind: "review",
+            actor: "Local reviewer",
+            timestamp: "2026-10-16",
+            context: model.reviewSummary,
+            changes: [],
+          },
+        ],
         comments: model.comments.map((c) => ({ ...c, pending: false })),
         announcement: "Local review submitted.",
       },

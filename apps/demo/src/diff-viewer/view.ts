@@ -2,6 +2,10 @@ import {
   ReviewThreads,
   ReviewSubmit,
   ReviewerList,
+  ChangedFiles,
+  CheckList,
+  MergeReadiness,
+  ChangeRequestHeader,
   type Thread,
   type Verdict,
 } from "@foldworks/review";
@@ -27,7 +31,7 @@ import {
   type DiffSelectionRange,
   type DiffThreadMarker,
 } from "@foldworks/diff-viewer";
-import { Button, Icon } from "@foldworks/ui";
+import { Button, Icon, TransactionTimeline } from "@foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
@@ -35,105 +39,19 @@ import { reviewFiles, localSource } from "./fixture";
 import { Message } from "./message";
 import type { Model } from "./model";
 
-const statusLabel = (file: DiffFile): string =>
-  file.status === "added"
-    ? "Added"
-    : file.status === "deleted"
-      ? "Deleted"
-      : file.status === "renamed"
-        ? "Renamed"
-        : "Modified";
-
-const fileItem = (model: Model, file: DiffFile, h: HtmlBuilder<Message>): Html => {
-  const viewed = model.viewedPaths.includes(file.path);
-  const commentCount = model.comments.filter(
-    (comment) => comment.path === file.path && !comment.resolved,
-  ).length;
-  return h.button(
-    [
-      h.Type("button"),
-      h.Class("review-demo__file"),
-      h.DataAttribute("active", model.activePath === file.path ? "true" : "false"),
-      h.OnClick(Message.SelectedFile({ path: file.path })),
-      h.AriaLabel(
-        `${file.path}, ${statusLabel(file)}, ${file.additions} additions, ${file.deletions} deletions${viewed ? ", viewed" : ""}`,
-      ),
-    ],
-    [
-      h.span(
-        [h.Class("review-demo__file-state"), h.DataAttribute("status", file.status)],
-        [
-          viewed
-            ? Icon.view({ icon: Check, size: 12, strokeWidth: 2.6 }, h)
-            : statusLabel(file).slice(0, 1),
-        ],
-      ),
-      h.span(
-        [h.Class("review-demo__file-copy")],
-        [
-          h.strong([], [file.path.split("/").pop() ?? file.path]),
-          h.span(
-            [],
-            [
-              file.path.includes("/")
-                ? file.path.slice(0, file.path.lastIndexOf("/"))
-                : "Repository root",
-            ],
-          ),
-        ],
-      ),
-      h.span(
-        [h.Class("review-demo__file-stats")],
-        [
-          h.span([h.Class("review-demo__plus")], [`+${file.additions}`]),
-          h.span([h.Class("review-demo__minus")], [`−${file.deletions}`]),
-          ...(commentCount === 0
-            ? []
-            : [h.span([h.Class("review-demo__comment-count")], [String(commentCount)])]),
-        ],
-      ),
-    ],
+const navigation = (model: Model, h: HtmlBuilder<Message>): Html =>
+  ChangedFiles.view(
+    {
+      model: model.filesUi,
+      files: reviewFiles.map((f) => ({
+        ...f,
+        viewed: model.viewedPaths.includes(f.path),
+        openThreads: model.comments.filter((c) => c.path === f.path && !c.resolved).length,
+      })),
+      toMessage: (message) => Message.GotChangedFilesMessage({ message }),
+    },
+    h,
   );
-};
-
-const navigation = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const totals = diffTotals(reviewFiles);
-  return h.aside(
-    [h.Class("review-demo__navigation"), h.AriaLabel("Changed files")],
-    [
-      h.div(
-        [h.Class("review-demo__nav-heading")],
-        [
-          h.div([], [h.strong([], ["Files changed"]), h.span([], [`${reviewFiles.length}`])]),
-          h.p([], [`${totals.additions} additions and ${totals.deletions} deletions`]),
-        ],
-      ),
-      h.div(
-        [
-          h.Class("review-demo__progress-track"),
-          h.AriaLabel(`${model.viewedPaths.length} of ${reviewFiles.length} files viewed`),
-        ],
-        [
-          h.span(
-            [h.Style({ width: `${(model.viewedPaths.length / reviewFiles.length) * 100}%` })],
-            [],
-          ),
-        ],
-      ),
-      h.div(
-        [h.Class("review-demo__file-list")],
-        reviewFiles.map((file) => fileItem(model, file, h)),
-      ),
-      h.div(
-        [h.Class("review-demo__nav-footer")],
-        [
-          h.span([], [`${model.viewedPaths.length} of ${reviewFiles.length} viewed`]),
-          h.span([], ["⌘⇧Enter to submit"]),
-        ],
-      ),
-    ],
-  );
-};
 
 const modeControl = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
@@ -249,6 +167,40 @@ const inspector = (model: Model, h: HtmlBuilder<Message>): Html => {
           ),
         ],
       ),
+      CheckList.view(
+        {
+          checks: [
+            { id: "schema", name: "Example local schema check", status: "passed" },
+            { id: "policy", name: "Example local policy check", status: "passed" },
+          ],
+        },
+        h,
+      ),
+      MergeReadiness.view(
+        {
+          requirements: [
+            {
+              id: "approval",
+              label: "Approval",
+              outcome: model.submittedVerdict === "approve" ? "met" : "unmet",
+              reason: "A local reviewer must approve.",
+            },
+            {
+              id: "threads",
+              label: "Discussion",
+              outcome: model.comments.some((c) => !c.resolved) ? "unmet" : "met",
+              reason: "Resolve open threads.",
+            },
+          ],
+          canMerge:
+            model.requestStatus === "open" &&
+            model.submittedVerdict === "approve" &&
+            !model.comments.some((c) => !c.resolved),
+          onMerge: Message.MergedRequest(),
+        },
+        h,
+      ),
+      TransactionTimeline.view({ label: "Activity", entries: model.activity }, h),
       ReviewSubmit.view(
         {
           summary: model.reviewSummary,
@@ -337,6 +289,16 @@ const diffReviewView = (model: Model, h: HtmlBuilder<Message>): Html => {
   return h.div(
     [h.Class("review-demo"), h.DataAttribute("diff-review-demo", "true")],
     [
+      ChangeRequestHeader.view(
+        {
+          title: "Review configuration changes",
+          status: model.requestStatus,
+          author: { id: "author", name: "Local author" },
+          baseLabel: "saved",
+          headLabel: "working copy",
+        },
+        h,
+      ),
       h.header(
         [h.Class("review-demo__topbar")],
         [

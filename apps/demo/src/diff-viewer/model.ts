@@ -1,4 +1,4 @@
-import { ReviewThreads, Suggestion, Verdict } from "@foldworks/review";
+import { ReviewThreads, Suggestion, Verdict, ChangedFiles } from "@foldworks/review";
 import { Schema as S } from "effect";
 
 import { reviewFiles, localSource } from "./fixture";
@@ -18,7 +18,19 @@ export const ReviewComment = S.Struct({
 });
 export type ReviewComment = typeof ReviewComment.Type;
 
+export const Activity = S.Struct({
+  id: S.String,
+  title: S.String,
+  actor: S.String,
+  timestamp: S.String,
+  context: S.String,
+  kind: S.String,
+  changes: S.Array(S.Struct({ label: S.String, before: S.String, after: S.String })),
+});
 export const Model = S.Struct({
+  filesUi: ChangedFiles.Model,
+  requestStatus: S.Literals(["draft", "open", "merged", "closed"]),
+  activity: S.Array(Activity),
   reviewUi: ReviewThreads.Model,
   workingText: S.String,
   reviewSummary: S.String,
@@ -40,6 +52,9 @@ export const Model = S.Struct({
 export type Model = typeof Model.Type;
 
 export const initialModel: Model = {
+  filesUi: ChangedFiles.init({ id: "review-files", files: reviewFiles }),
+  requestStatus: "open",
+  activity: [],
   workingText: localSource.newText,
   reviewSummary: "",
   verdict: "comment",
