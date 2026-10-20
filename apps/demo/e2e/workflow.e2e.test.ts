@@ -1,5 +1,6 @@
 import { documentAnalysisScenarios } from "./document-analysis.scenarios";
 import { themeBuilderScenarios } from "./theme-builder.scenarios";
+import { mobileFormScenarios } from "./mobile-form.scenarios";
 import { docsScenarios } from "./docs.scenarios";
 import { desktopScenarios } from "./desktop.scenarios";
 import { mkdir, readFile } from "node:fs/promises";
@@ -160,6 +161,7 @@ describe("structured workflow builder", { concurrent: false }, () => {
         "Text intelligence",
         "PDF rendering",
         "UI system",
+        "Mobile inputs",
         "Theme builder",
       ]);
     await expect.poll(() => sidebar.getByText("Foldworks", { exact: true }).count()).toBe(1);
@@ -1639,6 +1641,7 @@ describe("structured workflow builder", { concurrent: false }, () => {
   }, 60_000);
 
   themeBuilderScenarios(() => page, appUrl);
+  mobileFormScenarios(() => page, appUrl);
   workbenchScenarios(() => page, appUrl, screenshot);
   dataGridEditingScenarios(() => page, appUrl, screenshot);
   dataGridCoverageScenarios(() => page, appUrl, screenshot);

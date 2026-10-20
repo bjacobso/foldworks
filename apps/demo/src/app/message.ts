@@ -24,6 +24,7 @@ import { ThemeName, ThemePreference } from "../theme";
 import { Message as StatechartMessage } from "../statechart/message";
 import { Message as ThemeBuilderMessage } from "../theme-builder/message";
 import { Message as UiKitMessage } from "../ui-kit/message";
+import { Message as MobileFormMessage } from "../mobile-form/message";
 import { Message as WorkflowEditorMessage } from "../workflow/message";
 
 export const Message = defineMessageUnion({
@@ -55,6 +56,7 @@ export const Message = defineMessageUnion({
   GotEditorMessage: { message: EditorMessage },
   GotSidebarMessage: { message: Sidebar.Message },
   GotUiKitMessage: { message: UiKitMessage },
+  GotMobileFormMessage: { message: MobileFormMessage },
   GotThemeBuilderMessage: { message: ThemeBuilderMessage },
   GotGenerativeUiAction: { intent: ActionIntent },
 });
