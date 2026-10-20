@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit exposes safe-area insets; resizes-content keeps the action bar above the Android keyboard. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
+    <meta name="format-detection" content="telephone=no" />
+    <script>
+      document.documentElement.dataset.mode = matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    </script>
+    <link href="/src/mobile-form/standalone.css" rel="stylesheet" />
+    <title>Apply · Foldworks</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/mobile-form/standalone.ts"></script>
+  </body>
+</html>

@@ -11,3 +11,4 @@ test-results/
 playwright-report/
 .DS_Store
 /PLAN.md
+.bench/

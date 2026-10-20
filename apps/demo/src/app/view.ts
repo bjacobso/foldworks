@@ -23,6 +23,7 @@ import {
   Moon,
   Network,
   Palette,
+  Smartphone,
   Sun,
   Table2,
   Workflow as WorkflowIcon,
@@ -51,6 +52,7 @@ import { view as queryBuilderView } from "../query-builder/view";
 import { statechartSummary, view as statechartView } from "../statechart/view";
 import { view as themeBuilderView } from "../theme-builder/view";
 import { view as uiKitView } from "../ui-kit/view";
+import { view as mobileFormView } from "../mobile-form/view";
 import { allNodes } from "../workflow/graph";
 import {
   editorRouter,
@@ -72,6 +74,7 @@ import {
   queryBuilderRouter,
   statechartRouter,
   uiKitRouter,
+  mobileFormRouter,
   themeRouter,
   workflowPath,
   type Demo,
@@ -366,6 +369,13 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
         href: uiKitRouter(),
         icon: Blocks,
         isActive: demo === "UiKit",
+      },
+      {
+        id: "mobile-form",
+        label: "Mobile inputs",
+        href: mobileFormRouter(),
+        icon: Smartphone,
+        isActive: demo === "MobileForm",
       },
     ],
     // The builder exposes the same token layer as the theme picker.
@@ -839,6 +849,13 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
       toParentMessage: (message) => Message.GotPdfViewerDemoMessage({ message }),
     });
   }
+  if (demo === "MobileForm")
+    return h.submodel({
+      slotId: "mobile-form-content",
+      model: model.mobileForm,
+      view: mobileFormView,
+      toParentMessage: (message) => Message.GotMobileFormMessage({ message }),
+    });
   return h.submodel({
     slotId: "ui-kit-content",
     model: model.uiKit,
@@ -848,32 +865,34 @@ const content = (model: Model, h: HtmlBuilder<Message>): Html => {
 };
 
 const documentTitle = (demo: Demo): string =>
-  demo === "Theme"
-    ? "Theme builder · Foldworks"
-    : demo === "DocumentAnalysis"
-      ? "Document analysis · Foldworks"
-      : Match.value(demo).pipe(
-          Match.when("Docs", () => "Documentation · Foldworks"),
-          Match.when("Editor", () => "Document editor · Foldworks"),
-          Match.when("Orchestrator", () => "Outline workspace · Foldworks"),
-          Match.when("Agent", () => "Interactive agent · Foldworks"),
-          Match.when("CodeEditor", () => "Code editor · Foldworks"),
-          Match.when("Codebase", () => "Codebase workbench · Foldworks"),
-          Match.when("DiffViewer", () => "Change request · Foldworks"),
-          Match.when("Workbench", () => "Workers workbench · Foldworks"),
-          Match.when("Home", () => "Foldworks · The UI standard library for Foldkit and StyleX"),
-          Match.when("DataTable", () => "Data table · Foldworks"),
-          Match.when("DataGrid", () => "Data grid · Foldworks"),
-          Match.when("FormBuilder", () => "Form builder · Foldworks"),
-          Match.when("QueryBuilder", () => "Query builder · Foldworks"),
-          Match.when("Outliner", () => "Outliner · Foldworks"),
-          Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
-          Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
-          Match.when("UiKit", () => "UI components · Foldworks"),
-          Match.when("Workflow", () => "Workflow · Foldworks"),
-          Match.when("Statechart", () => "Statechart · Foldworks"),
-          Match.exhaustive,
-        );
+  demo === "MobileForm"
+    ? "Mobile inputs · Foldworks"
+    : demo === "Theme"
+      ? "Theme builder · Foldworks"
+      : demo === "DocumentAnalysis"
+        ? "Document analysis · Foldworks"
+        : Match.value(demo).pipe(
+            Match.when("Docs", () => "Documentation · Foldworks"),
+            Match.when("Editor", () => "Document editor · Foldworks"),
+            Match.when("Orchestrator", () => "Outline workspace · Foldworks"),
+            Match.when("Agent", () => "Interactive agent · Foldworks"),
+            Match.when("CodeEditor", () => "Code editor · Foldworks"),
+            Match.when("Codebase", () => "Codebase workbench · Foldworks"),
+            Match.when("DiffViewer", () => "Change request · Foldworks"),
+            Match.when("Workbench", () => "Workers workbench · Foldworks"),
+            Match.when("Home", () => "Foldworks · The UI standard library for Foldkit and StyleX"),
+            Match.when("DataTable", () => "Data table · Foldworks"),
+            Match.when("DataGrid", () => "Data grid · Foldworks"),
+            Match.when("FormBuilder", () => "Form builder · Foldworks"),
+            Match.when("QueryBuilder", () => "Query builder · Foldworks"),
+            Match.when("Outliner", () => "Outliner · Foldworks"),
+            Match.when("PdfAnnotator", () => "PDF annotator · Foldworks"),
+            Match.when("PdfViewer", () => "PDF viewer · Foldworks"),
+            Match.when("UiKit", () => "UI components · Foldworks"),
+            Match.when("Workflow", () => "Workflow · Foldworks"),
+            Match.when("Statechart", () => "Statechart · Foldworks"),
+            Match.exhaustive,
+          );
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
   const demo = demoFromRoute(model.route);

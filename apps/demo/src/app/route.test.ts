@@ -23,6 +23,7 @@ import {
   pdfViewerRouter,
   statechartRouter,
   uiKitRouter,
+  mobileFormRouter,
   themeRouter,
   urlToAppRoute,
   workflowOrientationFromRoute,
@@ -78,6 +79,8 @@ describe("demo routes", () => {
     );
     expect(uiKitRouter()).toBe("/ui-kit");
     expect(themeRouter()).toBe("/theme");
+    expect(mobileFormRouter()).toBe("/mobile-form");
+    expect(demoFromRoute(parseUrl("https://demo.test/mobile-form"))).toBe("MobileForm");
     expect(demoFromRoute(parseUrl("https://demo.test/theme#theme=state"))).toBe("Theme");
     expect(queryBuilderRouter()).toBe("/query-builder");
     expect(pdfAnnotatorRouter()).toBe("/pdf-annotator");

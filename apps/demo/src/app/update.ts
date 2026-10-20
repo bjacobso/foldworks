@@ -34,6 +34,8 @@ import { update as updateStatechart } from "../statechart/update";
 import { update as updateThemeBuilder } from "../theme-builder/update";
 import { Message as ThemeBuilderMessage } from "../theme-builder/message";
 import { update as updateUiKit } from "../ui-kit/update";
+import { Message as MobileFormMessage } from "../mobile-form/message";
+import { update as updateMobileForm } from "../mobile-form/update";
 import { OutMessage as WorkflowOutMessage } from "../workflow/message";
 import { setOrientation, update as updateWorkflow } from "../workflow/update";
 import {
@@ -161,17 +163,26 @@ const foldThemeBuilder = Update.foldChild({
   toParentMessage: (message) => Message.GotThemeBuilderMessage({ message }),
 });
 
+const foldMobileForm = Update.foldChild({
+  update: updateMobileForm,
+  read: (model: Model) => Option.some(model.mobileForm),
+  write: (model, mobileForm) => ({ ...model, mobileForm }),
+  toParentMessage: (message) => Message.GotMobileFormMessage({ message }),
+});
+
 /** Commands to run when a route is entered, after its child state exists. */
 export const enterRoute = (model: Model): UpdateReturn =>
-  model.route._tag === "Theme"
-    ? foldThemeBuilder(model, ThemeBuilderMessage.Initialize())
-    : model.route._tag === "Statechart"
-      ? foldStatechart(model, StatechartMessage.ClickedFit())
-      : model.route._tag === "PdfViewer"
-        ? enterPdfViewer(model)
-        : model.route._tag === "DocumentAnalysis"
-          ? foldDocumentAnalysis(model, DocumentAnalysisMessage.Initialize())
-          : { model };
+  model.route._tag === "MobileForm"
+    ? foldMobileForm(model, MobileFormMessage.Initialize())
+    : model.route._tag === "Theme"
+      ? foldThemeBuilder(model, ThemeBuilderMessage.Initialize())
+      : model.route._tag === "Statechart"
+        ? foldStatechart(model, StatechartMessage.ClickedFit())
+        : model.route._tag === "PdfViewer"
+          ? enterPdfViewer(model)
+          : model.route._tag === "DocumentAnalysis"
+            ? foldDocumentAnalysis(model, DocumentAnalysisMessage.Initialize())
+            : { model };
 
 const foldCodeEditor = Update.foldChild({
   update: updateCodeEditor,
@@ -431,6 +442,7 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     GotSidebarMessage: ({ message: childMessage }) => foldSidebar(model, childMessage),
     GotThemeBuilderMessage: ({ message }) => foldThemeBuilder(model, message),
     GotUiKitMessage: ({ message: childMessage }) => foldUiKit(model, childMessage),
+    GotMobileFormMessage: ({ message }) => foldMobileForm(model, message),
     GotGenerativeUiAction: ({ intent }) => ({
       model: modifyFields(model, {
         announcement: () =>

@@ -39,6 +39,7 @@ import {
   initialModel as initialThemeBuilder,
 } from "../theme-builder/model";
 import { Model as UiKitModel, initialModel as initialUiKit } from "../ui-kit/model";
+import { Model as MobileFormModel, init as initMobileForm } from "../mobile-form/model";
 import { Model as StatechartModel, initialModel as initialStatechart } from "../statechart/model";
 import { Model as WorkflowEditorModel, init as initWorkflowEditor } from "../workflow/model";
 import {
@@ -70,6 +71,7 @@ export const Model = S.Struct({
   editor: ArticleEditor.Model,
   sidebar: Sidebar.Model,
   uiKit: UiKitModel,
+  mobileForm: MobileFormModel,
   themeBuilder: ThemeBuilderModel,
   themeName: ThemeName,
   themePreference: ThemePreference,
@@ -115,6 +117,7 @@ export const init = (
     editor: initialEditor(),
     sidebar: Sidebar.init({ id: "foldworks-sidebar", defaultCollapsed: route._tag === "Theme" }),
     uiKit: initialUiKit,
+    mobileForm: initMobileForm(),
     themeBuilder: initialThemeBuilder(),
     themeName: theme.name,
     themePreference: theme.preference,

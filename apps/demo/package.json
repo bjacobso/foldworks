@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --config vite.mcp-app.config.ts",
+    "build": "vite build && vite build --config vite.mcp-app.config.ts && vite build --config vite.mobile-form.config.ts",
     "preview": "vite preview",
+    "bench:mobile-form": "vite build --config vite.mobile-form.config.ts --outDir .bench/foldkit && node bench/mobile-form.mjs foldkit=.bench/foldkit/apply.html",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",

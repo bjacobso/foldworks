@@ -26,6 +26,7 @@ export type Demo =
   | "PdfViewer"
   | "DocumentAnalysis"
   | "UiKit"
+  | "MobileForm"
   | "Theme";
 
 export const WorkflowOrientation = S.Literals(["Vertical", "Horizontal"]);
@@ -55,6 +56,7 @@ export const AppRoute = defineRouteUnion({
   PdfViewer: {},
   DocumentAnalysis: {},
   UiKit: {},
+  MobileForm: {},
   Theme: {},
   NotFound: { path: S.String },
 });
@@ -130,6 +132,11 @@ export const themeRouter = pipe(Route.literal("theme"), Route.mapTo(AppRoute.The
 
 export const uiKitRouter = pipe(Route.literal("ui-kit"), Route.mapTo(AppRoute.UiKit));
 
+export const mobileFormRouter = pipe(
+  Route.literal("mobile-form"),
+  Route.mapTo(AppRoute.MobileForm),
+);
+
 export const queryBuilderRouter = pipe(
   Route.literal("query-builder"),
   Route.mapTo(AppRoute.QueryBuilder),
@@ -171,6 +178,7 @@ const routeParser = Route.oneOf(
   pdfViewerRouter,
   documentAnalysisRouter,
   uiKitRouter,
+  mobileFormRouter,
   themeRouter,
   homeRouter,
 );
@@ -217,6 +225,8 @@ export const demoFromRoute = (route: AppRoute): Demo => {
       return "Theme";
     case "UiKit":
       return "UiKit";
+    case "MobileForm":
+      return "MobileForm";
     case "Workflow":
       return "Workflow";
     case "Statechart":
