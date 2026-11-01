@@ -1,0 +1,5 @@
+; Only exported names are visible to importing files.
+(export with-tax)
+(define tax-rate 0.1)
+(define with-tax [amount]
+  (+ amount (* amount tax-rate)))

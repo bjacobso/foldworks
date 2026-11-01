@@ -4,8 +4,8 @@ A language workbench needs editing surfaces that a language service can plug
 into: hover, completion, highlighting, and diagnostics on text; structure
 that the language can constrain; and views for reviewing proposed changes and
 inspecting values. This note decides which of those Foldworks owns and the
-contracts it exposes. The first consumer is a Forma workbench built in the
-Forma repository. The public APIs do not name Forma or any language. Each piece
+contracts it exposes. The first consumer is the [Forma workbench app](../apps/forma-workbench/)
+hosted here at [foldworks.dev/forma/](https://foldworks.dev/forma/). The public APIs do not name Forma or any language. Each piece
 must also serve a non-language host, such as notes with tags and mentions, a
 query or configuration editor, or a form or workflow review.
 
@@ -20,7 +20,8 @@ The demos prove these contracts with independent hosts:
 | [Statechart editor](../apps/demo/src/statechart/) | A simulator run replayed with `Stepper`, with each step selecting the state it reached                                                         |
 
 Language-specific analysis, evaluation, source codecs, and refactorings belong
-in the host repository. Foldworks owns the surfaces and their contracts.
+in the language host. The private app composes that host with Foldworks surfaces;
+the public packages remain language-agnostic. Foldworks owns the surfaces and their contracts.
 
 ## Principles
 

@@ -1,0 +1,513 @@
+/* The Foldworks surfaces the workbench renders. An application adds the
+   foldworks/ui base and a theme. */
+@import "foldworks/outliner/styles.css";
+@import "foldworks/text-intelligence/styles.css";
+@import "foldworks/code-editor/styles.css";
+
+.workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+.workspace__bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.workspace__bar p {
+  flex: 1;
+  margin: 0;
+  color: var(--muted-foreground);
+}
+.workspace :is(button, select, input, textarea) {
+  font: inherit;
+}
+.workspace__bar :is(button, select),
+.workspace__files :is(button, input),
+.workspace__repl button {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--background);
+  color: var(--foreground);
+}
+.workspace__body {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 310px;
+  flex: 1;
+  min-height: 0;
+}
+.workspace__files {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 16px 12px;
+  border-right: 1px solid var(--border);
+  overflow: auto;
+}
+.workspace__files button {
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.workspace__files button[aria-pressed="true"] {
+  background: var(--muted);
+  font-weight: 600;
+}
+.workspace__files p {
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+.workspace__files input {
+  min-width: 0;
+  width: 100%;
+}
+.workspace__files .workspace__diagnostic {
+  color: var(--foldworks-ui-danger, #dc2626);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.workspace__authoring {
+  min-width: 0;
+  min-height: 0;
+}
+.workspace__authoring .wb {
+  padding: 16px 16px 64px;
+}
+.workspace__repl {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-left: 1px solid var(--border);
+  overflow: auto;
+}
+.workspace__repl header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.workspace__repl p,
+.workspace__repl small {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+.workspace__transcript {
+  flex: 1;
+  overflow: auto;
+  min-height: 100px;
+}
+.workspace__repl pre,
+.workspace__repl textarea {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.workspace__repl textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  padding: 10px;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.repl-entry {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.repl-entry--error pre:last-child {
+  color: var(--foldworks-ui-danger, #dc2626);
+}
+@media (max-width: 1000px) {
+  .workspace__body {
+    grid-template-columns: 150px minmax(0, 1fr);
+    overflow: auto;
+  }
+  .workspace__authoring .wb {
+    height: auto;
+  }
+  .workspace__repl {
+    grid-column: 2;
+    border-top: 1px solid var(--border);
+    min-height: 350px;
+  }
+  .workspace__files {
+    grid-row: span 2;
+  }
+}
+@media (max-width: 600px) {
+  .workspace__body {
+    display: flex;
+    flex-direction: column;
+  }
+  .workspace__files {
+    flex: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .workspace__files p {
+    width: 100%;
+  }
+  .workspace__repl {
+    flex: none;
+  }
+}
+
+.wb {
+  --wb-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  --wb-code-special: var(--foldworks-ui-code-keyword, #8741a0);
+  --wb-code-string: var(--foldworks-ui-code-string, #246b46);
+  --wb-code-number: var(--foldworks-ui-code-number, #975312);
+  --wb-code-comment: var(--foldworks-ui-code-comment, #6c7180);
+  --wb-code-type: var(--foldworks-ui-code-type, #13677b);
+  --wb-code-property: var(--foldworks-ui-code-property, #315ba6);
+  --wb-danger: var(--foldworks-ui-danger, #dc2626);
+  --wb-warning: var(--foldworks-ui-warning, #a16207);
+  --wb-success: var(--foldworks-ui-success, #15803d);
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px clamp(12px, 2.5vw, 32px) 64px;
+}
+
+/* The program window: a title bar over the outline. */
+
+.wb__window {
+  max-width: 1120px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: var(--shadow-card, 0 3px 12px #0000000a);
+}
+
+.wb__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  font-size: 12px;
+}
+
+.wb__name {
+  flex: 1;
+  font-family: var(--wb-mono);
+  font-weight: 600;
+}
+
+.wb__stats {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb__page {
+  padding: 8px 4px 16px;
+}
+
+.wb-error {
+  margin: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--wb-danger);
+  font-size: 13px;
+}
+
+/* Rows are code. */
+
+.wb .fw-outliner__text,
+.wb .fw-outliner__mirror {
+  font-family: var(--wb-mono);
+  font-size: 13px;
+}
+
+/* Token kinds, shared by outline rows and the source pane. */
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="paren"] {
+  color: var(--muted-foreground);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="string"] {
+  color: var(--wb-code-string);
+}
+
+.wb
+  :is(.fw-outliner__span, .native-token--semantic):is(
+    [data-kind="number"],
+    [data-kind="constant"]
+  ) {
+  color: var(--wb-code-number);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="keyword"] {
+  color: var(--wb-code-property);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="comment"] {
+  color: var(--wb-code-comment);
+  font-style: italic;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="error"] {
+  color: var(--wb-danger);
+}
+
+.wb
+  :is(.fw-outliner__span, .native-token--semantic):is([data-kind="special"], [data-kind="macro"]) {
+  color: var(--wb-code-special);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="form"] {
+  color: var(--wb-code-special);
+  font-weight: 600;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="definition"] {
+  color: var(--wb-code-type);
+  font-weight: 600;
+}
+
+.wb
+  :is(.fw-outliner__span, .native-token--semantic):is(
+    [data-kind="defined"],
+    [data-kind="declared"]
+  ) {
+  color: var(--wb-code-type);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="declared"] {
+  text-decoration: underline dotted color-mix(in oklab, var(--wb-code-type) 50%, transparent);
+  text-underline-offset: 3px;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="builtin"] {
+  color: color-mix(in oklab, var(--wb-code-special) 70%, var(--foreground));
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="capability"] {
+  color: var(--wb-warning);
+  font-weight: 600;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="unresolved"] {
+  color: var(--wb-danger);
+}
+
+/* A row with a problem. */
+
+.wb .fw-outliner__row[data-tone="error"] .fw-outliner__cell {
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--wb-danger) 6%, transparent);
+}
+
+.wb .fw-outliner__row[data-tone="warning"] .fw-outliner__cell {
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--wb-warning) 7%, transparent);
+}
+
+.wb__value {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--wb-code-number);
+  font-family: var(--wb-mono);
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.wb__type {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wb__preview {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wb__inspector {
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  font-size: 13px;
+}
+.wb__inspector h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.wb__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.wb__toolbar button,
+.wb__action {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--background);
+  color: var(--foreground);
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.wb__action + .wb__action {
+  margin-left: 8px;
+}
+.wb__toolbar button[aria-pressed="true"] {
+  background: var(--accent);
+  font-weight: 600;
+}
+.wb__hover p {
+  margin: 6px 0;
+}
+
+.wb .native-editor {
+  min-height: 600px;
+}
+
+.wb__review {
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+}
+.wb__toolbar input {
+  width: 165px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  border-radius: 5px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12px;
+}
+.wb__toolbar {
+  flex-wrap: wrap;
+}
+.wb__toolbar button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wb__requirements {
+  color: var(--wb-warning);
+}
+.wb__run-result {
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+  color: var(--wb-success);
+}
+
+.wb__assistant {
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.wb__assistant-heading {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px 0;
+}
+.wb__assistant-heading span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.wb__assistant .wb__toolbar {
+  border: 0;
+}
+.wb__assistant input {
+  width: min(500px, 75%);
+}
+.wb__assistant p {
+  margin: 0;
+  padding: 0 14px 10px;
+}
+
+.wb__window {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: clip;
+}
+.wb--inspecting {
+  grid-template-columns: minmax(0, 1fr) 290px;
+  max-width: 1240px;
+}
+.wb__window
+  > :is(.wb__titlebar, .wb__toolbar, .wb__assistant, .wb__review, .wb-error, .wb__run-result) {
+  grid-column: 1 / -1;
+}
+.wb__page {
+  grid-column: 1;
+  min-width: 0;
+}
+.wb__inspector {
+  grid-column: 2;
+  position: sticky;
+  top: 12px;
+  align-self: start;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  border-left: 1px solid var(--border);
+  border-top: 0;
+  min-width: 0;
+}
+.wb__inspector > code {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.wb__inspector h3 {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.wb__close,
+.wb__links button {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--foreground);
+  padding: 3px 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.wb__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.wb__close {
+  float: right;
+}
+@media (max-width: 1000px) {
+  .wb--inspecting {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wb__inspector {
+    grid-column: 1;
+    position: static;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}

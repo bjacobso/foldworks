@@ -2,6 +2,7 @@ import { foldkit } from "@foldkit/vite-plugin";
 import { foldworksLayers, foldworksStylexTest } from "foldworks/ui/vite";
 import stylex from "@stylexjs/unplugin";
 import { defineConfig } from "vite";
+import { formaWorkbench } from "./forma-workbench.ts";
 import { moduleDocs } from "./docs/plugin.ts";
 import { uiDocs } from "./ui-docs.ts";
 
@@ -10,6 +11,7 @@ export default defineConfig(({ mode }) => ({
     mode === "test"
       ? [foldworksStylexTest()]
       : [
+          formaWorkbench(),
           uiDocs(),
           moduleDocs(),
           stylex.vite({

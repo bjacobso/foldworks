@@ -25,6 +25,7 @@ validation is available locally through `pnpm release:check`.
   source, unit tests, and README guide.
 - `packages/codebase/`: the private, unpublished codebase workbench. Keep it
   independent of `foldworks`.
+- `apps/forma-workbench/`: private Forma workbench app, tests, and pinned language tarballs.
 - `apps/demo/`: Vite reference applications and browser tests.
 - `apps/demo/docs/`: source discovery and the generated package/module catalog.
 - `apps/demo/ui-docs.ts`: Markdown guide routes and the generated `/llms.txt` asset.

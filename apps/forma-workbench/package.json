@@ -1,0 +1,34 @@
+{
+  "name": "@foldworks/forma-workbench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform-browser": "catalog:",
+    "@foldkit/ui": "catalog:",
+    "@formalang/host": "file:vendor/formalang-host-61a546a.tgz",
+    "@formalang/ts": "file:vendor/formalang-ts-61a546a.tgz",
+    "@lucide/icons": "catalog:",
+    "@stylexjs/stylex": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
+    "foldworks": "workspace:*"
+  },
+  "devDependencies": {
+    "@foldkit/vite-plugin": "catalog:",
+    "@playwright/test": "catalog:",
+    "@stylexjs/unplugin": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

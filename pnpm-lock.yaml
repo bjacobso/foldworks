@@ -174,6 +174,9 @@ importers:
       '@foldkit/vite-plugin':
         specifier: 'catalog:'
         version: 0.29.0(effect@4.1.1)(foldkit@0.170.0(patch_hash=b8953975f3bc58aaa77313d70f7cfb9508aa7e47ed999849f1ca98b2cfeeef98)(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))(redis@6.2.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+      '@foldworks/forma-workbench':
+        specifier: workspace:*
+        version: link:../forma-workbench
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.1
@@ -198,6 +201,58 @@ importers:
       typescript-api:
         specifier: npm:typescript@^5.9.3
         version: typescript@5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+
+  apps/forma-workbench:
+    dependencies:
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 4.1.1(effect@4.1.1)
+      '@foldkit/ui':
+        specifier: 'catalog:'
+        version: 0.170.0(effect@4.1.1)(foldkit@0.170.0(patch_hash=b8953975f3bc58aaa77313d70f7cfb9508aa7e47ed999849f1ca98b2cfeeef98)(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@formalang/host':
+        specifier: file:vendor/formalang-host-61a546a.tgz
+        version: file:apps/forma-workbench/vendor/formalang-host-61a546a.tgz
+      '@formalang/ts':
+        specifier: file:vendor/formalang-ts-61a546a.tgz
+        version: file:apps/forma-workbench/vendor/formalang-ts-61a546a.tgz
+      '@lucide/icons':
+        specifier: 'catalog:'
+        version: 1.40.0
+      '@stylexjs/stylex':
+        specifier: 'catalog:'
+        version: 0.19.0
+      effect:
+        specifier: 'catalog:'
+        version: 4.1.1
+      foldkit:
+        specifier: 'catalog:'
+        version: 0.170.0(patch_hash=b8953975f3bc58aaa77313d70f7cfb9508aa7e47ed999849f1ca98b2cfeeef98)(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)
+      foldworks:
+        specifier: workspace:*
+        version: link:../../packages/foldworks
+    devDependencies:
+      '@foldkit/vite-plugin':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@4.1.1)(foldkit@0.170.0(patch_hash=b8953975f3bc58aaa77313d70f7cfb9508aa7e47ed999849f1ca98b2cfeeef98)(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))(redis@6.2.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0))
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.62.1
+      '@stylexjs/unplugin':
+        specifier: 'catalog:'
+        version: 0.19.0(unplugin@2.3.11)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
       vite:
         specifier: 'catalog:'
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(yaml@2.9.0)
@@ -1059,6 +1114,15 @@ packages:
       effect: ~4.1.0
       foldkit: '>=0.167.0'
       vite: ^8.0.0
+
+  '@formalang/host@file:apps/forma-workbench/vendor/formalang-host-61a546a.tgz':
+    resolution: {integrity: sha512-obbbguNPRU2x7IxWmmmqTWFKlE6uDhpNS+E+QYThaSQarGWaXDjEQ6g/AV5TrgSweLyo0DfOXR+7xghO6XhjLg==, tarball: file:apps/forma-workbench/vendor/formalang-host-61a546a.tgz}
+    version: 0.3.0
+    hasBin: true
+
+  '@formalang/ts@file:apps/forma-workbench/vendor/formalang-ts-61a546a.tgz':
+    resolution: {integrity: sha512-/rVulkJdWFbaNqxtq7DJQVfqxWdA4mXgLMmImMdR6i4DoBDwhtTwu0mu0rcj3xrz1tlRgopWBRbEuJ8X8IIZlA==, tarball: file:apps/forma-workbench/vendor/formalang-ts-61a546a.tgz}
+    version: 0.3.0
 
   '@hono/node-server@1.19.9':
     resolution: {integrity: sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==}
@@ -4420,6 +4484,15 @@ snapshots:
       - bufferutil
       - redis
       - utf-8-validate
+
+  '@formalang/host@file:apps/forma-workbench/vendor/formalang-host-61a546a.tgz':
+    dependencies:
+      '@formalang/ts': file:apps/forma-workbench/vendor/formalang-ts-61a546a.tgz
+      effect: 4.1.1
+
+  '@formalang/ts@file:apps/forma-workbench/vendor/formalang-ts-61a546a.tgz':
+    dependencies:
+      effect: 4.1.1
 
   '@hono/node-server@1.19.9(hono@4.11.4)':
     dependencies:

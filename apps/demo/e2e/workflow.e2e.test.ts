@@ -138,6 +138,7 @@ describe("structured workflow builder", { concurrent: false }, () => {
       .toEqual([
         "Home",
         "Documentation",
+        "Forma workbench",
         "Outline workspace",
         "Agent playground",
         "Codebase workbench",

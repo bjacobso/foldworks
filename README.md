@@ -345,3 +345,7 @@ the [design and adapter contract](./docs/mentions-and-tags.md) for host lookup,
 syntax exclusions, stable identity, and persistence.
 
 [Document analysis demo](https://foldworks.dev/document-analysis) composes PDF passage highlights and text selection, transcript ranges, prose diffs, citation previews, and a read-only relationship graph using synthetic documents.
+
+The private [Forma workbench app](./apps/forma-workbench/) composes the Forma
+language host with Foldworks surfaces at [foldworks.dev/forma/](https://foldworks.dev/forma/).
+Run `pnpm dev:forma` to develop it locally.

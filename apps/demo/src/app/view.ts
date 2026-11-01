@@ -232,6 +232,12 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
   const itemsByLayer: Readonly<Record<LayerId, ReadonlyArray<Sidebar.NavigationItem>>> = {
     Workbenches: [
       {
+        id: "forma",
+        label: "Forma workbench",
+        href: "/forma/",
+        icon: ListTree,
+      },
+      {
         id: "orchestrator",
         label: "Outline workspace",
         href: orchestratorRouter(),

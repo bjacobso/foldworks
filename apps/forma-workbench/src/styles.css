@@ -1,0 +1,61 @@
+@import "foldworks/ui/base.css";
+@import "foldworks/ui/themes/shadcn.css";
+@import "./workbench/styles.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+#root {
+  flex: 1;
+  min-height: 0;
+}
+
+.workbench-site-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px clamp(12px, 2.5vw, 32px);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.workbench-site-header a {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.workbench-site-header a:hover {
+  text-decoration: underline;
+}
+
+.workbench-site-brand {
+  font-weight: 700;
+}
+
+.workbench-site-header > span {
+  color: var(--muted-foreground);
+}
+
+.workbench-site-header nav {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+}

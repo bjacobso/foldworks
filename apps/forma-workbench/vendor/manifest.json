@@ -1,0 +1,19 @@
+{
+  "repository": "https://github.com/bjacobso/forma",
+  "commit": "61a546acef2392e6fb8bad33bb1a1f42322f09aa",
+  "packages": {
+    "@formalang/ts": {
+      "commit": "61a546acef2392e6fb8bad33bb1a1f42322f09aa",
+      "sourcePath": "packages/ts",
+      "tarball": "formalang-ts-61a546a.tgz",
+      "sha256": "d449034cc023fc9ffd14750eaacabb4c60f0a7f987d3dd5523cc20298a153551"
+    },
+    "@formalang/host": {
+      "commit": "61a546acef2392e6fb8bad33bb1a1f42322f09aa",
+      "sourcePath": "packages/host",
+      "tarball": "formalang-host-61a546a.tgz",
+      "sha256": "748b5f737925e9627753be0d7fbe914acb6e4c72b82da6a6c0bc6f7ee154d0eb"
+    }
+  },
+  "packaging": "pnpm pack; host dependency on @formalang/ts rewritten to the app-local pinned engine tarball"
+}
