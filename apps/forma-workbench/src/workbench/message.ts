@@ -1,9 +1,9 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { CodeEditor } from "@foldworks/code-editor";
-import { ValueTree } from "@foldworks/ui";
+import { CodeEditor } from "foldworks/code-editor";
+import { ValueTree } from "foldworks/ui";
 import { ValueNodeSchema } from "./values.js";
-import { Outliner } from "@foldworks/outliner";
+import { Outliner } from "foldworks/outliner";
 
 import { RunOutcome } from "./run.js";
 import { Proposal } from "./edits.js";

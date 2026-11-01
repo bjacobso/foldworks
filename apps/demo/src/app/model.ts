@@ -7,10 +7,10 @@ import {
   initialModel as initialOrchestrator,
 } from "../orchestrator/model";
 import { Option, Schema as S } from "effect";
-import { Agent } from "@foldworks/agent";
-import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { Agent } from "foldworks/agent";
+import { PdfAnnotator } from "foldworks/pdf-annotator";
 import { ArticleEditor, initialEditor } from "../editor/demo";
-import { Sidebar } from "@foldworks/sidebar";
+import { Sidebar } from "foldworks/sidebar";
 
 import { Model as DocsModel, init as initDocs } from "../docs/model";
 import { Model as WorkbenchModel, init as initWorkbench } from "../workbench/model";

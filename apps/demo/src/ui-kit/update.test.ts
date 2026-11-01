@@ -1,4 +1,4 @@
-import { Stateful } from "@foldworks/ui";
+import { Stateful } from "foldworks/ui";
 import { describe, expect, it } from "vitest";
 
 import { Message } from "./message";
@@ -23,18 +23,28 @@ describe("UI foundation demos", () => {
       variant: "Success",
       payload: { title: "Success notification" },
     });
-    expect(result.commands?.map(({ name }) => name)).toContain(Stateful.Toast.WaitBeforeDismissal.name);
+    expect(result.commands?.map(({ name }) => name)).toContain(
+      Stateful.Toast.WaitBeforeDismissal.name,
+    );
   });
 
   it("folds typed menu and combobox selections into application state", () => {
-    const menu = update(initialModel, Message.GotActionMenuMessage({
-      message: Stateful.Menu.Message.SelectedItem({ index: 0, item: "Edit" }),
-    })).model;
-    const combobox = update(initialModel, Message.GotComboboxMessage({
-      message: Stateful.Combobox.Message.SelectedItem({
-        item: "Engineering", displayText: "Engineering", wasSelected: false,
+    const menu = update(
+      initialModel,
+      Message.GotActionMenuMessage({
+        message: Stateful.Menu.Message.SelectedItem({ index: 0, item: "Edit" }),
       }),
-    })).model;
+    ).model;
+    const combobox = update(
+      initialModel,
+      Message.GotComboboxMessage({
+        message: Stateful.Combobox.Message.SelectedItem({
+          item: "Engineering",
+          displayText: "Engineering",
+          wasSelected: false,
+        }),
+      }),
+    ).model;
 
     expect(menu.announcement).toContain("Edit selected");
     expect(combobox.department).toBe("Engineering");

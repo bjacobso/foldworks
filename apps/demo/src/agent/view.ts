@@ -1,7 +1,7 @@
 import * as Markdown from "@foldkit/markdown";
 import { parseMarkdown } from "@foldkit/markdown/vite";
-import { Agent } from "@foldworks/agent";
-import { TreeDiff, type TreeDiffNode } from "@foldworks/ui";
+import { Agent } from "foldworks/agent";
+import { TreeDiff, type TreeDiffNode } from "foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 

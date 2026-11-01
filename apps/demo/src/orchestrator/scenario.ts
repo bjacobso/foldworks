@@ -1,5 +1,5 @@
-import { createScenario } from "@foldworks/agent/testing";
-import type { Agent } from "@foldworks/agent";
+import { createScenario } from "foldworks/agent/testing";
+import type { Agent } from "foldworks/agent";
 import type { Thread } from "./model";
 
 /** Local, prompt-aware fixture. The transcript and lifecycle use the real agent runtime. */

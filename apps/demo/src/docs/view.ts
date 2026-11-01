@@ -1,11 +1,7 @@
 import { decodeDocument, viewBlocks } from "@foldkit/markdown";
-import { highlight } from "@foldworks/code-editor";
-import {
-  createFreeformLayout,
-  smoothPathForPoints,
-  type DiagramDocument,
-} from "@foldworks/diagram";
-import { Badge, CodeBlock, Icon, InputGroup, Select } from "@foldworks/ui";
+import { highlight } from "foldworks/code-editor";
+import { createFreeformLayout, smoothPathForPoints, type DiagramDocument } from "foldworks/diagram";
+import { Badge, CodeBlock, Icon, InputGroup, Select } from "foldworks/ui";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -561,11 +557,11 @@ const moduleView = (pkg: PackageDoc, module: ModuleDoc, h: HtmlBuilder<Message>)
                 h.div(
                   c(h, "chips"),
                   module.imports.map((item) =>
-                    item.startsWith("@foldworks/")
+                    item.startsWith("foldworks/")
                       ? link(
                           h,
                           item,
-                          docsPath(item.slice("@foldworks/".length).split("/")[0]),
+                          docsPath(item.slice("foldworks/".length).split("/")[0]),
                           "chip-link",
                         )
                       : h.code([], [item]),
@@ -619,7 +615,7 @@ const readmeView = (pkg: PackageDoc, h: HtmlBuilder<Message>): Html =>
             ? node.url
             : new URL(
                 node.url,
-                `https://github.com/bjacobso/foldworks/blob/main/packages/${pkg.id}/README.md`,
+                `https://github.com/bjacobso/foldworks/blob/main/${pkg.source}/README.md`,
               ).href;
           return h.a([h.Href(href)], children);
         },
@@ -628,7 +624,7 @@ const readmeView = (pkg: PackageDoc, h: HtmlBuilder<Message>): Html =>
   );
 
 const packageHome = (pkg: PackageDoc, model: Model, h: HtmlBuilder<Message>): Html => {
-  const internal = pkg.dependencies.filter((item) => item.startsWith("@foldworks/"));
+  const internal = pkg.dependencies.filter((item) => item.startsWith("foldworks/"));
   return h.div(
     [],
     [
@@ -642,18 +638,15 @@ const packageHome = (pkg: PackageDoc, model: Model, h: HtmlBuilder<Message>): Ht
         ]),
         h.div(
           [...c(h, "install"), h.Id("install")],
-          [h.span(c(h, "install-prompt"), ["$"]), h.code([], [`pnpm add ${pkg.name}`])],
+          [h.span(c(h, "install-prompt"), ["$"]), h.code([], ["pnpm add foldworks"])],
         ),
         h.dl(c(h, "facts"), [
           h.div([], [h.dt([], ["Version"]), h.dd([], [pkg.version])]),
-          h.div([], [h.dt([], ["Modules"]), h.dd([], [String(pkg.modules.length)])]),
+          h.div([], [h.dt([], ["Source files"]), h.dd([], [String(pkg.modules.length)])]),
           h.div([], [h.dt([], ["Entrypoints"]), h.dd([], [String(pkg.entrypoints.length)])]),
           h.div(
             [],
-            [
-              h.dt([], ["Source"]),
-              h.dd([], [externalLink(h, `packages/${pkg.id}`, sourceUrl(`packages/${pkg.id}`))]),
-            ],
+            [h.dt([], ["Source"]), h.dd([], [externalLink(h, pkg.source, sourceUrl(pkg.source))])],
           ),
         ]),
       ]),
@@ -662,7 +655,7 @@ const packageHome = (pkg: PackageDoc, model: Model, h: HtmlBuilder<Message>): Ht
       h.section(
         [...c(h, "section"), h.Id("entrypoints")],
         [
-          h.h2([], ["Package entrypoints"]),
+          h.h2([], ["Entrypoints"]),
           h.div(
             c(h, "chips"),
             pkg.entrypoints.map((item) => h.code([], [item])),
@@ -678,7 +671,7 @@ const packageHome = (pkg: PackageDoc, model: Model, h: HtmlBuilder<Message>): Ht
                 h.div(
                   c(h, "dependency-grid"),
                   internal.map((item) => {
-                    const id = item.slice("@foldworks/".length);
+                    const id = item.slice("foldworks/".length);
                     return h.a(
                       [...c(h, "dependency"), h.Href(docsPath(id))],
                       [Icon.view({ icon: packageIcon(id), size: 15 }, h), h.span([], [item])],
@@ -690,7 +683,7 @@ const packageHome = (pkg: PackageDoc, model: Model, h: HtmlBuilder<Message>): Ht
           h.div(
             c(h, "chips"),
             pkg.dependencies
-              .filter((item) => !item.startsWith("@foldworks/"))
+              .filter((item) => !item.startsWith("foldworks/"))
               .map((item) => h.code([], [item])),
           ),
         ],
@@ -864,8 +857,8 @@ const overview = (model: Model, h: HtmlBuilder<Message>): Html => {
         "Explore the modules, follow the messages, and watch state change. A living reference generated from the code you actually ship.",
       ]),
       h.div(c(h, "hero-stats"), [
-        h.div([], [h.strong([], [String(catalog.length)]), h.span([], ["packages"])]),
-        h.div([], [h.strong([], [String(moduleCount)]), h.span([], ["source modules"])]),
+        h.div([], [h.strong([], [String(catalog.length)]), h.span([], ["modules"])]),
+        h.div([], [h.strong([], [String(moduleCount)]), h.span([], ["source files"])]),
         h.div([], [h.strong([], [String(explorers.length)]), h.span([], ["live state machines"])]),
       ]),
       h.div(c(h, "search"), [
@@ -876,7 +869,7 @@ const overview = (model: Model, h: HtmlBuilder<Message>): Html => {
               {
                 value: model.query,
                 ariaLabel: "Search documentation",
-                placeholder: "Search packages, modules, or exports…",
+                placeholder: "Search modules, source files, or exports…",
                 onInput: (query) => Message.Searched({ query }),
               },
               h,
@@ -886,7 +879,7 @@ const overview = (model: Model, h: HtmlBuilder<Message>): Html => {
         ),
         h.div(
           [h.Role("status"), h.AriaLive("polite"), ...c(h, "search-status")],
-          [query ? `${matches.length} matching package${matches.length === 1 ? "" : "s"}` : ""],
+          [query ? `${matches.length} matching module${matches.length === 1 ? "" : "s"}` : ""],
         ),
       ]),
     ]),
@@ -921,7 +914,7 @@ const overview = (model: Model, h: HtmlBuilder<Message>): Html => {
       h.div(c(h, "group-heading"), [h.h2([], ["See it run"])]),
       paragraph(
         h,
-        "Every edge below was discovered by executing the package's own update function. Send messages and watch the model change.",
+        "Every edge below was discovered by executing the module's own update function. Send messages and watch the model change.",
       ),
       explorerView(model, h),
     ]),
@@ -929,7 +922,7 @@ const overview = (model: Model, h: HtmlBuilder<Message>): Html => {
       h.h2([], ["Documentation that follows the code"]),
       paragraph(
         h,
-        "Package metadata, public source modules, JSDoc, schemas, and messages are discovered automatically. READMEs provide the usage guides. Reducer explorers use explicit event samples and state projections; add an adapter to document another interaction.",
+        "Export maps, public source files, JSDoc, schemas, and messages are discovered automatically. READMEs provide the usage guides. Reducer explorers use explicit event samples and state projections; add an adapter to document another interaction.",
       ),
       externalLink(h, "Download the generated catalog", "/docs/manifest.json"),
     ]),
@@ -945,9 +938,9 @@ export const view = defineView<Model, Message, { packageId: string; moduleId: st
         viewInputs.packageId && !pkg
           ? h.div(c(h, "overview"), [
               h.div(c(h, "empty"), [
-                h.h1([], ["Package not found"]),
-                paragraph(h, `There is no Foldworks package named “${viewInputs.packageId}”.`),
-                link(h, "Browse all packages", docsPath()),
+                h.h1([], ["Module not found"]),
+                paragraph(h, `There is no Foldworks module named “${viewInputs.packageId}”.`),
+                link(h, "Browse all modules", docsPath()),
               ]),
             ])
           : pkg

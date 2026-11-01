@@ -7,7 +7,7 @@ relationship. All coordinates are UTF-16 offsets with an exclusive end.
 
 ## Package boundary
 
-`@foldworks/text-intelligence` owns `Mentions`: recognition, a caret query over
+`foldworks/text-intelligence` owns `Mentions`: recognition, a caret query over
 the whole token, synchronous lookup, completion items, semantic tokens,
 optional unknown-mention diagnostics, and a hover description. These outputs
 compose its existing completion helpers, geometry, accessible popups, and theme

@@ -1,5 +1,5 @@
 import { foldkit } from "@foldkit/vite-plugin";
-import { foldworksLayers } from "@foldworks/ui/vite";
+import { foldworksLayers } from "foldworks/ui/vite";
 import stylex from "@stylexjs/unplugin";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";

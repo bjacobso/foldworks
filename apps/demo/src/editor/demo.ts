@@ -1,5 +1,5 @@
 import { referenceIntelligence } from "./references";
-import { Editor, Message, type BlockDefinition } from "@foldworks/editor";
+import { Editor, Message, type BlockDefinition } from "foldworks/editor";
 
 const ProjectReference: BlockDefinition = {
   name: "project",

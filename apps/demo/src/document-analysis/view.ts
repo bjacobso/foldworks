@@ -1,9 +1,9 @@
 import { defineView } from "foldkit/submodel";
-import { PdfViewer } from "@foldworks/pdf-viewer";
-import * as Graph from "@foldworks/diagram/graph";
-import { HighlightedText } from "@foldworks/text-intelligence";
-import { ProseDiff } from "@foldworks/diff-viewer";
-import { Alert, Button, Citation } from "@foldworks/ui";
+import { PdfViewer } from "foldworks/pdf-viewer";
+import * as Graph from "foldworks/diagram/graph";
+import { HighlightedText } from "foldworks/text-intelligence";
+import { ProseDiff } from "foldworks/diff-viewer";
+import { Alert, Button, Citation } from "foldworks/ui";
 import { className } from "../workflow/styles";
 import { graphDocument, quote, revisedQuote } from "./fixture";
 import type { Model } from "./model";

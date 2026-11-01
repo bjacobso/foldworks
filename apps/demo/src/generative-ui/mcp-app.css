@@ -1,5 +1,5 @@
-@import "@foldworks/ui/base.css";
-@import "@foldworks/ui/themes/shadcn.css";
+@import "foldworks/ui/base.css";
+@import "foldworks/ui/themes/shadcn.css";
 
 * {
   box-sizing: border-box;

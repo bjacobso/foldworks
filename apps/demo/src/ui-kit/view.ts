@@ -35,7 +35,7 @@ import {
   Select,
   Switch,
   Toolbar,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 
 import { Message } from "./message";
 import type { Model } from "./model";

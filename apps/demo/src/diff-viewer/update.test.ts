@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ReviewThreads } from "@foldworks/review";
-import { CodeEditor } from "@foldworks/code-editor";
+import { ReviewThreads } from "foldworks/review";
+import { CodeEditor } from "foldworks/code-editor";
 import { Message } from "./message";
 import { freshModel, type Model } from "./model";
 import { proposedFlags, suggestedFlags, editorFor } from "./fixture";

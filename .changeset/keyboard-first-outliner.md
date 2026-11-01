@@ -1,8 +1,8 @@
 ---
-"@foldworks/outliner": minor
+"foldworks": minor
 ---
 
-Add `@foldworks/outliner`, a keyboard-first outliner in the style of classic
+Add `foldworks/outliner`, a keyboard-first outliner in the style of classic
 Mac outliners. Return, Tab, and Shift+Tab create and nest items; items move,
 fold, and hoist from the keyboard; and a bullet can be dragged to a new place
 and level with a Mac-style insertion marker. Rows can be selected with Esc,

@@ -2,7 +2,7 @@ import { Context, Effect, Layer, Option, Schema as S } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
 import { defineView } from "foldkit/submodel";
-import { CodeEditor } from "@foldworks/code-editor";
+import { CodeEditor } from "foldworks/code-editor";
 import { outlineToSource, type OutlineItem } from "@formalang/ts/syntax";
 import type { LanguageHost, SourceDocument } from "@formalang/host/types";
 import * as Workbench from "./workbench.js";

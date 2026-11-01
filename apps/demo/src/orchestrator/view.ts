@@ -11,9 +11,9 @@ import {
   Undo2,
   X,
 } from "@lucide/icons";
-import { Agent } from "@foldworks/agent";
-import { Outliner, ancestors, find, walk, type Row } from "@foldworks/outliner";
-import { History } from "@foldworks/history";
+import { Agent } from "foldworks/agent";
+import { Outliner, ancestors, find, walk, type Row } from "foldworks/outliner";
+import { History } from "foldworks/history";
 import {
   Badge,
   Button,
@@ -22,7 +22,7 @@ import {
   SegmentedControl,
   SplitView,
   TreeDiff,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 import { decorations } from "../outliner/mentions";

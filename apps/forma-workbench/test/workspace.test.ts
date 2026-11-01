@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { TsLanguageHost } from "@formalang/host/ts-host";
-import { CodeEditor } from "@foldworks/code-editor";
-import { Outliner } from "@foldworks/outliner";
+import { CodeEditor } from "foldworks/code-editor";
+import { Outliner } from "foldworks/outliner";
 import * as Workspace from "../src/workbench/workspace.js";
 import * as Workbench from "../src/workbench/workbench.js";
 import { completeAt, viewOf, sourceDiagnostics } from "../src/workbench/adapter.js";

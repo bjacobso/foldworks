@@ -1,8 +1,8 @@
 /* The Foldworks surfaces the workbench renders. An application adds the
-   @foldworks/ui base and a theme. */
-@import "@foldworks/outliner/styles.css";
-@import "@foldworks/text-intelligence/styles.css";
-@import "@foldworks/code-editor/styles.css";
+   foldworks/ui base and a theme. */
+@import "foldworks/outliner/styles.css";
+@import "foldworks/text-intelligence/styles.css";
+@import "foldworks/code-editor/styles.css";
 
 .workspace {
   height: 100%;

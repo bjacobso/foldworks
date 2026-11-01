@@ -4,14 +4,14 @@ import { defineView } from "foldkit/submodel";
 
 import { Button, Dialog } from "@foldkit/ui";
 import { Download, GripVertical, Plus, Redo2, RotateCcw, Undo2, Upload, X } from "@lucide/icons";
-import { Workflow, flowContainerId, paletteItemId, paletteTypeFromId } from "@foldworks/workflow";
-import { History } from "@foldworks/history";
+import { Workflow, flowContainerId, paletteItemId, paletteTypeFromId } from "foldworks/workflow";
+import { History } from "foldworks/history";
 import {
   Button as UiButton,
   Field as UiField,
   Icon as UiIcon,
   SegmentedControl as UiSegmentedControl,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 import {
   PALETTE_CONTAINER_ID,
   canMoveNode,

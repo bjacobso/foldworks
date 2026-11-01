@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 
-import { DataGrid } from "@foldworks/data-grid";
+import { DataGrid } from "foldworks/data-grid";
 
 import { coverageColumns } from "./coverage";
 import { columns } from "./demo";

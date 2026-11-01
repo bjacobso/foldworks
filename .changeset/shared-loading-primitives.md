@@ -1,6 +1,5 @@
 ---
-"@foldworks/ui": minor
-"@foldworks/data-table": patch
+"foldworks": minor
 ---
 
 Add a composable Loader for labeled inline and block loading states or groups

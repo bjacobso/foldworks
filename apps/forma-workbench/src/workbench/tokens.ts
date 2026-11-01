@@ -4,7 +4,7 @@
 // services when they know it (a definition, a reference, a local, a form)
 // and from its spelling otherwise.
 
-import type { SemanticToken } from "@foldworks/text-intelligence";
+import type { SemanticToken } from "foldworks/text-intelligence";
 import type { SyntaxIdentity, SyntaxNode } from "@formalang/ts/syntax";
 
 /** What the analysis knows about a symbol node, for its highlighting. */

@@ -26,6 +26,8 @@ export type PackageDoc = Readonly<{
   version: string;
   description: string;
   readme: MarkdownDocumentEncoded;
+  /** Repository path of the module's source directory. */
+  source: string;
   dependencies: ReadonlyArray<string>;
   entrypoints: ReadonlyArray<string>;
   modules: ReadonlyArray<ModuleDoc>;

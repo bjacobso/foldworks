@@ -1,6 +1,6 @@
 // A language service for environment files. The deploy host knows which
 // settings it reads and which values the platform provides; this module turns
-// that knowledge into @foldworks/text-intelligence values. The page's update
+// that knowledge into foldworks/text-intelligence values. The page's update
 // sends tokens, diagnostics, and completions to the editor, and its view
 // renders hover descriptions and highlights, all from one analysis.
 
@@ -10,7 +10,7 @@ import {
   type Diagnostic,
   type SemanticToken,
   type TextRange,
-} from "@foldworks/text-intelligence";
+} from "foldworks/text-intelligence";
 
 export const environmentLanguage = "env";
 

@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import { expect, it } from "vitest";
-import type { CodeEditor } from "@foldworks/code-editor";
+import type { CodeEditor } from "foldworks/code-editor";
 import { jsonSample } from "../src/code-editor/samples";
 import { yamlSample } from "../src/code-editor/configuration";
 

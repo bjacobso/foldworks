@@ -32,26 +32,26 @@ cp apps/demo/test-results/demo/workbench-*.png docs/workbench/
 
 ## Reference screens
 
-| Step | Screenshot |
-| --- | --- |
-| 1. Workers directory | [Workers](workbench-01-workers.png) |
-| 2. Object inspector | [Inspect Bob](workbench-02-inspect.png) |
-| 3. Eligibility and evidence | [Explanation](workbench-03-explain.png) |
-| 4. Draft state change | [Draft](workbench-04-draft.png) |
-| 5. Consequence preview | [Preview](workbench-05-preview.png) |
-| 6. Applied change and receipt | [History](workbench-06-history.png) |
-| 7. History after reload | [Reload](workbench-07-reloaded.png) |
-| 8. Dark appearance | [Dark](workbench-08-dark.png) |
-| 9. Stale preview rejected | [Conflict](workbench-09-conflict.png) |
-| 10. Narrow-screen inspector | [Mobile](workbench-10-mobile.png) |
+| Step                          | Screenshot                              |
+| ----------------------------- | --------------------------------------- |
+| 1. Workers directory          | [Workers](workbench-01-workers.png)     |
+| 2. Object inspector           | [Inspect Bob](workbench-02-inspect.png) |
+| 3. Eligibility and evidence   | [Explanation](workbench-03-explain.png) |
+| 4. Draft state change         | [Draft](workbench-04-draft.png)         |
+| 5. Consequence preview        | [Preview](workbench-05-preview.png)     |
+| 6. Applied change and receipt | [History](workbench-06-history.png)     |
+| 7. History after reload       | [Reload](workbench-07-reloaded.png)     |
+| 8. Dark appearance            | [Dark](workbench-08-dark.png)           |
+| 9. Stale preview rejected     | [Conflict](workbench-09-conflict.png)   |
+| 10. Narrow-screen inspector   | [Mobile](workbench-10-mobile.png)       |
 
 ![Proposed change and its consequences](workbench-05-preview.png)
 
 ## Reusable components and adapter boundary
 
-`@foldworks/ui` exports `ValueInspector`, `ExplanationTree`, `ChangeSetPreview`, and `TransactionTimeline`. They accept presentation data and application-owned actions through the existing `view(config, h)` convention. They do not fetch records, evaluate rules, execute transactions, or assume worker-specific fields.
+`foldworks/ui` exports `ValueInspector`, `ExplanationTree`, `ChangeSetPreview`, and `TransactionTimeline`. They accept presentation data and application-owned actions through the existing `view(config, h)` convention. They do not fetch records, evaluate rules, execute transactions, or assume worker-specific fields.
 
-The demo uses the existing `@foldworks/data-grid` for selection, keyboard navigation, sorting, and resizing. Its custom name, state, and eligibility cells open the inspector without replacing the grid. Inspector transitions restore keyboard focus to the record heading.
+The demo uses the existing `foldworks/data-grid` for selection, keyboard navigation, sorting, and resizing. Its custom name, state, and eligibility cells open the inspector without replacing the grid. Inspector transitions restore keyboard focus to the record heading.
 
 `apps/demo/src/workbench/domain.ts` is a browser-local reference adapter with illustrative workforce rules. It is not connected to Triplex. Each snapshot contains the workers and audit entries together. Apply takes a Web Lock, checks the proposal's source revision and previous value against storage, writes one snapshot, and only then reports success. Failed writes retain the proposal and saved row; stale previews require discarding and reloading. Unreadable storage disables writes.
 

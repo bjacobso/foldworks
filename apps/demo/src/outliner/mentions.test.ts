@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { Outliner, updateItem, walk } from "@foldworks/outliner";
+import { Outliner, updateItem, walk } from "foldworks/outliner";
 import { initialModel } from "./model";
 import { Message } from "./message";
 import { QUOTED_ID } from "./sample";

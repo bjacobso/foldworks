@@ -1,11 +1,11 @@
-import { Mentions } from "@foldworks/text-intelligence";
+import { Mentions } from "foldworks/text-intelligence";
 import {
   leaves,
   plainText,
   type Block,
   type Document,
   type TextIntelligence,
-} from "@foldworks/editor";
+} from "foldworks/editor";
 import { crewData } from "../references/crew";
 
 /** The parsed document supplies syntax exclusions; offsets address a leaf's plain text. */

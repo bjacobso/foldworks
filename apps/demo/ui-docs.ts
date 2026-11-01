@@ -4,25 +4,34 @@ import type { Plugin } from "vite";
 
 const documents = new Map([
   ["/docs/README.md", resolve(import.meta.dirname, "../../README.md")],
-  ["/docs/ui/desktop.md", resolve(import.meta.dirname, "../../packages/ui/docs/desktop.md")],
-  ["/docs/ui/setup.md", resolve(import.meta.dirname, "../../packages/ui/README.md")],
-  ["/docs/ui/stateful.md", resolve(import.meta.dirname, "../../packages/ui/docs/stateful.md")],
+  [
+    "/docs/ui/desktop.md",
+    resolve(import.meta.dirname, "../../packages/foldworks/src/ui/docs/desktop.md"),
+  ],
+  ["/docs/ui/setup.md", resolve(import.meta.dirname, "../../packages/foldworks/src/ui/README.md")],
+  [
+    "/docs/ui/stateful.md",
+    resolve(import.meta.dirname, "../../packages/foldworks/src/ui/docs/stateful.md"),
+  ],
   [
     "/docs/ui/capabilities.md",
-    resolve(import.meta.dirname, "../../packages/ui/docs/capabilities.md"),
+    resolve(import.meta.dirname, "../../packages/foldworks/src/ui/docs/capabilities.md"),
   ],
-  ["/docs/ui/primitives.md", resolve(import.meta.dirname, "../../packages/ui/docs/primitives.md")],
+  [
+    "/docs/ui/primitives.md",
+    resolve(import.meta.dirname, "../../packages/foldworks/src/ui/docs/primitives.md"),
+  ],
 ]);
 const index = `# Foldworks
 
-> Pre-1.0 application primitives for Foldkit and StyleX. Install a package with \`pnpm add @foldworks/ui\` and supply its peer dependencies and StyleX transform as described in Setup and themes; try the shipped examples at https://foldworks.dev.
+> Pre-1.0 application primitives for Foldkit and StyleX. Install the single package with \`pnpm add foldworks\`, import modules such as \`foldworks/ui\`, and supply the peer dependencies and StyleX transform described in Setup and themes; try the shipped examples at https://foldworks.dev.
 
 Foldworks includes editors, tables, grids, outlines, diagrams, workflows, PDF surfaces, application chrome, and agent UI. APIs are evolving. The demo's agent and outline orchestration flows are local simulations, with no provider calls or tool side effects.
 
 ## Project and package reference
 
-- [Project guide](https://foldworks.dev/docs/README.md): Package overview, compatibility, local setup, and demo applications.
-- [Generated source catalog](https://foldworks.dev/docs/manifest.json): JSON reference for every public package and reachable source module, including README guides, declarations, and model/message contracts. Browse it interactively at https://foldworks.dev/docs.
+- [Project guide](https://foldworks.dev/docs/README.md): Module overview, compatibility, local setup, and demo applications.
+- [Generated source catalog](https://foldworks.dev/docs/manifest.json): JSON reference for every public module and reachable source file, including README guides, declarations, and model/message contracts. Browse it interactively at https://foldworks.dev/docs.
 
 ## UI guides
 
@@ -30,7 +39,7 @@ Foldworks includes editors, tables, grids, outlines, diagrams, workflows, PDF su
 - [Stateful integration and examples](https://foldworks.dev/docs/ui/stateful.md): Models, messages, commands, and child update integration.
 - [Component capabilities and limitations](https://foldworks.dev/docs/ui/capabilities.md): Supported interactions and current limits.
 - [Layout and foundational primitives](https://foldworks.dev/docs/ui/primitives.md): Controlled presentation and reusable layout components.
-- [Desktop primitives and architecture](https://foldworks.dev/docs/ui/desktop.md): Keyboard commands, application compositions, and package boundaries.
+- [Desktop primitives and architecture](https://foldworks.dev/docs/ui/desktop.md): Keyboard commands, application compositions, and module boundaries.
 
 Use Stateful components for managed interactions and root primitives for controlled presentation.
 Forward child updates and commands with Update.foldChild. Check capabilities before assuming behavioral parity.
@@ -45,11 +54,11 @@ const readDocument = async (path: string, source: string): Promise<string> => {
       "](https://github.com/bjacobso/foldworks/blob/main/$1)",
     );
   }
-  // The package README lives one level above docs; its published Markdown twin does not.
+  // The ui README lives one level above docs; its published Markdown twin does not.
   return path === "/docs/ui/setup.md" ? markdown.replaceAll("](docs/", "](") : markdown;
 };
 
-/** Publish the package's documentation without maintaining a second copy. */
+/** Publish the ui module's documentation without maintaining a second copy. */
 export const uiDocs = (): Plugin => ({
   name: "foldworks-ui-docs",
   configureServer(server) {

@@ -1,8 +1,8 @@
 ---
-"@foldworks/text-intelligence": minor
+"foldworks": minor
 ---
 
-Add `@foldworks/text-intelligence`, the shared vocabulary for language
+Add `foldworks/text-intelligence`, the shared vocabulary for language
 features on Foldkit text surfaces: `TextRange`, `SemanticToken`, `Diagnostic`,
 and `CompletionItem` schemas; pure completion lists that narrow, track edits,
 and accept items; `segments` for painting text with several range layers;

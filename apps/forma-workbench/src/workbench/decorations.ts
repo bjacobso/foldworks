@@ -1,7 +1,7 @@
 // Paints rows: tokens become styled runs of the row's text.
 
-import { segments, type SemanticToken } from "@foldworks/text-intelligence";
-import type { TextSpan } from "@foldworks/outliner";
+import { segments, type SemanticToken } from "foldworks/text-intelligence";
+import type { TextSpan } from "foldworks/outliner";
 import { identifySyntax } from "@formalang/ts/syntax";
 
 import { tokensOf } from "./tokens.js";

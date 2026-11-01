@@ -13,8 +13,8 @@ import {
   toRelative,
   type DiagramScene,
   type Point,
-} from "@foldworks/diagram";
-import { History } from "@foldworks/history";
+} from "foldworks/diagram";
+import { History } from "foldworks/history";
 
 import {
   enabledTransitions,

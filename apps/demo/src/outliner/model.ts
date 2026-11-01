@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { Outliner } from "@foldworks/outliner";
+import { Outliner } from "foldworks/outliner";
 
 import { OUTLINE_ID, sampleOutline } from "./sample";
 

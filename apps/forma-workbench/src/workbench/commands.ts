@@ -4,7 +4,7 @@
 import { Duration, Effect, Schema as S } from "effect";
 import { Command } from "foldkit";
 
-import { CodeEditor } from "@foldworks/code-editor";
+import { CodeEditor } from "foldworks/code-editor";
 import { readSource } from "./source.js";
 import { valueChildren } from "./values.js";
 import { analyzeProgram } from "./analysis.js";

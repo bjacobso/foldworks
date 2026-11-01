@@ -1,4 +1,4 @@
-import { Mentions } from "@foldworks/text-intelligence";
+import { Mentions } from "foldworks/text-intelligence";
 
 /** Demo fixtures; production hosts supply their own lookup data. */
 export const CREW: ReadonlyArray<Mentions.Entity> = [

@@ -1,4 +1,4 @@
-import { Outliner } from "@foldworks/outliner";
+import { Outliner } from "foldworks/outliner";
 import { init } from "../src/workbench/init.js";
 import { fromRows, toRows } from "../src/workbench/document.js";
 import { outlineToSource, sourceToOutline } from "@formalang/ts/syntax";

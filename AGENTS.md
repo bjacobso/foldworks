@@ -14,13 +14,17 @@ types, runs unit tests and lint, checks formatting on files changed from
 documentation links. Use `pnpm format` to fix changed-file formatting.
 
 Run `pnpm dev` for the demo. `pnpm test:e2e` runs browser interactions;
-`pnpm test:visual` runs screenshot comparisons. CI also validates package
-tarballs and a clean consumer with `scripts/check-packages.mjs`; the same
+`pnpm test:visual` runs screenshot comparisons. CI also validates the package
+tarball and a clean consumer with `scripts/check-packages.mjs`; the same
 validation is available locally through `pnpm release:check`.
 
 ## Repository layout
 
-- `packages/`: public `@foldworks/*` primitives, source, unit tests, and README guides.
+- `packages/foldworks/`: the single published `foldworks` package. Each
+  `src/<module>/` directory is a `foldworks/<module>` entry point with its
+  source, unit tests, and README guide.
+- `packages/codebase/`: the private, unpublished codebase workbench. Keep it
+  independent of `foldworks`.
 - `apps/forma-workbench/`: private Forma workbench app, tests, and pinned language tarballs.
 - `apps/demo/`: Vite reference applications and browser tests.
 - `apps/demo/docs/`: source discovery and the generated package/module catalog.
@@ -38,9 +42,16 @@ catalog and development versions in the default catalog. Package builds run
 through Turborepo and `scripts/build-package.mjs`; use the existing scripts.
 Use `foldworksStylexTest()` for view tests without the StyleX compiler.
 
-Document behavior and limits in package READMEs. The docs build discovers
+Modules import each other with relative paths, such as `../ui`; never import
+`foldworks/*` from inside the package. A new module is a `src/<module>/`
+directory plus `./<module>` entries in the package `exports`. Libraries that
+only some modules need are optional peers (`peerDependenciesMeta`), so keep
+them out of the root entry of modules that do not need them;
+`scripts/check-packages.mjs` builds a consumer without them.
+
+Document behavior and limits in module READMEs. The docs build discovers
 exports and READMEs; do not edit generated `dist` files. Add a changeset with
-`pnpm changeset` for publishable package changes. Site and contributor-guide
+`pnpm changeset` for publishable `foldworks` changes. Site and contributor-guide
 changes alone do not require a package release.
 
 ## What not to do

@@ -4,13 +4,9 @@ import {
   flowLocationId,
   paletteTypeFromId,
   type FlowLocation,
-} from "@foldworks/workflow";
+} from "foldworks/workflow";
 
-import type {
-  NodeKind,
-  WorkflowDocument,
-  WorkflowNode,
-} from "./model";
+import type { NodeKind, WorkflowDocument, WorkflowNode } from "./model";
 import { nodeTypes } from "./node-types";
 
 export const PALETTE_CONTAINER_ID = "node-palette";
@@ -78,9 +74,8 @@ export const previewDocumentForDrop = (
   const location = flowLocationFromId(containerId);
   if (location === undefined) return undefined;
   const paletteType = paletteTypeFromId(itemId);
-  const paletteKind = paletteType !== undefined && isNodeKind(paletteType)
-    ? paletteType
-    : undefined;
+  const paletteKind =
+    paletteType !== undefined && isNodeKind(paletteType) ? paletteType : undefined;
   if (paletteKind !== undefined) {
     return insertNewNode(document, location, paletteKind, 0)?.document;
   }

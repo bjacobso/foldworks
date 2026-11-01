@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
-import { DataGrid } from "@foldworks/data-grid";
-import { ValueTree } from "@foldworks/ui";
+import { DataGrid } from "foldworks/data-grid";
+import { ValueTree } from "foldworks/ui";
 import { defineMessageUnion } from "foldkit/message";
 
 import { Snapshot } from "./domain";

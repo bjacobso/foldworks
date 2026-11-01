@@ -1,5 +1,5 @@
 {
-  "name": "foldworks",
+  "name": "foldworks-workspace",
   "description": "A standard library of UI primitives for Foldkit and StyleX, from design tokens to complete workbenches.",
   "private": true,
   "type": "module",

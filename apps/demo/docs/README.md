@@ -1,7 +1,7 @@
 # Generated Foldworks documentation
 
 Run `pnpm dev`, then open `/docs`. The website is part of the demo application
-and its normal production build/deployment. Package and module links use
+and its normal production build/deployment. Module and source-file links use
 `/docs?package=sidebar&module=model` and support browser history and direct loads.
 
 The site uses Foldworks Sidebar, Badge, Button, CodeBlock, Input, Select, and
@@ -11,17 +11,19 @@ the entire site.
 
 ## Automatic reference
 
-`generate.ts` discovers public `@foldworks/*` packages from `packages/`, reads
-their export maps, and follows local re-exports (including namespace barrels).
-Each reachable source module gets a page with exported declarations, JSDoc,
-source lines, imports, and inline Model, Message, and OutMessage records.
-Package pages include version, entrypoints, dependencies, and the existing
-README. New exports and README edits require no second documentation registry.
-The development plugin watches package sources and regenerates the catalog.
+`generate.ts` documents each top-level directory of `packages/foldworks/src`
+that the package export map exposes as `foldworks/<module>`, and follows local
+re-exports (including namespace barrels) within that directory. Each reachable
+source file gets a page with exported declarations, JSDoc, source lines,
+imports, and inline Model, Message, and OutMessage records. Module pages include
+the package version, entrypoints, the runtime imports of the module's source,
+and the module README; the description is the README's first sentence. New
+exports and README edits require no second documentation registry. The
+development plugin watches package sources and regenerates the catalog.
 The same catalog is emitted as `/docs/manifest.json` in production.
 
 `../ui-docs.ts` emits `/llms.txt` and Markdown guides from the repository and
-UI package READMEs and docs. Development serves `/llms.txt` as `text/plain` and
+`foldworks/ui` READMEs and docs. Development serves `/llms.txt` as `text/plain` and
 the guides as `text/markdown`; production serves the emitted static assets.
 `pnpm check:llms` validates the built file's H1, maturity/install summary,
 annotated link sections, and every linked documentation asset. It runs after

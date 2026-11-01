@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { item } from "@foldworks/outliner";
+import { item } from "foldworks/outliner";
 import { identifySyntax, outlineToSource, sourceToOutline } from "@formalang/ts/syntax";
 
 import { fromRows, sameRows, toRows } from "../src/workbench/document.js";

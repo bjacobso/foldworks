@@ -1,8 +1,8 @@
 import { Option, Schema as S } from "effect";
 
-import { FormBuilder } from "@foldworks/form-builder";
-import { History } from "@foldworks/history";
-import { Tree, Workspace } from "@foldworks/ui";
+import { FormBuilder } from "foldworks/form-builder";
+import { History } from "foldworks/history";
+import { Tree, Workspace } from "foldworks/ui";
 import { initOutline } from "./tree";
 
 import { nextFormId } from "../document-ids";
@@ -50,8 +50,21 @@ export const init = (
   return {
     outlineTree: initOutline(document),
     structureCards: false,
-    outlinePane: Workspace.init({ id: "form-outline", size: 250, minSize: 200, maxSize: 400, secondaryMinSize: 420 }),
-    settingsPane: Workspace.init({ id: "form-settings", side: "End", size: 260, minSize: 220, maxSize: 440, secondaryMinSize: 380 }),
+    outlinePane: Workspace.init({
+      id: "form-outline",
+      size: 250,
+      minSize: 200,
+      maxSize: 400,
+      secondaryMinSize: 420,
+    }),
+    settingsPane: Workspace.init({
+      id: "form-settings",
+      side: "End",
+      size: 260,
+      minSize: 220,
+      maxSize: 440,
+      secondaryMinSize: 380,
+    }),
     document,
     documents,
     history: History.init<FormDocument>(),

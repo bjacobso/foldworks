@@ -4,7 +4,7 @@
 // that did not change keep their exact text. Row ids are syntax node ids.
 
 import { Schema as S } from "effect";
-import { item, walk, type Item, type Items } from "@foldworks/outliner";
+import { item, walk, type Item, type Items } from "foldworks/outliner";
 import type { OutlineItem, SyntaxIdentity } from "@formalang/ts/syntax";
 
 const OffsetSpan = S.Struct({ start: S.Number, end: S.Number });

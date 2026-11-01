@@ -2,7 +2,7 @@
 // done against total, and each entry as a chip that marks it done or not.
 
 import type { HtmlBuilder } from "foldkit/html";
-import { find, type FoldedView, type Items, type Row } from "@foldworks/outliner";
+import { find, type FoldedView, type Items, type Row } from "foldworks/outliner";
 
 import { marksOf } from "./mentions";
 import { Message } from "./message";

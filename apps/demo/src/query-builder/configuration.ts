@@ -2,7 +2,7 @@ import {
   defineAttributes,
   type AttributeDefinition,
   type QueryGroup,
-} from "@foldworks/query-builder";
+} from "foldworks/query-builder";
 
 export const attributes = defineAttributes([
   {
@@ -51,10 +51,7 @@ export const attributes = defineAttributes([
   },
 ] as const);
 
-export const validateValue = (
-  attribute: AttributeDefinition,
-  value: string,
-): string | undefined =>
+export const validateValue = (attribute: AttributeDefinition, value: string): string | undefined =>
   attribute.id === "employee.salary" && Number(value) < 0
     ? "Annual salary cannot be negative."
     : undefined;

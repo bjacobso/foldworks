@@ -30,18 +30,18 @@ requirements the host evaluated and their outcomes.
 
 ## Already available
 
-| Need                                       | Foldworks API                                                                                                                                    |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Render a Git patch, unified or split       | `parseUnifiedDiff` and `DiffViewer.view` in `@foldworks/diff-viewer`, with line and range selection, thread count markers, and a reviewed toggle |
-| Compare prose                              | `diffText` and `ProseDiff.view` in `@foldworks/diff-viewer`                                                                                      |
-| Compare structure                          | `diffTrees` and `TreeDiff.view` in `@foldworks/ui`                                                                                               |
-| Summarize consequences and history         | `ChangeSetPreview`, `TransactionTimeline`, and `ExplanationTree` in `@foldworks/ui`                                                              |
-| Edit configuration with schema diagnostics | `CodeEditor` and `withSchema`/`validate` in `@foldworks/code-editor/structured`                                                                  |
-| Undo and redo                              | `@foldworks/history`                                                                                                                             |
-| Browse a real checkout                     | `@foldworks/codebase` (read-only server and workbench)                                                                                           |
-| File trees, split panes, command palette   | `Tree`, `Workspace`, `SplitView`, and `Stateful.Command` in `@foldworks/ui`                                                                      |
-| Mentions in comment drafts                 | `Mentions` in `@foldworks/text-intelligence`                                                                                                     |
-| Agent-proposed edits                       | `@foldworks/agent` permission checkpoints with `allowLabel`/`denyLabel` and `renderDetails`                                                      |
+| Need                                       | Foldworks API                                                                                                                                   |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Render a Git patch, unified or split       | `parseUnifiedDiff` and `DiffViewer.view` in `foldworks/diff-viewer`, with line and range selection, thread count markers, and a reviewed toggle |
+| Compare prose                              | `diffText` and `ProseDiff.view` in `foldworks/diff-viewer`                                                                                      |
+| Compare structure                          | `diffTrees` and `TreeDiff.view` in `foldworks/ui`                                                                                               |
+| Summarize consequences and history         | `ChangeSetPreview`, `TransactionTimeline`, and `ExplanationTree` in `foldworks/ui`                                                              |
+| Edit configuration with schema diagnostics | `CodeEditor` and `withSchema`/`validate` in `foldworks/code-editor/structured`                                                                  |
+| Undo and redo                              | `foldworks/history`                                                                                                                             |
+| Browse a real checkout                     | `@foldworks/codebase` (read-only server and workbench)                                                                                          |
+| File trees, split panes, command palette   | `Tree`, `Workspace`, `SplitView`, and `Stateful.Command` in `foldworks/ui`                                                                      |
+| Mentions in comment drafts                 | `Mentions` in `foldworks/text-intelligence`                                                                                                     |
+| Agent-proposed edits                       | `foldworks/agent` permission checkpoints with `allowLabel`/`denyLabel` and `renderDetails`                                                      |
 
 The [change-request demo](../apps/demo/src/diff-viewer/) composes the reusable
 review submodel with host-owned configuration, viewed files, review verdicts,
@@ -51,7 +51,7 @@ revision snapshots and local persistence.
 
 ### 1. Diffs from two texts, and richer line rendering
 
-Package: `@foldworks/diff-viewer`.
+Package: `foldworks/diff-viewer`.
 
 A configuration host usually has a saved version and a draft, not a Git patch.
 
@@ -77,7 +77,7 @@ newText }, gap, lines)` returns a new `DiffFile` with those lines added as
   context, so expansion stays host-owned data.
 - **Highlighting hook.** `highlight?: (content, language) => readonly Highlight[]`
   replaces the built-in regex tokenizer when provided. It uses the
-  `@foldworks/text-intelligence` semantic token kinds so the code editor's
+  `foldworks/text-intelligence` semantic token kinds so the code editor's
   language service can serve both.
 - **Mapping anchors to a new revision.** `mapLine(file, side, line)` and
   `mapRange(fromFile, range, toFile)` report where a line on one side lands on
@@ -91,7 +91,7 @@ newText }, gap, lines)` returns a new `DiffFile` with those lines added as
 
 ### 2. Review threads
 
-Package: new `@foldworks/review`. This is the
+Package: new `foldworks/review`. This is the
 [anchored review threads](./planned-primitives.md#anchored-review-threads)
 exploration, with a diff line as the first anchor and the anchor type left
 generic so document ranges, grid cells, diagram nodes, and PDF regions can use
@@ -129,7 +129,7 @@ createdAt, editedAt?, pending? }` and `Thread<Anchor>` `{ id, anchor, status:
 
 ### 3. Suggested changes
 
-Package: `@foldworks/review`, using `@foldworks/diff-viewer` for rendering.
+Package: `foldworks/review`, using `foldworks/diff-viewer` for rendering.
 
 A suggestion is a comment that carries replacement text for its anchored range
 on the new side.
@@ -149,7 +149,7 @@ on the new side.
 
 ### 4. Review submission
 
-Package: `@foldworks/review`.
+Package: `foldworks/review`.
 
 - Comments may be `pending` until the reviewer submits a review. `ReviewSubmit`
   is a view with a summary composer, the pending count, and a verdict choice of
@@ -161,7 +161,7 @@ Package: `@foldworks/review`.
 
 ### 5. Change-request chrome
 
-Package: `@foldworks/review`.
+Package: `foldworks/review`.
 
 - **`ChangedFiles`.** A file tree built on `Tree`: status icons, additions and
   deletions, viewed checkboxes, open-thread counts, annotation tones, a text
@@ -187,7 +187,7 @@ failed | skipped | cancelled | neutral, summary?, duration?, detailsHref? }`
 
 ### 6. Configuration-aware review
 
-Packages: `@foldworks/diff-viewer` for the pure parts, the demo for the
+Packages: `foldworks/diff-viewer` for the pure parts, the demo for the
 composition.
 
 Line diffs are honest but do not say what changed in a configuration value.
@@ -203,7 +203,7 @@ Line diffs are honest but do not say what changed in a configuration value.
   after values, as a "semantic" alternative to the line view of the same file.
   A host that has source maps from its parser can link a path change to its
   lines through `annotations`.
-- **Diagnostics in review.** A helper converts `@foldworks/code-editor`
+- **Diagnostics in review.** A helper converts `foldworks/code-editor`
   `Diagnostic`s (offset ranges in the new text) into new-side
   `DiffAnnotation`s, so schema errors from `withSchema` appear in the review
   without the host re-implementing offset-to-line math.
@@ -246,8 +246,8 @@ All seven steps ship with tests, README documentation of behavior and limits, a
 changeset, and demo coverage:
 
 1. `diffFile`, `formatUnifiedDiff`, intraline highlights, line slots,
-   annotations, and the highlighting hook in `@foldworks/diff-viewer`.
-2. `@foldworks/review` with `Comment`, `Thread`, the `ReviewThreads` submodel,
+   annotations, and the highlighting hook in `foldworks/diff-viewer`.
+2. `foldworks/review` with `Comment`, `Thread`, the `ReviewThreads` submodel,
    thread, composer, and list views, wired into the demo through line slots.
 3. `mapLine`/`mapRange` and outdated threads; `expandContext`.
 4. Suggestions and `applySuggestions`; pending comments, `ReviewSubmit`, and
@@ -278,6 +278,6 @@ These wait for a host that needs them.
   virtualization is the model.
 - **Presence and realtime.** Who is viewing, live comment arrival, and typing
   indicators. Transport stays with the host.
-- **Thread anchors outside diffs.** Document ranges in `@foldworks/editor`,
+- **Thread anchors outside diffs.** Document ranges in `foldworks/editor`,
   grid cells, diagram nodes, and PDF regions, designed with the
   [anchors that survive edits](./document-analysis.md#later) work.

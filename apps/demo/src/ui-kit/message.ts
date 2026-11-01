@@ -1,7 +1,7 @@
 import * as Desktop from "./desktop";
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { Stateful } from "@foldworks/ui";
+import { Stateful } from "foldworks/ui";
 
 import { AnswerPresentation, Department, FoundationStep, Tool, View } from "./model";
 

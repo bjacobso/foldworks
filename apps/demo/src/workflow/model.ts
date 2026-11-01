@@ -1,8 +1,8 @@
 import { Option, Schema as S } from "effect";
 
 import { Dialog } from "@foldkit/ui";
-import { History } from "@foldworks/history";
-import { Workflow } from "@foldworks/workflow";
+import { History } from "foldworks/history";
+import { Workflow } from "foldworks/workflow";
 import { nextWorkflowId } from "../document-ids";
 import type { WorkflowOrientation } from "../app/route";
 
@@ -48,9 +48,7 @@ export const WorkflowNode = S.Struct({
     S.Struct({
       id: S.String,
       label: S.String,
-      elements: S.Array(
-        S.suspend((): S.Codec<WorkflowNode> => WorkflowNode),
-      ),
+      elements: S.Array(S.suspend((): S.Codec<WorkflowNode> => WorkflowNode)),
     }),
   ),
 });
@@ -98,44 +96,22 @@ export const initialDocument: WorkflowDocument = {
     label: "",
     elements: [
       node("node-start", "start", "Start", "There is no text", "default"),
-      node(
-        "node-condition",
-        "condition",
-        "Condition",
-        "There is no text",
-        "default",
-        [
-          { id: "flow:condition:then", label: "Then", elements: [] },
-          {
-            id: "flow:condition:else",
-            label: "Else",
-            elements: [
-              node(
-                "node-switch",
-                "switch",
-                "Switch",
-                "",
-                "compact",
-                [
-                  {
-                    id: "flow:switch:default",
-                    label: "Default",
-                    elements: [
-                      node(
-                        "node-action",
-                        "action",
-                        "Action",
-                        "There is no text",
-                        "default",
-                      ),
-                    ],
-                  },
-                ],
-              ),
-            ],
-          },
-        ],
-      ),
+      node("node-condition", "condition", "Condition", "There is no text", "default", [
+        { id: "flow:condition:then", label: "Then", elements: [] },
+        {
+          id: "flow:condition:else",
+          label: "Else",
+          elements: [
+            node("node-switch", "switch", "Switch", "", "compact", [
+              {
+                id: "flow:switch:default",
+                label: "Default",
+                elements: [node("node-action", "action", "Action", "There is no text", "default")],
+              },
+            ]),
+          ],
+        },
+      ]),
       node("node-end", "end", "End", "There is no text", "default"),
     ],
   },

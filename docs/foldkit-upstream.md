@@ -17,10 +17,10 @@ Status values: **carried** (we ship a local patch or workaround), **proposed**
   Rebased onto `foldkit@0.170.0`; its published declaration remains a union.
   The patch still changes declarations only. Not filed.
 - Affects: every generic `view<Message>(config, h)` component and helper. In
-  practice that is `@foldworks/ui`, and any package built the same way.
-- Guard: `packages/ui/src/foldkit-attribute.test.ts` fails to type-check if
+  practice that is `foldworks/ui`, and any package built the same way.
+- Guard: `packages/foldworks/src/ui/foldkit-attribute.test.ts` fails to type-check if
   `Attribute` becomes a union again, for example after a Foldkit upgrade that
-  drops the patch. `@foldworks/ui` type-checks with `tsc --checkers 1`, so
+  drops the patch. `foldworks/ui` type-checks with `tsc --checkers 1`, so
   TS 7's parallel checkers can't hide a relation cache that outgrows the limit.
 
 `foldkit/html` types `Attribute<Message>` as a 310-variant `Data.TaggedEnum`.
@@ -35,7 +35,7 @@ The `| ChildAttribute` flattens the union, so the type-alias fast path never
 applies. A variance annotation can't help either, because TypeScript rejects
 `out` on a union alias (TS2637).
 
-On foldkit@0.156.0, `@foldworks/ui` reached 15,955,484 identity entries against
+On foldkit@0.156.0, `foldworks/ui` reached 15,955,484 identity entries against
 V8's 16,777,216 `Map` limit. Adding a few components crashed TS 6 with
 `RangeError: Map maximum size exceeded`. TS 7 with `--checkers 1` reported
 thousands of `TS2859 Excessive complexity` errors, then ran out of memory.
@@ -66,7 +66,7 @@ export interface Attribute<out Message> {
 Only the declaration file changes; the emitted JS is identical. The `h.*`
 constructors keep their precise return types.
 
-Measured on `@foldworks/ui` with the patch:
+Measured on `foldworks/ui` with the patch:
 
 |                     |     before |   after |
 | ------------------- | ---------: | ------: |
@@ -107,7 +107,7 @@ When Foldkit ships an equivalent fix, delete the patch and the
 ## Public constructor for DOM properties (`h.Prop`)
 
 - Status: **proposed**.
-- Affects: `packages/code-editor/src/native/view.ts`, where the textarea
+- Affects: `packages/foldworks/src/code-editor/native/view.ts`, where the textarea
   carries `{ _tag: "Prop", key: "foldkitNative", value: model }`.
 
 The native code editor needs a per-render channel from the view to its mounted
@@ -126,7 +126,7 @@ channel for plain elements.
 ## Public custom-event listener on plain elements
 
 - Status: **proposed**.
-- Affects: `packages/editor/src/browser.ts` (`contentView`), where the editor host
+- Affects: `packages/foldworks/src/editor/browser.ts` (`contentView`), where the editor host
   carries `{ _tag: "OnCustomEvent", name, f: (event) => event.detail }`.
 
 The editor surface reduces each native edit locally, then re-dispatches the

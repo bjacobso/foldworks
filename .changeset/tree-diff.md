@@ -1,5 +1,5 @@
 ---
-"@foldworks/ui": minor
+"foldworks": minor
 ---
 
 Add `TreeDiff`, a structural diff for any two versions of a tree whose nodes

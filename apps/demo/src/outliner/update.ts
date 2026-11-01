@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
 import { modifyFields } from "foldkit/struct";
-import { Outliner, find, updateItem } from "@foldworks/outliner";
+import { Outliner, find, updateItem } from "foldworks/outliner";
 
 import { suggestionsAt } from "./mentions";
 import { Message } from "./message";

@@ -2,7 +2,7 @@ import { Option } from "effect";
 import { type Html, type HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { createTable, DataGrid } from "@foldworks/data-grid";
+import { createTable, DataGrid } from "foldworks/data-grid";
 
 import { Message } from "./message";
 import type { Model } from "./model";

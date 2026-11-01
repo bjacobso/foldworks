@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { expect, it } from "vitest";
-import { Outliner } from "@foldworks/outliner";
+import { Outliner } from "foldworks/outliner";
 import { sourceToOutline } from "@formalang/ts/syntax";
 import { analyzeProgram } from "../src/workbench/analysis.js";
 import { fromRows } from "../src/workbench/document.js";

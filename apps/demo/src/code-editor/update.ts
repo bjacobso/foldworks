@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { Update } from "foldkit";
-import { CodeEditor } from "@foldworks/code-editor";
-import { Tree, Workspace } from "@foldworks/ui";
+import { CodeEditor } from "foldworks/code-editor";
+import { Tree, Workspace } from "foldworks/ui";
 import { Message } from "./message";
 import { jsonSample, typescriptSample, type Model } from "./model";
 import { ConfigurationEditor, yamlSample } from "./configuration";

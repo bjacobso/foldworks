@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { Stateful } from "@foldworks/ui";
+import { Stateful } from "foldworks/ui";
 import { ThemeName } from "../theme";
 
 export const Tokens = S.Record(S.String, S.String);

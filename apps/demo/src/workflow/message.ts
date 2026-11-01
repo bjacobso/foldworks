@@ -2,7 +2,7 @@ import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
 import { Dialog } from "@foldkit/ui";
-import { Workflow } from "@foldworks/workflow";
+import { Workflow } from "foldworks/workflow";
 import { WorkflowOrientation } from "../app/route";
 
 export const Message = defineMessageUnion({

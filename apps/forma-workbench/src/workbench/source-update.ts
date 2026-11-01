@@ -1,4 +1,4 @@
-import { CodeEditor } from "@foldworks/code-editor";
+import { CodeEditor } from "foldworks/code-editor";
 import { Command } from "foldkit";
 import { completeAt, sourceDiagnostics, sourceTokens } from "./adapter.js";
 import { ParseSource } from "./commands.js";

@@ -3,8 +3,8 @@ import { Command, File, Update } from "foldkit";
 import { modifyFields } from "foldkit/struct";
 
 import { Dialog } from "@foldkit/ui";
-import { History } from "@foldworks/history";
-import { Workflow, applyReorder } from "@foldworks/workflow";
+import { History } from "foldworks/history";
+import { Workflow, applyReorder } from "foldworks/workflow";
 
 import {
   downloadJson,

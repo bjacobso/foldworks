@@ -1,10 +1,10 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
-import { Agent } from "@foldworks/agent";
-import { CodeEditor } from "@foldworks/code-editor";
-import { ChangeSetPreview, TreeDiff, ValueTree } from "@foldworks/ui";
+import { Agent } from "foldworks/agent";
+import { CodeEditor } from "foldworks/code-editor";
+import { ChangeSetPreview, TreeDiff, ValueTree } from "foldworks/ui";
 import { preview } from "./values.js";
 import { defineView } from "foldkit/submodel";
-import { Outliner, walk, type RowDecoration } from "@foldworks/outliner";
+import { Outliner, walk, type RowDecoration } from "foldworks/outliner";
 
 import { brackets } from "./notation.js";
 import { hoverContent } from "./intelligence-view.js";
@@ -17,7 +17,7 @@ import { Option } from "effect";
 
 const diffNodes = (
   rows: ReadonlyArray<import("@formalang/host/types").OutlineItem>,
-): ReadonlyArray<import("@foldworks/ui").TreeDiffNode> =>
+): ReadonlyArray<import("foldworks/ui").TreeDiffNode> =>
   rows.map((row) => ({ id: row.id, label: row.text, children: diffNodes(row.children) }));
 
 const outlineMessage = (message: Outliner.Message): Message =>

@@ -215,10 +215,10 @@ describe("structured workflow builder", { concurrent: false }, () => {
       )
       .toBe(true);
     await expect
-      .poll(() => page.getByRole("link", { name: /@foldworks\/data-grid/ }).isVisible())
+      .poll(() => page.getByRole("link", { name: /foldworks\/data-grid/ }).isVisible())
       .toBe(true);
     await expect
-      .poll(() => page.getByRole("link", { name: /@foldworks\/data-table/ }).isVisible())
+      .poll(() => page.getByRole("link", { name: /foldworks\/data-table/ }).isVisible())
       .toBe(true);
     await expect
       .poll(() => page.getByRole("link", { name: "Try the agent playground" }).isVisible())

@@ -1,5 +1,5 @@
 ---
-"@foldworks/diff-viewer": minor
+"foldworks": minor
 ---
 
 Compare decoded configuration values by path and array identity, render semantic

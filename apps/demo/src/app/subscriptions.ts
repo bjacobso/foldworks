@@ -1,7 +1,7 @@
 import { subscriptions as documentAnalysisSubscriptions } from "../document-analysis/subscriptions";
 import { subscriptions as orchestratorSubscriptions } from "../orchestrator/subscriptions";
 import { Effect, Option, Schema as S, Stream } from "effect";
-import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { PdfAnnotator } from "foldworks/pdf-annotator";
 import { Subscription } from "foldkit";
 
 import { subscriptions as agentSubscriptions } from "../agent/subscriptions";

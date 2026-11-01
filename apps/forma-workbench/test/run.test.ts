@@ -8,7 +8,7 @@ import { Message } from "../src/workbench/message.js";
 import { update } from "../src/workbench/update.js";
 import { init } from "../src/workbench/init.js";
 import { fromRows } from "../src/workbench/document.js";
-import { Outliner } from "@foldworks/outliner";
+import { Outliner } from "foldworks/outliner";
 import { hostLayer } from "./support/program.js";
 import type { Capability } from "../src/workbench/config.js";
 

@@ -1,6 +1,5 @@
 ---
-"@foldworks/code-editor": minor
-"@foldworks/text-intelligence": patch
+"foldworks": minor
 ---
 
 Plug a language service into the code editor. `SetSemanticTokens` paints a
@@ -12,5 +11,5 @@ under the pointer, or at the caret with Ctrl+Shift+Space, with diagnostics
 listed first. The `highlights` view config and the `Reveal` operation show the
 range another view corresponds to. `ApplyEdits` now leaves focus and scrolling
 alone, and mounting keeps diagnostics from other sources. `Diagnostic` is now
-the shared `@foldworks/text-intelligence` schema, with the same shape. Text
+the shared `foldworks/text-intelligence` schema, with the same shape. Text
 popups are fixed to the viewport, so clipping containers no longer cut them off.

@@ -16,16 +16,11 @@
     "@foldkit/ui": "catalog:",
     "@formalang/host": "file:vendor/formalang-host-61a546a.tgz",
     "@formalang/ts": "file:vendor/formalang-ts-61a546a.tgz",
-    "@foldworks/ui": "workspace:*",
+    "@lucide/icons": "catalog:",
     "@stylexjs/stylex": "catalog:",
     "effect": "catalog:",
     "foldkit": "catalog:",
-    "@foldworks/agent": "workspace:*",
-    "@foldworks/code-editor": "workspace:*",
-    "@foldworks/history": "workspace:*",
-    "@foldworks/outliner": "workspace:*",
-    "@foldworks/text-intelligence": "workspace:*",
-    "@lucide/icons": "catalog:"
+    "foldworks": "workspace:*"
   },
   "devDependencies": {
     "@foldkit/vite-plugin": "catalog:",

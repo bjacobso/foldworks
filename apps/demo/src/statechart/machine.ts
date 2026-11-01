@@ -14,7 +14,7 @@ import {
   type DiagramNode,
   type Dimensions,
   type LayeredDirection,
-} from "@foldworks/diagram";
+} from "foldworks/diagram";
 
 export const StateKind = S.Literals([
   "initial",

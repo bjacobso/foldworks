@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors, radii, shadows, space, typography } from "@foldworks/ui/tokens.stylex";
+import { colors, radii, shadows, space, typography } from "foldworks/ui/tokens.stylex";
 
 export const styles = stylex.create({
   root: {

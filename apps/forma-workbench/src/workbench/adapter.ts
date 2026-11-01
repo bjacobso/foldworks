@@ -3,7 +3,7 @@
 // source pane uses them as they are, and outline rows use them through each
 // row's layout. Both surfaces get the same tokens and diagnostics.
 
-import type { Diagnostic, SemanticToken } from "@foldworks/text-intelligence";
+import type { Diagnostic, SemanticToken } from "foldworks/text-intelligence";
 import { identifySyntax, type SyntaxNode } from "@formalang/ts/syntax";
 
 import { analyzedText, type Analysis, type SourceDiagnostic } from "./analysis.js";

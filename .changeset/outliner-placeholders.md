@@ -1,5 +1,5 @@
 ---
-"@foldworks/outliner": minor
+"foldworks": minor
 ---
 
 Add placeholder rows: ghost children, such as “+ add a question” or “+ step”,

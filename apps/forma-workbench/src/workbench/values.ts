@@ -1,6 +1,6 @@
 import { Effect, Schema as S } from "effect";
 import type { ValueProjection, EvaluationState, Diagnostic } from "@formalang/host/types";
-import type { ValueTree } from "@foldworks/ui";
+import type { ValueTree } from "foldworks/ui";
 type ValueNode = ValueTree.ValueNode;
 import { FormaHost, call, configureSession, openValueSession, closeValueSession } from "./host.js";
 import type { Document } from "./document.js";

@@ -1,7 +1,7 @@
 /**
  * The Foldworks stack. Each layer is built only from the layers beneath it.
  * The home page, navigation sidebar, and documentation index all group
- * packages by these layers, ordered from the top of the stack to the bottom.
+ * modules by these layers, ordered from the top of the stack to the bottom.
  */
 export type LayerId =
   | "Workbenches"
@@ -16,7 +16,7 @@ export type Layer = Readonly<{
   title: string;
   summary: string;
   examples: ReadonlyArray<string>;
-  /** Package ids without the `@foldworks/` scope. */
+  /** Module ids: `foldworks/<id>` import paths. */
   packageIds: ReadonlyArray<string>;
 }>;
 
@@ -27,7 +27,7 @@ export const layers: ReadonlyArray<Layer> = [
     title: "Workbenches",
     summary: "Complete tools composed from the layers below. Ship them, or read them as recipes.",
     examples: ["Agent chat", "Generative UI", "Codebase", "Statechart", "Orchestrator"],
-    packageIds: ["agent", "generative-ui", "codebase"],
+    packageIds: ["agent", "generative-ui"],
   },
   {
     id: "ApplicationPrimitives",
@@ -84,7 +84,7 @@ export const layers: ReadonlyArray<Layer> = [
     title: "Tokens",
     summary: "Semantic CSS variables, light and dark, shared by every layer above.",
     examples: ["Shadcn", "Blueprint", "Office", "Google", "Apple", "Polaris"],
-    // Tokens and themes ship inside @foldworks/ui, which is listed under Components.
+    // Tokens and themes ship inside foldworks/ui, which is listed under Components.
     packageIds: [],
   },
 ];

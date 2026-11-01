@@ -23,14 +23,23 @@ contract:
   buttons.
 - **The details included.** Keyboard commands, focus management, undo history,
   validation, and responsive behavior ship with each primitive.
-- **One package at a time.** Every package installs on its own. Take one layer
-  or the whole stack.
+- **One package, separate modules.** Install `foldworks` once and import only
+  the modules you use, such as `foldworks/ui` or `foldworks/data-grid`. Take
+  one layer or the whole stack.
 
 ## The stack
 
-| Layer                      | What it provides                                                                        | Packages                                                                                            |
+```sh
+pnpm add foldworks effect foldkit @foldkit/ui @stylexjs/stylex
+```
+
+Every module below is a `foldworks/<name>` import path from the
+[`foldworks` package](./packages/foldworks). The PDF modules and the MCP Apps
+bridge need optional peers; see [Install](./packages/foldworks/README.md#install).
+
+| Layer                      | What it provides                                                                        | Modules                                                                                             |
 | -------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 05. Workbenches            | Complete tools composed from the layers below                                           | `agent`, `generative-ui`, `codebase`                                                                |
+| 05. Workbenches            | Complete tools composed from the layers below                                           | `agent`, `generative-ui`                                                                            |
 | 04. Application primitives | Product surfaces with models, messages, and updates included                            | `editor`, `code-editor`, `outliner`, `data-table`, `data-grid`, `query-builder`, `review`, and more |
 | 03. Behaviors              | Headless engines that more than one surface shares                                      | `keyboard`, `history`, `text-intelligence`, `diagram`, `pdf`                                        |
 | 02. Components             | Accessible controls, overlays, and application chrome                                   | `ui`, `sidebar`                                                                                     |
@@ -38,83 +47,85 @@ contract:
 
 ### Components
 
-- [`@foldworks/ui`](./packages/ui): semantic design tokens, themes,
+- [`foldworks/ui`](./packages/foldworks/src/ui): semantic design tokens, themes,
   application chrome, and accessible controls, overlays, menus, trees, split
   views, and feedback.
-- [`@foldworks/sidebar`](./packages/sidebar): collapsible application chrome,
+- [`foldworks/sidebar`](./packages/foldworks/src/sidebar): collapsible application chrome,
   grouped navigation, inset content, and responsive mobile drawer behavior.
 
 ### Behaviors
 
-- [`@foldworks/keyboard`](./packages/keyboard): typed, scoped command
+- [`foldworks/keyboard`](./packages/foldworks/src/keyboard): typed, scoped command
   definitions and platform-aware shortcuts with Foldkit lifecycles.
-- [`@foldworks/history`](./packages/history): immutable undo/redo history for
+- [`foldworks/history`](./packages/foldworks/src/history): immutable undo/redo history for
   application-owned documents.
-- [`@foldworks/text-intelligence`](./packages/text-intelligence): reusable
+- [`foldworks/text-intelligence`](./packages/foldworks/src/text-intelligence): reusable
   host-provided `@mentions` and `#tags`, plus the shared vocabulary and popups
   for hover, completion, highlighting, and diagnostics on text surfaces.
-- [`@foldworks/diagram`](./packages/diagram): compound directed-graph
+- [`foldworks/diagram`](./packages/foldworks/src/diagram): compound directed-graph
   documents with ports, notes, and cycles; layered and freeform layout
   strategies; and a canvas interaction model for selection, dragging,
   connecting, panning, and zoom.
-- [`@foldworks/pdf`](./packages/pdf): PDF page rendering, geometry, and
+- [`foldworks/pdf`](./packages/foldworks/src/pdf): PDF page rendering, geometry, and
   composable surfaces.
 
 ### Application primitives
 
-- [`@foldworks/editor`](./packages/editor): a native rich-text editor with
+- [`foldworks/editor`](./packages/foldworks/src/editor): a native rich-text editor with
   Markdown import/export, draggable blocks, and application-defined Foldkit views.
-- [`@foldworks/code-editor`](./packages/code-editor): a native Foldkit editor
+- [`foldworks/code-editor`](./packages/foldworks/src/code-editor): a native Foldkit editor
   with highlighting, undo/redo, find/replace, diagnostics, and shared
-  implementation contracts. See the [architecture](./packages/code-editor/NATIVE.md).
-- [`@foldworks/outliner`](./packages/outliner): a keyboard-first outliner
+  implementation contracts. See the [architecture](./packages/foldworks/src/code-editor/NATIVE.md).
+- [`foldworks/outliner`](./packages/foldworks/src/outliner): a keyboard-first outliner
   with natural indenting, reordering, folding, hoisting, and drag and drop.
-- [`@foldworks/data-table`](./packages/data-table): a resource-first CRUD
+- [`foldworks/data-table`](./packages/foldworks/src/data-table): a resource-first CRUD
   table with semantic markup, sortable columns, bulk row selection, resource
   links, density controls, and pinned columns.
-- [`@foldworks/data-grid`](./packages/data-grid): a typed data-grid core with
+- [`foldworks/data-grid`](./packages/foldworks/src/data-grid): a typed data-grid core with
   sorting, resizing, ordering, pinned columns, row virtualization, range
   selection, clipboard copy/paste, editing, and an accessible view.
-- [`@foldworks/query-builder`](./packages/query-builder): configurable query
+- [`foldworks/query-builder`](./packages/foldworks/src/query-builder): configurable query
   documents, editing, validation, rendering, and rule reordering.
-- [`@foldworks/form-builder`](./packages/form-builder): section-first form
+- [`foldworks/form-builder`](./packages/foldworks/src/form-builder): section-first form
   documents, immutable operations, registries, and drag-and-drop primitives.
-- [`@foldworks/workflow`](./packages/workflow): recursive workflows,
+- [`foldworks/workflow`](./packages/foldworks/src/workflow): recursive workflows,
   branch-aware operations, layout, and drag-and-drop primitives, built on the
-  `@foldworks/diagram` scene contract.
-- [`@foldworks/review`](./packages/review): review threads, drafts, and host-owned change-request workflows.
-- [`@foldworks/diff-viewer`](./packages/diff-viewer): a controlled unified and
+  `foldworks/diagram` scene contract.
+- [`foldworks/review`](./packages/foldworks/src/review): review threads, drafts, and host-owned change-request workflows.
+- [`foldworks/diff-viewer`](./packages/foldworks/src/diff-viewer): a controlled unified and
   split diff renderer with line selection for code review workflows.
-- [`@foldworks/pdf-viewer`](./packages/pdf-viewer): read-only PDF viewing
+- [`foldworks/pdf-viewer`](./packages/foldworks/src/pdf-viewer): read-only PDF viewing
   with overlay hotspots.
-- [`@foldworks/pdf-annotator`](./packages/pdf-annotator): multi-page PDF
+- [`foldworks/pdf-annotator`](./packages/foldworks/src/pdf-annotator): multi-page PDF
   annotation authoring with AcroForm inspection, versioned JSON, custom data,
   zoom-aware editing, and interactive PDF export.
 
 ### Workbenches
 
-- [`@foldworks/agent`](./packages/agent): a provider-neutral conversation
+- [`foldworks/agent`](./packages/foldworks/src/agent): a provider-neutral conversation
   runtime and chat UI with streaming text, tool states, permission checkpoints,
   and retry.
-- [`@foldworks/generative-ui`](./packages/generative-ui): an Effect
+- [`foldworks/generative-ui`](./packages/foldworks/src/generative-ui): an Effect
   Schema-first contract for agent-generated component graphs, a safe Foldkit
   renderer, Effect AI structured generation, and an MCP Apps tool bridge.
   Because every layer has a typed contract, agents can compose the library too.
-- [`@foldworks/codebase`](./packages/codebase): a live, read-only web
-  workbench for repository documentation, source, history, and staged or
-  unstaged Git diffs.
+
+The repository also contains [`@foldworks/codebase`](./packages/codebase), a
+live, read-only web workbench for repository documentation, source, history,
+and staged or unstaged Git diffs. It is a private workspace tool: it is not
+published and is not part of `foldworks`.
 
 ## Live examples
 
-The browser demo in [`apps/demo`](./apps/demo) exercises the complete package
-suite. Its `/docs` website generates searchable references for every public package
-and source module, with schemas, messages, source links, README guides, and
+The browser demo in [`apps/demo`](./apps/demo) exercises every Foldworks
+module. Its `/docs` website generates searchable references for every public module
+and source file, with schemas, messages, source links, README guides, and
 interactive state-machine explorers. See [documentation generation](./apps/demo/docs/README.md)
 for the source pipeline and how to add reducer explorers. Its `/agent` reference application demonstrates streaming assistant
 text, tool calls and results, an interactive permission checkpoint, a model
 picker, and a prompt composer. Its `/statechart` editor builds a nested state
 machine with cycles, parallel regions, submachines, notes, and a simulator on
-`@foldworks/diagram`. The agent flow is a deterministic browser-only fixture
+`foldworks/diagram`. The agent flow is a deterministic browser-only fixture
 and performs no provider calls or tool side effects.
 
 The `/orchestrator` reference application puts independent agent threads inside
@@ -135,19 +146,21 @@ for available primitives for checking extracted values against their source docu
 
 ## WorldVM
 
-Foldworks is an independent project, and its packages are useful in any Foldkit
+Foldworks is an independent project, and its modules are useful in any Foldkit
 application. It is also the UI layer planned for the developer tools of
 [WorldVM](https://worldvm.com), a TypeScript runtime and standard library for
-software that models the world, reasons about it, and acts on it. No Foldworks
-package depends on WorldVM. WorldVM-specific views belong to WorldVM; generic
+software that models the world, reasons about it, and acts on it. Foldworks does
+not depend on WorldVM. WorldVM-specific views belong to WorldVM; generic
 pieces they need can become Foldworks primitives. See
 [WorldVM developer tools](./docs/worldvm-devtools.md) for the proposed split.
 
 ## Dependency compatibility
 
-Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
-when they use them. Applications can supply compatible versions of these shared
-runtimes; each package's peer ranges state what it supports. The named `peers`
+The `foldworks` package declares Effect, Foldkit, `@foldkit/ui`, and StyleX as
+peers. Applications supply compatible versions of these shared runtimes; the
+package's peer ranges state what it supports. `pdfjs-dist`, `pdf-lib`, and
+`@modelcontextprotocol/ext-apps` are optional peers, needed only by the PDF
+modules and `foldworks/generative-ui/mcp-app`. The named `peers`
 catalog holds those ranges, while the default catalog and lockfile keep exact
 versions for builds and tests. The tested combination is Effect and its platform,
 SQL, and Vitest companions `4.1.1`, Foldkit, `@foldkit/ui`, and
@@ -175,10 +188,10 @@ performance; see the [upstream log](./docs/foldkit-upstream.md).
 
 Applications consuming StyleX components must also configure
 the StyleX transform and its cascade layers; see the
-[`@foldworks/ui` setup](./packages/ui/README.md#setup). To test views without
-the StyleX compiler, use `foldworksStylexTest()` from `@foldworks/ui/vite`; see
-[Testing views](./packages/ui/README.md#testing-views). The packages in this
-repository use the same plugin in their Vitest configurations.
+[`foldworks/ui` setup](./packages/foldworks/src/ui/README.md#setup). To test views without
+the StyleX compiler, use `foldworksStylexTest()` from `foldworks/ui/vite`; see
+[Testing views](./packages/foldworks/src/ui/README.md#testing-views). The `foldworks` package
+uses the same plugin in its Vitest configuration.
 
 ## Development
 
@@ -226,16 +239,16 @@ development environment's port forwarding.
 
 ## Publishing
 
-Changesets records which packages changed and keeps versions and internal
-`workspace:*` dependencies in sync. Add a changeset with every publishable
-change:
+`foldworks` is the only published package; `@foldworks/codebase` and the demo
+are private. Changesets records release notes and the version bump for
+`foldworks`. Add a changeset with every publishable change:
 
 ```sh
 pnpm changeset
 ```
 
 When a release is ready, apply the pending changesets and inspect the generated
-versions and changelogs:
+version and changelog:
 
 ```sh
 pnpm version-packages
@@ -243,18 +256,19 @@ pnpm release:check
 ```
 
 `release:check` runs the tests and type checks, builds the demo and every
-package, inspects the package tarballs, and installs those tarballs into a clean
-Vite application. The tarball inspection consumes that completed build without
-rerunning each package's `prepack` script; ordinary `pnpm pack` and publish flows
-still build through `prepack`. It does not publish. Commit the version and
-changelog changes, then publish the public packages to npm with:
+workspace package, inspects the `foldworks` tarball, and installs it into a
+clean Vite application, first without and then with the optional peers. The
+tarball inspection consumes that completed build without rerunning the
+package's `prepack` script; ordinary `pnpm pack` and publish flows still build
+through `prepack`. It does not publish. Commit the version and changelog
+changes, then publish to npm with:
 
 ```sh
 pnpm release
 ```
 
-The release command refuses to publish while changesets are pending or a
-package still has the placeholder `0.0.0` version.
+The release command refuses to publish while changesets are pending or
+`foldworks` still has the placeholder `0.0.0` version.
 
 ### Automated releases
 
@@ -263,8 +277,8 @@ or update a `Release packages` pull request. Merging that version PR validates
 and packs the release, publishes it through npm trusted publishing, creates
 GitHub releases, and pushes package tags.
 
-Trusted publishing requires a one-time configuration on npm for every
-`@foldworks/*` package that already exists on the registry:
+Trusted publishing requires a one-time configuration of the `foldworks`
+package on npm:
 
 - Provider: GitHub Actions
 - Organization or user: `bjacobso`
@@ -277,17 +291,18 @@ In the GitHub repository settings, enable **Allow GitHub Actions to create and
 approve pull requests**. The workflow uses short-lived OIDC credentials and
 does not require an `NPM_TOKEN` secret.
 
-For a new package, publish its first version manually from a tarball validated
-by `pnpm release:check`; npm cannot configure a trusted publisher before the
-package exists. Then connect it to this workflow in the package's npm settings,
-or use an authenticated npm CLI (version 11.15 or newer):
+npm cannot configure a trusted publisher before a package exists, so publish
+the first `foldworks` version manually from a tarball validated by
+`pnpm release:check`. Then connect it to this workflow in the package's npm
+settings, or use an authenticated npm CLI (version 11.15 or newer):
 
 ```sh
-npm trust github @foldworks/<name> --file release.yml --repository bjacobso/foldworks --allow-publish
+npm trust github foldworks --file release.yml --repository bjacobso/foldworks --allow-publish
 ```
 
-Do this before merging a version PR that includes the package. Subsequent
-versions publish through the automated workflow.
+Subsequent versions publish through the automated workflow. The earlier
+`@foldworks/<name>` packages remain on npm; after `foldworks` is published,
+deprecate them with a pointer to the matching `foldworks/<name>` module.
 
 ## Deployment
 
@@ -322,8 +337,8 @@ Give the deployment token only these Cloudflare permissions:
 - Zone `foldworks.dev`: Zone Read
 - Zone `foldworks.dev`: Workers Routes Edit
 
-Desktop command definitions live in `@foldworks/keyboard`; UI compositions and
-package-boundary decisions are documented in [Desktop primitives](packages/ui/docs/desktop.md).
+Desktop command definitions live in `foldworks/keyboard`; UI compositions and
+package-boundary decisions are documented in [Desktop primitives](packages/foldworks/src/ui/docs/desktop.md).
 
 The outliner and native Markdown editor share plain-text mentions and tags. See
 the [design and adapter contract](./docs/mentions-and-tags.md) for host lookup,

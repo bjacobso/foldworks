@@ -1,6 +1,7 @@
 {
   "name": "@foldworks/codebase",
   "version": "0.1.0",
+  "private": true,
   "description": "A live, read-only codebase workbench with repository navigation, documentation, source, history, and Git diffs.",
   "license": "MIT",
   "author": "Ben Jacobson",
@@ -27,10 +28,6 @@
     "diff",
     "workbench"
   ],
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
   "bin": {
     "foldworks-codebase": "./dist/cli.js"
   },
@@ -47,7 +44,6 @@
   "scripts": {
     "build": "node ../../scripts/build-package.mjs",
     "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
-    "prepack": "pnpm run build",
     "start": "node dist/cli.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

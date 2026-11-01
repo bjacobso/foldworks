@@ -3,7 +3,7 @@
 // last row the list contains, so the outline reads as Forma source. The
 // brackets are painted, not typed, so they can never be unbalanced.
 
-import { ancestors, walk, type Item, type Items, type RowDecoration } from "@foldworks/outliner";
+import { ancestors, walk, type Item, type Items, type RowDecoration } from "foldworks/outliner";
 import { identifySyntax } from "@formalang/ts/syntax";
 
 export type Notation = "Outline" | "Brackets";

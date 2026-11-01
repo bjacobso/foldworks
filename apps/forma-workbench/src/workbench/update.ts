@@ -1,19 +1,19 @@
 import { Option } from "effect";
 import { AskProposer } from "./propose-command.js";
 import { BeginRun, ResumeRun, AbortRun } from "./run-commands.js";
-import { selectedRoots } from "@foldworks/outliner";
+import { selectedRoots } from "foldworks/outliner";
 import { refactoring, type Proposal } from "./edits.js";
 import { PrepareEdit } from "./edit-commands.js";
-import { CodeEditor } from "@foldworks/code-editor";
+import { CodeEditor } from "foldworks/code-editor";
 import { editSource, setPane, sourceAnalysis, sourceOperation } from "./source-update.js";
 import { Command, Update } from "foldkit";
 import { modifyFields } from "foldkit/struct";
-import { Outliner, type Policy } from "@foldworks/outliner";
+import { Outliner, type Policy } from "foldworks/outliner";
 
-import { ValueTree } from "@foldworks/ui";
+import { ValueTree } from "foldworks/ui";
 import { rowContaining } from "./rows.js";
 import { completeAt, sourceOffsetAtRow } from "./adapter.js";
-import { find } from "@foldworks/outliner";
+import { find } from "foldworks/outliner";
 import { valueRoot } from "./values.js";
 import { AnalyzeProgram, ScheduleAnalysis, LoadValue, ReleaseAnalysis } from "./commands.js";
 import { fromRows, toRows, sameRows } from "./document.js";

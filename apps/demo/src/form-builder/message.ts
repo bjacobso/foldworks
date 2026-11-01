@@ -1,8 +1,8 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
-import { FormBuilder } from "@foldworks/form-builder";
-import { Tree, Workspace } from "@foldworks/ui";
+import { FormBuilder } from "foldworks/form-builder";
+import { Tree, Workspace } from "foldworks/ui";
 
 import { FormExampleId, FormMode } from "./model";
 

@@ -59,38 +59,56 @@ export type Result = Readonly<{ model: Model }>;
 
   it("discovers newly exported modules and subpaths and stops at re-export cycles", async () => {
     const fixture = await mkdtemp(resolve(tmpdir(), "foldworks-docs-"));
-    const pkg = resolve(fixture, "packages/example");
+    const pkg = resolve(fixture, "packages/foldworks");
     try {
-      await mkdir(resolve(pkg, "src"), { recursive: true });
+      await mkdir(resolve(pkg, "src/example"), { recursive: true });
+      await mkdir(resolve(pkg, "src/unexported"), { recursive: true });
       await writeFile(
         resolve(pkg, "package.json"),
         JSON.stringify({
-          name: "@foldworks/example",
+          name: "foldworks",
           version: "1.0.0",
           exports: {
-            ".": { import: "./dist/index.js" },
-            "./extra": { import: "./dist/extra.js" },
-            "./theme.css": "./dist/theme.css",
+            "./example": { import: "./dist/example/index.js" },
+            "./example/extra": { import: "./dist/example/extra.js" },
+            "./example/theme.css": "./dist/example/theme.css",
           },
         }),
       );
-      await writeFile(resolve(pkg, "README.md"), "# Example\n\nSource-owned guide.");
-      await writeFile(resolve(pkg, "src/index.ts"), 'export * as Child from "./child.js";\n');
       await writeFile(
-        resolve(pkg, "src/child.ts"),
-        'export * from "./index";\nexport const useful = 1;\n',
+        resolve(pkg, "src/example/README.md"),
+        "# foldworks/example\n\nSource-owned guide. More detail.",
       );
-      await writeFile(resolve(pkg, "src/extra.ts"), "export type Extra = string;\n");
-      const [result] = await generateCatalog(fixture);
+      await writeFile(
+        resolve(pkg, "src/example/index.ts"),
+        'export * as Child from "./child.js";\n',
+      );
+      await writeFile(
+        resolve(pkg, "src/example/child.ts"),
+        'export * from "./index";\nexport { other } from "../unexported";\nexport const useful = 1;\n',
+      );
+      await writeFile(resolve(pkg, "src/example/extra.ts"), "export type Extra = string;\n");
+      await writeFile(resolve(pkg, "src/unexported/index.ts"), "export const other = 1;\n");
+      const catalog = await generateCatalog(fixture);
+      const [result] = catalog;
+      expect(catalog).toHaveLength(1);
+      expect(result?.name).toBe("foldworks/example");
+      expect(result?.description).toBe("Source-owned guide.");
+      expect(result?.source).toBe("packages/foldworks/src/example");
       expect(result?.modules.map((module) => module.id)).toEqual(["child", "extra", "index"]);
-      expect(result?.entrypoints).toEqual(["@foldworks/example", "@foldworks/example/extra"]);
+      expect(result?.modules.find((module) => module.id === "child")?.imports).toEqual([
+        "./index",
+        "foldworks/unexported",
+      ]);
+      expect(result?.dependencies).toEqual(["foldworks/unexported"]);
+      expect(result?.entrypoints).toEqual(["foldworks/example", "foldworks/example/extra"]);
       expect(decodeDocument(JSON.parse(JSON.stringify(result?.readme))).blocks).toHaveLength(2);
     } finally {
       await rm(fixture, { recursive: true, force: true });
     }
   });
 
-  it("generates every public package in this repository with serializable READMEs", async () => {
+  it("generates every public module in this repository with serializable READMEs", async () => {
     const catalog = await generateCatalog(root);
     expect(catalog.map((pkg) => pkg.id)).toContain("keyboard");
     expect(catalog.map((pkg) => pkg.id)).toContain("sidebar");

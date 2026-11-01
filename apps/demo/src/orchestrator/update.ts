@@ -1,9 +1,9 @@
 import { Effect, Option, Schema as S } from "effect";
 import { Command, Update } from "foldkit";
-import { Agent } from "@foldworks/agent";
-import { Outliner, find, item, updateItem } from "@foldworks/outliner";
-import { Completion } from "@foldworks/text-intelligence";
-import { DateInput } from "@foldworks/ui";
+import { Agent } from "foldworks/agent";
+import { Outliner, find, item, updateItem } from "foldworks/outliner";
+import { Completion } from "foldworks/text-intelligence";
+import { DateInput } from "foldworks/ui";
 import { contextFor, dateInputFor, documentOf, newThread, STORAGE_KEY, type Model } from "./model";
 import { Message } from "./message";
 import { nextEvent } from "./scenario";

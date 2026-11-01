@@ -72,8 +72,8 @@ import {
   ToggleGroup,
   Tooltip,
   VisuallyHidden,
-} from "@foldworks/ui";
-import { highlight } from "@foldworks/code-editor";
+} from "foldworks/ui";
+import { highlight } from "foldworks/code-editor";
 import {
   Eye,
   EyeOff,
@@ -85,7 +85,7 @@ import {
   Settings,
   User,
 } from "@lucide/icons";
-import { Icon } from "@foldworks/ui";
+import { Icon } from "foldworks/ui";
 
 import { Message } from "./message";
 import { catalogSnippet, type Model } from "./model";

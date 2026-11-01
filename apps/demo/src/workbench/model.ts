@@ -1,6 +1,6 @@
 import { Option, Schema as S } from "effect";
-import { DataGrid } from "@foldworks/data-grid";
-import { ValueTree } from "@foldworks/ui";
+import { DataGrid } from "foldworks/data-grid";
+import { ValueTree } from "foldworks/ui";
 
 import { initialSnapshot, Proposal, Snapshot } from "./domain";
 import { initialLoaded, ROOT_ID } from "./record";

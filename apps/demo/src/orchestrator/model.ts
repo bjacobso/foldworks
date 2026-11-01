@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
-import { Agent } from "@foldworks/agent";
-import { Items, Outliner, item, find, ancestors } from "@foldworks/outliner";
-import { DateInput } from "@foldworks/ui";
+import { Agent } from "foldworks/agent";
+import { Items, Outliner, item, find, ancestors } from "foldworks/outliner";
+import { DateInput } from "foldworks/ui";
 
 export const ContextSource = S.Struct({ id: S.String, text: S.String });
 export const Thread = S.Struct({

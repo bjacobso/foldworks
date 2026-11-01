@@ -1,5 +1,5 @@
 ---
-"@foldworks/outliner": minor
+"foldworks": minor
 ---
 
 Let hosts layer meaning onto an outline. The view accepts `decorations`, which

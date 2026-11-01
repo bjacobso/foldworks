@@ -31,9 +31,12 @@ catalog:
 catalogs:
   peers:
     "@foldkit/ui": ^0.170.0
+    "@modelcontextprotocol/ext-apps": ^2.0.0
     "@stylexjs/stylex": ^0.19.0
     effect: ^4.1.1
     foldkit: ^0.170.0
+    pdf-lib: ^1.17.1
+    pdfjs-dist: ^6.3.289
 
 engineStrict: true
 

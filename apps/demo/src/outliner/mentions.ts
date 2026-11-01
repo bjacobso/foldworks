@@ -1,6 +1,6 @@
 // Surface adapter: walking Items and counting rows belongs to the outline host.
-import { walk, type Items, type RowDecoration } from "@foldworks/outliner";
-import { Mentions, segments } from "@foldworks/text-intelligence";
+import { walk, type Items, type RowDecoration } from "foldworks/outliner";
+import { Mentions, segments } from "foldworks/text-intelligence";
 import { crewData } from "../references/crew";
 
 export const marksOf = Mentions.recognize;

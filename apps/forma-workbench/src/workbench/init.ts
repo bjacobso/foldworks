@@ -1,7 +1,7 @@
 import type { Update } from "foldkit";
-import { CodeEditor } from "@foldworks/code-editor";
-import { ValueTree } from "@foldworks/ui";
-import { Outliner } from "@foldworks/outliner";
+import { CodeEditor } from "foldworks/code-editor";
+import { ValueTree } from "foldworks/ui";
+import { Outliner } from "foldworks/outliner";
 
 import { ReadProgram } from "./commands.js";
 import type { FormaHost } from "./host.js";

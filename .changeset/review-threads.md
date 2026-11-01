@@ -1,5 +1,5 @@
 ---
-"@foldworks/review": minor
+"foldworks": minor
 ---
 
 Add generic review-thread schemas, acknowledged drafts, mutation out-messages,

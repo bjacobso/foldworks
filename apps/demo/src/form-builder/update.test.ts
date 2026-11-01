@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { findField } from "@foldworks/form-builder";
+import { findField } from "foldworks/form-builder";
 
 import { initialModel } from "./editor-model";
 import { Message } from "./message";

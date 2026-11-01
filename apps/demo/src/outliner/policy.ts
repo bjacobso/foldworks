@@ -2,7 +2,7 @@
 // quoted word for word, so they are read only. A done item is signed off:
 // moving something into it would reopen it without anyone noticing.
 
-import { reparented, walk, type Items, type Policy } from "@foldworks/outliner";
+import { reparented, walk, type Items, type Policy } from "foldworks/outliner";
 
 import { QUOTED_ID } from "./sample";
 

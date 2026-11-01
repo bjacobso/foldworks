@@ -1,0 +1,254 @@
+{
+  "name": "foldworks",
+  "version": "0.0.0",
+  "description": "A standard library of UI primitives for Foldkit and StyleX, from design tokens to complete workbenches.",
+  "license": "MIT",
+  "author": "Ben Jacobson",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/foldworks.git",
+    "directory": "packages/foldworks"
+  },
+  "homepage": "https://foldworks.dev",
+  "bugs": {
+    "url": "https://github.com/bjacobso/foldworks/issues"
+  },
+  "keywords": [
+    "foldkit",
+    "stylex",
+    "effect",
+    "ui",
+    "components",
+    "accessibility",
+    "data-grid",
+    "editor",
+    "outliner",
+    "diagram",
+    "diff",
+    "pdf",
+    "agent",
+    "generative-ui"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    "./agent": {
+      "types": "./dist/agent/index.d.ts",
+      "import": "./dist/agent/index.js"
+    },
+    "./agent/testing": {
+      "types": "./dist/agent/testing.d.ts",
+      "import": "./dist/agent/testing.js"
+    },
+    "./code-editor": {
+      "types": "./dist/code-editor/index.d.ts",
+      "import": "./dist/code-editor/index.js"
+    },
+    "./code-editor/styles.css": "./dist/code-editor/styles.css",
+    "./code-editor/contracts": {
+      "types": "./dist/code-editor/contracts.d.ts",
+      "import": "./dist/code-editor/contracts.js"
+    },
+    "./code-editor/structured": {
+      "types": "./dist/code-editor/structured.d.ts",
+      "import": "./dist/code-editor/structured.js"
+    },
+    "./data-grid": {
+      "types": "./dist/data-grid/index.d.ts",
+      "import": "./dist/data-grid/index.js"
+    },
+    "./data-grid/styles.css": "./dist/data-grid/styles.css",
+    "./data-table": {
+      "types": "./dist/data-table/index.d.ts",
+      "import": "./dist/data-table/index.js"
+    },
+    "./data-table/styles.css": "./dist/data-table/styles.css",
+    "./diagram": {
+      "types": "./dist/diagram/index.d.ts",
+      "import": "./dist/diagram/index.js"
+    },
+    "./diagram/graph": {
+      "types": "./dist/diagram/graph.d.ts",
+      "import": "./dist/diagram/graph.js"
+    },
+    "./diagram/styles.css": "./dist/diagram/styles.css",
+    "./diff-viewer": {
+      "types": "./dist/diff-viewer/index.d.ts",
+      "import": "./dist/diff-viewer/index.js"
+    },
+    "./diff-viewer/styles.css": "./dist/diff-viewer/styles.css",
+    "./editor": {
+      "types": "./dist/editor/index.d.ts",
+      "import": "./dist/editor/index.js"
+    },
+    "./editor/styles.css": "./dist/editor/styles.css",
+    "./form-builder": {
+      "types": "./dist/form-builder/index.d.ts",
+      "import": "./dist/form-builder/index.js"
+    },
+    "./generative-ui": {
+      "types": "./dist/generative-ui/index.d.ts",
+      "import": "./dist/generative-ui/index.js"
+    },
+    "./generative-ui/ai": {
+      "types": "./dist/generative-ui/ai.d.ts",
+      "import": "./dist/generative-ui/ai.js"
+    },
+    "./generative-ui/core": {
+      "types": "./dist/generative-ui/core.d.ts",
+      "import": "./dist/generative-ui/core.js"
+    },
+    "./generative-ui/foldworks": {
+      "types": "./dist/generative-ui/foldworks.d.ts",
+      "import": "./dist/generative-ui/foldworks.js"
+    },
+    "./generative-ui/mcp": {
+      "types": "./dist/generative-ui/mcp.d.ts",
+      "import": "./dist/generative-ui/mcp.js"
+    },
+    "./generative-ui/mcp-app": {
+      "types": "./dist/generative-ui/mcp-app.d.ts",
+      "import": "./dist/generative-ui/mcp-app.js"
+    },
+    "./history": {
+      "types": "./dist/history/index.d.ts",
+      "import": "./dist/history/index.js"
+    },
+    "./keyboard": {
+      "types": "./dist/keyboard/index.d.ts",
+      "import": "./dist/keyboard/index.js"
+    },
+    "./outliner": {
+      "types": "./dist/outliner/index.d.ts",
+      "import": "./dist/outliner/index.js"
+    },
+    "./outliner/styles.css": "./dist/outliner/styles.css",
+    "./pdf-annotator": {
+      "types": "./dist/pdf-annotator/index.d.ts",
+      "import": "./dist/pdf-annotator/index.js"
+    },
+    "./pdf-annotator/styles.css": "./dist/pdf-annotator/styles.css",
+    "./pdf-viewer": {
+      "types": "./dist/pdf-viewer/index.d.ts",
+      "import": "./dist/pdf-viewer/index.js"
+    },
+    "./pdf-viewer/styles.css": "./dist/pdf-viewer/styles.css",
+    "./pdf": {
+      "types": "./dist/pdf/index.d.ts",
+      "import": "./dist/pdf/index.js"
+    },
+    "./query-builder": {
+      "types": "./dist/query-builder/index.d.ts",
+      "import": "./dist/query-builder/index.js"
+    },
+    "./review": {
+      "types": "./dist/review/index.d.ts",
+      "import": "./dist/review/index.js"
+    },
+    "./review/styles.css": "./dist/review/styles.css",
+    "./sidebar": {
+      "types": "./dist/sidebar/index.d.ts",
+      "import": "./dist/sidebar/index.js"
+    },
+    "./text-intelligence": {
+      "types": "./dist/text-intelligence/index.d.ts",
+      "import": "./dist/text-intelligence/index.js"
+    },
+    "./text-intelligence/styles.css": "./dist/text-intelligence/styles.css",
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "import": "./dist/ui/index.js"
+    },
+    "./ui/icon": {
+      "types": "./dist/ui/icon.d.ts",
+      "import": "./dist/ui/icon.js"
+    },
+    "./ui/tokens.stylex": {
+      "types": "./dist/ui/tokens.stylex.d.ts",
+      "import": "./dist/ui/tokens.stylex.js"
+    },
+    "./ui/testing/stylex": {
+      "types": "./dist/ui/testing/stylex.d.ts",
+      "import": "./dist/ui/testing/stylex.js"
+    },
+    "./ui/vite": {
+      "types": "./dist/ui/vite.d.ts",
+      "import": "./dist/ui/vite.js"
+    },
+    "./ui/theme.css": "./dist/ui/theme.css",
+    "./ui/base.css": "./dist/ui/base.css",
+    "./ui/layers.css": "./dist/ui/layers.css",
+    "./ui/themes/shadcn.css": "./dist/ui/themes/shadcn.css",
+    "./ui/themes/blueprint.css": "./dist/ui/themes/blueprint.css",
+    "./ui/themes/office.css": "./dist/ui/themes/office.css",
+    "./ui/themes/fluent2.css": "./dist/ui/themes/fluent2.css",
+    "./ui/themes/google.css": "./dist/ui/themes/google.css",
+    "./ui/themes/apple.css": "./dist/ui/themes/apple.css",
+    "./ui/themes/polaris.css": "./dist/ui/themes/polaris.css",
+    "./workflow": {
+      "types": "./dist/workflow/index.d.ts",
+      "import": "./dist/workflow/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-package.mjs",
+    "build:runtime": "node ../../scripts/build-package.mjs --runtime-only",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lucide/icons": "catalog:",
+    "micromark-util-decode-string": "^2.0.1",
+    "remark-directive": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@foldkit/ui": "catalog:",
+    "@modelcontextprotocol/ext-apps": "catalog:",
+    "@stylexjs/stylex": "catalog:",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "catalog:",
+    "pdf-lib": "catalog:",
+    "pdfjs-dist": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "catalog:peers",
+    "@modelcontextprotocol/ext-apps": "catalog:peers",
+    "@stylexjs/stylex": "catalog:peers",
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers",
+    "pdf-lib": "catalog:peers",
+    "pdfjs-dist": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/ext-apps": {
+      "optional": true
+    },
+    "pdf-lib": {
+      "optional": true
+    },
+    "pdfjs-dist": {
+      "optional": true
+    }
+  }
+}

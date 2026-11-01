@@ -3,7 +3,7 @@
 A private Foldworks app at **https://foldworks.dev/forma/**. It composes the
 UI-free Forma language host with Foldworks' agent, code editor, history,
 outliner, text intelligence, and UI surfaces. All Forma-specific code stays in
-this app; public `@foldworks/*` packages have no Forma dependency.
+this app; the public `foldworks` package has no Forma dependency.
 
 Imported from [Forma commit 61a546acef2392e6fb8bad33bb1a1f42322f09aa](https://github.com/bjacobso/forma/commit/61a546acef2392e6fb8bad33bb1a1f42322f09aa):
 

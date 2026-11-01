@@ -3,7 +3,7 @@ import {
   type LayoutOrientation,
   pathForPoints,
   type StructuredWorkflowLayout,
-} from "@foldworks/workflow";
+} from "foldworks/workflow";
 
 import type { WorkflowNode } from "./model";
 import { nodeTypes } from "./node-types";

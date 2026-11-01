@@ -1,5 +1,5 @@
 import { Option } from "effect";
-import { DataGrid } from "@foldworks/data-grid";
+import { DataGrid } from "foldworks/data-grid";
 import {
   Alert,
   Badge,
@@ -12,7 +12,7 @@ import {
   ValueInspector,
   ValueTree,
   sxAttrs,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 import { ArrowRight, Braces, CircleHelp, History, Table2, Users } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";

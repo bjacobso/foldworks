@@ -1,4 +1,4 @@
-import { createFoldworksCatalog } from "@foldworks/generative-ui/foldworks";
+import { createFoldworksCatalog } from "foldworks/generative-ui/foldworks";
 import { Schema as S } from "effect";
 
 export const releaseCatalog = createFoldworksCatalog({

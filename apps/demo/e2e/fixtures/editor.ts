@@ -1,18 +1,15 @@
 import { Schema as S } from "effect";
 import { Runtime, Update } from "foldkit";
-import { Editor, Message, block, text } from "@foldworks/editor";
-import "@foldworks/ui/theme.css";
-import "@foldworks/editor/styles.css";
+import { Editor, Message, block, text } from "foldworks/editor";
+import "foldworks/ui/theme.css";
+import "foldworks/editor/styles.css";
 
 const Model = S.Struct({ first: Editor.Model, second: Editor.Model });
 type Model = typeof Model.Type;
 type Event = { _tag: "First" | "Second"; message: Message };
 const count = Math.max(
   1,
-  Math.min(
-    1000,
-    Number(new URLSearchParams(location.search).get("blocks")) || 1,
-  ),
+  Math.min(1000, Number(new URLSearchParams(location.search).get("blocks")) || 1),
 );
 Runtime.run(
   Runtime.makeElement({

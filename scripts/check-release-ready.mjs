@@ -13,24 +13,11 @@ if (pendingChangesets.length > 0) {
   );
 }
 
-const packageDirectory = join(repositoryRoot, "packages");
-const placeholderVersions = [];
-for (const entry of await readdir(packageDirectory, { withFileTypes: true })) {
-  if (!entry.isDirectory()) continue;
-  try {
-    const manifest = JSON.parse(
-      await readFile(join(packageDirectory, entry.name, "package.json"), "utf8"),
-    );
-    if (manifest.private !== true && manifest.name?.startsWith("@foldworks/") && manifest.version === "0.0.0") {
-      placeholderVersions.push(manifest.name);
-    }
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
-  }
-}
-
-if (placeholderVersions.length > 0) {
-  throw new Error(`Refusing to publish placeholder versions: ${placeholderVersions.join(", ")}.`);
+const manifest = JSON.parse(
+  await readFile(join(repositoryRoot, "packages", "foldworks", "package.json"), "utf8"),
+);
+if (manifest.version === "0.0.0") {
+  throw new Error(`Refusing to publish the placeholder ${manifest.name}@0.0.0 version.`);
 }
 
 console.log("Release versions are ready to publish.");

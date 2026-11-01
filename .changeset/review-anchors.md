@@ -1,6 +1,5 @@
 ---
-"@foldworks/diff-viewer": minor
-"@foldworks/review": patch
+"foldworks": minor
 ---
 
 Map review anchors across revisions conservatively and expand supplied context

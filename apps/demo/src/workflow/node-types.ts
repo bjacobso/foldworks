@@ -11,36 +11,23 @@ import {
   X,
   type LucideIconData,
 } from "@lucide/icons";
-import * as Icon from "@foldworks/ui/icon";
-import {
-  defineNodeTypes,
-  type Dimensions,
-  type NodeTypeDefinition,
-} from "@foldworks/workflow";
+import * as Icon from "foldworks/ui/icon";
+import { defineNodeTypes, type Dimensions, type NodeTypeDefinition } from "foldworks/workflow";
 
 import type { Message } from "./message";
-import {
-  type NodeKind,
-  type NodeSize,
-  type WorkflowNode,
-} from "./model";
+import { type NodeKind, type NodeSize, type WorkflowNode } from "./model";
 import { className, kindStyles, styles } from "./styles";
 
-export type NodeRenderer = (
-  node: WorkflowNode,
-  h: HtmlBuilder<Message>,
-) => ReadonlyArray<Html>;
+export type NodeRenderer = (node: WorkflowNode, h: HtmlBuilder<Message>) => ReadonlyArray<Html>;
 
-export type ExampleNodeTypeDefinition = NodeTypeDefinition<
-  WorkflowNode,
-  NodeRenderer
-> & Readonly<{
-  label: string;
-  icon: LucideIconData;
-  description: string;
-  movable: boolean;
-  deletable: boolean;
-}>;
+export type ExampleNodeTypeDefinition = NodeTypeDefinition<WorkflowNode, NodeRenderer> &
+  Readonly<{
+    label: string;
+    icon: LucideIconData;
+    description: string;
+    movable: boolean;
+    deletable: boolean;
+  }>;
 
 export const nodeSizes: Record<NodeSize, Dimensions> = {
   compact: { width: 252, height: 38 },
@@ -51,40 +38,55 @@ export const nodeSizes: Record<NodeSize, Dimensions> = {
 const standardView =
   (label: string, icon: LucideIconData) =>
   (node: WorkflowNode, h: HtmlBuilder<Message>): ReadonlyArray<Html> => [
-    h.div([h.Class(className(styles.nodeHeader))], [
-      h.span([h.Class(className(styles.nodeIdentity))], [
+    h.div(
+      [h.Class(className(styles.nodeHeader))],
+      [
         h.span(
-          [h.Class(className(styles.nodeIcon, kindStyles[node.type]))],
-          [Icon.view({ icon, size: 11, strokeWidth: 2.25 }, h)],
+          [h.Class(className(styles.nodeIdentity))],
+          [
+            h.span(
+              [h.Class(className(styles.nodeIcon, kindStyles[node.type]))],
+              [Icon.view({ icon, size: 11, strokeWidth: 2.25 }, h)],
+            ),
+            h.span([h.Class(className(styles.nodeTitle))], [node.data.title || label]),
+          ],
         ),
-        h.span([h.Class(className(styles.nodeTitle))], [node.data.title || label]),
-      ]),
-      node.type === "start" || node.type === "end"
-        ? h.empty
-        : h.span([h.Class(className(styles.nodeRemoveHint)), h.AriaHidden(true)], [
-            Icon.view({ icon: X, size: 10, strokeWidth: 2.25 }, h),
-          ]),
-    ]),
-    h.p([h.Class(className(styles.nodeDescription))], [
-      node.data.description || "There is no text",
-    ]),
+        node.type === "start" || node.type === "end"
+          ? h.empty
+          : h.span(
+              [h.Class(className(styles.nodeRemoveHint)), h.AriaHidden(true)],
+              [Icon.view({ icon: X, size: 10, strokeWidth: 2.25 }, h)],
+            ),
+      ],
+    ),
+    h.p(
+      [h.Class(className(styles.nodeDescription))],
+      [node.data.description || "There is no text"],
+    ),
   ];
 
 const compactView =
   (label: string, icon: LucideIconData) =>
   (node: WorkflowNode, h: HtmlBuilder<Message>): ReadonlyArray<Html> => [
-    h.div([h.Class(className(styles.nodeHeader, styles.nodeHeaderCompact))], [
-      h.span([h.Class(className(styles.nodeIdentity))], [
+    h.div(
+      [h.Class(className(styles.nodeHeader, styles.nodeHeaderCompact))],
+      [
         h.span(
-          [h.Class(className(styles.nodeIcon, kindStyles[node.type]))],
-          [Icon.view({ icon, size: 11, strokeWidth: 2.25 }, h)],
+          [h.Class(className(styles.nodeIdentity))],
+          [
+            h.span(
+              [h.Class(className(styles.nodeIcon, kindStyles[node.type]))],
+              [Icon.view({ icon, size: 11, strokeWidth: 2.25 }, h)],
+            ),
+            h.span([h.Class(className(styles.nodeTitle))], [node.data.title || label]),
+          ],
         ),
-        h.span([h.Class(className(styles.nodeTitle))], [node.data.title || label]),
-      ]),
-      h.span([h.Class(className(styles.nodeRemoveHint)), h.AriaHidden(true)], [
-        Icon.view({ icon: X, size: 10, strokeWidth: 2.25 }, h),
-      ]),
-    ]),
+        h.span(
+          [h.Class(className(styles.nodeRemoveHint)), h.AriaHidden(true)],
+          [Icon.view({ icon: X, size: 10, strokeWidth: 2.25 }, h)],
+        ),
+      ],
+    ),
   ];
 
 const makeNode = (
@@ -136,17 +138,11 @@ const definitions: Record<NodeKind, ExampleNodeTypeDefinition> = {
     movable: true,
     deletable: true,
     palette: { label: "Condition", description: "Create Then and Else paths" },
-    create: (id) => makeNode(
-      id,
-      "condition",
-      "New condition",
-      "There is no text",
-      "default",
-      [
+    create: (id) =>
+      makeNode(id, "condition", "New condition", "There is no text", "default", [
         { id: `${id}:then`, label: "Then", elements: [] },
         { id: `${id}:else`, label: "Else", elements: [] },
-      ],
-    ),
+      ]),
     size: (node) => nodeSizes[node.data.size],
     render: standardView("Condition", GitBranch),
   },
@@ -168,14 +164,10 @@ const definitions: Record<NodeKind, ExampleNodeTypeDefinition> = {
     movable: true,
     deletable: true,
     palette: { label: "Switch", description: "Route into named cases" },
-    create: (id) => makeNode(
-      id,
-      "switch",
-      "New switch",
-      "",
-      "compact",
-      [{ id: `${id}:default`, label: "Default", elements: [] }],
-    ),
+    create: (id) =>
+      makeNode(id, "switch", "New switch", "", "compact", [
+        { id: `${id}:default`, label: "Default", elements: [] },
+      ]),
     size: (node) => nodeSizes[node.data.size],
     render: compactView("Switch", GitFork),
   },

@@ -1,8 +1,8 @@
 import { Schema as S } from "effect";
 import { describe, expect, it } from "vitest";
-import { Agent } from "@foldworks/agent";
-import { find, item, Outliner, removeItems, updateItem } from "@foldworks/outliner";
-import { DateInput } from "@foldworks/ui";
+import { Agent } from "foldworks/agent";
+import { find, item, Outliner, removeItems, updateItem } from "foldworks/outliner";
+import { DateInput } from "foldworks/ui";
 import {
   contextFor,
   Document,

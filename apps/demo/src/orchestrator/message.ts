@@ -1,8 +1,8 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { Agent } from "@foldworks/agent";
-import { Outliner } from "@foldworks/outliner";
-import { DateInput } from "@foldworks/ui";
+import { Agent } from "foldworks/agent";
+import { Outliner } from "foldworks/outliner";
+import { DateInput } from "foldworks/ui";
 import { DetailView } from "./model";
 
 export const Message = defineMessageUnion({

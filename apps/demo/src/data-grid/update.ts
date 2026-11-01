@@ -2,7 +2,7 @@ import { Effect, Option } from "effect";
 import { Command, Update } from "foldkit";
 import { modifyFields } from "foldkit/struct";
 
-import { DataGrid } from "@foldworks/data-grid";
+import { DataGrid } from "foldworks/data-grid";
 
 import { Message } from "./message";
 import type { Model } from "./model";

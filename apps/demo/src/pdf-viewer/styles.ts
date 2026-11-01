@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, radii, space, typography } from "@foldworks/ui/tokens.stylex";
+import { colors, radii, space, typography } from "foldworks/ui/tokens.stylex";
 
 export const styles = stylex.create({
   viewport: {

@@ -1,8 +1,8 @@
-import { diffFile, mapRange, type JsonValue, type RangeMapping } from "@foldworks/diff-viewer";
-import { highlight } from "@foldworks/code-editor";
-import { validate } from "@foldworks/code-editor/structured";
-import type { Check } from "@foldworks/review";
-import type { ChangedFiles } from "@foldworks/review";
+import { diffFile, mapRange, type JsonValue, type RangeMapping } from "foldworks/diff-viewer";
+import { highlight } from "foldworks/code-editor";
+import { validate } from "foldworks/code-editor/structured";
+import type { Check } from "foldworks/review";
+import type { ChangedFiles } from "foldworks/review";
 import type { Model, ReviewThread } from "./model";
 import { Flags, Access } from "./fixture";
 
