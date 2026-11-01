@@ -5,21 +5,21 @@ packages:
   - packages/packages/*
 
 catalog:
-  "@effect/platform-browser": 4.0.3
-  "@effect/platform-node": 4.0.3
+  "@effect/platform-browser": 4.1.1
+  "@effect/platform-node": 4.1.1
   "@modelcontextprotocol/ext-apps": 2.0.0
   "@playwright/test": 1.62.1
-  "@foldkit/devtools": 0.168.0
-  "@foldkit/markdown": 0.14.3
-  "@foldkit/ui": 0.168.0
-  "@foldkit/vite-plugin": 0.27.1
+  "@foldkit/devtools": 0.170.0
+  "@foldkit/markdown": 0.15.0
+  "@foldkit/ui": 0.170.0
+  "@foldkit/vite-plugin": 0.29.0
   "@lucide/icons": 1.40.0
   "@stylexjs/stylex": 0.19.0
   "@stylexjs/unplugin": 0.19.0
   "@types/node": 24.13.3
   dejavu-fonts-ttf: 2.37.3
-  effect: 4.0.3
-  foldkit: 0.168.0
+  effect: 4.1.1
+  foldkit: 0.170.0
   inter-font: 3.19.0
   playwright: 1.62.1
   pdf-lib: 1.17.1
@@ -30,32 +30,19 @@ catalog:
 
 catalogs:
   peers:
-    "@foldkit/ui": ^0.168.0
+    "@foldkit/ui": ^0.170.0
     "@stylexjs/stylex": ^0.19.0
-    effect: ^4.0.3
-    foldkit: ^0.168.0
+    effect: ^4.1.1
+    foldkit: ^0.170.0
 
 engineStrict: true
 
 patchedDependencies:
-  foldkit@0.168.0: patches/foldkit@0.168.0.patch
+  alchemy@2.0.0-beta.80: patches/alchemy@2.0.0-beta.80.patch
+  foldkit@0.170.0: patches/foldkit@0.170.0.patch
 
-# Foldkit's released peers are pinned to 4.0.0. Only these releases may use
-# the tested 4.0.3 patch; all other peer requirements are still checked.
-peerDependencyRules:
-  allowedVersions:
-    "foldkit@0.168.0>effect": 4.0.3
-    "foldkit@0.168.0>@effect/platform-browser": 4.0.3
-    "@foldkit/ui@0.168.0>effect": 4.0.3
-    "@foldkit/devtools@0.168.0>effect": 4.0.3
-    "@foldkit/devtools@0.168.0>@effect/platform-browser": 4.0.3
-    "@foldkit/markdown@0.14.3>effect": 4.0.3
-    "@foldkit/vite-plugin@0.27.1>effect": 4.0.3
-
-# The Vite plugin also pins its server dependencies to 4.0.0.
+# Keep Alchemy's existing SQL companions on the tested Effect release.
+# Both dependencies declare ^4.0.0, which accepts 4.1.1.
 overrides:
-  "@foldkit/vite-plugin@0.27.1>@effect/platform-node": 4.0.3
-  "@foldkit/vite-plugin@0.27.1>@effect/platform-node-shared": 4.0.3
-  # Alchemy accepts stable Effect; pin the existing SQL/test companions too.
-  "alchemy@2.0.0-beta.80>@effect/sql-d1": 4.0.3
-  "alchemy@2.0.0-beta.80>@effect/sql-sqlite-do": 4.0.3
+  "alchemy@2.0.0-beta.80>@effect/sql-d1": 4.1.1
+  "alchemy@2.0.0-beta.80>@effect/sql-sqlite-do": 4.1.1

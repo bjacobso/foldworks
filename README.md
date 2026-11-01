@@ -149,28 +149,29 @@ Published packages declare Effect, Foldkit, `@foldkit/ui`, and StyleX as peers
 when they use them. Applications can supply compatible versions of these shared
 runtimes; each package's peer ranges state what it supports. The named `peers`
 catalog holds those ranges, while the default catalog and lockfile keep exact
-versions for builds and tests. The tested combination is Effect `4.0.3`,
-Foldkit and `@foldkit/ui` `0.168.0`, `@foldkit/markdown` `0.14.3`, and
-`@foldkit/vite-plugin` `0.27.1`.
+versions for builds and tests. The tested combination is Effect and its platform,
+SQL, and Vitest companions `4.1.1`, Foldkit, `@foldkit/ui`, and
+`@foldkit/devtools` `0.170.0`, `@foldkit/markdown` `0.15.0`, and
+`@foldkit/vite-plugin` `0.29.0`.
 
-Those Foldkit releases declare exact Effect `4.0.0` peers, including
-`@effect/platform-browser` for Foldkit and DevTools. This repository allows
-only `4.0.3` for those exact releases through scoped `peerDependencyRules` in
-`pnpm-workspace.yaml`. The Vite plugin's two exact `4.0.0` Node platform
-dependencies are overridden to `4.0.3` for that plugin release only. Alchemy's
-SQL companions are pinned to `4.0.3` within its declared ranges. Alchemy and
-its frontend adapter are upgraded together to `2.0.0-beta.80`, which uses
-Effect's new import paths. An offline deployment-import test runs through
-`@effect/vitest@4.0.3`; that adapter requires Vitest 5, so the test runner is
-`5.0.3`. Other peer requirements remain checked.
+These Foldkit releases declare Effect `~4.1.0` peers, which accept `4.1.1`.
+Alchemy and its frontend adapter remain on `2.0.0-beta.80`; their Effect
+`^4.0.0` ranges also accept the tested runtime. Alchemy's existing SQL companions
+are pinned to `4.1.1` within their declared ranges.
 
-This is a local compatibility exception, not an upstream peer guarantee.
-Applications installing these Foldkit releases with Effect `4.0.3` need the
-same scoped peer rules (or npm overrides). The clean-consumer check in
-`scripts/check-packages.mjs` demonstrates the npm configuration. Remove these
-exceptions when upgrading to releases whose peers accept the tested Effect
-version. The declaration-only Foldkit attribute patch is still carried for
-TypeScript performance; see the [upstream log](./docs/foldkit-upstream.md).
+Alchemy beta.80 still imports the removed `effect/Crypto` API. The scoped
+`patches/alchemy@2.0.0-beta.80.patch` migrates OAuth state and PKCE generation
+to Effect 4.1's `SecureRandom` and `Digest` WebCrypto layers, preserves
+`OAuthError` failures, and removes the obsolete service from declarations.
+Published Alchemy beta.84 still uses the removed API. Remove the patch when
+Alchemy ships compatible crypto APIs. Offline tests verify deployment imports,
+random state, the S256 challenge, and crypto failures without contacting a
+provider. They use `@effect/vitest@4.1.1` with Vitest `5.0.3`.
+
+No Effect peer exceptions are required; the clean-consumer check in
+`scripts/check-packages.mjs` installs without peer overrides. The
+declaration-only Foldkit attribute patch is still carried for TypeScript
+performance; see the [upstream log](./docs/foldkit-upstream.md).
 
 Applications consuming StyleX components must also configure
 the StyleX transform and its cascade layers; see the

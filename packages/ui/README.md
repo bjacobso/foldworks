@@ -33,10 +33,10 @@ compatibility. Catalog coverage does not imply behavioral parity: see the
 
 ## Setup
 
-This release is tested with Effect `4.0.3`, Foldkit and `@foldkit/ui`
-`0.168.0`, and StyleX `0.19.0`. These Foldkit releases declare exact Effect
-`4.0.0` peers; using the tested `4.0.3` combination requires the scoped peer
-exceptions described in [dependency compatibility](https://github.com/bjacobso/foldworks#dependency-compatibility).
+This release is tested with Effect `4.1.1`, Foldkit and `@foldkit/ui`
+`0.170.0`, and StyleX `0.19.0`. These Foldkit releases accept Effect `~4.1.0`;
+no peer exceptions are required. See
+[dependency compatibility](https://github.com/bjacobso/foldworks#dependency-compatibility).
 
 Foldworks ships its StyleX expressions so applications can combine them with
 their own atomic styles. Configure the StyleX transform in the consuming

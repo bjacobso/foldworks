@@ -13,8 +13,8 @@ Status values: **carried** (we ship a local patch or workaround), **proposed**
 
 ## `Attribute<Message>` type-check blow-up
 
-- Status: **carried** as `patches/foldkit@0.168.0.patch` (bjacobso/foldworks#40).
-  Rebased onto `foldkit@0.168.0`; its published declaration remains a union.
+- Status: **carried** as `patches/foldkit@0.170.0.patch` (bjacobso/foldworks#40).
+  Rebased onto `foldkit@0.170.0`; its published declaration remains a union.
   The patch still changes declarations only. Not filed.
 - Affects: every generic `view<Message>(config, h)` component and helper. In
   practice that is `@foldworks/ui`, and any package built the same way.

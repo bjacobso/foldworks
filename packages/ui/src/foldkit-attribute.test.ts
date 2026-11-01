@@ -1,7 +1,7 @@
 import type { Attribute } from "foldkit/html";
 import { describe, expectTypeOf, it } from "vitest";
 
-// patches/foldkit@0.168.0.patch turns Foldkit's 310-variant `Attribute<Message>`
+// patches/foldkit@0.170.0.patch turns Foldkit's 310-variant `Attribute<Message>`
 // union into one covariant interface. As a union, every generic view that infers
 // `Message` from an attribute array compares two such unions member by member,
 // which pushed TypeScript's identity cache for this package to V8's Map limit
