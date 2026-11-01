@@ -87,6 +87,9 @@ export const diffViewerScenarios = (
       });
       await start.focus();
       await start.press("Enter");
+      await expect
+        .poll(() => composer.evaluate((element) => element === document.activeElement))
+        .toBe(true);
       await start.focus();
       await start.press("Shift+ArrowDown");
       await expect

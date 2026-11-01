@@ -81,8 +81,8 @@ primitive if a second use appears; until then, build it in `apps/devtools`.
 
 ## Constraints
 
-- **Shared runtimes.** Foldworks currently requires `foldkit@0.156.0`, which
-  pins Effect `4.0.0-rc.112`; see
+- **Shared runtimes.** Foldworks is tested with `foldkit@0.170.0` and
+  Effect `4.1.1`; see
   [dependency compatibility](../README.md#dependency-compatibility). If
   `apps/devtools` imports WorldVM schemas or clients that are built on Effect,
   WorldVM must use the same Effect version or keep those imports out of the

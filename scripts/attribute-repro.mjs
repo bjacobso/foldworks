@@ -16,7 +16,7 @@
 //             that mention M are generic.
 //   split-intersect  `split`, with the generic variants left as intersections.
 //   structural  Attribute is one covariant interface every variant is
-//             assignable to (the patch in patches/foldkit@0.168.0.patch).
+//             assignable to (the patch in patches/foldkit@0.170.0.patch).
 //   opaque    Attribute is a single branded interface (for comparison).
 //   explicit  Same as `enum`, but every helper call passes `<M>` explicitly.
 import { mkdirSync, writeFileSync } from "node:fs";
