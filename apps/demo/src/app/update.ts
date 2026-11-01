@@ -394,7 +394,12 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       UrlRequest.match<UpdateReturn>(request, {
         Internal: ({ url }) => ({
           model,
-          commands: [NavigateInternal({ url: urlToString(url) })],
+          // The Forma workbench has its own runtime and entry point.
+          commands: [
+            url.pathname === "/forma" || url.pathname.startsWith("/forma/")
+              ? LoadExternal({ href: urlToString(url) })
+              : NavigateInternal({ url: urlToString(url) }),
+          ],
         }),
         External: ({ href }) => ({ model, commands: [LoadExternal({ href })] }),
       }),

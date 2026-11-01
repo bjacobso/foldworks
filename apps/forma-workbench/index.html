@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A structural Forma IDE in which the outline is the program."
+    />
+    <script>
+      (() => {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = "shadcn";
+        document.documentElement.dataset.mode = dark ? "dark" : "light";
+        document.documentElement.classList.toggle("dark", dark);
+      })();
+    </script>
+    <link href="/src/styles.css" rel="stylesheet" />
+    <title>Forma workbench</title>
+  </head>
+  <body>
+    <header class="workbench-site-header">
+      <a class="workbench-site-brand" href="/">Foldworks</a>
+      <span>Structural workbench</span>
+      <nav aria-label="Site navigation">
+        <a href="https://forma-lang.com/playground/demo">Examples</a>
+        <a href="https://forma-lang.com/workbench">About this demo</a>
+      </nav>
+    </header>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

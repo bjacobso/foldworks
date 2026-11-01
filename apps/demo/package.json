@@ -55,6 +55,7 @@
     "typescript": "catalog:",
     "typescript-api": "npm:typescript@^5.9.3",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@foldworks/forma-workbench": "workspace:*"
   }
 }

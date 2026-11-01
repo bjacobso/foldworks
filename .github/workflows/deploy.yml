@@ -62,3 +62,7 @@ jobs:
             --retry 5 --retry-delay 2 --retry-all-errors \
             --output "$response" https://foldworks.dev
           grep --quiet '<title>Foldworks</title>' "$response"
+          curl --fail --silent --show-error --location \
+            --retry 5 --retry-delay 2 --retry-all-errors \
+            --output "$response" https://foldworks.dev/forma/
+          grep --quiet '<title>Forma workbench</title>' "$response"

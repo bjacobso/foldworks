@@ -1,0 +1,11 @@
+; Explore a definition in the outline, then try it in the REPL.
+(define square [number] (* number number))
+(define numbers [1 2 3 4 5])
+(map square numbers)
+
+(define greet [person]
+  (str "Hello, " (get person :name) "!"))
+(greet {:name "Ada"})
+
+(define identity [value] value)
+(identity {:numbers numbers :message (greet {:name "Grace"})})

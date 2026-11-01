@@ -11,6 +11,8 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const demo = yield* Cloudflare.Website.Foldkit("Demo", {
       rootDir: "apps/demo",
+      // The demo Vite build also emits the private Forma app at /forma/.
+      memo: { workspaces: [{ cwd: "../forma-workbench" }, { cwd: "../../packages" }] },
       domain: {
         name: "foldworks.dev",
         aliases: ["www.foldworks.dev"],
@@ -19,6 +21,7 @@ export default Alchemy.Stack(
 
     return {
       demo: demo.url,
+      formaWorkbench: "https://foldworks.dev/forma/",
     };
   }),
 );
