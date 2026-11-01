@@ -21,6 +21,7 @@ validation is available locally through `pnpm release:check`.
 ## Repository layout
 
 - `packages/`: public `@foldworks/*` primitives, source, unit tests, and README guides.
+- `apps/forma-workbench/`: private Forma workbench app, tests, and pinned language tarballs.
 - `apps/demo/`: Vite reference applications and browser tests.
 - `apps/demo/docs/`: source discovery and the generated package/module catalog.
 - `apps/demo/ui-docs.ts`: Markdown guide routes and the generated `/llms.txt` asset.

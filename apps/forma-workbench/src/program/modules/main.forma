@@ -1,0 +1,9 @@
+; F12 on with-tax follows this re-export into pricing.forma.
+(import "./pricing-api.forma" [with-tax])
+; Namespaced imports keep similarly named helpers separate.
+(import "./lib/discount.forma" :as discount)
+
+(define price-quote [amount]
+  (with-tax (discount/apply-discount amount)))
+
+(map price-quote [100 250 1000])
