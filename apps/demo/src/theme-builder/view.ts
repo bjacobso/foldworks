@@ -13,7 +13,7 @@ import {
   Slider,
   Stateful,
   Switch,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 import { ThemeName } from "../theme";
 import { contrast, contrastLabel, parseColor, toHex } from "./color";
 import { contrastPairs, surfaceRadii, type Tokens } from "./contract";
@@ -584,7 +584,7 @@ export const view = defineView<Model, Message>((model, h) => {
                         [h.Class(className(styles.row))],
                         [
                           h.span([h.Class(className(styles.eyebrow))], ["Live preview"]),
-                          Badge.view({ label: "@foldworks/ui", tone: "muted" }, h),
+                          Badge.view({ label: "foldworks/ui", tone: "muted" }, h),
                         ],
                       ),
                       SegmentedControl.view(

@@ -1,17 +1,10 @@
-import { Mentions } from "@foldworks/text-intelligence";
+import { Mentions } from "foldworks/text-intelligence";
 import { ChevronsDownUp, ChevronsUpDown, Lock, Redo2, SquareCheck, Undo2 } from "@lucide/icons";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
-import { Button, Icon } from "@foldworks/ui";
-import { History } from "@foldworks/history";
-import {
-  Outliner,
-  find,
-  shortcutHelp,
-  walk,
-  type Placeholder,
-  type Row,
-} from "@foldworks/outliner";
+import { Button, Icon } from "foldworks/ui";
+import { History } from "foldworks/history";
+import { Outliner, find, shortcutHelp, walk, type Placeholder, type Row } from "foldworks/outliner";
 
 import { decorations, describeMark, type MarkInfo } from "./mentions";
 import { Message } from "./message";

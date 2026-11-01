@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { CodeEditor } from "@foldworks/code-editor";
-import { Tree, Workspace } from "@foldworks/ui";
+import { CodeEditor } from "foldworks/code-editor";
+import { Tree, Workspace } from "foldworks/ui";
 
 export const Message = defineMessageUnion({
   Navigator: { message: Workspace.Message },

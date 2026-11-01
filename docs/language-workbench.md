@@ -64,9 +64,9 @@ with methods, for three reasons:
    outliner by item and offset. The shared part is what happens inside one
    text, which is where the vocabulary lives.
 
-A new package, `@foldworks/text-intelligence`, holds that vocabulary and the
+A new package, `foldworks/text-intelligence`, holds that vocabulary and the
 presentation both surfaces share. It has no dependencies besides Effect and
-Foldkit and uses plain CSS with the `@foldworks/ui` tokens, like the outliner.
+Foldkit and uses plain CSS with the `foldworks/ui` tokens, like the outliner.
 
 | Export                          | Purpose                                                                                        |
 | ------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -82,7 +82,7 @@ The code editor re-exports `Diagnostic` from it, so its public shape does not
 change. A host writes one adapter from its language service to these types and
 uses it on both surfaces.
 
-`@foldworks/ui`'s `HoverCard` wraps its trigger element, so it cannot anchor to
+`foldworks/ui`'s `HoverCard` wraps its trigger element, so it cannot anchor to
 a span of text inside a textarea. The surfaces render `HoverPopup` themselves,
 anchored to the hovered range.
 
@@ -270,13 +270,13 @@ contracts, since they do not depend on the native implementation.
   reorderings are reported minimally. Removed nodes appear at their old
   position. `TreeDiff.view` shows only changed nodes, their ancestors, and one
   row of context, and folds other unchanged runs into “N unchanged”. It lives in
-  `@foldworks/ui` beside `ChangeSetPreview`, not inside it: a structural diff is
+  `foldworks/ui` beside `ChangeSetPreview`, not inside it: a structural diff is
   one kind of change, and `ChangeSetPreview` gains a `content` slot to hold it
-  next to consequences and actions. Inside an `@foldworks/agent` permission
+  next to consequences and actions. Inside an `foldworks/agent` permission
   checkpoint it renders through `renderDetails`, and `PermissionPresentation`
   gains `allowLabel` and `denyLabel` so a proposal reads “Accept” and
   “Discard” rather than “Allow once” and “Deny”.
-- **Value tree.** `ValueTree` in `@foldworks/ui` shows nested values with
+- **Value tree.** `ValueTree` in `foldworks/ui` shows nested values with
   keys, previews, and kinds as a keyboard-navigable tree. The host supplies
   nodes; a node may be `expandable` without children, and expanding it sends
   `RequestedChildren({ id })`, so values can live behind handles in another
@@ -292,7 +292,7 @@ contracts, since they do not depend on the native implementation.
   `highlights` range. `TransactionTimeline` stays attributed history that is
   read rather than replayed. The statechart simulator replays a recorded run
   this way, selecting the state reached at each step, and the
-  [primitives guide](../packages/ui/docs/primitives.md) documents the pattern.
+  [primitives guide](../packages/foldworks/src/ui/docs/primitives.md) documents the pattern.
   A scrubber for traces too long to list, and steps nested by call depth, wait
   for a trace that needs them.
 
@@ -301,7 +301,7 @@ contracts, since they do not depend on the native implementation.
 The primitives were implemented in this order, with changesets and tests.
 The independent demos above exercise their interactive contracts:
 
-1. `@foldworks/text-intelligence`, outliner hover, and row diagnostics
+1. `foldworks/text-intelligence`, outliner hover, and row diagnostics
 2. Outliner completion
 3. Outliner placeholder rows
 4. Code editor semantic tokens, hover, completion, and highlights
@@ -326,7 +326,7 @@ Virtualization is designed above and deferred.
   out-messages `ChangedDocument`, `RequestedCompletion`, and `Hovered`; and the
   view config's `hover` and `highlights`, with `suggestions: "host"`.
 - **One adapter.** A language service that produces
-  `@foldworks/text-intelligence` `SemanticToken`s, `Diagnostic`s,
+  `foldworks/text-intelligence` `SemanticToken`s, `Diagnostic`s,
   `CompletionItem`s, and hover ranges serves both surfaces.
 - **Review and inspection.** `TreeDiff` inside `ChangeSetPreview` or an agent
   permission checkpoint with `allowLabel` and `denyLabel`; `ValueTree` with

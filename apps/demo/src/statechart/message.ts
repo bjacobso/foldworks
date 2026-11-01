@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
-import { Diagram } from "@foldworks/diagram";
+import { Diagram } from "foldworks/diagram";
 
 import { StateKind } from "./machine";
 import { Direction, Mode } from "./model";

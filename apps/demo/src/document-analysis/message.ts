@@ -1,9 +1,9 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { PdfViewer } from "@foldworks/pdf-viewer";
-import { PdfTextRegion, PdfTextSelection } from "@foldworks/pdf";
-import * as Graph from "@foldworks/diagram/graph";
-import { Citation } from "@foldworks/ui";
+import { PdfViewer } from "foldworks/pdf-viewer";
+import { PdfTextRegion, PdfTextSelection } from "foldworks/pdf";
+import * as Graph from "foldworks/diagram/graph";
+import { Citation } from "foldworks/ui";
 export const Message = defineMessageUnion({
   Initialize: {},
   GotSample: { bytesBase64: S.String, regions: S.Array(PdfTextRegion) },

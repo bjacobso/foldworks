@@ -15,7 +15,7 @@ import {
   Stateful,
   TokenField,
   Toolbar,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 
 export const commands: ReadonlyArray<Shortcuts.Binding> = [
   {
@@ -95,8 +95,7 @@ export type Message = typeof Message.Type;
 export const initialModel: Model = {
   commandsEnabled: true,
   platform:
-    typeof navigator !== "undefined" &&
-    /Mac|iPhone|iPad/.test(navigator.platform)
+    typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
       ? "mac"
       : "other",
   menu: Stateful.Menu.init({ id: "desktop-menu" }),
@@ -136,8 +135,7 @@ const tokenConfig = (model: Model): TokenField.Config => ({
   allowCustom: true,
   maxCount: 5,
   deduplicate: (value) => value.toLowerCase(),
-  validate: (value) =>
-    value.length > 24 ? "Tags must be 24 characters or fewer." : undefined,
+  validate: (value) => (value.length > 24 ? "Tags must be 24 characters or fewer." : undefined),
 });
 const deadlineCodec = DateInput.numericLocale("en-GB");
 const dateConfig = (model: Model): DateInput.Config => ({
@@ -196,10 +194,7 @@ const invoke = (model: Model, id: string): Model => ({
         ? "Inspector preview requested."
         : `${id} requested.`,
 });
-export const update = (
-  model: Model,
-  message: Message,
-): Update.Return<Model, Message> => {
+export const update = (model: Model, message: Message): Update.Return<Model, Message> => {
   switch (message._tag) {
     case "ToggledCommands":
       return { model: { ...model, commandsEnabled: !model.commandsEnabled } };
@@ -239,11 +234,7 @@ export const update = (
           : message._tag === "SheetMenu"
             ? "sheetMenu"
             : "nested";
-      const r = Stateful.ContextMenu.update(
-        model[key],
-        message.message,
-        menuItems(model),
-      );
+      const r = Stateful.ContextMenu.update(model[key], message.message, menuItems(model));
       let next = { ...model, [key]: r.model };
       if (r.outMessage) {
         const { id, isChecked } = r.outMessage;
@@ -280,26 +271,17 @@ export const update = (
         model: {
           ...model,
           [key]: r.model,
-          [valueKey]:
-            r.outMessage?._tag === "Committed"
-              ? r.outMessage.value
-              : model[valueKey],
+          [valueKey]: r.outMessage?._tag === "Committed" ? r.outMessage.value : model[valueKey],
         },
         commands: (r.commands ?? []).map((c) =>
           Cmd.mapMessage(c, (message) =>
-            key === "editable"
-              ? Message.Editable({ message })
-              : Message.Multiline({ message }),
+            key === "editable" ? Message.Editable({ message }) : Message.Multiline({ message }),
           ),
         ),
       };
     }
     case "Tokens": {
-      const r = TokenField.update(
-        model.tokens,
-        message.message,
-        tokenConfig(model),
-      );
+      const r = TokenField.update(model.tokens, message.message, tokenConfig(model));
       return {
         model: {
           ...model,
@@ -330,8 +312,7 @@ export const update = (
       return {
         model: {
           ...model,
-          breadcrumbs: OverflowList.update(model.breadcrumbs, message.message)
-            .model,
+          breadcrumbs: OverflowList.update(model.breadcrumbs, message.message).model,
         },
       };
     case "Actions":
@@ -360,11 +341,7 @@ export const update = (
     case "Sheet":
     case "Alert": {
       const key =
-        message._tag === "Drawer"
-          ? "drawer"
-          : message._tag === "Sheet"
-            ? "sheet"
-            : "alert";
+        message._tag === "Drawer" ? "drawer" : message._tag === "Sheet" ? "sheet" : "alert";
       const r = Stateful.Dialog.update(model[key], message.message);
       return {
         model: { ...model, [key]: r.model },
@@ -380,11 +357,7 @@ export const update = (
       };
     }
     case "Date": {
-      const r = DateInput.update(
-        model.date,
-        message.message,
-        dateConfig(model),
-      );
+      const r = DateInput.update(model.date, message.message, dateConfig(model));
       return {
         model: {
           ...model,
@@ -400,24 +373,16 @@ export const update = (
 };
 export const view = defineView<Model, Message>((model, h) => {
   const bindings = activeCommands(model);
-  const paths = [
-    "Foldworks",
-    "Workspaces",
-    "Platform",
-    "Projects",
-    model.name,
-  ].map((label, index) => ({
-    id: `crumb-${index}`,
-    label,
-    current: index === 4,
-  }));
-  const actions = [
-    "Save workspace",
-    "Inspect selection",
-    "Export",
-    "Duplicate",
-    "Archive",
-  ].map((label, index) => ({ id: `action-${index}`, label }));
+  const paths = ["Foldworks", "Workspaces", "Platform", "Projects", model.name].map(
+    (label, index) => ({
+      id: `crumb-${index}`,
+      label,
+      current: index === 4,
+    }),
+  );
+  const actions = ["Save workspace", "Inspect selection", "Export", "Duplicate", "Archive"].map(
+    (label, index) => ({ id: `action-${index}`, label }),
+  );
   const inspector = h.div(
     [h.Id("desktop-inspector")],
     [
@@ -443,8 +408,7 @@ export const view = defineView<Model, Message>((model, h) => {
                           value: model.name,
                           label: "project name",
                           blur: "keep",
-                          toParentMessage: (message) =>
-                            Message.Editable({ message }),
+                          toParentMessage: (message) => Message.Editable({ message }),
                         },
                         h,
                       ),
@@ -455,8 +419,7 @@ export const view = defineView<Model, Message>((model, h) => {
                           label: "description",
                           multiline: true,
                           blur: "keep",
-                          toParentMessage: (message) =>
-                            Message.Multiline({ message }),
+                          toParentMessage: (message) => Message.Multiline({ message }),
                         },
                         h,
                       ),
@@ -483,10 +446,7 @@ export const view = defineView<Model, Message>((model, h) => {
                     {
                       gap: "sm",
                       children: [
-                        h.p(
-                          [],
-                          ["Platform and Design can edit this workspace."],
-                        ),
+                        h.p([], ["Platform and Design can edit this workspace."]),
                         Button.view(
                           {
                             label: "Advanced permissions",
@@ -505,12 +465,7 @@ export const view = defineView<Model, Message>((model, h) => {
                     },
                     h,
                   )
-                : h.p(
-                    [],
-                    [
-                      "Only workspace owners can change retention and export policy.",
-                    ],
-                  ),
+                : h.p([], ["Only workspace owners can change retention and export policy."]),
         },
         h,
       ),
@@ -544,27 +499,17 @@ export const view = defineView<Model, Message>((model, h) => {
                       label: "Workspace path",
                       direction: "start",
                       minVisible: 1,
-                      toParentMessage: (message) =>
-                        Message.Breadcrumbs({ message }),
+                      toParentMessage: (message) => Message.Breadcrumbs({ message }),
                       renderItem: (item) =>
                         item.current
-                          ? Breadcrumb.view(
-                              { items: [], current: item.label },
-                              h,
-                            )
+                          ? Breadcrumb.view({ items: [], current: item.label }, h)
                           : h.button(
-                              [
-                                h.Type("button"),
-                                h.OnClick(Message.Invoked({ id: item.label })),
-                              ],
+                              [h.Type("button"), h.OnClick(Message.Invoked({ id: item.label }))],
                               [item.label, " / "],
                             ),
                       measureItem: (item) =>
                         item.current
-                          ? Breadcrumb.view(
-                              { items: [], current: item.label },
-                              h,
-                            )
+                          ? Breadcrumb.view({ items: [], current: item.label }, h)
                           : h.button([h.Type("button")], [item.label, " / "]),
                     },
                     h,
@@ -594,8 +539,7 @@ export const view = defineView<Model, Message>((model, h) => {
                       items: actions,
                       label: "Workspace actions",
                       minVisible: 1,
-                      toParentMessage: (message) =>
-                        Message.Actions({ message }),
+                      toParentMessage: (message) => Message.Actions({ message }),
                       renderItem: (item) =>
                         Button.view(
                           {
@@ -604,11 +548,9 @@ export const view = defineView<Model, Message>((model, h) => {
                             ...(["action-0", "action-1"].includes(item.id)
                               ? {
                                   command: {
-                                    definition:
-                                      bindings[item.id === "action-0" ? 0 : 1]!,
+                                    definition: bindings[item.id === "action-0" ? 0 : 1]!,
                                     platform: model.platform,
-                                    toMessage: (id: string) =>
-                                      Message.Invoked({ id }),
+                                    toMessage: (id: string) => Message.Invoked({ id }),
                                   },
                                 }
                               : {
@@ -618,10 +560,7 @@ export const view = defineView<Model, Message>((model, h) => {
                           h,
                         ),
                       measureItem: (item) =>
-                        Button.view(
-                          { label: item.label, variant: "outline" },
-                          h,
-                        ),
+                        Button.view({ label: item.label, variant: "outline" }, h),
                     },
                     h,
                   ),
@@ -637,14 +576,11 @@ export const view = defineView<Model, Message>((model, h) => {
                               h.submodel({
                                 slotId: model.menu.id,
                                 model: model.menu,
-                                toParentMessage: (message) =>
-                                  Message.Menu({ message }),
+                                toParentMessage: (message) => Message.Menu({ message }),
                                 view: Menu.view,
                                 viewInputs: Stateful.Menu.styledViewInputs(
                                   {
-                                    items: bindings
-                                      .slice(0, 2)
-                                      .map(Stateful.Menu.fromCommand),
+                                    items: bindings.slice(0, 2).map(Stateful.Menu.fromCommand),
                                     trigger: ["Workspace commands"],
                                     ariaLabel: "Workspace commands",
                                     platform: model.platform,
@@ -655,13 +591,10 @@ export const view = defineView<Model, Message>((model, h) => {
                               h.submodel({
                                 slotId: model.palette.id,
                                 model: model.palette,
-                                toParentMessage: (message) =>
-                                  Message.Palette({ message }),
+                                toParentMessage: (message) => Message.Palette({ message }),
                                 view: Stateful.Command.view,
                                 viewInputs: {
-                                  items: bindings
-                                    .slice(0, 2)
-                                    .map(Stateful.Command.fromCommand),
+                                  items: bindings.slice(0, 2).map(Stateful.Command.fromCommand),
                                   ariaLabel: "Search workspace commands",
                                   platform: model.platform,
                                 },
@@ -679,10 +612,7 @@ export const view = defineView<Model, Message>((model, h) => {
                               h.details(
                                 [],
                                 [
-                                  h.summary(
-                                    [],
-                                    ["Keyboard shortcut reference"],
-                                  ),
+                                  h.summary([], ["Keyboard shortcut reference"]),
                                   Shortcuts.reference(
                                     {
                                       bindings,
@@ -699,12 +629,9 @@ export const view = defineView<Model, Message>((model, h) => {
                                   items: menuItems(model),
                                   label: "Project context menu",
                                   context: true,
-                                  trigger: [
-                                    "Right-click this project · Shift+F10",
-                                  ],
+                                  trigger: ["Right-click this project · Shift+F10"],
                                   platform: model.platform,
-                                  toParentMessage: (message) =>
-                                    Message.Context({ message }),
+                                  toParentMessage: (message) => Message.Context({ message }),
                                 },
                                 h,
                               ),
@@ -714,8 +641,7 @@ export const view = defineView<Model, Message>((model, h) => {
                                   items: menuItems(model),
                                   label: "View settings",
                                   platform: model.platform,
-                                  toParentMessage: (message) =>
-                                    Message.Nested({ message }),
+                                  toParentMessage: (message) => Message.Nested({ message }),
                                 },
                                 h,
                               ),
@@ -729,10 +655,7 @@ export const view = defineView<Model, Message>((model, h) => {
                             children: [
                               inspector,
                               h.form(
-                                [
-                                  h.Id("desktop-form"),
-                                  h.OnSubmit(Message.Invoked({ id: "save" })),
-                                ],
+                                [h.Id("desktop-form"), h.OnSubmit(Message.Invoked({ id: "save" }))],
                                 [
                                   TokenField.view(
                                     {
@@ -740,8 +663,7 @@ export const view = defineView<Model, Message>((model, h) => {
                                       model: model.tokens,
                                       label: "Project teams",
                                       name: "teams",
-                                      toParentMessage: (message) =>
-                                        Message.Tokens({ message }),
+                                      toParentMessage: (message) => Message.Tokens({ message }),
                                     },
                                     h,
                                   ),
@@ -751,8 +673,7 @@ export const view = defineView<Model, Message>((model, h) => {
                                       model: model.date,
                                       label: "Deadline",
                                       name: "deadline",
-                                      toParentMessage: (message) =>
-                                        Message.Date({ message }),
+                                      toParentMessage: (message) => Message.Date({ message }),
                                     },
                                     h,
                                   ),
@@ -791,10 +712,7 @@ export const view = defineView<Model, Message>((model, h) => {
                     },
                     h,
                   ),
-                  h.p(
-                    [h.Role("status"), h.Id("desktop-announcement")],
-                    [model.announcement],
-                  ),
+                  h.p([h.Role("status"), h.Id("desktop-announcement")], [model.announcement]),
                 ],
               },
               h,
@@ -813,16 +731,10 @@ export const view = defineView<Model, Message>((model, h) => {
             title: "Workspace activity",
             content: ({ initialFocus, closeButton }, child) => [
               child.button(
-                [
-                  ...initialFocus,
-                  child.OnClick(Message.Open({ kind: "alert" })),
-                ],
+                [...initialFocus, child.OnClick(Message.Open({ kind: "alert" }))],
                 ["Clear activity"],
               ),
-              child.p(
-                [],
-                ["All changes are persisted by the host application."],
-              ),
+              child.p([], ["All changes are persisted by the host application."]),
               child.button(closeButton, ["Close activity"]),
             ],
           },
@@ -866,13 +778,9 @@ export const view = defineView<Model, Message>((model, h) => {
         viewInputs: Stateful.AlertDialog.styledViewInputs(
           {
             title: "Clear activity?",
-            description:
-              "This demo requests confirmation without deleting records.",
+            description: "This demo requests confirmation without deleting records.",
             content: ({ initialFocus, closeButton }, child) => [
-              child.button(
-                [...initialFocus, ...closeButton],
-                ["Keep activity"],
-              ),
+              child.button([...initialFocus, ...closeButton], ["Keep activity"]),
               child.button(closeButton, ["Confirm clear"]),
             ],
           },

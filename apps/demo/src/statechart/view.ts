@@ -45,15 +45,15 @@ import {
   type Rect,
   type SceneEdge,
   type SceneNode,
-} from "@foldworks/diagram";
-import { History } from "@foldworks/history";
+} from "foldworks/diagram";
+import { History } from "foldworks/history";
 import {
   Button as UiButton,
   Field as UiField,
   Icon as UiIcon,
   SegmentedControl as UiSegmentedControl,
   Stepper as UiStepper,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 
 import {
   activeStates,

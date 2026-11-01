@@ -1,5 +1,5 @@
 ---
-"@foldworks/outliner": minor
+"foldworks": minor
 ---
 
 Let hosts refuse moves and protect read-only items. `Outliner.update` takes an

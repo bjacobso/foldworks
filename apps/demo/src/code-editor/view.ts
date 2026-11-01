@@ -1,5 +1,5 @@
-import { CodeEditor } from "@foldworks/code-editor";
-import { Badge, Button, Select, Tree, Workspace } from "@foldworks/ui";
+import { CodeEditor } from "foldworks/code-editor";
+import { Badge, Button, Select, Tree, Workspace } from "foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 import {

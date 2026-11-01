@@ -10,7 +10,7 @@ import {
   TextCursorInput,
   type LucideIconData,
 } from "@lucide/icons";
-import { defineFieldTypes, type FieldTypeDefinition } from "@foldworks/form-builder";
+import { defineFieldTypes, type FieldTypeDefinition } from "foldworks/form-builder";
 
 import { Message } from "./message";
 import type { FieldKind, FormField } from "./model";

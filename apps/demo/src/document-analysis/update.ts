@@ -1,8 +1,8 @@
 import { Effect, Option } from "effect";
 import { Command, Update } from "foldkit";
-import { PdfViewer } from "@foldworks/pdf-viewer";
-import * as Graph from "@foldworks/diagram/graph";
-import { Citation } from "@foldworks/ui";
+import { PdfViewer } from "foldworks/pdf-viewer";
+import * as Graph from "foldworks/diagram/graph";
+import { Citation } from "foldworks/ui";
 import { graphDocument, sample } from "./fixture";
 import { Message } from "./message";
 import type { Model } from "./model";

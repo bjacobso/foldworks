@@ -1,7 +1,7 @@
 import { defineMessageUnion } from "foldkit/message";
 import { Schema as S } from "effect";
 
-import { DataGrid } from "@foldworks/data-grid";
+import { DataGrid } from "foldworks/data-grid";
 
 export const Message = defineMessageUnion({
   GotGridMessage: { message: DataGrid.Message },

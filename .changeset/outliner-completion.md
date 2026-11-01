@@ -1,6 +1,5 @@
 ---
-"@foldworks/outliner": minor
-"@foldworks/text-intelligence": patch
+"foldworks": minor
 ---
 
 Suggest completions at the caret. Ctrl+Space sends `RequestedCompletion`, and

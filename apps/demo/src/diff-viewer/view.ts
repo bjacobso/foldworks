@@ -9,8 +9,8 @@ import {
   normalizeSelection,
   selectionLabel,
   type DiffLineRef,
-} from "@foldworks/diff-viewer";
-import { CodeEditor } from "@foldworks/code-editor";
+} from "foldworks/diff-viewer";
+import { CodeEditor } from "foldworks/code-editor";
 import {
   ChangedFiles,
   CheckList,
@@ -19,8 +19,8 @@ import {
   ReviewThreads,
   ReviewSubmit,
   ReviewerList,
-} from "@foldworks/review";
-import { TransactionTimeline, ChangeSetPreview } from "@foldworks/ui";
+} from "foldworks/review";
+import { TransactionTimeline, ChangeSetPreview } from "foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 import type { Model, ReviewThread } from "./model";
@@ -66,7 +66,7 @@ const threadView = (model: Model, thread: ReviewThread, h: HtmlBuilder<Message>)
           !thread.comments.some((c) => c.pending)
             ? {
                 onApplySuggestion: (
-                  suggestion: import("@foldworks/review").Suggestion,
+                  suggestion: import("foldworks/review").Suggestion,
                   threadId: string,
                 ) => Message.AppliedSuggestion({ suggestion, threadId }),
               }

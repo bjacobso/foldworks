@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Agent } from "@foldworks/agent";
+import type { Agent } from "foldworks/agent";
 
 import { scenarioDelayFor, scenarioEvents } from "./scenario";
 

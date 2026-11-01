@@ -21,9 +21,9 @@ import {
   updateField,
   updatePage,
   updateSection,
-} from "@foldworks/form-builder";
-import { History } from "@foldworks/history";
-import { Tree, Workspace } from "@foldworks/ui";
+} from "foldworks/form-builder";
+import { History } from "foldworks/history";
+import { Tree, Workspace } from "foldworks/ui";
 import { initOutline, outlineConfig, outlineNodes } from "./tree";
 
 import {

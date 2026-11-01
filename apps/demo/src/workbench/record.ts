@@ -4,7 +4,7 @@
 // handle would. The host keeps only how many children have loaded at each
 // path and reads them from the record, so they follow saved changes.
 
-import type { ValueTree } from "@foldworks/ui";
+import type { ValueTree } from "foldworks/ui";
 
 import { eligible, requirements, RULE_VERSION, type Snapshot, type Worker } from "./domain";
 import type { Model } from "./model";

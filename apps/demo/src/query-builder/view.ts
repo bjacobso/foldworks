@@ -1,8 +1,8 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
-import { Panel, sxAttrs } from "@foldworks/ui";
-import { QueryBuilder, validate, type QueryGroup } from "@foldworks/query-builder";
+import { Panel, sxAttrs } from "foldworks/ui";
+import { QueryBuilder, validate, type QueryGroup } from "foldworks/query-builder";
 
 import { attributes, validateValue } from "./configuration";
 import { Message } from "./message";

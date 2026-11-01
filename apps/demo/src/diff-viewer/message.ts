@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
 import { defineMessageUnion } from "foldkit/message";
-import { CodeEditor } from "@foldworks/code-editor";
-import { ChangedFiles, ReviewThreads, Suggestion, Verdict } from "@foldworks/review";
+import { CodeEditor } from "foldworks/code-editor";
+import { ChangedFiles, ReviewThreads, Suggestion, Verdict } from "foldworks/review";
 
 const Line = { path: S.String, side: S.Literals(["old", "new"]), line: S.Number };
 export const Message = defineMessageUnion({

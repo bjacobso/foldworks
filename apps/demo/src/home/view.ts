@@ -16,21 +16,19 @@ import {
   PanelLeft,
   Table2,
   Workflow,
-  FolderGit2,
   FileDiff,
   Sparkles,
   TextCursorInput,
 } from "@lucide/icons";
-import { render } from "@foldworks/generative-ui/core";
-import { foldworksRegistry } from "@foldworks/generative-ui/foldworks";
-import { Avatar, Badge, Card, Chart, Icon, Progress } from "@foldworks/ui";
+import { render } from "foldworks/generative-ui/core";
+import { foldworksRegistry } from "foldworks/generative-ui/foldworks";
+import { Avatar, Badge, Card, Chart, Icon, Progress } from "foldworks/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import {
   editorRouter,
   agentRouter,
   codeEditorRouter,
-  codebaseRouter,
   diffViewerRouter,
   dataTablePath,
   dataGridPath,
@@ -164,11 +162,6 @@ const packages: Readonly<Record<string, Package>> = {
     description: "Schema-checked agent interfaces rendered through a closed component catalog.",
     href: "#generative-ui",
     icon: Sparkles,
-  },
-  codebase: {
-    description: "A live repository workbench for documentation, source, history, and Git diffs.",
-    href: codebaseRouter(),
-    icon: FolderGit2,
   },
 };
 
@@ -336,7 +329,7 @@ const packageCard = <Message>(id: string, item: Package, h: HtmlBuilder<Message>
     [
       h.Class(className(styles.packageCard)),
       h.Href(item.href),
-      h.AriaLabel(`@foldworks/${id}: ${item.description}`),
+      h.AriaLabel(`foldworks/${id}: ${item.description}`),
     ],
     [
       h.span(
@@ -345,7 +338,7 @@ const packageCard = <Message>(id: string, item: Package, h: HtmlBuilder<Message>
       ),
       h.span(
         [h.Class(className(styles.packageName))],
-        [`@foldworks/${id}`, Icon.view({ icon: ArrowRight, size: 14 }, h)],
+        [`foldworks/${id}`, Icon.view({ icon: ArrowRight, size: 14 }, h)],
       ),
       h.p([h.Class(className(styles.packageDescription))], [item.description]),
     ],
@@ -498,7 +491,7 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                         [h.Class(className(styles.metaItem))],
                         [
                           Icon.view({ icon: Layers3, size: 14 }, h),
-                          `${packageCount} packages, ${layers.length} layers`,
+                          `${packageCount} modules, ${layers.length} layers`,
                         ],
                       ),
                       h.span(
@@ -581,7 +574,7 @@ export const view = (h: HtmlBuilder<Message>): Html =>
                   h.p(
                     [h.Class(className(styles.sectionDescription))],
                     [
-                      "Every package installs on its own and follows the same state, accessibility, styling, and composition rules. Each one links to a live example.",
+                      "One package, one import path per module. Every module follows the same state, accessibility, styling, and composition rules, and each one links to a live example.",
                     ],
                   ),
                 ],

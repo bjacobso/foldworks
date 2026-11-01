@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { Subscription } from "foldkit";
 
-import { Diagram } from "@foldworks/diagram";
+import { Diagram } from "foldworks/diagram";
 
 import { Message } from "./message";
 import type { Model } from "./model";

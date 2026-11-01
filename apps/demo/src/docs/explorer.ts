@@ -1,5 +1,5 @@
-import { Sidebar } from "@foldworks/sidebar";
-import { EditableText } from "@foldworks/ui";
+import { Sidebar } from "foldworks/sidebar";
+import { EditableText } from "foldworks/ui";
 
 export type Transition = Readonly<{
   from: string;

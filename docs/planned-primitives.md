@@ -16,7 +16,7 @@ The repository already includes application chrome, accessible controls,
 keyboard commands, a tree, split panes, data tables and grids, document and code
 editors, diagrams, workflows, forms, queries, agent conversations, PDF annotation,
 and operational inspection views. See the [package inventory](../README.md) and
-[UI capability guide](../packages/ui/docs/capabilities.md) before adding a new
+[UI capability guide](../packages/foldworks/src/ui/docs/capabilities.md) before adding a new
 primitive. [Adopting from foldkit-plus](./foldkit-plus.md) lists related code
 and ideas that could be ported from that project.
 
@@ -30,10 +30,10 @@ token setup. The proposals below should build on that work when it lands.
 ### Charts and data visualization
 
 Explore a dedicated charting surface for bars, lines, sparklines, and stacked
-measures. It should share tokens with `@foldworks/ui`, expose meaningful data
+measures. It should share tokens with `foldworks/ui`, expose meaningful data
 and selection events, and provide an accessible table or text alternative.
 Start with the review-dashboard cases already identified in the downstream UI
-audit. The current `Chart` in `@foldworks/ui` is a small visual bar display, not
+audit. The current `Chart` in `foldworks/ui` is a small visual bar display, not
 this broader charting model.
 
 ### Collection views and boards
@@ -73,7 +73,7 @@ should own storage, authorization, and upload transport.
 
 Explore reorderable tabs and panes, saved layouts, and focus restoration when a
 view moves. Build on `Workspace` and the responsive split-layout work. The
-current [workspace contract](../packages/ui/docs/workspace.md) supports nested
+current [workspace contract](../packages/foldworks/src/ui/docs/workspace.md) supports nested
 splits but leaves tab docking and pane reordering open.
 
 ### Large hierarchical collections
@@ -86,8 +86,8 @@ the existing eager tree without a concrete workload.
 ### Rich document blocks
 
 Explore tables, images, uploads, mentions, and richer clipboard fragments in
-`@foldworks/editor`. Define how each block serializes, imports and exports, and
-interacts with selection and undo. The [editor's current limits](../packages/editor/README.md#browser-boundary-and-current-limits)
+`foldworks/editor`. Define how each block serializes, imports and exports, and
+interacts with selection and undo. The [editor's current limits](../packages/foldworks/src/editor/README.md#browser-boundary-and-current-limits)
 call out these gaps. Collaboration can follow once the document and anchor
 contracts are stable.
 

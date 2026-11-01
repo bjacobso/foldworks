@@ -1,5 +1,5 @@
 ---
-"@foldworks/agent": minor
+"foldworks": minor
 ---
 
 Name a permission checkpoint's decision with `allowLabel` and `denyLabel`, so a

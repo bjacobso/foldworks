@@ -1,7 +1,5 @@
 ---
-"@foldworks/review": patch
-"@foldworks/diff-viewer": patch
-"@foldworks/diagram": patch
+"foldworks": patch
 ---
 
 Exercise configuration review end to end in a persistent local reference host.

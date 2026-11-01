@@ -6,7 +6,7 @@ import {
   flowContainerId,
   flowIdFromContainerId,
   flowLocationId,
-} from "@foldworks/workflow";
+} from "foldworks/workflow";
 import { allNodes, findFlow, findNode } from "./graph";
 import { Message } from "./message";
 import { init, initialModel, type WorkflowDocument, type WorkflowNode } from "./model";
@@ -111,17 +111,15 @@ describe("workflow update", () => {
     ).model;
 
     expect(allNodes(dropped.document)).toHaveLength(6);
-    expect(findFlow(dropped.document, "flow:condition:then")?.elements)
-      .toContainEqual(expect.objectContaining({ id: "node-1", type: "approval" }));
+    expect(findFlow(dropped.document, "flow:condition:then")?.elements).toContainEqual(
+      expect.objectContaining({ id: "node-1", type: "approval" }),
+    );
     expect(dropped.revision).toBe(1);
     expect(dropped.announcement).toContain("added");
   });
 
   it("opens the Foldkit dialog when a nested node is selected", () => {
-    const selected = update(
-      initialModel,
-      Message.ClickedNode({ nodeId: "node-action" }),
-    ).model;
+    const selected = update(initialModel, Message.ClickedNode({ nodeId: "node-action" })).model;
 
     expect(Option.getOrUndefined(selected.selectedNodeId)).toBe("node-action");
     expect(selected.inspector.isOpen).toBe(true);
@@ -150,5 +148,4 @@ describe("workflow update", () => {
     const undone = update(second, Message.ClickedUndo()).model;
     expect(findNode(undone.document, "node-action")?.data.title).toBe("Action");
   });
-
 });

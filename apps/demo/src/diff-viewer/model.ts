@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
-import { CodeEditor } from "@foldworks/code-editor";
-import { ReviewThreads, ChangedFiles, Thread, Verdict } from "@foldworks/review";
+import { CodeEditor } from "foldworks/code-editor";
+import { ReviewThreads, ChangedFiles, Thread, Verdict } from "foldworks/review";
 import { initialFiles, editorFor, storageKey } from "./fixture";
 
 export const FileState = S.Struct({ path: S.String, baseText: S.String, text: S.String });

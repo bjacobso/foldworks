@@ -1,9 +1,9 @@
 import { Effect, Option, Schema as S } from "effect";
 import { Command, Update } from "foldkit";
 import * as Dom from "foldkit/dom";
-import { CodeEditor } from "@foldworks/code-editor";
-import { ReviewThreads, ChangedFiles, applySuggestions, type Comment } from "@foldworks/review";
-import { lineGutterId, normalizeSelection } from "@foldworks/diff-viewer";
+import { CodeEditor } from "foldworks/code-editor";
+import { ReviewThreads, ChangedFiles, applySuggestions, type Comment } from "foldworks/review";
+import { lineGutterId, normalizeSelection } from "foldworks/diff-viewer";
 import { Message } from "./message";
 import { freshModel, type Model, type Anchor } from "./model";
 import { author, reviewer, editorFor, storageKey } from "./fixture";

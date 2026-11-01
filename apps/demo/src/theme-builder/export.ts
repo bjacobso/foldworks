@@ -15,7 +15,7 @@ const declarations = (tokens: Tokens, names: readonly string[] = tokenNames): st
 export const exportFoldworks = (theme: WorkingTheme): string => {
   const { light, dark } = resolveTheme(theme),
     name = slugify(theme.name);
-  return `/* After @import "@foldworks/ui/base.css" and any preset imports.\n   Use data-theme="${name}" and data-mode="light" or "dark" on your app. */\n\n[data-theme="${name}"] {\n  color-scheme: light;\n${declarations(light)}\n}\n\n[data-theme="${name}"][data-mode="dark"],\n[data-theme="${name}"].dark {\n  color-scheme: dark;\n${declarations(dark)}\n}\n`;
+  return `/* After @import "foldworks/ui/base.css" and any preset imports.\n   Use data-theme="${name}" and data-mode="light" or "dark" on your app. */\n\n[data-theme="${name}"] {\n  color-scheme: light;\n${declarations(light)}\n}\n\n[data-theme="${name}"][data-mode="dark"],\n[data-theme="${name}"].dark {\n  color-scheme: dark;\n${declarations(dark)}\n}\n`;
 };
 export const exportTailwind = (theme: WorkingTheme): string => {
   const { light, dark } = resolveTheme(theme);

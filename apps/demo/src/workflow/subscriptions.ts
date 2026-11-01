@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { Subscription } from "foldkit";
 
-import { Workflow } from "@foldworks/workflow";
+import { Workflow } from "foldworks/workflow";
 
 import { Message } from "./message";
 import type { Model } from "./model";

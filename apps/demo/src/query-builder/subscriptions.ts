@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { Subscription } from "foldkit";
 
-import { QueryBuilder } from "@foldworks/query-builder";
+import { QueryBuilder } from "foldworks/query-builder";
 
 import { Message } from "./message";
 import type { Model } from "./model";

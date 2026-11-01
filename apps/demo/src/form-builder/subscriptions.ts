@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { Subscription } from "foldkit";
 
-import { FormBuilder } from "@foldworks/form-builder";
+import { FormBuilder } from "foldworks/form-builder";
 
 import { Message } from "./message";
 import type { Model } from "./editor-model";

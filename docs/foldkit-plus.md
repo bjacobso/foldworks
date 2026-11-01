@@ -36,10 +36,10 @@ into Foldworks.
 Each item fixes a gap or duplication Foldworks already has. None of them
 depends on a Foldkit upgrade. Items 1 to 3 fit together in one change.
 
-### 1. Rich clipboard for `@foldworks/editor`
+### 1. Rich clipboard for `foldworks/editor`
 
 The editor copies and pastes plain text only
-(`packages/editor/src/browser.ts`). foldkit-plus has an allowlist HTML
+(`packages/foldworks/src/editor/browser.ts`). foldkit-plus has an allowlist HTML
 sanitizer for pasted content (`packages/richtext-dom/src/html.ts`), a URL
 safety check (`packages/richtext/src/url.ts`), and a versioned clipboard
 `Slice` that gives pasted blocks fresh IDs (`packages/richtext/src/clipboard.ts`).
@@ -52,20 +52,20 @@ clipboard fragments" item in
 
 Foldworks writes the same browser plumbing more than once:
 
-- ResizeObserver or MutationObserver code in `packages/ui/src/measurement.ts`,
-  `packages/ui/src/workspace.ts`, `packages/ui/src/stateful/menu-tree.ts`,
-  `packages/data-grid/src/virtualization.ts`, `packages/pdf-viewer`, and
-  `packages/code-editor/src/native/mount.ts`.
-- Clipboard writes in `packages/ui/src/code-block.ts` and
-  `packages/agent/src/update.ts`.
+- ResizeObserver or MutationObserver code in `packages/foldworks/src/ui/measurement.ts`,
+  `packages/foldworks/src/ui/workspace.ts`, `packages/foldworks/src/ui/stateful/menu-tree.ts`,
+  `packages/foldworks/src/data-grid/virtualization.ts`, `packages/foldworks/src/pdf-viewer`, and
+  `packages/foldworks/src/code-editor/native/mount.ts`.
+- Clipboard writes in `packages/foldworks/src/ui/code-block.ts` and
+  `packages/foldworks/src/agent/update.ts`.
 - `matchMedia` subscriptions in `apps/demo/src/app/subscriptions.ts` and
-  `packages/pdf-viewer/src/viewer-update.ts`.
+  `packages/foldworks/src/pdf-viewer/viewer-update.ts`.
 
 `packages/primitives` has observer Mounts (`observers/`), a clipboard Command
 (`dom/clipboard.ts`), a media query (`media/mediaquery.ts`), and debounce and
 timer helpers (`time/`). Each is roughly 50 to 130 lines. Replace `Bundle.make`
-with a plain model, update, and subscriptions, then put them in `@foldworks/ui`
-or a small `@foldworks/browser` package.
+with a plain model, update, and subscriptions, then put them in `foldworks/ui`
+or a small `foldworks/browser` module.
 
 ### 3. Accessibility helpers
 
@@ -83,11 +83,11 @@ are not available as reusable pieces:
 The `interaction/` versions attach through `foldkit-mixins` Behaviors, so port
 the logic, not the attachment.
 
-### 4. Shiki highlighting for `@foldworks/code-editor`
+### 4. Shiki highlighting for `foldworks/code-editor`
 
 `packages/richtext-code-shiki/src/shiki.ts` (about 110 lines) maps TextMate
 scopes to token classes. Connect it to the token format in
-`packages/code-editor/src/highlight.ts` to get real grammars.
+`packages/foldworks/src/code-editor/highlight.ts` to get real grammars.
 
 ### 5. Structured Markdown diagnostics
 
@@ -121,7 +121,7 @@ Places in the demo that would use it:
 
 ### 7. Agent capabilities
 
-`@foldworks/agent` renders tool calls but cannot run them; the demo scenario is
+`foldworks/agent` renders tool calls but cannot run them; the demo scenario is
 scripted. `packages/agent` in foldkit-plus exposes existing application
 Messages as agent tools. Each tool is opt-in and has an input Schema, a mapping
 to a Message, an authorization check, and a completion rule. The completion
@@ -131,7 +131,7 @@ call is dispatched. Invocations go to an audit sink.
 Rebuild the contract layer in Foldworks, starting from `forModel.ts`, which
 does not need Surface. Its authorization step maps onto the existing
 `PermissionRequested` and `ChosePermission` flow. A contract could also produce
-an Effect AI `Toolkit`, following `packages/generative-ui/src/mcp.ts`. The
+an Effect AI `Toolkit`, following `packages/foldworks/src/generative-ui/mcp.ts`. The
 WebMCP adapter (`packages/agent-webmcp`, about 300 lines) could be adapted
 nearly as it is. With it, outside agents could drive the data-grid, diagram,
 query-builder, and PDF-annotator demos.
@@ -163,7 +163,7 @@ Neither project has mentions yet.
 names a Kanban board as the first test. `examples/foldkit-kanban` (about 2,200
 lines) already covers keyboard pick-up, arrow and Tab moves, Escape to cancel,
 screen-reader announcements, and ordering with `fractional-indexing`. It uses
-`@foldkit/ui/dragAndDrop`, which `packages/pdf-annotator` already uses. Its
+`@foldkit/ui/dragAndDrop`, which `packages/foldworks/src/pdf-annotator` already uses. Its
 domain and update logic port easily.
 
 ## Process and tooling
@@ -182,7 +182,7 @@ Foldworks will eventually do. The main changes:
 The published `foldkit@0.163.0` still types `Attribute<Message>` as a tagged
 union, so `patches/foldkit@0.156.0.patch` must be redone for 0.163. See the
 [upstream log](./foldkit-upstream.md). Foldkit 0.161 also added
-`Subscription.keyBindings`, which overlaps with `@foldworks/keyboard`. Compare
+`Subscription.keyBindings`, which overlaps with `foldworks/keyboard`. Compare
 the two before adding more to that package.
 
 ### 11. Upstream proposals
@@ -205,6 +205,6 @@ from the package READMEs.
   StyleX.
 - **Full-stack packages.** `remote`, `sync`, `durable`, `entity`, `crud`, `cms`,
   and `ssr` are application infrastructure, which Foldworks leaves to the host.
-- **`agent-mcp`.** `@foldworks/generative-ui` already uses Effect's MCP server.
+- **`agent-mcp`.** `foldworks/generative-ui` already uses Effect's MCP server.
 - **`agent-a2a` and `agent-native`.**
-- **Undo history.** `@foldworks/history` covers it.
+- **Undo history.** `foldworks/history` covers it.

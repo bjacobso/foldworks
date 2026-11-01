@@ -32,16 +32,16 @@ pauses active runs rather than automatically restarting them.
 
 ## Existing primitives used
 
-| Primitive                      | Role                                                                                                              |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `@foldworks/outliner`          | Editing, nesting, drag movement, folding, hoisting, breadcrumbs, placeholders, row accessories, folded views      |
-| `@foldworks/agent`             | Per-node conversation, stream reduction, tools, review checkpoints, cancellation, follow-ups, transcript controls |
-| `@foldworks/agent/testing`     | Deterministic run events                                                                                          |
-| `@foldworks/text-intelligence` | Slash completion and mention/tag decorations                                                                      |
-| `@foldworks/history`           | Outline undo/redo availability                                                                                    |
-| `@foldworks/ui`                | Split panes, buttons, badges, segmented controls, icons, validated date input/calendar, tree diffs                |
-| `@foldworks/sidebar`           | Reference-app navigation and application chrome                                                                   |
-| Foldkit                        | Schemas, child update/command mapping, subscriptions, keyed views, routing                                        |
+| Primitive                     | Role                                                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `foldworks/outliner`          | Editing, nesting, drag movement, folding, hoisting, breadcrumbs, placeholders, row accessories, folded views      |
+| `foldworks/agent`             | Per-node conversation, stream reduction, tools, review checkpoints, cancellation, follow-ups, transcript controls |
+| `foldworks/agent/testing`     | Deterministic run events                                                                                          |
+| `foldworks/text-intelligence` | Slash completion and mention/tag decorations                                                                      |
+| `foldworks/history`           | Outline undo/redo availability                                                                                    |
+| `foldworks/ui`                | Split panes, buttons, badges, segmented controls, icons, validated date input/calendar, tree diffs                |
+| `foldworks/sidebar`           | Reference-app navigation and application chrome                                                                   |
+| Foldkit                       | Schemas, child update/command mapping, subscriptions, keyed views, routing                                        |
 
 The application owns node-to-thread associations, context policy, dates,
 promotion, and persistence. No new package API was needed for this composition.

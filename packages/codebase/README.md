@@ -6,12 +6,16 @@ files, follows file changes, shows file history, and renders staged, unstaged,
 or branch diffs. Repository files remain the source of truth; the workbench does
 not create a parallel documentation database.
 
+This package is private to the Foldworks repository and is not published. Run
+it from the repository root with `pnpm codebase`, or build it and start the CLI
+directly:
+
 ```sh
-pnpm add -D @foldworks/codebase
-foldworks-codebase --root .
+pnpm --filter @foldworks/codebase build
+node packages/codebase/dist/cli.js --root .
 ```
 
-Or start it programmatically:
+Or start it programmatically from inside this workspace:
 
 ```ts
 import { startCodebaseServer } from "@foldworks/codebase/server";

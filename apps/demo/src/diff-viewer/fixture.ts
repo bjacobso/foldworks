@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
-import { CodeEditor } from "@foldworks/code-editor";
-import { withSchema } from "@foldworks/code-editor/structured";
+import { CodeEditor } from "foldworks/code-editor";
+import { withSchema } from "foldworks/code-editor/structured";
 
 export const Flags = S.Struct({
   checkout: S.Boolean,

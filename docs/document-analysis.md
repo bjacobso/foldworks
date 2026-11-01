@@ -16,7 +16,7 @@ items under “Later” remain design work.
 
 ## Boundary
 
-The `@foldworks/ui` rule decides the split: product concepts and feature
+The `foldworks/ui` rule decides the split: product concepts and feature
 behavior stay in their application or feature package. Foldworks gets generic
 text, PDF, graph, and diff building blocks. Claims, attributes, confidence, and
 review stay with the application.
@@ -40,7 +40,7 @@ values checkable against their source, which is the workspace's core promise.
 
 ### 1. PDF highlights, text layer, and on-demand rendering
 
-Packages: `@foldworks/pdf` and `@foldworks/pdf-viewer`.
+Packages: `foldworks/pdf` and `foldworks/pdf-viewer`.
 
 `PdfOverlay` keeps its single-rectangle API. `PdfHighlight` adds
 `regions: [{ pageIndex, rects }]`, translucent tones, selection, and activation.
@@ -60,7 +60,7 @@ and user-space rectangles for selections across rendered pages. The mounted
 viewer renders near the viewport from one shared PDF.js document, releases it
 on unmount or document replacement, and retains at most `maxCachedPages`
 images and associated text layers (default 8). It still mounts lightweight
-wrappers for every page. See the [PDF viewer guide](../packages/pdf-viewer/README.md)
+wrappers for every page. See the [PDF viewer guide](../packages/foldworks/src/pdf-viewer/README.md)
 for cache behavior and selection limits.
 
 Second uses: form review, contract and invoice checking, and any grounded answer
@@ -68,7 +68,7 @@ that cites a PDF.
 
 ### 2. Text with highlighted ranges
 
-Package: `@foldworks/text-intelligence`, which already owns `TextRange`,
+Package: `foldworks/text-intelligence`, which already owns `TextRange`,
 `segments`, the hover popup, and the shared token stylesheet.
 
 `HighlightedText.view` displays read-only text with character ranges marked: clauses,
@@ -87,10 +87,10 @@ range in the text highlights the same quote in the PDF, and the reverse.
 
 ### 3. Graph view
 
-Package: `@foldworks/diagram`. It already has a normalized compound graph
+Package: `foldworks/diagram`. It already has a normalized compound graph
 document, layered layout, edge routing with label positions, and a `Diagram`
 interaction submodel for selection, panning, and zoom. A ready-made, read-only view for exploration is available as
-`@foldworks/diagram/graph`, also exported as `Graph` from the root.
+`foldworks/diagram/graph`, also exported as `Graph` from the root.
 
 - Themed node labels and edges using the shared UI CSS tokens, with edge labels
   and tones, replacing hand-picked coordinates and colors.
@@ -108,7 +108,7 @@ view, and dependency graphs.
 
 ### 4. Text diff
 
-Package: `@foldworks/diff-viewer`, alongside its line-based patch renderer.
+Package: `foldworks/diff-viewer`, alongside its line-based patch renderer.
 
 - `diffText` preserves exact whitespace and punctuation, with word or sentence
   granularity and a bounded search fallback for large replacements.
@@ -121,7 +121,7 @@ and change-review diffs, so a second consumer exists.
 
 ### 5. Citation marker
 
-Package: `@foldworks/ui`.
+Package: `foldworks/ui`.
 
 `Citation.styledViewInputs` creates a superscript number or chip with a
 hover/focus preview and an activation message. The preview is application content,
@@ -146,14 +146,14 @@ or AI interface needs it.
 
 The first consumer should use these now rather than hand-build them:
 
-| Need                                       | Foldworks API                                                                                                                |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Documents × attributes matrix              | `@foldworks/data-grid`: sticky headers, pinned columns, row virtualization, row groups, TSV clipboard                        |
-| Article and section navigation             | `Tree` in `@foldworks/ui`                                                                                                    |
-| Source in one pane, values in another      | `Workspace` for split panes and `PanelStack` for an inspector to drill into                                                  |
-| Search across everything                   | `Stateful.Command`                                                                                                           |
-| Citation preview engines                   | `Stateful.Popover` and `Stateful.Tooltip`                                                                                    |
-| Charts, stat tiles, meters, and app chrome | `@foldworks/ui` and `@foldworks/sidebar`; richer charts are [planned](./planned-primitives.md#charts-and-data-visualization) |
+| Need                                       | Foldworks API                                                                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Documents × attributes matrix              | `foldworks/data-grid`: sticky headers, pinned columns, row virtualization, row groups, TSV clipboard                       |
+| Article and section navigation             | `Tree` in `foldworks/ui`                                                                                                   |
+| Source in one pane, values in another      | `Workspace` for split panes and `PanelStack` for an inspector to drill into                                                |
+| Search across everything                   | `Stateful.Command`                                                                                                         |
+| Citation preview engines                   | `Stateful.Popover` and `Stateful.Tooltip`                                                                                  |
+| Charts, stat tiles, meters, and app chrome | `foldworks/ui` and `foldworks/sidebar`; richer charts are [planned](./planned-primitives.md#charts-and-data-visualization) |
 
 The data grid virtualizes rows, not columns, so put documents in rows and
 attributes in columns. Hand-built graph code should sit behind one module whose
@@ -179,6 +179,6 @@ These came up while exploring the workload. Each waits for a host that needs it.
 - **Term references with an identity.** `Mentions` inserts plain spellings by
   design. Completion that inserts a link with a stable ID would extend it.
 - **Policy editing.** Fenced policy blocks in an s-expression language need
-  bracket matching and structural selection in `@foldworks/code-editor`.
+  bracket matching and structural selection in `foldworks/code-editor`.
 - **Clause variants across many documents.** Grouping near-identical wording
   and diffing each group against a baseline is record UI built on item 4.

@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
 
-import { QueryBuilder } from "@foldworks/query-builder";
+import { QueryBuilder } from "foldworks/query-builder";
 
 import { initialQuery } from "./configuration";
 

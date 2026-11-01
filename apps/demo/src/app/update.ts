@@ -3,10 +3,10 @@ import { Message as DocumentAnalysisMessage } from "../document-analysis/message
 import { update as updateOrchestrator } from "../orchestrator/update";
 import { update as updateDocs } from "../docs/update";
 import { Effect, Option, Schema as S } from "effect";
-import { Agent } from "@foldworks/agent";
-import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { Agent } from "foldworks/agent";
+import { PdfAnnotator } from "foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
-import { Sidebar } from "@foldworks/sidebar";
+import { Sidebar } from "foldworks/sidebar";
 import { Command, Update } from "foldkit";
 import { scrollIntoViewAfterPaint } from "foldkit/dom";
 import { UrlRequest, load, pushUrl } from "foldkit/navigation";

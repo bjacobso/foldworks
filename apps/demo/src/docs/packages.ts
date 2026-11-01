@@ -7,7 +7,6 @@ import {
   FileDiff,
   FileSearch,
   FileText,
-  FolderGit2,
   Grid3x3,
   Highlighter,
   History,
@@ -29,7 +28,6 @@ import type { PackageDoc } from "./catalog";
 const icons: Readonly<Record<string, IconData>> = {
   agent: Bot,
   "code-editor": SquareCode,
-  codebase: FolderGit2,
   "data-grid": Grid3x3,
   "data-table": Table2,
   diagram: Network,
@@ -53,7 +51,7 @@ const icons: Readonly<Record<string, IconData>> = {
 
 export const packageIcon = (id: string): IconData => icons[id] ?? Boxes;
 
-/** Groups packages by stack layer; packages not yet placed in the stack land in "More packages". */
+/** Groups modules by stack layer; modules not yet placed in the stack land in "More modules". */
 export const groupPackages = (
   packages: ReadonlyArray<PackageDoc>,
 ): ReadonlyArray<Readonly<{ id: string; title: string; packages: ReadonlyArray<PackageDoc> }>> =>
@@ -65,7 +63,7 @@ export const groupPackages = (
     })),
     {
       id: "more",
-      title: "More packages",
+      title: "More modules",
       packages: packages.filter((pkg) => layerOf(pkg.id) === undefined),
     },
   ].filter((group) => group.packages.length > 0);

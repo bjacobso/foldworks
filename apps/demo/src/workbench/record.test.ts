@@ -1,4 +1,4 @@
-import { ValueTree } from "@foldworks/ui";
+import { ValueTree } from "foldworks/ui";
 import { describe, expect, it } from "vitest";
 
 import { applyProposal, initialSnapshot } from "./domain";

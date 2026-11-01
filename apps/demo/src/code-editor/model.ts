@@ -1,6 +1,6 @@
 import { Schema as S } from "effect";
-import { CodeEditor } from "@foldworks/code-editor";
-import { Tree, Workspace } from "@foldworks/ui";
+import { CodeEditor } from "foldworks/code-editor";
+import { Tree, Workspace } from "foldworks/ui";
 import { ConfigurationEditor } from "./configuration";
 
 import { jsonSample, typescriptSample } from "./samples";

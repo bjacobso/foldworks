@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { bytesToBase64, locateQuote, readPdfText } from "@foldworks/pdf";
-import type { GraphDocument } from "@foldworks/diagram/graph";
+import { bytesToBase64, locateQuote, readPdfText } from "foldworks/pdf";
+import type { GraphDocument } from "foldworks/diagram/graph";
 
 export const quote =
   "Employees with one year of service may bid on schedules during each bid period.";

@@ -1,5 +1,5 @@
 ---
-"@foldworks/outliner": minor
+"foldworks": minor
 ---
 
 Show a host's view of a folded item's children with the `foldedView` view

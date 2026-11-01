@@ -53,7 +53,7 @@ export const docsScenarios = (getPage: () => Page, appUrl: string) => {
     it("handles missing deep links and fits a mobile viewport", async () => {
       const page = getPage();
       await page.goto(`${appUrl}/docs?package=missing`, { waitUntil: "networkidle" });
-      await page.getByRole("heading", { name: "Package not found", exact: true }).waitFor();
+      await page.getByRole("heading", { name: "Module not found", exact: true }).waitFor();
       await page.goto(`${appUrl}/docs?package=sidebar&module=missing`, {
         waitUntil: "networkidle",
       });

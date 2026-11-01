@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect";
 import { Command, Update } from "foldkit";
-import { DataGrid } from "@foldworks/data-grid";
-import { ValueTree } from "@foldworks/ui";
+import { DataGrid } from "foldworks/data-grid";
+import { ValueTree } from "foldworks/ui";
 
 import { commitProposal, Proposal } from "./domain";
 import { Message } from "./message";

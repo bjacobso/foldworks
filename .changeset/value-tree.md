@@ -1,5 +1,5 @@
 ---
-"@foldworks/ui": minor
+"foldworks": minor
 ---
 
 Add `ValueTree`, a keyboard-navigable tree for nested values with lazily

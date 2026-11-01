@@ -1,7 +1,7 @@
 import * as Desktop from "./desktop";
 import { Command, Update } from "foldkit";
 import { Effect, Option, Schema as S } from "effect";
-import { CodeBlock, Stateful } from "@foldworks/ui";
+import { CodeBlock, Stateful } from "foldworks/ui";
 import { modifyFields } from "foldkit/struct";
 
 import { Message } from "./message";

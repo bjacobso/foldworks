@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Diagram, validateDocument } from "@foldworks/diagram";
+import { Diagram, validateDocument } from "foldworks/diagram";
 
 import {
   enabledTransitions,

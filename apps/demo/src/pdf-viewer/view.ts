@@ -3,8 +3,8 @@ import type { Html, HtmlBuilder } from "foldkit/html";
 import { defineView } from "foldkit/submodel";
 
 import { RefreshCw } from "@lucide/icons";
-import { PdfViewer, type PdfOverlay, type PdfOverlayTone } from "@foldworks/pdf-viewer";
-import { Alert, Badge, Button, Toggle } from "@foldworks/ui";
+import { PdfViewer, type PdfOverlay, type PdfOverlayTone } from "foldworks/pdf-viewer";
+import { Alert, Badge, Button, Toggle } from "foldworks/ui";
 
 import { className } from "../workflow/styles";
 import { sampleFields, type FieldStatus, type SampleField } from "./fixture";

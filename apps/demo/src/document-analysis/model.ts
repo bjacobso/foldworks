@@ -1,8 +1,8 @@
 import { Schema as S } from "effect";
-import { PdfViewer } from "@foldworks/pdf-viewer";
-import { PdfTextRegion } from "@foldworks/pdf";
-import * as Graph from "@foldworks/diagram/graph";
-import { Citation } from "@foldworks/ui";
+import { PdfViewer } from "foldworks/pdf-viewer";
+import { PdfTextRegion } from "foldworks/pdf";
+import * as Graph from "foldworks/diagram/graph";
+import { Citation } from "foldworks/ui";
 
 export const Model = S.Struct({
   viewer: PdfViewer.Model,

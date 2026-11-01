@@ -111,31 +111,59 @@ const resolveSource = (base: string, specifier: string): string | undefined => {
   return [stem + ".ts", resolve(stem, "index.ts")].find(existsSync);
 };
 
-/** Follow package export maps and local re-exports, including namespace barrels. */
+const firstSentence = (readme: string): string => {
+  const paragraph = readme
+    .replace(/^#[^\n]*\n/, "")
+    .trim()
+    .split(/\n\s*\n/)[0]
+    ?.replace(/\s+/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replaceAll("`", "");
+  return paragraph?.match(/^.+?\.(?=\s|$)/)?.[0] ?? paragraph ?? "";
+};
+
+/**
+ * Document each top-level directory of `packages/foldworks/src` as one module
+ * group: its `foldworks/<module>` export map entries, the local re-exports
+ * they reach, and its README.
+ */
 export const generateCatalog = async (root: string): Promise<ReadonlyArray<PackageDoc>> => {
+  const packageRoot = resolve(root, "packages/foldworks");
+  const pkg = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+    version: string;
+    exports?: Record<string, string | { import?: string; types?: string }>;
+  };
+  const sourceRoot = resolve(packageRoot, "src");
   const catalog: PackageDoc[] = [];
-  for (const entry of (await readdir(resolve(root, "packages"), { withFileTypes: true })).sort(
-    (a, b) => a.name.localeCompare(b.name),
+  for (const entry of (await readdir(sourceRoot, { withFileTypes: true })).sort((a, b) =>
+    a.name.localeCompare(b.name),
   )) {
-    const packageRoot = resolve(root, "packages", entry.name);
-    if (!entry.isDirectory() || !existsSync(resolve(packageRoot, "package.json"))) continue;
-    const pkg = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8")) as {
-      name: string;
-      version: string;
-      description?: string;
-      private?: boolean;
-      exports?: Record<string, string | { import?: string; types?: string }>;
-      dependencies?: Record<string, string>;
-      peerDependencies?: Record<string, string>;
+    if (!entry.isDirectory()) continue;
+    const moduleRoot = resolve(sourceRoot, entry.name);
+    const exportPrefix = `./${entry.name}`;
+    const exports = Object.entries(pkg.exports ?? {}).filter(
+      ([key]) => key === exportPrefix || key.startsWith(exportPrefix + "/"),
+    );
+    if (exports.length === 0) continue;
+    // Name imports that leave this directory by the export they reach.
+    const importName = (path: string, specifier: string): string => {
+      if (!specifier.startsWith(".")) return specifier;
+      const target = portable(relative(sourceRoot, resolve(dirname(path), specifier)));
+      return target.startsWith(entry.name + "/") || target.startsWith("..")
+        ? specifier
+        : `${pkg.name}/${target.replace(/\/index(?:\.[jt]s)?$/, "").replace(/\.[jt]s$/, "")}`;
     };
-    if (pkg.private || !pkg.name.startsWith("@foldworks/")) continue;
     const modules = new Map<string, ModuleDoc>();
     const visit = async (path: string): Promise<void> => {
       if (modules.has(path)) return;
       const source = await readFile(path, "utf8");
-      const id = portable(relative(resolve(packageRoot, "src"), path)).replace(/\.ts$/, "");
+      const id = portable(relative(moduleRoot, path)).replace(/\.ts$/, "");
       const module = analyzeModule(source, portable(relative(root, path)), id);
-      modules.set(path, module);
+      modules.set(path, {
+        ...module,
+        imports: module.imports.map((specifier) => importName(path, specifier)),
+      });
       const ast = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
       for (const node of ast.statements) {
         if (
@@ -145,11 +173,11 @@ export const generateCatalog = async (root: string): Promise<ReadonlyArray<Packa
         )
           continue;
         const target = resolveSource(path, node.moduleSpecifier.text);
-        if (target && target.startsWith(packageRoot + sep)) await visit(target);
+        if (target && target.startsWith(moduleRoot + sep)) await visit(target);
       }
     };
     const entrypoints: string[] = [];
-    for (const [key, target] of Object.entries(pkg.exports ?? {})) {
+    for (const [key, target] of exports) {
       const runtime = typeof target === "string" ? target : target.import;
       if (!runtime?.endsWith(".js")) continue;
       const source = resolve(
@@ -157,26 +185,59 @@ export const generateCatalog = async (root: string): Promise<ReadonlyArray<Packa
         runtime.replace(/^\.\/dist\//, "src/").replace(/\.js$/, ".ts"),
       );
       if (!existsSync(source)) throw new Error(`Documentation source missing: ${source}`);
-      entrypoints.push(key === "." ? pkg.name : pkg.name + key.slice(1));
+      entrypoints.push(pkg.name + key.slice(1));
       await visit(source);
     }
-    const readmePath = resolve(packageRoot, "README.md");
-    const readme = existsSync(readmePath)
-      ? await readFile(readmePath, "utf8")
-      : `# ${pkg.name}\n\n${pkg.description ?? ""}`;
+    if (entrypoints.length === 0) continue;
+    const name = `${pkg.name}/${entry.name}`;
+    const readmePath = resolve(moduleRoot, "README.md");
+    const readme = existsSync(readmePath) ? await readFile(readmePath, "utf8") : `# ${name}\n`;
+    // Runtime imports from all of the module's source, not only its entrypoints.
+    const dependencies = new Set<string>();
+    const collect = async (directory: string): Promise<void> => {
+      for (const item of await readdir(directory, { withFileTypes: true })) {
+        const path = resolve(directory, item.name);
+        if (item.isDirectory()) await collect(path);
+        else if (/(?<!\.test|\.d)\.ts$/.test(item.name)) {
+          const file = ts.createSourceFile(
+            path,
+            await readFile(path, "utf8"),
+            ts.ScriptTarget.Latest,
+          );
+          for (const node of file.statements) {
+            if (
+              !(ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) ||
+              !node.moduleSpecifier ||
+              !ts.isStringLiteral(node.moduleSpecifier) ||
+              (ts.isImportDeclaration(node) ? node.importClause?.isTypeOnly : node.isTypeOnly)
+            )
+              continue;
+            const imported = importName(path, node.moduleSpecifier.text);
+            if (imported.startsWith(".") || imported.startsWith("node:")) continue;
+            dependencies.add(
+              imported.startsWith(pkg.name + "/")
+                ? imported.split("/").slice(0, 2).join("/")
+                : imported
+                    .split("/")
+                    .slice(0, imported.startsWith("@") ? 2 : 1)
+                    .join("/")
+                    .replace(/\?.*$/, ""),
+            );
+          }
+        }
+      }
+    };
+    await collect(moduleRoot);
+    dependencies.delete(name);
     catalog.push({
       id: entry.name,
-      name: pkg.name,
+      name,
       version: pkg.version,
-      description: pkg.description ?? "",
+      description: firstSentence(readme),
       readme: encodeDocument(parseMarkdown(readme)),
+      source: portable(relative(root, moduleRoot)),
       entrypoints,
-      dependencies: [
-        ...new Set([
-          ...Object.keys(pkg.dependencies ?? {}),
-          ...Object.keys(pkg.peerDependencies ?? {}),
-        ]),
-      ].sort(),
+      dependencies: [...dependencies].sort(),
       modules: [...modules.values()].sort((a, b) => a.id.localeCompare(b.id)),
     });
   }

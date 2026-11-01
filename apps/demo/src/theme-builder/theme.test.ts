@@ -175,7 +175,7 @@ describe("theme exports and serialization", () => {
       css = exportFoldworks(theme);
     expect(css).toContain('[data-theme="my-studio"]');
     expect(css).toContain('[data-theme="my-studio"][data-mode="dark"]');
-    expect(css).toContain('@import "@foldworks/ui/base.css"');
+    expect(css).toContain('@import "foldworks/ui/base.css"');
     const blocks = [...css.matchAll(/\{\n([\s\S]*?)\n\}/g)];
     for (const [index, mode] of modes.entries()) {
       const parsed = Object.fromEntries(

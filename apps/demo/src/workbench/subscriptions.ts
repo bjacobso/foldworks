@@ -1,6 +1,6 @@
 import { Option } from "effect";
 import { Subscription } from "foldkit";
-import { DataGrid } from "@foldworks/data-grid";
+import { DataGrid } from "foldworks/data-grid";
 import { Message } from "./message";
 import type { Model } from "./model";
 

@@ -1,4 +1,4 @@
-import { Stateful } from "@foldworks/ui";
+import { Stateful } from "foldworks/ui";
 import type { DemoAction, Department, Tool, View } from "./model";
 
 export const AccountTabs = Stateful.Tabs.create<View>();

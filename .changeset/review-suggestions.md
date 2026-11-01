@@ -1,5 +1,5 @@
 ---
-"@foldworks/review": minor
+"foldworks": minor
 ---
 
 Add checked, atomic suggested changes, pending comment display, controlled

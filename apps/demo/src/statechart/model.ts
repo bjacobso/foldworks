@@ -1,7 +1,7 @@
 import { Schema as S } from "effect";
 
-import { Diagram } from "@foldworks/diagram";
-import { History } from "@foldworks/history";
+import { Diagram } from "foldworks/diagram";
+import { History } from "foldworks/history";
 
 import { initialConfiguration, Library } from "./machine";
 import { sampleLibrary } from "./sample";

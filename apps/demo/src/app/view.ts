@@ -27,10 +27,10 @@ import {
   Table2,
   Workflow as WorkflowIcon,
 } from "@lucide/icons";
-import { Badge, Icon, Select, Toolbar } from "@foldworks/ui";
-import { PdfAnnotator } from "@foldworks/pdf-annotator";
+import { Badge, Icon, Select, Toolbar } from "foldworks/ui";
+import { PdfAnnotator } from "foldworks/pdf-annotator";
 import { ArticleEditor } from "../editor/demo";
-import { Sidebar } from "@foldworks/sidebar";
+import { Sidebar } from "foldworks/sidebar";
 
 import { view as orchestratorView } from "../orchestrator/view";
 import { view as agentView } from "../agent/view";
@@ -200,7 +200,7 @@ const navigationGroups = (model: Model): ReadonlyArray<Sidebar.NavigationGroup> 
         items: [
           {
             id: "docs-home",
-            label: "All packages",
+            label: "All modules",
             href: docsPath(),
             icon: Blocks,
             isActive: Option.isNone(model.route.package),
@@ -456,8 +456,8 @@ const docsDescription = (model: Model): string => {
   const packageId = Option.getOrUndefined(model.route.package);
   const moduleId = Option.getOrUndefined(model.route.module);
   return packageId === undefined
-    ? `${docsCatalog.length} packages · APIs · messages · state machines`
-    : `@foldworks/${packageId}${moduleId === undefined ? "" : ` › ${moduleId}`}`;
+    ? `${docsCatalog.length} modules · APIs · messages · state machines`
+    : `foldworks/${packageId}${moduleId === undefined ? "" : ` › ${moduleId}`}`;
 };
 
 const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
@@ -503,7 +503,7 @@ const toolbar = (model: Model, h: HtmlBuilder<Message>): Html => {
                                         ? "Onboarding packet review"
                                         : demo === "Home"
                                           ? "Foldworks"
-                                          : "@foldworks/ui";
+                                          : "foldworks/ui";
   const description =
     demo === "Docs"
       ? docsDescription(model)

@@ -2,28 +2,27 @@ import type { Page } from "playwright";
 import { describe, expect, it } from "vitest";
 
 const expectedPackages = [
-  "@foldworks/agent",
-  "@foldworks/generative-ui",
-  "@foldworks/codebase",
-  "@foldworks/editor",
-  "@foldworks/code-editor",
-  "@foldworks/outliner",
-  "@foldworks/data-table",
-  "@foldworks/data-grid",
-  "@foldworks/query-builder",
-  "@foldworks/form-builder",
-  "@foldworks/workflow",
-  "@foldworks/diff-viewer",
-  "@foldworks/review",
-  "@foldworks/pdf-viewer",
-  "@foldworks/pdf-annotator",
-  "@foldworks/keyboard",
-  "@foldworks/history",
-  "@foldworks/text-intelligence",
-  "@foldworks/diagram",
-  "@foldworks/pdf",
-  "@foldworks/ui",
-  "@foldworks/sidebar",
+  "foldworks/agent",
+  "foldworks/generative-ui",
+  "foldworks/editor",
+  "foldworks/code-editor",
+  "foldworks/outliner",
+  "foldworks/data-table",
+  "foldworks/data-grid",
+  "foldworks/query-builder",
+  "foldworks/form-builder",
+  "foldworks/workflow",
+  "foldworks/diff-viewer",
+  "foldworks/review",
+  "foldworks/pdf-viewer",
+  "foldworks/pdf-annotator",
+  "foldworks/keyboard",
+  "foldworks/history",
+  "foldworks/text-intelligence",
+  "foldworks/diagram",
+  "foldworks/pdf",
+  "foldworks/ui",
+  "foldworks/sidebar",
 ] as const;
 
 type PackageDemo = Readonly<{
@@ -32,7 +31,7 @@ type PackageDemo = Readonly<{
 }>;
 
 const screenshotName = (packageName: string): string =>
-  `site-docs-${packageName.replace("@foldworks/", "")}`;
+  `site-docs-${packageName.replace("foldworks/", "")}`;
 
 export const packageDemoScreenshotScenarios = (
   getPage: () => Page,
@@ -45,7 +44,7 @@ export const packageDemoScreenshotScenarios = (
       await page.goto(appUrl, { waitUntil: "networkidle" });
 
       const demos = await page
-        .locator('[data-home-page="true"] a[aria-label^="@foldworks/"]')
+        .locator('[data-home-page="true"] a[aria-label^="foldworks/"]')
         .evaluateAll(
           (links): ReadonlyArray<PackageDemo> =>
             links.map((link) => ({
@@ -59,7 +58,7 @@ export const packageDemoScreenshotScenarios = (
         demos.every(
           ({ href, name }) =>
             href.startsWith("/") ||
-            (name === "@foldworks/generative-ui" && href === "#generative-ui"),
+            (name === "foldworks/generative-ui" && href === "#generative-ui"),
         ),
       ).toBe(true);
 
@@ -69,7 +68,7 @@ export const packageDemoScreenshotScenarios = (
         await expect.poll(() => new URL(page.url()).pathname).toBe(url.pathname);
         await expect.poll(() => page.locator("main").first().isVisible()).toBe(true);
 
-        if (demo.name === "@foldworks/pdf-annotator") {
+        if (demo.name === "foldworks/pdf-annotator") {
           await page.getByRole("button", { name: "Try the sample document" }).click();
           await expect
             .poll(() => page.locator('[data-pdf-canvas-id="foldworks-pdf-annotator"]').isVisible())

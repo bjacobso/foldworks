@@ -1,4 +1,4 @@
-import { validateSpec, type Spec } from "@foldworks/generative-ui/core";
+import { validateSpec, type Spec } from "foldworks/generative-ui/core";
 import { Result } from "effect";
 
 import { releaseCatalog } from "./catalog";

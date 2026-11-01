@@ -1,6 +1,6 @@
 import * as Desktop from "./desktop";
 import { Schema as S } from "effect";
-import { Stateful } from "@foldworks/ui";
+import { Stateful } from "foldworks/ui";
 
 export const Department = S.Literals(["Engineering", "Operations", "People"]);
 export type Department = typeof Department.Type;

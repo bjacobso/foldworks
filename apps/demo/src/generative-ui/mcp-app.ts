@@ -1,6 +1,6 @@
-import { ActionIntent, Spec, render } from "@foldworks/generative-ui/core";
-import { connectMcpApp, sendActionIntent } from "@foldworks/generative-ui/mcp-app";
-import { foldworksRegistry } from "@foldworks/generative-ui/foldworks";
+import { ActionIntent, Spec, render } from "foldworks/generative-ui/core";
+import { connectMcpApp, sendActionIntent } from "foldworks/generative-ui/mcp-app";
+import { foldworksRegistry } from "foldworks/generative-ui/foldworks";
 import { Effect, Schema as S } from "effect";
 import { Command, Port, Runtime, Subscription, type Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";

@@ -1,4 +1,4 @@
-import baseCss from "@foldworks/ui/base.css?raw";
+import baseCss from "foldworks/ui/base.css?raw";
 
 /** Names only: the CSS remains the source of all preset values. */
 export const semanticTokens = [

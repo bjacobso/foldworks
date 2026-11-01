@@ -4,13 +4,28 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
-const packagesRoot = join(repositoryRoot, "packages");
+const packageDirectory = join(repositoryRoot, "packages", "foldworks");
 const sharedRuntimeVersions = {
   "@foldkit/ui": "0.170.0",
   "@stylexjs/stylex": "0.19.0",
   effect: "4.1.1",
   foldkit: "0.170.0",
 };
+// Integrations only some modules use. They are optional peers, so the modules
+// that need one are checked after the rest build without it.
+const optionalPeerVersions = {
+  "@modelcontextprotocol/ext-apps": "2.0.0",
+  "pdf-lib": "1.17.1",
+  "pdfjs-dist": "6.3.289",
+};
+const optionalPeerEntries = new Set([
+  "./generative-ui/mcp-app",
+  "./pdf",
+  "./pdf-annotator",
+  "./pdf-viewer",
+]);
+// Configuration helpers that run in Node, not in application bundles.
+const configurationEntries = new Set(["./ui/testing/stylex", "./ui/vite"]);
 
 const run = (command, args, options = {}) =>
   new Promise((resolveRun, rejectRun) => {
@@ -44,23 +59,9 @@ const run = (command, args, options = {}) =>
     });
   });
 
-const packageDirectories = [];
-for (const entry of await readdir(packagesRoot, { withFileTypes: true })) {
-  if (!entry.isDirectory()) continue;
-  const directory = join(packagesRoot, entry.name);
-  try {
-    const manifest = JSON.parse(await readFile(join(directory, "package.json"), "utf8"));
-    if (manifest.name?.startsWith("@foldworks/") && manifest.private !== true) {
-      packageDirectories.push({ directory, manifest });
-    }
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
-  }
-}
-packageDirectories.sort((left, right) => left.manifest.name.localeCompare(right.manifest.name));
-
-if (packageDirectories.length === 0) {
-  throw new Error("No publishable @foldworks packages were found.");
+const manifest = JSON.parse(await readFile(join(packageDirectory, "package.json"), "utf8"));
+if (manifest.name !== "foldworks" || manifest.private === true) {
+  throw new Error("packages/foldworks must be the publishable foldworks package.");
 }
 
 const collectExportTargets = (value) => {
@@ -68,91 +69,129 @@ const collectExportTargets = (value) => {
   if (value === null || typeof value !== "object") return [];
   return Object.values(value).flatMap(collectExportTargets);
 };
+const exportEntries = Object.entries(manifest.exports ?? {});
+const scriptEntries = exportEntries
+  .filter(([key, target]) => typeof target !== "string" && !configurationEntries.has(key))
+  .map(([key]) => key);
+const styleEntries = exportEntries
+  .filter(([, target]) => typeof target === "string" && target.endsWith(".css"))
+  .map(([key]) => key)
+  // Cascade layer order must be declared before any layered rules.
+  .sort((left, right) => Number(right === "./ui/layers.css") - Number(left === "./ui/layers.css"));
+for (const entry of [...optionalPeerEntries, ...configurationEntries]) {
+  if (!(entry in (manifest.exports ?? {})))
+    throw new Error(`foldworks no longer exports ${entry}.`);
+}
 
 const temporaryRoot = await mkdtemp(join(tmpdir(), "foldworks-pack-check-"));
-const tarballDirectory = join(temporaryRoot, "tarballs");
 const consumerDirectory = join(temporaryRoot, "consumer");
 
+const writeEntrypointSmokeTest = (entries) => {
+  const imports = entries.map(
+    (entry, index) => `import * as Module${index} from "foldworks${entry.slice(1)}";`,
+  );
+  return writeFile(
+    join(consumerDirectory, "src", "main.ts"),
+    `${styleEntries.map((entry) => `import "foldworks${entry.slice(1)}";`).join("\n")}
+
+${imports.join("\n")}
+import { ReviewThreads } from "foldworks/review";
+
+console.log(ReviewThreads.init({ id: "consumer-review" }).id);
+const modules = [${entries.map((_entry, index) => `Module${index}`).join(", ")}];
+const app = document.querySelector<HTMLElement>("#app");
+if (app === null) throw new Error("Missing smoke-test mount point.");
+app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.keys(module).length, 0) + " Foldworks exports";
+`,
+  );
+};
+
+const assertBuiltAssets = async (outDir) => {
+  await stat(join(consumerDirectory, outDir, "index.html"));
+  const builtAssets = await readdir(join(consumerDirectory, outDir, "assets"));
+  if (!builtAssets.some((file) => file.endsWith(".js"))) {
+    throw new Error("The clean consumer build did not emit JavaScript.");
+  }
+  if (!builtAssets.some((file) => file.endsWith(".css"))) {
+    throw new Error("The clean consumer build did not emit CSS.");
+  }
+};
+
 try {
-  const tarballs = new Map();
+  const archivePath = join(temporaryRoot, `foldworks-${manifest.version}.tgz`);
+  // The caller builds the package once through Turbo. Skip lifecycle scripts
+  // here so the tarball consumes that verified output instead of rebuilding
+  // through prepack.
+  await run("pnpm", ["pack", "--out", archivePath], {
+    cwd: packageDirectory,
+    env: { npm_config_ignore_scripts: "true" },
+  });
 
-  await mkdir(tarballDirectory, { recursive: true });
+  const { stdout: listing } = await run("tar", ["-tzf", archivePath], { capture: true });
+  const entries = listing.trim().split("\n");
+  const required = [
+    "package/package.json",
+    "package/README.md",
+    "package/LICENSE",
+    ...collectExportTargets(manifest.exports)
+      .filter((target) => target.startsWith("./"))
+      .map((target) => `package/${target.slice(2)}`),
+  ];
+  for (const expected of required) {
+    if (!entries.includes(expected)) throw new Error(`The tarball is missing ${expected}.`);
+  }
 
-  for (const { directory, manifest } of packageDirectories) {
-    const archiveName = `${manifest.name.slice("@foldworks/".length)}-${manifest.version}.tgz`;
-    const archivePath = join(tarballDirectory, archiveName);
-    // The caller builds the workspace once through Turbo. Skip package lifecycle
-    // scripts here so each tarball consumes that verified output instead of
-    // rebuilding packages serially through prepack.
-    await run("pnpm", ["pack", "--out", archivePath], {
-      cwd: directory,
-      env: { npm_config_ignore_scripts: "true" },
-    });
+  const forbidden = entries.filter(
+    (entry) =>
+      entry.startsWith("package/src/") ||
+      /(?:^|\/)(?:[^/]+\.)?(?:test|spec)\.[^/]+$/.test(entry) ||
+      entry === "package/tsconfig.json" ||
+      entry.includes("vitest.config"),
+  );
+  if (forbidden.length > 0) {
+    throw new Error(`The tarball contains development files:\n${forbidden.join("\n")}`);
+  }
 
-    const { stdout: listing } = await run("tar", ["-tzf", archivePath], { capture: true });
-    const entries = listing.trim().split("\n");
-    const required = [
-      "package/package.json",
-      "package/README.md",
-      "package/LICENSE",
-      "package/dist/index.js",
-      "package/dist/index.d.ts",
-      ...collectExportTargets(manifest.exports)
-        .filter((target) => target.startsWith("./"))
-        .map((target) => `package/${target.slice(2)}`),
-    ];
-    for (const expected of required) {
-      if (!entries.includes(expected)) {
-        throw new Error(`${manifest.name} tarball is missing ${expected}.`);
-      }
+  const { stdout: packedManifestJson } = await run(
+    "tar",
+    ["-xOzf", archivePath, "package/package.json"],
+    { capture: true },
+  );
+  const packedManifest = JSON.parse(packedManifestJson);
+  for (const name of [
+    ...Object.keys(sharedRuntimeVersions),
+    ...Object.keys(optionalPeerVersions),
+  ]) {
+    if (name in (packedManifest.dependencies ?? {})) {
+      throw new Error(`foldworks must declare ${name} as a peer, not a dependency.`);
     }
-
-    const forbidden = entries.filter(
-      (entry) =>
-        entry.startsWith("package/src/") ||
-        /(?:^|\/)(?:[^/]+\.)?(?:test|spec)\.[^/]+$/.test(entry) ||
-        entry === "package/tsconfig.json" ||
-        entry.includes("vitest.config"),
+    if (!(name in (packedManifest.peerDependencies ?? {}))) {
+      throw new Error(`foldworks must declare ${name} as a peer.`);
+    }
+    if (!(name in (packedManifest.devDependencies ?? {}))) {
+      throw new Error(`foldworks needs ${name} as a dev dependency to build against.`);
+    }
+  }
+  const optionalPeers = Object.entries(packedManifest.peerDependenciesMeta ?? {})
+    .filter(([, meta]) => meta?.optional === true)
+    .map(([name]) => name)
+    .sort();
+  if (optionalPeers.join() !== Object.keys(optionalPeerVersions).sort().join()) {
+    throw new Error(
+      `Optional peers changed to ${optionalPeers.join(", ")}; update scripts/check-packages.mjs.`,
     );
-    if (forbidden.length > 0) {
-      throw new Error(
-        `${manifest.name} tarball contains development files:\n${forbidden.join("\n")}`,
-      );
-    }
-
-    const { stdout: packedManifestJson } = await run(
-      "tar",
-      ["-xOzf", archivePath, "package/package.json"],
-      { capture: true },
-    );
-    const packedManifest = JSON.parse(packedManifestJson);
-    for (const name of Object.keys(sharedRuntimeVersions)) {
-      if (name in (packedManifest.dependencies ?? {})) {
-        throw new Error(`${manifest.name} must declare ${name} as a peer, not a dependency.`);
-      }
-      if (
-        name in (packedManifest.peerDependencies ?? {}) &&
-        !(name in (packedManifest.devDependencies ?? {}))
-      ) {
-        throw new Error(`${manifest.name} needs ${name} as a dev dependency to build against.`);
-      }
-    }
-    const packedDependencySpecs = Object.values({
-      ...packedManifest.dependencies,
-      ...packedManifest.optionalDependencies,
-      ...packedManifest.peerDependencies,
-    });
-    const unresolvedSpec = packedDependencySpecs.find(
-      (spec) =>
-        typeof spec === "string" && (spec.startsWith("workspace:") || spec.startsWith("catalog:")),
-    );
-    if (unresolvedSpec !== undefined) {
-      throw new Error(
-        `${manifest.name} contains an unresolved dependency specifier: ${unresolvedSpec}`,
-      );
-    }
-
-    tarballs.set(manifest.name, archivePath);
+  }
+  const packedDependencySpecs = Object.values({
+    ...packedManifest.dependencies,
+    ...packedManifest.optionalDependencies,
+    ...packedManifest.peerDependencies,
+  });
+  const unresolvedSpec = packedDependencySpecs.find(
+    (spec) =>
+      typeof spec === "string" && (spec.startsWith("workspace:") || spec.startsWith("catalog:")),
+  );
+  if (unresolvedSpec !== undefined) {
+    throw new Error(`foldworks contains an unresolved dependency specifier: ${unresolvedSpec}`);
   }
 
   await mkdir(join(consumerDirectory, "src"), { recursive: true });
@@ -164,11 +203,11 @@ try {
         private: true,
         type: "module",
         scripts: { build: "vite build", test: "vitest run", typecheck: "tsc --noEmit" },
-        dependencies: Object.fromEntries([
-          ...Object.entries(sharedRuntimeVersions),
-          ["@effect/platform-browser", "4.1.1"],
-          ...[...tarballs].map(([name, archivePath]) => [name, `file:${archivePath}`]),
-        ]),
+        dependencies: {
+          ...sharedRuntimeVersions,
+          "@effect/platform-browser": "4.1.1",
+          foldworks: `file:${archivePath}`,
+        },
         devDependencies: {
           "@stylexjs/unplugin": "0.19.0",
           typescript: "6.0.3",
@@ -186,7 +225,7 @@ try {
   );
   await writeFile(
     join(consumerDirectory, "vite.config.ts"),
-    `import { foldworksLayers } from "@foldworks/ui/vite";
+    `import { foldworksLayers } from "foldworks/ui/vite";
 import stylex from "@stylexjs/unplugin";
 import { defineConfig } from "vite";
 
@@ -225,60 +264,12 @@ export default defineConfig({
     )}\n`,
   );
   await writeFile(join(consumerDirectory, "src", "env.d.ts"), 'declare module "*.css";\n');
-  await writeFile(
-    join(consumerDirectory, "src", "main.ts"),
-    `import "@foldworks/ui/layers.css";
-import "@foldworks/ui/base.css";
-import "@foldworks/ui/themes/shadcn.css";
-import "@foldworks/editor/styles.css";
-import "@foldworks/code-editor/styles.css";
-import "@foldworks/data-table/styles.css";
-import "@foldworks/data-grid/styles.css";
-import "@foldworks/pdf-annotator/styles.css";
-import "@foldworks/pdf-viewer/styles.css";
-import "@foldworks/text-intelligence/styles.css";
-import "@foldworks/diff-viewer/styles.css";
-import "@foldworks/review/styles.css";
-import "@foldworks/diagram/styles.css";
 
-import * as Agent from "@foldworks/agent";
-import * as Editor from "@foldworks/editor";
-import * as CodeEditor from "@foldworks/code-editor";
-import * as EditorContracts from "@foldworks/code-editor/contracts";
-import * as StructuredEditor from "@foldworks/code-editor/structured";
-import * as DataTable from "@foldworks/data-table";
-import * as DataGrid from "@foldworks/data-grid";
-import * as Diagram from "@foldworks/diagram";
-import * as Graph from "@foldworks/diagram/graph";
-import * as Pdf from "@foldworks/pdf";
-import * as PdfViewer from "@foldworks/pdf-viewer";
-import * as TextIntelligence from "@foldworks/text-intelligence";
-import * as DiffViewer from "@foldworks/diff-viewer";
-import * as FormBuilder from "@foldworks/form-builder";
-import * as History from "@foldworks/history";
-import * as Review from "@foldworks/review";
-console.log(Review.ReviewThreads.init({ id: "consumer-review" }).id);
-import * as Keyboard from "@foldworks/keyboard";
-import * as PdfAnnotator from "@foldworks/pdf-annotator";
-import * as QueryBuilder from "@foldworks/query-builder";
-import * as Sidebar from "@foldworks/sidebar";
-import * as Ui from "@foldworks/ui";
-import * as UiIcon from "@foldworks/ui/icon";
-import * as UiTokens from "@foldworks/ui/tokens.stylex";
-import * as Workflow from "@foldworks/workflow";
-
-const modules = [Agent, Editor, CodeEditor, EditorContracts, StructuredEditor, DataTable, DataGrid, Diagram, Graph, Pdf, PdfViewer, TextIntelligence, DiffViewer, FormBuilder, History, Keyboard, PdfAnnotator, QueryBuilder, Sidebar, Ui, UiIcon, UiTokens, Workflow];
-const app = document.querySelector<HTMLElement>("#app");
-if (app === null) throw new Error("Missing smoke-test mount point.");
-app.textContent = "Loaded " + modules.reduce((count, module) => count + Object.keys(module).length, 0) + " Foldworks exports";
-`,
-  );
-
-  // Views from installed packages must render under Vitest without the StyleX
-  // compiler, which is the setup `@foldworks/ui/vite` documents.
+  // Views from the installed package must render under Vitest without the
+  // StyleX compiler, which is the setup `foldworks/ui/vite` documents.
   await writeFile(
     join(consumerDirectory, "vitest.config.ts"),
-    `import { foldworksStylexTest } from "@foldworks/ui/vite";
+    `import { foldworksStylexTest } from "foldworks/ui/vite";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({ plugins: [foldworksStylexTest()] });
@@ -287,7 +278,7 @@ export default defineConfig({ plugins: [foldworksStylexTest()] });
   await writeFile(
     join(consumerDirectory, "src", "view.test.ts"),
     `import * as stylex from "@stylexjs/stylex";
-import { Button, sxAttrs } from "@foldworks/ui";
+import { Button, sxAttrs } from "foldworks/ui";
 import { Option } from "effect";
 import { inertHtml as h } from "foldkit/html";
 import { Scene } from "foldkit/test";
@@ -305,28 +296,40 @@ it("renders Foldworks and application StyleX in a view test", () => {
 `,
   );
 
+  // Without the optional peers installed, every other entry must type-check,
+  // test, and bundle.
+  await writeEntrypointSmokeTest(scriptEntries.filter((entry) => !optionalPeerEntries.has(entry)));
   await run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund"], {
     cwd: consumerDirectory,
   });
   await run("npm", ["run", "typecheck"], { cwd: consumerDirectory });
   await run("npm", ["run", "test"], { cwd: consumerDirectory });
+  await run("npm", ["run", "build", "--", "--outDir", "dist-core"], { cwd: consumerDirectory });
+  await assertBuiltAssets("dist-core");
+
+  // With the optional peers installed, every entry builds together.
+  await run(
+    "npm",
+    [
+      "install",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      ...Object.entries(optionalPeerVersions).map(([name, version]) => `${name}@${version}`),
+    ],
+    { cwd: consumerDirectory },
+  );
+  await writeEntrypointSmokeTest(scriptEntries);
+  await run("npm", ["run", "typecheck"], { cwd: consumerDirectory });
   await run("npm", ["run", "build"], { cwd: consumerDirectory });
+  await assertBuiltAssets("dist");
 
-  await stat(join(consumerDirectory, "dist", "index.html"));
-  const builtAssets = await readdir(join(consumerDirectory, "dist", "assets"));
-  if (!builtAssets.some((file) => file.endsWith(".js"))) {
-    throw new Error("The clean consumer build did not emit JavaScript.");
-  }
-  if (!builtAssets.some((file) => file.endsWith(".css"))) {
-    throw new Error("The clean consumer build did not emit CSS.");
-  }
-
-  // Check the default editor bundle independently of the other packages.
+  // Check the default editor bundle independently of the other modules.
   await writeFile(
     join(consumerDirectory, "src", "main.ts"),
     `
-import { CodeEditor } from "@foldworks/code-editor";
-import "@foldworks/code-editor/styles.css";
+import { CodeEditor } from "foldworks/code-editor";
+import "foldworks/code-editor/styles.css";
 document.querySelector("#app")!.textContent = Object.keys(CodeEditor).join(", ");
 `,
   );
@@ -339,7 +342,7 @@ document.querySelector("#app")!.textContent = Object.keys(CodeEditor).join(", ")
     [
       "--input-type=module",
       "-e",
-      'import { CodeEditor } from "@foldworks/code-editor"; if (CodeEditor.init({ id: "ssr", text: "ok" }).document.text !== "ok") throw new Error("Editor import failed");',
+      'import { CodeEditor } from "foldworks/code-editor"; if (CodeEditor.init({ id: "ssr", text: "ok" }).document.text !== "ok") throw new Error("Editor import failed");',
     ],
     { cwd: consumerDirectory },
   );
@@ -350,8 +353,8 @@ document.querySelector("#app")!.textContent = Object.keys(CodeEditor).join(", ")
       "-e",
       `
 import { Schema as S } from "effect";
-import { CodeEditor } from "@foldworks/code-editor";
-import { withSchema } from "@foldworks/code-editor/structured";
+import { CodeEditor } from "foldworks/code-editor";
+import { withSchema } from "foldworks/code-editor/structured";
 const editor = withSchema(CodeEditor.implementation, S.Struct({ enabled: S.Boolean }));
 for (const [languageId, text] of [["yaml", "enabled: true"], ["json", '{"enabled":true}']]) {
   const model = editor.init({ id: "ssr", languageId, text });
@@ -363,7 +366,7 @@ for (const [languageId, text] of [["yaml", "enabled: true"], ["json", '{"enabled
   );
 
   console.log(
-    `\nValidated ${tarballs.size} package tarballs, a clean Vite and Vitest consumer, and native-editor bundle isolation.`,
+    `\nValidated the foldworks tarball, a clean Vite and Vitest consumer with and without optional peers, and native-editor bundle isolation.`,
   );
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });

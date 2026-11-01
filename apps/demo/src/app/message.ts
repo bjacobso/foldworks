@@ -1,11 +1,11 @@
 import { Message as DocumentAnalysisMessage } from "../document-analysis/message";
 import { Message as OrchestratorMessage } from "../orchestrator/message";
 import { Schema as S } from "effect";
-import { ActionIntent } from "@foldworks/generative-ui/core";
-import { Agent } from "@foldworks/agent";
-import { PdfAnnotator } from "@foldworks/pdf-annotator";
-import { Message as EditorMessage } from "@foldworks/editor";
-import { Sidebar } from "@foldworks/sidebar";
+import { ActionIntent } from "foldworks/generative-ui/core";
+import { Agent } from "foldworks/agent";
+import { PdfAnnotator } from "foldworks/pdf-annotator";
+import { Message as EditorMessage } from "foldworks/editor";
+import { Sidebar } from "foldworks/sidebar";
 import { defineMessageUnion } from "foldkit/message";
 import { UrlRequest } from "foldkit/navigation";
 import { Url } from "foldkit/url";

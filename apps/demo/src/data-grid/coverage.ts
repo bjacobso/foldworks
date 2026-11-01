@@ -1,8 +1,8 @@
 import { Option } from "effect";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { DataGrid, type RowTone } from "@foldworks/data-grid";
-import { Badge, Button, Input, Toggle } from "@foldworks/ui";
+import { DataGrid, type RowTone } from "foldworks/data-grid";
+import { Badge, Button, Input, Toggle } from "foldworks/ui";
 
 import { className } from "../workflow/styles";
 import { coverageStyles as styles } from "./coverage-styles";

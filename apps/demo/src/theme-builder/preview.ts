@@ -26,7 +26,7 @@ import {
   Stat,
   Switch,
   Table,
-} from "@foldworks/ui";
+} from "foldworks/ui";
 import { Message } from "./message";
 import type { Model } from "./model";
 import type { Mode, Tokens } from "./contract";

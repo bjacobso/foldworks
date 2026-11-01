@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Outliner, find, walk } from "@foldworks/outliner";
+import { Outliner, find, walk } from "foldworks/outliner";
 
 import { Message } from "./message";
 import { initialModel, type Model } from "./model";

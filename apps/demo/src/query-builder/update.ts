@@ -2,7 +2,7 @@ import { Option } from "effect";
 import { Update } from "foldkit";
 import { modifyFields } from "foldkit/struct";
 
-import { QueryBuilder, validate } from "@foldworks/query-builder";
+import { QueryBuilder, validate } from "foldworks/query-builder";
 
 import { attributes, validateValue } from "./configuration";
 import { Message } from "./message";

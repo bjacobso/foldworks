@@ -1,7 +1,5 @@
 ---
-"@foldworks/text-intelligence": minor
-"@foldworks/editor": minor
-"@foldworks/outliner": patch
+"foldworks": minor
 ---
 
 Add reusable plain-text mention/tag recognition, host entity lookup, configurable syntax exclusions, completions, diagnostics and shared hover presentation. Normalize completion matching to NFC and retain exact-prefix suggestions when a replacement still has a suffix.

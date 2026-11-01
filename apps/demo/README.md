@@ -1,9 +1,9 @@
 # Foldworks demo
 
 A browser-only demo app built with Foldkit, StyleX, and Vite. The homepage
-introduces the Foldworks package family, shows a live component composition,
+introduces the Foldworks modules, shows a live component composition,
 and explains the boundary between UI components and application primitives.
-Use the sidebar to move between every package showcase, including the interactive
+Use the sidebar to move between every module showcase, including the interactive
 local change-request reference at `/diff-viewer`.
 
 Foldkit's bidirectional router owns navigational state. The project overview
@@ -33,19 +33,19 @@ step; structural operations such as add, delete, move, reset, and import remain
 individual steps. Transient selection, drag, dialog, route, and preview-answer
 state is intentionally excluded from history and persistence.
 
-Reusable flow operations, layout, and drag interaction live in the private
-`@foldworks/workflow` workspace package. This application registers the
+Reusable flow operations, layout, and drag interaction live in the
+`foldworks/workflow` module. This application registers the
 available node types, their factories, dimensions, palette metadata, and views.
 
-The private `@foldworks/data-grid` workspace package provides a typed,
+The `foldworks/data-grid` module provides a typed,
 headless table model and a Foldkit DOM view. The demo supplies 120 rows, column
 configuration, and custom employee and status cell renderers.
 
-The `@foldworks/data-table` demo is deliberately resource-first: one compact
+The `foldworks/data-table` demo is deliberately resource-first: one compact
 row per person, semantic table markup, links into a route-driven detail panel,
 sorting, search, bulk selection, density, and pinned identity/actions columns.
 It owns no spreadsheet editing state; that richer interaction model remains in
-`@foldworks/data-grid`.
+`foldworks/data-grid`.
 
 Features include:
 
@@ -86,7 +86,7 @@ The form builder demonstrates a section-first, multi-actor document model:
 - undo/redo for field configuration and structural edits;
 - independent autosaved drafts plus validated form JSON import/export.
 
-The UI component showcase demonstrates every `@foldworks/ui` primitive:
+The UI component showcase demonstrates every `foldworks/ui` primitive:
 
 - declarative, theme-aware Lucide icons rendered through Foldkit;
 - all button intents, sizes, and disabled states;
@@ -99,7 +99,7 @@ The UI component showcase demonstrates every `@foldworks/ui` primitive:
   overlays, menus, navigation, tables, charts, calendars, and message views.
 
 The agent playground at `/agent` demonstrates the provider-neutral
-`@foldworks/agent` conversation runtime with real incremental Effect streams,
+`foldworks/agent` conversation runtime with real incremental Effect streams,
 tool input and result states, an
 inline allow/deny permission checkpoint, model selection, and a multiline
 composer. Its model responses and tool results are deterministic local fixtures:
@@ -136,8 +136,8 @@ change, push the branch and download CI's `visual-test-report` artifact with
 confirm the reviewed baselines. `pnpm test:visual:update` is suitable only when
 running on the same Ubuntu 24.04 renderer as CI.
 
-The browser suite discovers the package catalog rendered on the homepage and
-captures every linked showcase as `site-docs-<package>.png`. This provides a
+The browser suite discovers the module catalog rendered on the homepage and
+captures every linked showcase as `site-docs-<module>.png`. This provides a
 consistent screenshot set for the site documentation and fails when the catalog
 changes without corresponding screenshot coverage.
 
@@ -171,7 +171,7 @@ generic contracts. Try them in these existing pages:
 The `/ui-kit` Desktop workspace demonstrates shared keyboard commands, measured
 breadcrumb/action rows, inline editing, token entry, a nested inspector, context
 menus, modal variants and a controlled date input. See
-[the integration guide](../../packages/ui/docs/desktop.md).
+[the integration guide](../../packages/foldworks/src/ui/docs/desktop.md).
 
 ## Local change-request reference
 

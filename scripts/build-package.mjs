@@ -1,6 +1,7 @@
 // Builds the package in the current directory into `dist`:
 // - JavaScript: tsup bundles every JavaScript target in `exports` and `bin`
-//   from the matching `src/*.ts` file;
+//   from the matching `src/*.ts` file, sharing code between entries through
+//   chunks;
 // - CSS: every `src/**/*.css` file is copied as is;
 // - declarations: the package's own `tsc`, excluding tests. This also fails
 //   the build on type errors.
@@ -10,9 +11,19 @@
 // `turbo dev` via `build:runtime`) skips declarations and keeps the previous
 // ones, because nothing at runtime needs them and `tsc` is the slow step.
 import { spawnSync } from "node:child_process";
-import { cp, mkdir, mkdtemp, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 import { build } from "tsup";
 
@@ -47,10 +58,27 @@ for (const source of Object.values(entries)) {
   });
 }
 
-// StyleX resolves `defineVars` by module path, so `*.stylex` entries stay
-// standalone files: other entries import them as externals, and packages that
-// have them are not split, because splitting would make the token module import a shared chunk.
+// StyleX resolves `defineVars` and `defineConsts` by module path, so
+// `*.stylex` entries stay standalone files that every other output imports
+// directly rather than through a shared chunk. During bundling, imports of
+// those sources become placeholders; `linkStylexEntries` then rewrites each
+// placeholder to the path from the importing output file.
 const stylexEntries = Object.keys(entries).filter((name) => name.endsWith(".stylex"));
+const stylexSources = new Map(
+  stylexEntries.map((name) => [join(packageRoot, entries[name]), name]),
+);
+const stylexPlaceholder = "foldworks-stylex-entry:";
+const externalStylexEntries = {
+  name: "foldworks-external-stylex-entries",
+  setup(build) {
+    build.onResolve({ filter: /\.stylex(?:\.[jt]s)?$/ }, (args) => {
+      if (args.kind === "entry-point" || !args.path.startsWith(".")) return undefined;
+      const source = join(args.resolveDir, args.path).replace(/\.[jt]s$/, "") + ".ts";
+      const name = stylexSources.get(source);
+      return name === undefined ? undefined : { path: stylexPlaceholder + name, external: true };
+    });
+  },
+};
 
 const liveOutputDirectory = join(packageRoot, "dist");
 const stagingParent = join(packageRoot, "node_modules");
@@ -111,6 +139,23 @@ const emitDeclarations = async () => {
   }
 };
 
+const linkStylexEntries = async (directory) => {
+  if (stylexEntries.length === 0) return;
+  for (const entry of await readdir(directory, { withFileTypes: true, recursive: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
+    const path = join(entry.parentPath, entry.name);
+    const text = await readFile(path, "utf8");
+    const linked = text.replaceAll(
+      new RegExp(`(["'])${stylexPlaceholder}([^"']+)\\1`, "g"),
+      (_match, quote, name) => {
+        const target = relative(entry.parentPath, join(stagedOutputDirectory, `${name}.js`));
+        return quote + (target.startsWith(".") ? target : `./${target}`) + quote;
+      },
+    );
+    if (linked !== text) await writeFile(path, linked);
+  }
+};
+
 const publishStagedOutput = async () => {
   let movedPreviousOutput = false;
   try {
@@ -142,25 +187,38 @@ try {
     fileName.endsWith(".css"),
   );
 
-  await build({
-    bundle: true,
-    clean: false,
-    config: false,
-    dts: false,
-    entry: entries,
-    external: ["node:*", ...stylexEntries.map((name) => `./${name}.js`)],
-    format: ["esm"],
-    minify: false,
-    outDir: stagedOutputDirectory,
-    // A package that ships a CLI is a Node program; the rest run in browsers.
-    platform: packageJson.bin === undefined ? "browser" : "node",
-    silent: false,
-    sourcemap: true,
-    splitting: Object.keys(entries).length > 1 && stylexEntries.length === 0,
-    target: "es2022",
-    treeshake: true,
-  });
+  const bundle = (entry, options) =>
+    build({
+      bundle: true,
+      clean: false,
+      config: false,
+      dts: false,
+      entry,
+      external: ["node:*"],
+      format: ["esm"],
+      minify: false,
+      outDir: stagedOutputDirectory,
+      // A package that ships a CLI is a Node program; the rest run in browsers.
+      platform: packageJson.bin === undefined ? "browser" : "node",
+      silent: false,
+      sourcemap: true,
+      target: "es2022",
+      treeshake: true,
+      ...options,
+    });
+  const pick = (names) => Object.fromEntries(names.map((name) => [name, entries[name]]));
+  const otherEntries = Object.keys(entries).filter((name) => !stylexEntries.includes(name));
+  // Splitting shares code between entries through chunks. StyleX entries are
+  // built on their own so they never import one.
+  if (stylexEntries.length > 0) await bundle(pick(stylexEntries), { splitting: false });
+  if (otherEntries.length > 0) {
+    await bundle(pick(otherEntries), {
+      esbuildPlugins: [externalStylexEntries],
+      splitting: otherEntries.length > 1,
+    });
+  }
 
+  await linkStylexEntries(stagedOutputDirectory);
   if (!runtimeOnly) await emitDeclarations();
 
   await publishStagedOutput();

@@ -1,4 +1,4 @@
-import { parseOutline, setCollapsed, walk, type Items } from "@foldworks/outliner";
+import { parseOutline, setCollapsed, walk, type Items } from "foldworks/outliner";
 
 export const OUTLINE_ID = "foldworks-outline";
 

@@ -1,6 +1,6 @@
 import { Command, Update } from "foldkit";
 import { Effect, Option, Schema as S } from "effect";
-import { CodeBlock, Stateful } from "@foldworks/ui";
+import { CodeBlock, Stateful } from "foldworks/ui";
 import { ThemeName } from "../theme";
 import { Message } from "./message";
 import { fromPreset, WorkingTheme, type Model } from "./model";
