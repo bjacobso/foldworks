@@ -155,18 +155,24 @@ SQL, and Vitest companions `4.1.1`, Foldkit, `@foldkit/ui`, and
 `@foldkit/vite-plugin` `0.29.0`.
 
 These Foldkit releases declare Effect `~4.1.0` peers, which accept `4.1.1`.
-Alchemy and its frontend adapter remain on `2.0.0-beta.80`; their Effect
-`^4.0.0` ranges also accept the tested runtime. Alchemy's existing SQL companions
-are pinned to `4.1.1` within their declared ranges.
+Alchemy, its Cloudflare provider, and its frontend adapter use `2.0.0-beta.84`;
+their Effect `^4.0.5` ranges accept the tested runtime. The Cloudflare provider
+is imported from `@alchemy.run/cloudflare`.
 
-Alchemy beta.80 still imports the removed `effect/Crypto` API. The scoped
-`patches/alchemy@2.0.0-beta.80.patch` migrates OAuth state and PKCE generation
+Alchemy beta.84 still imports the removed `effect/Crypto` API. The scoped
+`patches/alchemy@2.0.0-beta.84.patch` migrates OAuth state and PKCE generation
 to Effect 4.1's `SecureRandom` and `Digest` WebCrypto layers, preserves
-`OAuthError` failures, and removes the obsolete service from declarations.
-Published Alchemy beta.84 still uses the removed API. Remove the patch when
-Alchemy ships compatible crypto APIs. Offline tests verify deployment imports,
-random state, the S256 challenge, and crypto failures without contacting a
-provider. They use `@effect/vitest@4.1.1` with Vitest `5.0.3`.
+`OAuthCryptoError` failures, and removes the obsolete service from declarations.
+Remove the patch when Alchemy ships compatible crypto APIs. Offline tests verify
+the deployment entrypoint, random state, the S256 challenge, crypto failures,
+Cloudflare state-store loading, and stage-specific output paths without contacting
+a provider. They use `@effect/vitest@4.1.1` with Vitest `5.0.3`.
+
+The Cloudflare runtime brings `capnp-es@0.0.16`, which declares a TypeScript
+`^5.7.3 || ^6.0.0` peer. pnpm reports a warning with this repository's
+TypeScript `7.0.2`; no peer rule or override suppresses it. Infrastructure type
+checks and offline tests cover the APIs used here; this does not establish
+compatibility with every `capnp-es` API.
 
 No Effect peer exceptions are required; the clean-consumer check in
 `scripts/check-packages.mjs` installs without peer overrides. The
@@ -296,23 +302,43 @@ The demo is deployed to Cloudflare Workers with
 
 **[Open Foldworks](https://foldworks.dev)**
 
-Authenticate with Cloudflare, then deploy the production stage with:
+The `Deploy` GitHub Actions workflow deploys the exact revision validated by
+`CI` after every successful push or merge to `main`. It runs
+`pnpm exec alchemy deploy --stage prod --yes`, then verifies the homepage and
+`/forma/`. Only `prod` binds `foldworks.dev` and `www.foldworks.dev`; the Worker's
+generated `workers.dev` URL is retained.
 
-```sh
-pnpm run deploy
-```
+The `Preview` workflow deploys each same-repository pull request to
+`pr-<number>` on open, synchronize, or reopen. A single PR comment links to the
+`workers.dev` preview and its `/forma/` workbench, using the URL read from
+Alchemy's stack output. Closing or merging the PR runs `alchemy destroy` for
+that stage and marks the comment as destroyed. Per-stage concurrency serializes
+deployments and cleanup. Fork pull requests never receive a deployment.
 
-The `Deploy` GitHub Actions workflow also deploys the exact revision validated
-by `CI` after every successful push or merge to `main`. In automation, it runs
-the non-interactive equivalent, `pnpm exec alchemy deploy --stage prod --yes`,
-then verifies that `https://foldworks.dev` serves the Foldworks application.
-Alchemy also retains the Worker's generated `workers.dev` URL.
-
-The `production` GitHub environment requires these Actions secrets:
+Configure these Actions secrets in the `production` and `preview` GitHub
+environments (or as repository secrets available to both):
 
 - `CLOUDFLARE_ACCOUNT_ID` — the Cloudflare account that owns `foldworks.dev`.
-- `CLOUDFLARE_API_TOKEN` — a dedicated deployment token scoped to that account
-  and zone.
+- `CLOUDFLARE_API_TOKEN` — a deployment token scoped to that account. Production
+  also needs access to the `foldworks.dev` zone.
+
+Both workflows skip with a notice when either credential is absent. The
+`preview` environment must permit same-repository PR branches, and repository
+Actions policy must allow the workflow's `pull-requests: write` permission for
+sticky comments. Preview credentials are available to same-repository PR code;
+use an account-scoped preview token without production zone permissions.
+
+Alchemy uses the account's shared Cloudflare state-store Worker for every
+stage. beta.84 moved its setup command to
+`pnpm exec alchemy state bootstrap --backend cloudflare`; deploys with `--yes`
+can provision or upgrade it in CI. Do not tear down the shared state store when
+closing a PR: `alchemy destroy --stage pr-<number> --yes` removes only that PR's
+resources. `alchemy state read Foldworks/pr-<number>/output --backend cloudflare`
+reads its saved URLs.
+
+For local validation, authenticate with Cloudflare and run
+`pnpm exec alchemy plan --stage prod --no-input` (or `--stage pr-<number>`).
+Deployments run through GitHub Actions; do not deploy from a workspace.
 
 Give the deployment token only these Cloudflare permissions:
 

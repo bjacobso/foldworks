@@ -1,0 +1,100 @@
+name: Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: deploy-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Foldworks PR preview
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: preview
+    env:
+      STAGE: pr-${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - name: Check Cloudflare credentials
+        id: credentials
+        run: |
+          if [[ -n "$CLOUDFLARE_ACCOUNT_ID" && -n "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping PR preview deployment or cleanup: configure CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in the preview environment or repository secrets."
+          fi
+
+      - name: Check out PR revision
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up pnpm
+        if: steps.credentials.outputs.available == 'true'
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.13.0
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.credentials.outputs.available == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        if: steps.credentials.outputs.available == 'true'
+        run: pnpm run build:packages
+
+      - name: Deploy preview
+        if: steps.credentials.outputs.available == 'true' && github.event.action != 'closed'
+        run: |
+          pnpm exec alchemy deploy --stage "$STAGE" --yes
+          pnpm exec alchemy state read "Foldworks/$STAGE/output" --backend cloudflare > "$RUNNER_TEMP/preview-output.json"
+
+      - name: Destroy closed PR preview
+        if: steps.credentials.outputs.available == 'true' && github.event.action == 'closed'
+        run: pnpm exec alchemy destroy --stage "$STAGE" --yes
+
+      - name: Update preview comment
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- foldworks-pr-preview -->';
+            const issue_number = context.payload.pull_request.number;
+            const closed = context.payload.action === 'closed';
+            let body = `${marker}\nPreview stage \`${process.env.STAGE}\` has been destroyed.`;
+            if (!closed) {
+              const fs = require('node:fs');
+              const path = require('node:path');
+              const output = JSON.parse(fs.readFileSync(path.join(process.env.RUNNER_TEMP, 'preview-output.json'), 'utf8'));
+              const url = new URL(output.demo);
+              if (url.protocol !== 'https:' || !url.hostname.endsWith('.workers.dev')) {
+                throw new Error('Expected a workers.dev preview URL in Alchemy stack outputs');
+              }
+              body = `${marker}\nFoldworks preview: ${url.href}\n\nForma workbench: ${new URL('/forma/', url).href}\n\nRevision: ${context.payload.pull_request.head.sha}`;
+            }
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number, per_page: 100,
+            });
+            const comment = comments.find((item) => item.user?.login === 'github-actions[bot]' && item.body?.includes(marker));
+            if (comment) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: comment.id, body });
+            } else if (!closed) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number, body });
+            }
