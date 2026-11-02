@@ -1,5 +1,28 @@
 # @foldworks/generative-ui
 
+## 0.2.0
+
+### Minor Changes
+
+- 7b60eb4: Require the tested Effect 4.1.1 and Foldkit 0.170.0 shared runtime peers,
+  including @foldkit/ui 0.170.0. Remove the previous Effect peer exceptions.
+- cec341d: Require the tested Effect 4.0.3 and Foldkit 0.168.0 shared runtime peers.
+  Migrate renamed Foldkit APIs, textarea values, custom-event messages, and Effect
+  AI imports. Update the re-exported headless UI APIs to @foldkit/ui 0.168.0.
+  Preserve description linkage and supply the calendar format data required by
+  the new headless APIs.
+
+### Patch Changes
+
+- Updated dependencies [7b60eb4]
+- Updated dependencies [cec341d]
+- Updated dependencies [6973c08]
+- Updated dependencies [0d75dc8]
+- Updated dependencies [4aba469]
+- Updated dependencies [0f16fd8]
+- Updated dependencies [0f16fd8]
+  - @foldworks/ui@0.3.0
+
 ## 0.1.0
 
 ### Minor Changes
