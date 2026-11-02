@@ -23,39 +23,55 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     environment:
       name: production
       url: https://foldworks.dev
 
     steps:
+      - name: Check Cloudflare credentials
+        id: credentials
+        run: |
+          if [[ -n "$CLOUDFLARE_ACCOUNT_ID" && -n "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping production deployment: configure CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in the production environment or repository secrets."
+          fi
+
       - name: Check out validated revision
+        if: steps.credentials.outputs.available == 'true'
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           persist-credentials: false
 
       - name: Set up pnpm
+        if: steps.credentials.outputs.available == 'true'
         uses: pnpm/action-setup@v6
 
       - name: Set up Node.js
+        if: steps.credentials.outputs.available == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: 24.13.0
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.credentials.outputs.available == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build workspace packages
+        if: steps.credentials.outputs.available == 'true'
         run: pnpm run build:packages
 
       - name: Deploy production
+        if: steps.credentials.outputs.available == 'true'
         run: pnpm exec alchemy deploy --stage prod --yes
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Verify production
+        if: steps.credentials.outputs.available == 'true'
         run: |
           response="$(mktemp)"
           curl --fail --silent --show-error --location \

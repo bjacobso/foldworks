@@ -44,12 +44,13 @@
     "dev:forma": "turbo run dev --filter=@foldworks/forma-workbench"
   },
   "devDependencies": {
-    "@alchemy.run/frontend-frameworks": "2.0.0-beta.80",
+    "@alchemy.run/cloudflare": "2.0.0-beta.84",
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.84",
     "@changesets/cli": "^3.0.2",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "4.1.1",
     "@types/node": "catalog:",
-    "alchemy": "2.0.0-beta.80",
+    "alchemy": "2.0.0-beta.84",
     "effect": "catalog:",
     "hono": "4.12.14",
     "oxfmt": "^0.44.0",

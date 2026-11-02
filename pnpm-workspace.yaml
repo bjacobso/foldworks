@@ -38,11 +38,5 @@ catalogs:
 engineStrict: true
 
 patchedDependencies:
-  alchemy@2.0.0-beta.80: patches/alchemy@2.0.0-beta.80.patch
+  alchemy@2.0.0-beta.84: patches/alchemy@2.0.0-beta.84.patch
   foldkit@0.170.0: patches/foldkit@0.170.0.patch
-
-# Keep Alchemy's existing SQL companions on the tested Effect release.
-# Both dependencies declare ^4.0.0, which accepts 4.1.1.
-overrides:
-  "alchemy@2.0.0-beta.80>@effect/sql-d1": 4.1.1
-  "alchemy@2.0.0-beta.80>@effect/sql-sqlite-do": 4.1.1
